@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googleapiconnector.png" type="Source"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google API Connector</name>
+	<shortDescription>Create a connection to access various Google APIs.</shortDescription>
+	<fullDescription>
+		<intro>
+			Creates a connection to access various Google APIs.
+		</intro>
+		<option name="Service account email">Email address of the service account.</option>
+		<option name="Key file location">Path to the private key file.</option>
+		<option name="Scopes">The permissions that will be granted for this connection.</option>
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="Google API Connection">A connection that can be used to
+			access various Google APIs.</outPort>
+	</ports>
+</knimeNode>

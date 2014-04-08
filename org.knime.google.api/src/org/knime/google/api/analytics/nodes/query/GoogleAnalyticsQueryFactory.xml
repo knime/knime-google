@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googleanalyticsquery.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Analytics Query</name>
+	<shortDescription>Execute a query to retrieve data from the Google Analytics API.</shortDescription>
+	<fullDescription>
+		<intro>
+			Execute a query to retrieve data from the Google Analytics API.
+		</intro>
+		<option name="Dimensions">
+			<i>(Optional)</i>
+			<br />
+			The dimension data to be retrieved from the API. A single request is
+			limited to a maximum of 7 dimensions.
+		</option>
+		<option name="Metrics">The metrics data to be retrieved from the API. A
+			single request needs at least one metric and is limited to a maximum
+			of 10 metrics.
+		</option>
+		<option name="Segment">
+			<i>(Optional)</i>
+			<br />
+			Specifies a subset of visits based on either an expression or a
+			filter. The subset of visits matched happens before dimensions and
+			metrics are calculated. You can either use the predefined
+			segmentations or define your own (for details see Filters).
+			<br />
+			<br />
+			Example:
+			<br />
+			<i>source=~twitter</i>
+		</option>
+		<option name="Filters">
+			<i>(Optional)</i>
+			<br />
+			Specifies a subset of all data matched in analytics. Multiple filters
+			are separated by
+			<b>,</b>
+			(OR operator) or
+			<b>;</b>
+			(AND operator).
+			<b>\</b>
+			escapes the special characters
+			<b>,</b>
+			<b>;</b>
+			and
+			<b>\</b>
+			.
+			<br />
+			<br />
+			Dimension operators:
+			<br />
+			<b>==</b>
+			Exact match
+			<br />
+			<b>!=</b>
+			Does not match
+			<br />
+			<b>=@</b>
+			Contains substring
+			<br />
+			<b>!@</b>
+			Does not contain substring
+			<br />
+			<b>=~</b>
+			Contains a match for the regular expression
+			<br />
+			<b>!~</b>
+			Does not match regular expression
+			<br />
+			<br />
+			Metric operators:
+			<br />
+			<b>==</b>
+			Equals
+			<br />
+			<b>!=</b>
+			Does not equal
+			<br />
+			<b>&gt;</b>
+			Greater than
+			<br />
+			<b>&lt;</b>
+			Less than
+			<br />
+			<b>&gt;=</b>
+			Greater than or equal to
+			<br />
+			<b>&lt;=</b>
+			Less than or equal to
+			<br />
+			<br />
+			Example:
+			<br />
+			<i>country==Canada</i>
+			<br />
+			<i>city=~^New.*</i>
+		</option>
+		<option name="Sort">
+			<i>(Optional)</i>
+			<br />
+			The order and direction to retrieve the results. Can have multiple
+			dimensions and metrics. Prepending a dash will sort in descending
+			order.
+			<br />
+			<br />
+			Example:
+			<br />
+			<i>pageLoadTime</i>
+			<br />
+			<i>-visits</i>
+		</option>
+		<option name="Start date">Beginning date to retrieve data in format
+			YYYY-MM-DD.
+		</option>
+		<option name="End date">Final date to retrieve data in format YYYY-MM-DD.
+		</option>
+		<option name="Start index">Use this parameter to request more rows from the
+			API. For example if your query matches 100,000 rows, the API will
+			only return a subset of them and you can use this parameter to
+			request different subsets. The index starts from 1 and the default is
+			1.
+		</option>
+		<option name="Max results">Maximum number of results to retrieve from the
+			API. The default is 1,000 but can be set up to 10,000.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Analytics Connection">A connection to the Google Analytics
+			API.
+		</inPort>
+		<outPort name="Table" index="0">The resulting table.</outPort>
+	</ports>
+</knimeNode>

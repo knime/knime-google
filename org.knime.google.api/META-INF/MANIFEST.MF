@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: org.knime.google.api
+Bundle-SymbolicName: org.knime.google.api;singleton:=true
+Bundle-Version: 2.10.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: org.knime.base;bundle-version="2.10.0",
+ org.apache.commons.lang;bundle-version="2.6.0",
+ com.google.api;bundle-version="1.17.0",
+ com.google.api.services.analytics;bundle-version="3.0.0"

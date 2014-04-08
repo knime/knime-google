@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.knime.workbench.repository.nodes">
+      <node category-path="/labs/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" id="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" />
+      <node category-path="/labs/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory" id="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory" />
+      <node category-path="/labs/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory" id="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory" />
+   </extension>
+   <extension point="org.knime.workbench.repository.categories">
+      <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API" path="/labs" />
+      <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics" path="/labs/googleapi" />
+   </extension>
+</plugin>
