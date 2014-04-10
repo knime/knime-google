@@ -108,25 +108,29 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
         GoogleAnalyticsConnection connection =
                 ((GoogleAnalyticsConnectionPortObject)inObjects[0]).getGoogleAnalyticsConnection();
         GaData results = null;
-        // Use exponential backoff in case the user rate limit is exceeded (by multiple running nodes)
-        int retry = 0;
-        int sleepTime = 0;
-        Random random = new Random();
-        try {
-            if (sleepTime > 0) {
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            }
-            results = m_config.createGetRequest(connection).execute();
-        } catch (GoogleJsonResponseException e) {
-            if (retry < 5 && e.getMessage().contains("User Rate Limit Exceeded")) {
-                sleepTime = 2^retry++ + random.nextInt(1000);
-            } else {
-                throw e;
-            }
+        // Try five times before giving up
+        int leftTries = 5;
+        while (results==null && leftTries-->0) {
+	        // Use exponential backoff in case the user rate limit is exceeded (by multiple running nodes)
+	        int retry = 0;
+	        int sleepTime = 0;
+	        Random random = new Random();
+	        try {
+	            if (sleepTime > 0) {
+	                try {
+	                    Thread.sleep(sleepTime);
+	                } catch (InterruptedException e) {
+	                    // ignore
+	                }
+	            }
+	            results = m_config.createGetRequest(connection).execute();
+	        } catch (GoogleJsonResponseException e) {
+	            if (retry < 5 && e.getMessage().contains("User Rate Limit Exceeded")) {
+	                sleepTime = 2^retry++ + random.nextInt(1000);
+	            } else {
+	                throw e;
+	            }
+	        }
         }
         if (results == null) {
             throw new IOException("Could not get the requested data");
