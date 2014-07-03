@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -50,6 +50,7 @@ package org.knime.google.api.analytics.data;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -63,7 +64,7 @@ import org.knime.core.node.util.ViewUtils;
 
 /**
  * Port object containing a GoogleAnalyticsConnection.
- * 
+ *
  * @author "Patrick Winter", University of Konstanz
  */
 public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObject {
@@ -116,7 +117,7 @@ public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObjec
      * {@inheritDoc}
      */
     @Override
-    protected void save(ModelContentWO model, ExecutionMonitor exec) throws CanceledExecutionException {
+    protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
         // nothing to do
     }
 
@@ -124,7 +125,7 @@ public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObjec
      * {@inheritDoc}
      */
     @Override
-    protected void load(ModelContentRO model, PortObjectSpec spec, ExecutionMonitor exec)
+    protected void load(final ModelContentRO model, final PortObjectSpec spec, final ExecutionMonitor exec)
             throws InvalidSettingsException, CanceledExecutionException {
         m_spec = (GoogleAnalyticsConnectionPortObjectSpec)spec;
     }
@@ -142,7 +143,7 @@ public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObjec
         }
         JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
         f.setName("Connection");
-        return new JComponent[]{f};
+        return new JComponent[]{new JScrollPane(f)};
     }
 
 }
