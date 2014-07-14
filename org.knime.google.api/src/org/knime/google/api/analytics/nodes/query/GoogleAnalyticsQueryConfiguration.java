@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -64,8 +64,8 @@ import com.google.api.services.analytics.Analytics.Data.Ga.Get;
 
 /**
  * Configuration of the GoogleAnalyticsQuery node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsQueryConfiguration {
 
@@ -391,9 +391,9 @@ public class GoogleAnalyticsQueryConfiguration {
 
     /**
      * Returns the segment with prefix.
-     * 
+     *
      * The prefix is 'gaid::' for default segments or 'dynamic::' for custom segments.
-     * 
+     *
      * @return The segment with prefix
      */
     private String getSegmentWithPrefix() {
@@ -406,7 +406,7 @@ public class GoogleAnalyticsQueryConfiguration {
 
     /**
      * Will prepend the prefix 'ga:' to the string while keeping the '-' in front (for sort strings)
-     * 
+     *
      * @param string The string to prepend to
      * @return The string with the prepended prefix 'ga:'
      */
@@ -420,7 +420,7 @@ public class GoogleAnalyticsQueryConfiguration {
 
     /**
      * Will prepend the prefix 'ga:' to all column names in the given filters string while respecting escaped characters.
-     * 
+     *
      * @param string The string to prepend to
      * @return The string with the prepended prefix 'ga:' to the columns
      */

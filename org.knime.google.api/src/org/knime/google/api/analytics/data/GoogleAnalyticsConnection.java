@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 18, 2014 ("Patrick Winter"): created
  */
@@ -70,8 +70,8 @@ import com.google.api.services.analytics.model.Webproperty;
 
 /**
  * A connection to the Google Analytics API.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsConnection {
 
@@ -89,7 +89,7 @@ public class GoogleAnalyticsConnection {
 
     /**
      * Retrieves all accounts with there webproperties and there profiles from Google Analytics.
-     * 
+     *
      * @param connection Connection to the Google API
      * @return Map containing the hierarchical structure of accounts, webproperties and profiles
      * @throws IOException If an error occurs while retrieving the data
@@ -186,7 +186,7 @@ public class GoogleAnalyticsConnection {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }

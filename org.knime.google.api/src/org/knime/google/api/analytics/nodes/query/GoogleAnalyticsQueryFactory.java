@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 20, 2014 ("Patrick Winter"): created
  */
@@ -53,8 +53,8 @@ import org.knime.core.node.NodeView;
 
 /**
  * The factory of the GoogleAnalyticsQuery node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsQueryFactory extends NodeFactory<GoogleAnalyticsQueryModel> {
 
@@ -78,7 +78,7 @@ public class GoogleAnalyticsQueryFactory extends NodeFactory<GoogleAnalyticsQuer
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleAnalyticsQueryModel> createNodeView(int viewIndex, GoogleAnalyticsQueryModel nodeModel) {
+    public NodeView<GoogleAnalyticsQueryModel> createNodeView(final int viewIndex, final GoogleAnalyticsQueryModel nodeModel) {
         return null;
     }
 

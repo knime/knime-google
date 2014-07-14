@@ -65,7 +65,7 @@ import org.knime.core.node.util.ViewUtils;
 /**
  * Port object containing a GoogleAnalyticsConnection.
  *
- * @author "Patrick Winter", University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObject {
 

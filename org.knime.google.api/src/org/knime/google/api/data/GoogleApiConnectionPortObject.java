@@ -65,7 +65,7 @@ import org.knime.core.node.util.ViewUtils;
 /**
  * Port object containing a GoogleApiConnection.
  *
- * @author "Patrick Winter", University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnectionPortObject extends AbstractSimplePortObject {
 

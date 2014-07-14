@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -66,6 +66,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -80,6 +81,7 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -97,8 +99,8 @@ import com.google.api.services.analytics.model.Segments;
 
 /**
  * The dialog to the GoogleAnalyticsConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
 
@@ -146,7 +148,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
     public GoogleAnalyticsQueryDialog() {
         m_warning = new JLabel("Warning: Could not connect to the Google API");
         m_warning.setForeground(Color.RED);
-        m_segment = new JComboBox<String>();
+        m_segment = new JComboBox<String>(new DefaultComboBoxModel<String>());
         m_segment.setEditable(true);
         m_filters = new JTextField();
         m_sort = new JTextField();
@@ -241,17 +243,17 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         m_addColumnButton = new JButton("Add");
         m_addColumnButton.setToolTipText("Add dimension/metric");
         final JLabel description = new JLabel();
-        description.setVerticalAlignment(JLabel.TOP);
+        description.setVerticalAlignment(SwingConstants.TOP);
         m_groupSelection.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 // Change the available columns in the column selection
                 refreshAvailableColumns();
             }
         });
         m_addColumnButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 // Add selected column to query
                 String selection = (String)m_columnSelection.getSelectedItem();
                 if (selection != null) {
@@ -271,7 +273,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         });
         m_columnSelection.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 // Refresh column description
                 description.setText("");
                 String selection = (String)m_columnSelection.getSelectedItem();
@@ -343,25 +345,25 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         dimensionRemove.setToolTipText("Remove");
         dimensionUp.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 moveListElement(true, m_dimensions);
             }
         });
         dimensionDown.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 moveListElement(false, m_dimensions);
             }
         });
         dimensionAdd.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 openAddDialog("Add dimension", m_dimensionsModel, dimensionAdd);
             }
         });
         dimensionRemove.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 if (m_dimensions.getSelectedIndex() >= 0) {
                     m_dimensionsModel.remove(m_dimensions.getSelectedIndex());
                     refreshAddColumnButton();
@@ -424,25 +426,25 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         metricRemove.setToolTipText("Remove");
         metricUp.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 moveListElement(true, m_metrics);
             }
         });
         metricDown.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 moveListElement(false, m_metrics);
             }
         });
         metricAdd.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 openAddDialog("Add metric", m_metricsModel, metricAdd);
             }
         });
         metricRemove.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 if (m_metrics.getSelectedIndex() >= 0) {
                     m_metricsModel.remove(m_metrics.getSelectedIndex());
                     refreshAddColumnButton();
@@ -490,7 +492,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         m_columnSelection.removeAllItems();
         for (Column column : m_columnMap.values()) {
             String columnGroup = column.getAttributes().get("group");
-            if (all || group.equals(columnGroup)) {
+            if (all || columnGroup.equals(group)) {
                 m_columnSelection.addItem(column.getAttributes().get("uiName"));
             }
         }
@@ -538,7 +540,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
      * @param up Moves the selected element up if true, down if false
      * @param list The list with the element
      */
-    private void moveListElement(boolean up, final JList<String> list) {
+    private void moveListElement(final boolean up, final JList<String> list) {
         DefaultListModel<String> model = (DefaultListModel<String>)list.getModel();
         int sourceI = list.getSelectedIndex();
         // Check if something is selected
@@ -558,7 +560,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         GoogleAnalyticsQueryConfiguration config = new GoogleAnalyticsQueryConfiguration();
         String[] dimensions = new String[m_dimensionsModel.getSize()];
         for (int i = 0; i < m_dimensionsModel.getSize(); i++) {
@@ -588,11 +590,12 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         GoogleAnalyticsQueryConfiguration config = new GoogleAnalyticsQueryConfiguration();
         config.loadInDialog(settings);
         String segment = config.getSegment();
         m_segmentMap = new TreeMap<String, String>();
+        ((DefaultComboBoxModel<String>)m_segment.getModel()).removeAllElements();
         try {
             GoogleAnalyticsConnectionPortObjectSpec spec = (GoogleAnalyticsConnectionPortObjectSpec)specs[0];
             if (spec != null) {
@@ -679,7 +682,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         cancel.setMargin(buttonMargin);
         dialog.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyTyped(KeyEvent e) {
+            public void keyTyped(final KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
                     dialog.setVisible(false);
                 }
@@ -698,14 +701,14 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         });
         ok.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 apply.set(true);
                 dialog.setVisible(false);
             }
         });
         cancel.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 dialog.setVisible(false);
             }
         });

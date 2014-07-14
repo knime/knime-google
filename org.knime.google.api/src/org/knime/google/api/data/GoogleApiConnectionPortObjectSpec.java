@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -62,8 +62,8 @@ import org.knime.core.node.util.ViewUtils;
 
 /**
  * Specification for the GoogleApiConnectionPortObject.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
 
@@ -94,7 +94,7 @@ public class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectS
      * {@inheritDoc}
      */
     @Override
-    protected void save(ModelContentWO model) {
+    protected void save(final ModelContentWO model) {
         m_googleApiConnection.save(model);
     }
 
@@ -102,7 +102,7 @@ public class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectS
      * {@inheritDoc}
      */
     @Override
-    protected void load(ModelContentRO model) throws InvalidSettingsException {
+    protected void load(final ModelContentRO model) throws InvalidSettingsException {
         try {
             m_googleApiConnection = new GoogleApiConnection(model);
         } catch (GeneralSecurityException | IOException e) {
@@ -114,7 +114,7 @@ public class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectS
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object ospec) {
+    public boolean equals(final Object ospec) {
         if (this == ospec) {
             return true;
         }

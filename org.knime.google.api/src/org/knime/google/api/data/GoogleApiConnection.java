@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 18, 2014 ("Patrick Winter"): created
  */
@@ -67,8 +67,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 /**
  * Object that represents a connection to the Google API.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnection {
 
@@ -154,7 +154,7 @@ public class GoogleApiConnection {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }

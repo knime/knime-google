@@ -15,7 +15,7 @@
 	under 'APIs'.
 		</intro>
 		<option name="Service account email">Email address of the service account.</option>
-		<option name="Key file location">Path to the private key file.</option>
+		<option name="P12 key file location">Path to the private P12 key file.</option>
 		<option name="Scopes">The scopes that will be granted for this connection.</option>
 	</fullDescription>
 	<ports>

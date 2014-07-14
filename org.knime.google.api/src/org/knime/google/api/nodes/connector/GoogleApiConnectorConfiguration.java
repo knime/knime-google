@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -60,8 +60,8 @@ import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Configuration of the GoogleApiConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnectorConfiguration {
 
@@ -87,7 +87,7 @@ public class GoogleApiConnectorConfiguration {
     /**
      * @param serviceAccountEmail the serviceAccountEmail to set
      */
-    public void setServiceAccountEmail(String serviceAccountEmail) {
+    public void setServiceAccountEmail(final String serviceAccountEmail) {
         m_serviceAccountEmail = serviceAccountEmail;
     }
 
@@ -101,7 +101,7 @@ public class GoogleApiConnectorConfiguration {
     /**
      * @param keyFileLocation the keyFileLocation to set
      */
-    public void setKeyFileLocation(String keyFileLocation) {
+    public void setKeyFileLocation(final String keyFileLocation) {
         m_keyFileLocation = keyFileLocation;
     }
 
@@ -115,7 +115,7 @@ public class GoogleApiConnectorConfiguration {
     /**
      * @param scopes the scopes to set
      */
-    public void setScopes(String[] scopes) {
+    public void setScopes(final String[] scopes) {
         m_scopes = scopes;
     }
 

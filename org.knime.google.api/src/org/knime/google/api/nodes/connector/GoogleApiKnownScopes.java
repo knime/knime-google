@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 20, 2014 ("Patrick Winter"): created
  */
@@ -54,8 +54,8 @@ import com.google.api.services.analytics.AnalyticsScopes;
 
 /**
  * Contains a map of all known scopes.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiKnownScopes {
 

@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -77,8 +77,8 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * The dialog to the GoogleAnalyticsConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 @SuppressWarnings("cast")
 public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
@@ -101,7 +101,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
     private JTextField m_profileId;
 
     private JLabel m_warning;
-    
+
     private JPanel m_selectionsPanel;
 
     /**
@@ -119,7 +119,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         m_profileId = new JTextField();
         m_accounts.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 if (!m_map.isEmpty() && m_accountsModel.getSize() > 0 && isValidSelection(m_accounts)) {
                     m_webpropertiesModel.removeAllElements();
                     Set<String> webproperties = m_map.get((String)m_accounts.getSelectedItem()).keySet();
@@ -134,7 +134,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         });
         m_webproperties.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 if (!m_map.isEmpty() && m_webpropertiesModel.getSize() > 0 && isValidSelection(m_accounts)
                         && isValidSelection(m_webproperties)) {
                     m_profilesModel.removeAllElements();
@@ -152,7 +152,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         });
         m_profiles.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 String profileId = getSelectedProfileId();
                 if (profileId != null) {
                     m_profileId.setText(profileId);
@@ -161,17 +161,17 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         });
         m_profileId.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void removeUpdate(DocumentEvent e) {
+            public void removeUpdate(final DocumentEvent e) {
                 invalidateSelection();
             }
 
             @Override
-            public void insertUpdate(DocumentEvent e) {
+            public void insertUpdate(final DocumentEvent e) {
                 invalidateSelection();
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
+            public void changedUpdate(final DocumentEvent e) {
                 invalidateSelection();
             }
         });
@@ -243,7 +243,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
         config.setProfileId(m_profileId.getText());
         config.save(settings);
@@ -253,7 +253,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google API Connection");
         }
