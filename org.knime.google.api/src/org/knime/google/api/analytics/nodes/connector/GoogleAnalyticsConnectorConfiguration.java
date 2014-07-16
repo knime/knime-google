@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -55,8 +55,8 @@ import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Configuration of the GoogleAnalyticsConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsConnectorConfiguration {
 

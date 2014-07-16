@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -74,8 +74,8 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The dialog to the GoogleApiConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnectorDialog extends NodeDialogPane {
 
@@ -99,7 +99,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
         JButton addKnownScope = new JButton("Add");
         addKnownScope.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 String selection = (String)knownScopes.getSelectedItem();
                 String text = m_scopes.getText();
                 boolean addNewLine = !text.isEmpty() && !text.endsWith("\n");
@@ -122,7 +122,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
         gbc.gridy++;
         panel.add(m_serviceAccountEmail, gbc);
         gbc.gridy++;
-        panel.add(new JLabel("Key file location:"), gbc);
+        panel.add(new JLabel("P12 key file location:"), gbc);
         gbc.gridy++;
         panel.add(m_keyFileLocation, gbc);
         gbc.gridy++;
@@ -155,7 +155,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         GoogleApiConnectorConfiguration config = new GoogleApiConnectorConfiguration();
         config.setServiceAccountEmail(m_serviceAccountEmail.getText());
         config.setKeyFileLocation(m_keyFileLocation.getSelectedFile());
@@ -167,7 +167,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         GoogleApiConnectorConfiguration config = new GoogleApiConnectorConfiguration();
         config.loadInDialog(settings);
         m_serviceAccountEmail.setText(config.getServiceAccountEmail());

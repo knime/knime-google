@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -53,8 +53,8 @@ import org.knime.core.node.NodeView;
 
 /**
  * The factory of the GoogleApiConnector node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleApiConnectorFactory extends NodeFactory<GoogleApiConnectorModel> {
 
@@ -78,7 +78,7 @@ public class GoogleApiConnectorFactory extends NodeFactory<GoogleApiConnectorMod
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleApiConnectorModel> createNodeView(int viewIndex, GoogleApiConnectorModel nodeModel) {
+    public NodeView<GoogleApiConnectorModel> createNodeView(final int viewIndex, final GoogleApiConnectorModel nodeModel) {
         return null;
     }
 

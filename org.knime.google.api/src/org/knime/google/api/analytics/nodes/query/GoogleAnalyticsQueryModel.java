@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2014 ("Patrick Winter"): created
  */
@@ -83,8 +83,8 @@ import com.google.api.services.analytics.model.GaData;
 
 /**
  * The model of the GoogleAnalyticsQuery node.
- * 
- * @author "Patrick Winter", University of Konstanz
+ *
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class GoogleAnalyticsQueryModel extends NodeModel {
 
@@ -101,7 +101,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleAnalyticsConnection connection =
                 ((GoogleAnalyticsConnectionPortObject)inObjects[0]).getGoogleAnalyticsConnection();
         GaData results = null;
@@ -189,7 +189,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return new PortObjectSpec[]{null};
     }
 
@@ -197,7 +197,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec) throws IOException,
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // not used
     }
@@ -206,7 +206,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec) throws IOException,
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // not used
     }
@@ -215,7 +215,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_config.save(settings);
     }
 
@@ -223,7 +223,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         GoogleAnalyticsQueryConfiguration config = new GoogleAnalyticsQueryConfiguration();
         config.loadInModel(settings);
     }
@@ -232,7 +232,7 @@ public class GoogleAnalyticsQueryModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         GoogleAnalyticsQueryConfiguration config = new GoogleAnalyticsQueryConfiguration();
         config.loadInModel(settings);
         m_config = config;
