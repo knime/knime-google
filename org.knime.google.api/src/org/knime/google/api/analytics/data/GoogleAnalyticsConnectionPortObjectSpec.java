@@ -58,30 +58,30 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Specification for the GoogleAnalyticsConnectionPortObject.
+ * Specification for the {@link GoogleAnalyticsConnectionPortObject}.
  *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleAnalyticsConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
+public final class GoogleAnalyticsConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
 
     private GoogleAnalyticsConnection m_googleAnalyticsConnection;
 
     /**
-     * Constructor for a port object spec that holds no GoogleAanalyticsConnection.
+     * Constructor for a port object spec that holds no {@link GoogleAnalyticsConnection}.
      */
     public GoogleAnalyticsConnectionPortObjectSpec() {
         m_googleAnalyticsConnection = null;
     }
 
     /**
-     * @param googleAnalyticsConnection The GoogleAnalyticsConnection that will be contained by this port object spec
+     * @param googleAnalyticsConnection The {@link GoogleAnalyticsConnection} that will be contained by this port object spec
      */
     public GoogleAnalyticsConnectionPortObjectSpec(final GoogleAnalyticsConnection googleAnalyticsConnection) {
         m_googleAnalyticsConnection = googleAnalyticsConnection;
     }
 
     /**
-     * @return The contained GoogleAnalyticsConnection object
+     * @return The contained {@link GoogleAnalyticsConnection} object
      */
     public GoogleAnalyticsConnection getGoogleAnalyticsConnection() {
         return m_googleAnalyticsConnection;

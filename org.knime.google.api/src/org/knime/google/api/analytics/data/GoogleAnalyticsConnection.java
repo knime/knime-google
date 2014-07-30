@@ -71,9 +71,11 @@ import com.google.api.services.analytics.model.Webproperty;
 /**
  * A connection to the Google Analytics API.
  *
+ * Use the {@link Analytics} object returned by {@link #getAnalytics()} to communicate with the Google Analytics API.
+ *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleAnalyticsConnection {
+public final class GoogleAnalyticsConnection {
 
     private static final String CFG_PROFILE_ID = "profileId";
 
@@ -88,10 +90,10 @@ public class GoogleAnalyticsConnection {
     private Analytics m_analytics;
 
     /**
-     * Retrieves all accounts with there webproperties and there profiles from Google Analytics.
+     * Retrieves all accounts with their web properties and their profiles from Google Analytics.
      *
      * @param connection Connection to the Google API
-     * @return Map containing the hierarchical structure of accounts, webproperties and profiles
+     * @return Map containing the hierarchical structure of accounts, web properties and profiles
      * @throws IOException If an error occurs while retrieving the data
      */
     public static Map<String, Map<String, Map<String, String>>> getAccountsWebpropertiesProfilesMap(
@@ -128,6 +130,8 @@ public class GoogleAnalyticsConnection {
     }
 
     /**
+     * Creates a new {@link GoogleAnalyticsConnection} using the given {@link GoogleApiConnection}.
+     *
      * @param connection The used GoogleApiConnection
      * @param applicationName Name of this application as it is shown to the Google API
      * @param profileId ID of the profile that will be used
@@ -143,6 +147,8 @@ public class GoogleAnalyticsConnection {
     }
 
     /**
+     * Restores a {@link GoogleAnalyticsConnection} from a saved model (used by the framework).
+     *
      * @param model The model containing the connection information
      * @throws InvalidSettingsException If the model was invalid
      */
@@ -160,14 +166,14 @@ public class GoogleAnalyticsConnection {
     }
 
     /**
-     * @return the analytics The Google Analytics object
+     * @return The {@link Analytics} object used to communicate with the Google Analytics API
      */
     public Analytics getAnalytics() {
         return m_analytics;
     }
 
     /**
-     * @return the profileId
+     * @return The profile ID that should be used
      */
     public String getProfileId() {
         return m_profileId;

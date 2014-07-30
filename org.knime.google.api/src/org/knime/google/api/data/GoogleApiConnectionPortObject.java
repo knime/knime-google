@@ -63,11 +63,11 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Port object containing a GoogleApiConnection.
+ * Port object containing a {@link GoogleApiConnection}.
  *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleApiConnectionPortObject extends AbstractSimplePortObject {
+public final class GoogleApiConnectionPortObject extends AbstractSimplePortObject {
 
     private GoogleApiConnectionPortObjectSpec m_spec;
 
@@ -77,10 +77,10 @@ public class GoogleApiConnectionPortObject extends AbstractSimplePortObject {
     public static final PortType TYPE = new PortType(GoogleApiConnectionPortObject.class);
 
     /**
-     * Constructor for framework.
+     * Constructor used by the framework.
      */
     public GoogleApiConnectionPortObject() {
-        // used by framework
+        // used by the framework
     }
 
     /**

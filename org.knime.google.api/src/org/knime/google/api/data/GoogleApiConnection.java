@@ -68,9 +68,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 /**
  * Object that represents a connection to the Google API.
  *
+ * Use the {@link GoogleCredential} object returned by {@link #getCredential()} to build objects for a specific Google API.
+ *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleApiConnection {
+public final class GoogleApiConnection {
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
@@ -91,8 +93,10 @@ public class GoogleApiConnection {
     private String[] m_scopes;
 
     /**
+     * Creates a new {@link GoogleApiConnection}.
+     *
      * @param serviceAccountEmail Email address of the service account
-     * @param keyFileLocation Location of the key file
+     * @param keyFileLocation Location of the P12 key file
      * @param scopes Scopes that will be used
      * @throws GeneralSecurityException If there was a problem with the key file
      * @throws IOException If the key file was not accessible
@@ -109,6 +113,8 @@ public class GoogleApiConnection {
     }
 
     /**
+     * Restores a {@link GoogleApiConnection} from a saved model (used by the framework).
+     *
      * @param model The model containing the connection information
      * @throws GeneralSecurityException If there was a problem with the key file
      * @throws IOException If the key file was not accessible
@@ -121,21 +127,21 @@ public class GoogleApiConnection {
     }
 
     /**
-     * @return The httpTransport instance
+     * @return The {@link HttpTransport} instance to be used to build Google API objects
      */
     public HttpTransport getHttpTransport() {
         return HTTP_TRANSPORT;
     }
 
     /**
-     * @return The jsonFactory instance
+     * @return The {@link JsonFactory} instance to be used to build Google API objects
      */
     public JsonFactory getJsonFactory() {
         return JSON_FACTORY;
     }
 
     /**
-     * @return The Google API credential
+     * @return The {@link GoogleCredential} object used to build specific Google API objects
      */
     public GoogleCredential getCredential() {
         return m_credential;
