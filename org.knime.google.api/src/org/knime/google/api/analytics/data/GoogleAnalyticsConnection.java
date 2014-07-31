@@ -50,6 +50,7 @@ package org.knime.google.api.analytics.data;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -77,6 +78,8 @@ import com.google.api.services.analytics.model.Webproperty;
  */
 public final class GoogleAnalyticsConnection {
 
+    private static final String ALL_WILDCARD = "~all";
+
     private static final String CFG_PROFILE_ID = "profileId";
 
     private static final String CFG_APPLICATION_NAME = "applicationName";
@@ -100,31 +103,24 @@ public final class GoogleAnalyticsConnection {
             final GoogleApiConnection connection) throws IOException {
         Map<String, Map<String, Map<String, String>>> accountsMap =
                 new TreeMap<String, Map<String, Map<String, String>>>();
-        Map<String, Map<String, String>> webpropertiesMap;
-        Map<String, String> profilesMap;
+        Map<String, String> accountIdToName = new HashMap<String, String>();
+        Map<String, String> webpropertyIdToName = new HashMap<String, String>();
         Analytics analytics =
                 new Analytics.Builder(connection.getHttpTransport(), connection.getJsonFactory(),
                         connection.getCredential()).setApplicationName("KNIME-Profiles-Scan").build();
         Accounts accounts = analytics.management().accounts().list().execute();
-        if (accounts.getItems() != null) {
-            for (Account account : accounts.getItems()) {
-                webpropertiesMap = new TreeMap<String, Map<String, String>>();
-                Webproperties webproperties = analytics.management().webproperties().list(account.getId()).execute();
-                if (webproperties.getItems() != null) {
-                    for (Webproperty webproperty : webproperties.getItems()) {
-                        profilesMap = new TreeMap<String, String>();
-                        Profiles profiles =
-                                analytics.management().profiles().list(account.getId(), webproperty.getId()).execute();
-                        if (profiles.getItems() != null) {
-                            for (Profile profile : profiles.getItems()) {
-                                profilesMap.put(profile.getName(), profile.getId());
-                            }
-                        }
-                        webpropertiesMap.put(webproperty.getName(), profilesMap);
-                    }
-                }
-                accountsMap.put(account.getName(), webpropertiesMap);
-            }
+        Webproperties webproperties = analytics.management().webproperties().list(ALL_WILDCARD).execute();
+        Profiles profiles = analytics.management().profiles().list(ALL_WILDCARD, ALL_WILDCARD).execute();
+        for (Account account : accounts.getItems()) {
+            accountIdToName.put(account.getId(), account.getName());
+            accountsMap.put(account.getName(), new TreeMap<String, Map<String, String>>());
+        }
+        for (Webproperty webproperty : webproperties.getItems()) {
+            webpropertyIdToName.put(webproperty.getId(), webproperty.getName());
+            accountsMap.get(accountIdToName.get(webproperty.getAccountId())).put(webproperty.getName(), new TreeMap<String, String>());
+        }
+        for (Profile profile : profiles.getItems()) {
+            accountsMap.get(accountIdToName.get(profile.getAccountId())).get(webpropertyIdToName.get(profile.getWebPropertyId())).put(profile.getName(), profile.getId());
         }
         return accountsMap;
     }
