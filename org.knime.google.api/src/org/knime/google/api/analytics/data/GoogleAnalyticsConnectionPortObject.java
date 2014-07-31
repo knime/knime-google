@@ -63,11 +63,11 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Port object containing a GoogleAnalyticsConnection.
+ * Port object containing a {@link GoogleAnalyticsConnection}.
  *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObject {
+public final class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObject {
 
     private GoogleAnalyticsConnectionPortObjectSpec m_spec;
 
@@ -77,10 +77,10 @@ public class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObjec
     public static final PortType TYPE = new PortType(GoogleAnalyticsConnectionPortObject.class);
 
     /**
-     * Constructor for framework.
+     * Constructor used by the framework.
      */
     public GoogleAnalyticsConnectionPortObject() {
-        // used by framework
+        // used by the framework
     }
 
     /**

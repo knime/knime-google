@@ -61,30 +61,30 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Specification for the GoogleApiConnectionPortObject.
+ * Specification for the {@link GoogleApiConnectionPortObject}.
  *
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
+public final class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
 
     private GoogleApiConnection m_googleApiConnection;
 
     /**
-     * Constructor for a port object spec that holds no GoogleApiConnection.
+     * Constructor for a port object spec that holds no {@link GoogleApiConnection}.
      */
     public GoogleApiConnectionPortObjectSpec() {
         m_googleApiConnection = null;
     }
 
     /**
-     * @param googleApiConnection The GoogleApiConnection that will be contained by this port object spec
+     * @param googleApiConnection The {@link GoogleApiConnection} that will be contained by this port object spec
      */
     public GoogleApiConnectionPortObjectSpec(final GoogleApiConnection googleApiConnection) {
         m_googleApiConnection = googleApiConnection;
     }
 
     /**
-     * @return The contained GoogleApiConnection object
+     * @return The contained {@link GoogleApiConnection} object
      */
     public GoogleApiConnection getGoogleApiConnection() {
         return m_googleApiConnection;

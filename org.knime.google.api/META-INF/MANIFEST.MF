@@ -9,3 +9,6 @@ Require-Bundle: org.knime.base;bundle-version="2.10.0",
  com.google.api;bundle-version="1.17.0",
  com.google.api.services.analytics;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: org.knime.google.api.analytics.data,
+ org.knime.google.api.data
+Bundle-Vendor: KNIME.com AG, Zurich, Switzerland
