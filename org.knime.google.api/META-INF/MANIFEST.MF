@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Google API Nodes
 Bundle-SymbolicName: org.knime.google.api;singleton:=true
-Bundle-Version: 2.10.0.qualifier
+Bundle-Version: 2.10.1.qualifier
+Bundle-Vendor: KNIME.com AG, Zurich, Switzerland
+Export-Package: org.knime.google.api.analytics.data,
+ org.knime.google.api.data
 Require-Bundle: org.knime.base;bundle-version="2.10.0",
  org.apache.commons.lang;bundle-version="2.6.0",
  com.google.api;bundle-version="1.17.0",
  com.google.api.services.analytics;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Export-Package: org.knime.google.api.analytics.data,
- org.knime.google.api.data
-Bundle-Vendor: KNIME.com AG, Zurich, Switzerland
