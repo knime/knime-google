@@ -3,13 +3,13 @@
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Google API Connector</name>
-	<shortDescription>Create a connection to access various Google APIs.</shortDescription>
+	<shortDescription>Create a connection to access various Google APIs. (Please note that we currently only provide nodes to connect to Google Analytics.)</shortDescription>
 	<fullDescription>
 		<intro>
-	Creates a connection to access various Google APIs.
+	Creates a connection to access various Google APIs. (Please note that we currently only provide nodes to connect to Google Analytics.)
 	<p>
 	You will need to create a project at <a href="https://console.developers.google.com/project">console.developers.google.com</a>
-	. To get your credentials you have to go to 'Credentials' → 'Create new	Client ID' and create a service account.
+	. To get your credentials you have to go to 'Credentials' → 'Create new	Client ID' and create a <b>service account</b>.
 	</p>
 	Please note: The specific Google API you want to use has to be enabled
 	under 'APIs'.
