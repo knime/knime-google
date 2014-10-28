@@ -161,6 +161,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
         config.setKeyFileLocation(m_keyFileLocation.getSelectedFile());
         config.setScopes(m_scopes.getText().trim().split("\n"));
         config.save(settings);
+        m_keyFileLocation.addToHistory();
     }
 
     /**
