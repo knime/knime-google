@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.ext.socialmedia"
-      label="KNIME Twitter API Nodes"
+      label="KNIME Social Media Connectors (Twitter &amp; Google)"
       version="3.0.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany">
 
