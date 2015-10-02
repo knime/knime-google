@@ -6,7 +6,7 @@
       provider-name="KNIME GmbH, Konstanz, Germany">
 
    <description>
-      This feature contains nodes to work with the Twitter API.
+      This feature contains nodes to work with the Twitter and Google API.
    </description>
 
    <copyright>
