@@ -68,6 +68,8 @@ import org.knime.core.node.util.ViewUtils;
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public final class GoogleAnalyticsConnectionPortObject extends AbstractSimplePortObject {
+    public static final class Serializer
+        extends AbstractSimplePortObjectSerializer<GoogleAnalyticsConnectionPortObject> { }
 
     private GoogleAnalyticsConnectionPortObjectSpec m_spec;
 

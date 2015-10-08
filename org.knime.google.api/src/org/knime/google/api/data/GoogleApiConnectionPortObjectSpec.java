@@ -66,6 +66,8 @@ import org.knime.core.node.util.ViewUtils;
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public final class GoogleApiConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
+    public static final class Serializer
+        extends AbstractSimplePortObjectSpecSerializer<GoogleApiConnectionPortObjectSpec> { }
 
     private GoogleApiConnection m_googleApiConnection;
 

@@ -10,4 +10,23 @@
       <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API" path="/social-media" />
       <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics" path="/social-media/googleapi" />
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#1e69af"
+            name="Google Analytics"
+            objectClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject"
+            objectSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#1e69af"
+            name="Google API"
+            objectClass="org.knime.google.api.data.GoogleApiConnectionPortObject"
+            objectSerializer="org.knime.google.api.data.GoogleApiConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec$Serializer">
+      </portType>
+   </extension>
 </plugin>
