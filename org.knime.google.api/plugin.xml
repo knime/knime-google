@@ -13,7 +13,7 @@
    <extension
          point="org.knime.core.PortType">
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="Google Analytics"
             objectClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject"
             objectSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject$Serializer"
@@ -21,7 +21,7 @@
             specSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec$Serializer">
       </portType>
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="Google API"
             objectClass="org.knime.google.api.data.GoogleApiConnectionPortObject"
             objectSerializer="org.knime.google.api.data.GoogleApiConnectionPortObject$Serializer"
