@@ -2,9 +2,9 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension point="org.knime.workbench.repository.nodes">
-      <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" id="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" />
-      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory" id="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory" />
-      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory" id="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory" />
+      <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory"  />
+      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory"  />
+      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory"  />
    </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API" path="/social-media" />
