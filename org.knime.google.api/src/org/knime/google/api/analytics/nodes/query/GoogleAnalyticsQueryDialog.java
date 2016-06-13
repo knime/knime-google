@@ -261,12 +261,25 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
                     if (column != null) {
                         String id = column.getId().replaceFirst("ga:", "");
                         String type = column.getAttributes().get("type");
-                        if (type.equals("DIMENSION")) {
-                            m_dimensionsModel.addElement(id);
-                        } else if (type.equals("METRIC")) {
-                            m_metricsModel.addElement(id);
+                        boolean cancel = false;
+                        if (id.contains("XX")) {
+                            int number = 1;
+                            if (type.equals("DIMENSION")) {
+                                number = openNumberDialog("Select custom dimension", id, m_addColumnButton);
+                            } else if (type.equals("METRIC")) {
+                                number = openNumberDialog("Select custom metric", id, m_addColumnButton);
+                            }
+                            id = id.replace("XX", ""+number);
+                            cancel = number == -1;
                         }
-                        refreshAddColumnButton();
+                        if (!cancel) {
+                            if (type.equals("DIMENSION")) {
+                                m_dimensionsModel.addElement(id);
+                            } else if (type.equals("METRIC")) {
+                                m_metricsModel.addElement(id);
+                            }
+                            refreshAddColumnButton();
+                        }
                     }
                 }
             }
@@ -758,6 +771,95 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
             }
         }
         dialog.dispose();
+    }
+
+    private int openNumberDialog(final String title, final String id, final Component relativeTo) {
+        Frame f = null;
+        Container c = getPanel().getParent();
+        while (c != null) {
+            if (c instanceof Frame) {
+                f = (Frame)c;
+                break;
+            }
+            c = c.getParent();
+        }
+        final JDialog dialog = new JDialog(f);
+        final AtomicBoolean apply = new AtomicBoolean(false);
+        JSpinner number = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        JButton ok = new JButton("OK");
+        JButton cancel = new JButton("Cancel");
+        Insets buttonMargin = new Insets(0, 0, 0, 0);
+        ok.setMargin(buttonMargin);
+        cancel.setMargin(buttonMargin);
+        dialog.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(final KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                    dialog.setVisible(false);
+                }
+            }
+        });
+        number.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(final KeyEvent e) {
+                if (e.getKeyChar() == '\n') {
+                    apply.set(true);
+                    dialog.setVisible(false);
+                } else if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+                    dialog.setVisible(false);
+                }
+            }
+        });
+        ok.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                apply.set(true);
+                dialog.setVisible(false);
+            }
+        });
+        cancel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                dialog.setVisible(false);
+            }
+        });
+        ok.setPreferredSize(cancel.getPreferredSize());
+        dialog.setLayout(new GridBagLayout());
+        dialog.setTitle(title);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        dialog.add(new JLabel(id), gbc);
+        gbc.weightx = 1;
+        gbc.gridx++;
+        gbc.gridwidth = 3;
+        dialog.add(number, gbc);
+        gbc.anchor = GridBagConstraints.SOUTHEAST;
+        gbc.gridwidth = 1;
+        gbc.gridy++;
+        dialog.add(new JLabel(), gbc);
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx++;
+        dialog.add(ok, gbc);
+        gbc.gridx++;
+        dialog.add(cancel, gbc);
+        dialog.pack();
+        dialog.setLocationRelativeTo(relativeTo);
+        dialog.setModal(true);
+        dialog.setVisible(true);
+        // Continues here after dialog is closed
+        int result = -1;
+        if (apply.get()) {
+            result = (Integer)number.getValue();
+        }
+        dialog.dispose();
+        return result;
     }
 
 }
