@@ -83,6 +83,7 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -506,7 +507,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         for (Column column : m_columnMap.values()) {
             String columnGroup = column.getAttributes().get("group");
             if (all || columnGroup.equals(group)) {
-                m_columnSelection.addItem(column.getAttributes().get("uiName"));
+                m_columnSelection.addItem(createReadableName(column));
             }
         }
         if (m_columnSelection.getItemCount() > 0) {
@@ -627,7 +628,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
                     Set<String> groups = new TreeSet<String>();
                     for (Column column : m_columns.getItems()) {
                         if (!"DEPRECATED".equals(column.getAttributes().get("status"))) {
-                            m_columnMap.put(column.getAttributes().get("uiName"), column);
+                            m_columnMap.put(createReadableName(column), column);
                             groups.add(column.getAttributes().get("group"));
                         }
                     }
@@ -860,6 +861,13 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         }
         dialog.dispose();
         return result;
+    }
+
+    private String createReadableName(final Column column) {
+        String readableName = column.getAttributes().get("uiName");
+        readableName += "  (" + column.getId().replaceFirst("ga:", "") + ")";
+        readableName = StringUtils.abbreviate(readableName, 50);
+        return readableName;
     }
 
 }
