@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheets.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google New Spreadsheet Writer</name>
+	<shortDescription>Write a table to a new spreadsheet in Google Sheets.</shortDescription>
+	<fullDescription>
+		<intro>
+			Writes the input table to a new spreadsheet's sheet in Google Sheets.
+			The node outputs a table containing the created spreadsheet's name and id, as well as the sheet's name.
+		</intro>
+		<option name="Spreadsheet name">
+			The name of the spreadsheet to be created.
+		</option>
+		<option name="Sheet name">
+			The name of the sheet to which the table should be written.
+		</option>
+		<option name="Write column name">
+			Whether the column names should be written in the first row.
+		</option>
+		<option name="Write row id">
+			Whether the row ids should be written i the first column.
+		</option>
+		<option name="Raw">
+			Whether the cells should be written in raw format. E.g. so that "=xy" is not interpreted as a formula.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Sheets Connection">A Google Sheets connection.</inPort>
+		<inPort index="1" name="Buffered data table">Table to be written to a google sheet</inPort>
+		<outPort name="Table" index="0">Table containing the spreadsheet name, sheet name and spreadsheet ID.</outPort>
+	</ports>
+</knimeNode>

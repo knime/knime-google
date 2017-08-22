@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheets.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Spreadsheet Reader</name>
+	<shortDescription>Read tables from Google Sheets.</shortDescription>
+	<fullDescription>
+		<intro>
+			Reads a google sheet, given the spreadsheet id and the specified range in A1 notation
+			<p>
+			The spreadsheet id can be found in the URL.
+			https://docs.google.com/spreadsheets/d/<b>1qpyC0XzvTcKT6EISywvqESX3A0MwQoFDE8p-Bll4hps</b>/edit#gid=0.
+			</p>
+			<p>
+				For more information on spreadsheet ids visit: 
+				<a href="https://developers.google.com/sheets/api/guides/concepts#spreadsheet_id">
+				developers.google.com/sheets/api/guides/concepts#spreadsheet_id</a>
+			</p>
+			<p>
+				For more information about the A1 notation visit: 
+				<a href="https://developers.google.com/sheets/api/guides/concepts#a1_notation">
+				developers.google.com/sheets/api/guides/concepts#a1_notation</a>
+			</p>
+		</intro>
+		<option name="Spreadsheet ID">
+			The spreadsheet's ID.
+		</option>
+		<option name="Sheet range">
+			The range of the spreadsheet that should be read. E.g. "Sheet1", "Sheet1!A1:E100"
+		</option>
+		<option name="Read column name">
+			Whether the first row of the sheet should be read as column names.
+		</option>
+		<option name="Read row id">
+			Whether the first column of the sheet should be read as row ids.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Sheets Connection">A Google Sheets Connection.
+		</inPort>
+		<outPort name="Buffered Data Table" index="0">The retrieved sheet.</outPort>
+	</ports>
+</knimeNode>
