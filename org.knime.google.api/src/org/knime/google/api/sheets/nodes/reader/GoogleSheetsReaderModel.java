@@ -208,6 +208,7 @@ public class GoogleSheetsReaderModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        // TODO make sure we at least try to guess the column types in the future. Behaviour maybe similiar to excel node. Also same missing value handling (if any?).
         return new PortObjectSpec[]{null};
     }
 

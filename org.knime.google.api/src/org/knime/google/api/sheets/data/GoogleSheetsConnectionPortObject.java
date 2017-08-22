@@ -69,6 +69,9 @@ import org.knime.core.node.util.ViewUtils;
  * @author Ole Ostergaard, KNIME GmbH
  */
 public final class GoogleSheetsConnectionPortObject extends AbstractSimplePortObject {
+    /**
+     * TODO
+     */
     public static final class Serializer
         extends AbstractSimplePortObjectSerializer<GoogleSheetsConnectionPortObject> { }
 
@@ -77,6 +80,7 @@ public final class GoogleSheetsConnectionPortObject extends AbstractSimplePortOb
     /**
      * The type of this port.
      */
+    @SuppressWarnings("hiding")
     public static final PortType TYPE =
         PortTypeRegistry.getInstance().getPortType(GoogleSheetsConnectionPortObject.class);
 

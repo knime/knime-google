@@ -105,6 +105,7 @@ public final class GoogleSheetsConnection {
      * This creates a pop-up to confirm access to the necessary scopes.
      *
      * @param applicationName Name of this application as it is shown to the Google API
+     * @param config TODO
      * @throws IOException
      * @throws GeneralSecurityException
      */

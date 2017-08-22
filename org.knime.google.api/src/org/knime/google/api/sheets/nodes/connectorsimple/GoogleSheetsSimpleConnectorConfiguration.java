@@ -61,7 +61,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 public class GoogleSheetsSimpleConnectorConfiguration {
 
     /**
-     * @param googleApiConnection The GoogleApiConnection to use
+     * @param config TODO
      * @return GoogleAnalyticsConnection based on this configuration
      * @throws InvalidSettingsException If the current configuration is not valid
      * @throws IOException
