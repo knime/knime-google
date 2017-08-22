@@ -128,7 +128,6 @@ public class GoogleSheetsConnectorModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        GoogleSheetsConnectorConfiguration config = new GoogleSheetsConnectorConfiguration();
     }
 
     /**

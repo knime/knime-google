@@ -70,8 +70,6 @@ import com.google.api.services.sheets.v4.Sheets;
  */
 public final class GoogleSheetsConnection {
 
-    private static final String ALL_WILDCARD = "~all";
-
     private static final String CFG_APPLICATION_NAME = "applicationName";
 
     private static final String CFG_SIMPLE = "simpleAuth";

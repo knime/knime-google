@@ -80,12 +80,10 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Create;
-import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties;
-import com.google.api.services.sheets.v4.model.ValueRange;
 
 /**
  * The model of the GoogleSheetsReader node.
@@ -165,8 +163,6 @@ public class GoogleSheetsWriterModel extends NodeModel {
         GoogleSheetsConnection connection =
                 ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
-        final String valueInputOption = m_writeRawModel.getBooleanValue() ? "RAW" : "USER_ENTERED";
-
         BufferedDataTable table = (BufferedDataTable)inObjects[1];
 
         Spreadsheet content = new Spreadsheet();
@@ -200,10 +196,6 @@ public class GoogleSheetsWriterModel extends NodeModel {
                 headers.add(tableColumnNames[i].toString());
             }
             columnNames.add(headers);
-            ValueRange vRange = new ValueRange().setValues(columnNames);
-            AppendValuesResponse headerResult = connection.getSheetsService()
-                    .spreadsheets().values().append(spreadsheetId, m_sheetNameModel.getStringValue(), vRange)
-                    .setValueInputOption(valueInputOption).execute();
         }
         // table content
         CloseableRowIterator iterator = table.iterator();
@@ -220,12 +212,6 @@ public class GoogleSheetsWriterModel extends NodeModel {
             }
             sheetData.add(sheetRow);
         }
-        ValueRange body = new ValueRange().setValues(sheetData);
-        AppendValuesResponse result =
-                connection.getSheetsService().spreadsheets().values()
-                .append(spreadsheetId, m_sheetNameModel.getStringValue(), body)
-                .setValueInputOption(valueInputOption)
-                .execute();
 
         BufferedDataContainer outContainer = exec.createDataContainer(createSpec());
         outContainer.addRowToTable(new DefaultRow("Row" + 0,
