@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.api.services.analytics.AnalyticsScopes;
+import com.google.api.services.sheets.v4.SheetsScopes;
 
 /**
  * Contains a map of all known scopes.
@@ -69,6 +70,10 @@ public class GoogleApiKnownScopes {
         MAP.put("Analytics readonly", AnalyticsScopes.ANALYTICS_READONLY);
         MAP.put("Analytics edit", AnalyticsScopes.ANALYTICS_EDIT);
         MAP.put("Analytics manage users", AnalyticsScopes.ANALYTICS_MANAGE_USERS);
+        MAP.put("Sheets drive", SheetsScopes.DRIVE);
+        MAP.put("Sheets drive readonly",SheetsScopes.DRIVE_READONLY);
+        MAP.put("Sheets", SheetsScopes.SPREADSHEETS);
+        MAP.put("Sheets readonly", SheetsScopes.SPREADSHEETS_READONLY);
     }
 
 }
