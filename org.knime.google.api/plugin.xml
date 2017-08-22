@@ -5,10 +5,48 @@
       <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory"  />
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory"  />
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory"  />
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.writer.GoogleSheetsWriterFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            factory-class="org.knime.google.api.sheets.nodes.connectorsimple.GoogleSheetsSimpleConnectorFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.specificwriter.GoogleSheetsSpecificWriterFactory">
+      </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API" path="/social-media" />
       <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics" path="/social-media/googleapi" />
+      <category
+            description="Nodes to access various Google APIs"
+            icon="icons/googleapicategory.png"
+            level-id="googleapilabs"
+            name="Google API (labs)"
+            path="/labs">
+      </category>
+      <category
+            description="Nodes for interaction with Google Sheets"
+            icon="icons/googlesheetscategory.png"
+            level-id="googlesheets"
+            name="Google Sheets"
+            path="/labs/googleapilabs">
+      </category>
    </extension>
    <extension
          point="org.knime.core.PortType">
@@ -29,6 +67,15 @@
             objectSerializer="org.knime.google.api.data.GoogleApiConnectionPortObject$Serializer"
             specClass="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec"
             specSerializer="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#1eb9dc"
+            hidden="true"
+            name="Google Sheets"
+            objectClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject"
+            objectSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec$Serializer">
       </portType>
    </extension>
 </plugin>
