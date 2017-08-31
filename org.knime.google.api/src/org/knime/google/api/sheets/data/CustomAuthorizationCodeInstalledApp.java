@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,36 +41,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Aug 21, 2017 (oole): created
+ *   Aug 31, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.connectorsimple;
+package org.knime.google.api.sheets.data;
 
+import java.awt.Desktop;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
-import org.knime.google.api.sheets.data.GoogleSheetsConnection;
+import org.knime.core.util.DesktopUtil;
+
+import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
+import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.java6.auth.oauth2.VerificationCodeReceiver;
+import com.google.api.client.util.Preconditions;
 
 /**
- * Configuration of the GoogleSheetsConnector node.
+ * Custom {@link AuthorizationCodeInstalledApp} to fix GTK3/2 problems. Uses {@link DesktopUtil#browse(java.net.URL)}
+ * instead of {@link Desktop#isDesktopSupported()} which crashes when launched without the GTK version being set to 2.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsSimpleConnectorConfiguration {
+public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
 
     /**
-     *  Returns a new GoogleSheetsConnection.
+     * Constructor.
      *
-     * @param config Whether the creation is called from the configuration of the node or the execute.
-     * @return GoogleAnalyticsConnection based on this configuration
-     * @throws IOException If the current configuration is not valid
-     * @throws GeneralSecurityException If the current configuration is not valid
+     * @param flow authorization code flow
+     * @param receiver verification code receiver
      */
-    public GoogleSheetsConnection createGoogleSheetsConnection(final boolean config)
-            throws IOException, GeneralSecurityException {
-        return new GoogleSheetsConnection("KNIME-Google-Sheets-Simple-Connector", config);
+    public CustomAuthorizationCodeInstalledApp(final AuthorizationCodeFlow flow, final VerificationCodeReceiver receiver) {
+        super(flow, receiver);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onAuthorization(final AuthorizationCodeRequestUrl authorizationUrl) throws IOException {
+          Preconditions.checkNotNull(authorizationUrl);
+          // Attempt to open it in the browser
+          DesktopUtil.browse(authorizationUrl.toURL());
+      }
 
 }

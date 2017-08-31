@@ -90,7 +90,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
             return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec(false))};
         } catch (Exception e) {
             e.printStackTrace();
-            throw new InvalidSettingsException("Something went wrong during authentication");
+            throw new InvalidSettingsException("Something went wrong during authentication: " + e.getMessage(), e);
         }
     }
 
@@ -102,7 +102,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
         try {
             return new PortObjectSpec[]{createSpec(true)};
         } catch (Exception e) {
-            throw new InvalidSettingsException("Something went wrong during authentication");
+            throw new InvalidSettingsException("Something went wrong during authentication" + e.getMessage(), e);
         }
     }
 
