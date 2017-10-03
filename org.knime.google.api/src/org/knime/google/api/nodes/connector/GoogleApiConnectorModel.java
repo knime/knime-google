@@ -49,6 +49,7 @@ package org.knime.google.api.nodes.connector;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -84,7 +85,8 @@ public class GoogleApiConnectorModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleApiConnectionPortObject(createSpec())};
+        return createSpec(true).map(c -> new PortObject[] {new GoogleApiConnectionPortObject(c)})
+                .orElseThrow(() -> new IllegalStateException("Optional expected to be set here"));
     }
 
     /**
@@ -92,7 +94,7 @@ public class GoogleApiConnectorModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec()};
+        return createSpec(false).map(c -> new PortObjectSpec[] {c}).orElse(null);
     }
 
     /**
@@ -149,11 +151,12 @@ public class GoogleApiConnectorModel extends NodeModel {
     }
 
     /**
-     * @return The spec of this node, containing the GoogleApiConnection for the current configuration
-     * @throws InvalidSettingsException If the current configuration is not valid
+     * Creates the port object spec, if possible. For details see
+     * {@link GoogleApiConnectorConfiguration#createGoogleApiConnection(boolean)}
      */
-    private GoogleApiConnectionPortObjectSpec createSpec() throws InvalidSettingsException {
-        return new GoogleApiConnectionPortObjectSpec(m_config.createGoogleApiConnection());
+    private Optional<GoogleApiConnectionPortObjectSpec> createSpec(final boolean isDuringExecute)
+            throws InvalidSettingsException {
+        return m_config.createGoogleApiConnection(isDuringExecute).map(c -> new GoogleApiConnectionPortObjectSpec(c));
     }
 
 }
