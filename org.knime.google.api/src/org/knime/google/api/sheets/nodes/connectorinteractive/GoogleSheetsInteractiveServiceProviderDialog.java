@@ -45,31 +45,47 @@
  * History
  *   Aug 21, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.connectorsimple;
+package org.knime.google.api.sheets.nodes.connectorinteractive;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
-import org.knime.google.api.sheets.data.GoogleSheetsConnection;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Configuration of the GoogleSheetsConnector node.
+ * The dialog for the GoogleSheetsReader node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsSimpleConnectorConfiguration {
+public class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
+
+    private GoogleInteractiveServiceProviderSettings m_settings =
+            GoogleSheetsInteractiveServiceProviderModel.getSettings();
+    private GoogleInteractiveServiceProviderComponents m_components =
+            new GoogleInteractiveServiceProviderComponents(m_settings);
 
     /**
-     *  Returns a new GoogleSheetsConnection.
-     *
-     * @param config Whether the creation is called from the configuration of the node or the execute.
-     * @return GoogleAnalyticsConnection based on this configuration
-     * @throws IOException If the current configuration is not valid
-     * @throws GeneralSecurityException If the current configuration is not valid
+     * Constructor creating the dialogs content.
      */
-    public GoogleSheetsConnection createGoogleSheetsConnection(final boolean config)
-            throws IOException, GeneralSecurityException {
-        return new GoogleSheetsConnection("KNIME-Google-Sheets-Simple-Connector", config);
+    public GoogleSheetsInteractiveServiceProviderDialog() {
+        addTab("Authentication", m_components.getPanel());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_components.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+        m_components.loadSettingsFrom(settings, specs);
+    }
 }

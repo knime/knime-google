@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheetsconnector.png" type="Source"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Sheets Interactive Service Provider</name>
+	<shortDescription>Create a Google Sheets connection.</shortDescription>
+	<fullDescription>
+		<intro>
+			Create a Google Sheets connection using interactive authentication, via pop-up.
+			<p>
+			Authentication happens in the dialog. A pop-up will appear that asks the user to grant access
+			to Google Sheets and Google Drive.
+			</p>
+			<p>
+			Received authentication tokens will, by default, be saved in the node. 
+			It is however possible to set a custom storage location.
+			</p>
+			<p>
+			Access can be revoked any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
+			</p>
+			<p>
+			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
+			</p>
+		</intro>
+		<option name="Credential Location">
+		Where the credentials received during authentication should be stored.
+			<br/>
+			<b>Default</b>
+			<br/>
+			Credentials will be stored in the node settings.
+			<br/>
+			<b>Custom</b>
+			<p>
+			<b>User id</b>
+			<br/>
+			A user id under which the tokens should be saved. Specifying different user ids generates different credentials
+			<br/>
+			<b>Select Directory</b>
+			<br/>
+			The directory to which the credentials should be saved.
+			</p>
+		</option>
+		<option name="(Re-)Authentication">
+		This button will open a dialog to authenticate with google services.
+		</option>
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="Google Sheets Connection">A connection that can be used to
+			access Google Sheets.</outPort>
+	</ports>
+</knimeNode>

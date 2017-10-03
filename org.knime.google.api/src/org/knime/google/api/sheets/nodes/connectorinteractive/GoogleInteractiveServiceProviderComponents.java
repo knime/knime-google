@@ -1,0 +1,192 @@
+/*
+ * ------------------------------------------------------------------------
+ *
+ *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 5, 2017 (oole): created
+ */
+package org.knime.google.api.sheets.nodes.connectorinteractive;
+
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
+import org.knime.google.api.util.DialogComponenCredentialLocation;
+
+import com.google.api.services.sheets.v4.Sheets;
+
+/**
+ * This class holds the components for the GoogleInterActiveServiceProvider
+ *
+ * @author Ole Ostergaard, KNIME GmbH
+ */
+public class GoogleInteractiveServiceProviderComponents {
+
+    private final GoogleInteractiveServiceProviderSettings m_settings;
+
+    private final JButton m_authTestButton = new JButton("(Re-)Authentication");
+
+    private DialogComponenCredentialLocation m_credentialLocationComponent;
+
+    /**
+     * Constructor.
+     *
+     * @param settings The settings for the dialog components
+     */
+    public GoogleInteractiveServiceProviderComponents(
+        final GoogleInteractiveServiceProviderSettings settings) {
+        m_settings = settings;
+    }
+
+    /**
+     * Returns the {@link JButton} for the authentication test.
+     *
+     * @return The button for the authentication test
+     */
+    protected JButton getAuthTestButton() {
+        return m_authTestButton;
+    }
+
+    /**
+     * Returns {@link DialogComponentFileChooser} for the credential storage location.
+     *
+     * @return The component for the credential storage location
+     */
+    protected DialogComponenCredentialLocation getCredentialLocationComponent() {
+        m_credentialLocationComponent = new DialogComponenCredentialLocation(m_settings.getCredentialLocationModel());
+        return m_credentialLocationComponent;
+    }
+
+    /**
+     * Returns the {@link JPanel} containing the dialog components
+     *
+     * @return The Panel containing the dialog components
+     */
+    public JPanel getPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(getCredentialLocationComponent().getComponentPanel(), gbc);
+        gbc.gridy++;
+        m_authTestButton.setBackground(Color.yellow);
+        m_authTestButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                Sheets service = null;
+                boolean exception = false;
+                try {
+                    service = GoogleSheetsInteractiveAuthentication
+                        .getAuthRenewedSheetsService(m_settings.getCredentialLocation(), m_settings.getUserString());
+                    m_settings.setByteFile();
+                } catch (Exception ee) {
+                    exception = true;
+                    m_authTestButton.setBackground(Color.red);
+                }
+                if (service != null && !exception) {
+                    m_authTestButton.setBackground(Color.green);
+
+                } else {
+                    m_authTestButton.setBackground(Color.red);
+                }
+            }
+        });
+        gbc.gridwidth = 2;
+        panel.add(getAuthTestButton(), gbc);
+        return panel;
+    }
+
+    /**
+    *
+    * This method has to be called in {@link NodeDialogPane}.
+    *
+    * @param settings
+    *            The node settings.
+    * @param specs
+    *            The specs of inputs.
+    * @throws NotConfigurableException
+    */
+   public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+       m_credentialLocationComponent.loadSettingsFrom(settings, specs);
+       m_authTestButton.setBackground(Color.yellow);
+       try {
+           m_settings.loadAuth(settings);
+       } catch (InvalidSettingsException e) {
+           // Not authenticated
+       }
+   }
+
+    /**
+     * This method has to be called in the {@link NodeDialogPane}.
+     *
+     * @param settings The node settings.
+     * @throws InvalidSettingsException If the settings are invalid
+     */
+    public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_credentialLocationComponent.saveSettingsTo(settings);
+        m_settings.saveAuth(settings);
+    }
+
+}

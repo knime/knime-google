@@ -45,7 +45,7 @@
  * History
  *   Aug 21, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.connectorsimple;
+package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -56,14 +56,14 @@ import org.knime.core.node.NodeView;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsSimpleConnectorFactory extends NodeFactory<GoogleSheetsSimpleConnectorModel> {
+public class GoogleSheetsInteractiveServiceProviderFactory extends NodeFactory<GoogleSheetsInteractiveServiceProviderModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public GoogleSheetsSimpleConnectorModel createNodeModel() {
-        return new GoogleSheetsSimpleConnectorModel();
+    public GoogleSheetsInteractiveServiceProviderModel createNodeModel() {
+        return new GoogleSheetsInteractiveServiceProviderModel();
     }
 
     /**
@@ -78,7 +78,7 @@ public class GoogleSheetsSimpleConnectorFactory extends NodeFactory<GoogleSheets
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleSheetsSimpleConnectorModel> createNodeView(final int viewIndex, final GoogleSheetsSimpleConnectorModel nodeModel) {
+    public NodeView<GoogleSheetsInteractiveServiceProviderModel> createNodeView(final int viewIndex, final GoogleSheetsInteractiveServiceProviderModel nodeModel) {
         return null;
     }
 
@@ -95,7 +95,7 @@ public class GoogleSheetsSimpleConnectorFactory extends NodeFactory<GoogleSheets
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleSheetsSimpleConnectorDialog();
+        return new GoogleSheetsInteractiveServiceProviderDialog();
     }
 
 }

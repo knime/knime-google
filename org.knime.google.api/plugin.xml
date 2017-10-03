@@ -22,7 +22,7 @@
       </node>
       <node
             category-path="/labs/googleapilabs/googlesheets"
-            factory-class="org.knime.google.api.sheets.nodes.connectorsimple.GoogleSheetsSimpleConnectorFactory">
+            factory-class="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory">
       </node>
       <node
             category-path="/labs/googleapilabs/googlesheets"

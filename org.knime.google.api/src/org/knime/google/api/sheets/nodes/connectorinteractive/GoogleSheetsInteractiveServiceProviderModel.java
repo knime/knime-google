@@ -45,10 +45,11 @@
  * History
  *   Aug 21, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.connectorsimple;
+package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -61,22 +62,33 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
+import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 
 /**
  * The model of the GoogleSheetsConnector node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsSimpleConnectorModel extends NodeModel {
+public class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
 
-    private GoogleSheetsSimpleConnectorConfiguration m_config = new GoogleSheetsSimpleConnectorConfiguration();
+    private GoogleInteractiveServiceProviderSettings m_settings = getSettings();
+
+    /**
+     * Returns the {@link GoogleInteractiveServiceProviderSettings} for this node.
+     *
+     * @return The settings for this node
+     */
+    protected static GoogleInteractiveServiceProviderSettings getSettings() {
+        return new GoogleInteractiveServiceProviderSettings();
+    }
 
     /**
      * Constructor of the node model.
      */
-    protected GoogleSheetsSimpleConnectorModel() {
+    protected GoogleSheetsInteractiveServiceProviderModel() {
         super(new PortType[]{},
                 new PortType[]{GoogleSheetsConnectionPortObject.TYPE});
     }
@@ -86,12 +98,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        try {
-            return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec(false))};
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new InvalidSettingsException("Something went wrong during authentication: " + e.getMessage(), e);
-        }
+            return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec())};
     }
 
     /**
@@ -99,10 +106,31 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new PortObjectSpec[]{createSpec()};
+    }
+
+    /**
+     * Returns the specs given the user, credential path and execution state.
+     *
+     * @return The spec of this node, containing the GoogleApiConnection for the current configuration
+     * @throws InvalidSettingsException If the current configuration is not valid
+     * @throws IOException If the current configuration is not valid
+     * @throws URISyntaxException
+     * @throws GeneralSecurityExceptionGeneralSecurityException If the current configuration is not valid
+     */
+    private GoogleSheetsConnectionPortObjectSpec createSpec()
+            throws InvalidSettingsException {
+        if (m_settings.inNodeCredential() && m_settings.getEncodedStoredCredential() == null) {
+            throw new InvalidSettingsException("Not authenticated. Authenticate in the node dialog.");
+        }
         try {
-            return new PortObjectSpec[]{createSpec(true)};
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Something went wrong during authentication" + e.getMessage(), e);
+            return new GoogleSheetsConnectionPortObjectSpec(
+                new GoogleSheetsConnection(
+                    GoogleSheetsInteractiveAuthentication.APP_NAME, m_settings.getCredentialLocation(),
+                    m_settings.getUserString(), m_settings.getEncodedStoredCredential(),
+                    m_settings.inNodeCredential()));
+        } catch (IOException | GeneralSecurityException | URISyntaxException e) {
+            throw new InvalidSettingsException("(Re-)Authenticate using the settings dialog.\n");
         }
     }
 
@@ -111,7 +139,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    CanceledExecutionException {
         // not used
     }
 
@@ -120,7 +148,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    CanceledExecutionException {
         // not used
     }
 
@@ -129,6 +157,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_settings.saveSettingsTo(settings);
     }
 
     /**
@@ -136,6 +165,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_settings.validateSettings(settings);
     }
 
     /**
@@ -143,6 +173,7 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_settings.loadValidatedSettingsFrom(settings);
     }
 
     /**
@@ -152,17 +183,4 @@ public class GoogleSheetsSimpleConnectorModel extends NodeModel {
     protected void reset() {
         // not used
     }
-
-    /**
-     * @return The spec of this node, containing the GoogleApiConnection for the current configuration
-     * @throws InvalidSettingsException If the current configuration is not valid
-     * @throws IOException
-     * @throws GeneralSecurityExceptionGeneralSecurityException
-     */
-    private GoogleSheetsConnectionPortObjectSpec createSpec(final boolean config)
-            throws InvalidSettingsException, IOException, GeneralSecurityException {
-        return new GoogleSheetsConnectionPortObjectSpec(
-                m_config.createGoogleSheetsConnection(config));
-    }
-
 }

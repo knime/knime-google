@@ -48,12 +48,15 @@
  */
 package org.knime.google.api.sheets.data;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderDialog;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -67,6 +70,7 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.Spreadsheet;
 
 /**
  *
@@ -75,72 +79,141 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 public class GoogleSheetsInteractiveAuthentication {
 
     /** Global instance of the JSON factory. */
-    private static final JsonFactory JSON_FACTORY =
-        new JacksonFactory();
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     /** Global instance of the HTTP transport. */
     private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    /** Directory to store user credentials for this application. */
-    private static final java.io.File DATA_STORE_DIR = new java.io.File(
-        System.getProperty("user.home"), ".credentials/sheets.googleapis.com-knime-analytics-platform");
+    /** The application name, for which the credentials are stored */
+    public static String APP_NAME = "KNIME-Google-Sheets-Interactive-Connector";
 
-    /** Global instance of the {@link FileDataStoreFactory}. */
-    private static FileDataStoreFactory DATA_STORE_FACTORY;
-
-    /** Global instance of the scopes required by this quickstart.
-    *
-    * If modifying these scopes, delete your previously saved credentials
-    * at ~/.credentials/sheets.googleapis.com-java-quickstart
-    */
-   private static final List<String> SCOPES =
-       Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_READONLY);
+    /** The scopes required for the {@link GoogleSheetsInteractiveAuthentication} */
+    private static final List<String> SCOPES = Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_READONLY);
 
     /**
-     * Creates an authorized Credential object.
+     * Returns a {@link Sheets} service for the given user from the given application name
+     * and the path for the data store file. The authentication is verified.
+     *
+     * @param credentialPath the path for the data store file
+     * @param user the user for which the credentials should be used
+     * @return A sheets service authenticated for the given user, with credentials read from
+     * the given location of the data store file
+     * @throws IOException If there is a problem reading the credentials from the data storage file
+     * @throws GeneralSecurityException If there is a problem testing the sheet service
+     */
+    public static Sheets getExistingAuthSheetService(final String credentialPath,
+        final String user) throws IOException, GeneralSecurityException {
+        Credential credential = existingAuthorization(credentialPath, user);
+        Sheets service =
+            getSheetService(credential);
+        testService(service);
+        return service;
+    }
+
+    /**
+     * Tries to use pre-existing authentication. If the permissions for the app are revoked in the google settings,
+     * the authentication tokens need to be removed before they can be renewed. This is handled.
+     * The authentication is verified.
+     *
+     * Used in the {@link GoogleSheetsInteractiveServiceProviderDialog}.
+     *
+     * @param credentialPath The path to the data store file
+     * @param user The user to be used for authentication
+     * @return An authenticated sheet service.
+     * @throws IOException If there is a problem reading the credentials from the data storage file
+     * @throws GeneralSecurityException If there is a problem testing the sheet service
+     */
+    public static Sheets getAuthRenewedSheetsService(final String credentialPath,
+        final String user) throws IOException, GeneralSecurityException {
+        try {
+            return getAuthSheetsService(credentialPath, user);
+        } catch (Exception e) {
+            getAuthorizationCodeFlow(credentialPath).getCredentialDataStore().delete(user);
+            return getAuthSheetsService(credentialPath, user);
+        }
+    }
+
+
+    /**
+     * Creates an authorized credential object.
+     * If the given user is not yet authenticated a pop-up will ask the user to authenticate.
+     * The acquired authentication token will be stored in the given {@link File}.
      *
      * @return an authorized Credential object.
-     * @throws IOException
-     * @throws GeneralSecurityException
+     * @throws IOException If there is a problem reading the credentials from the data storage file
      */
-    public static Credential authorize() throws IOException, GeneralSecurityException {
-        if (DATA_STORE_FACTORY == null) {
-            DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
-        }
-        // Load client secrets.
-        final InputStream in =
-            GoogleSheetsConnection.class.getResourceAsStream("client_secret.json");
-        final GoogleClientSecrets clientSecrets =
-            GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-        // Build flow and trigger user authorization request.
-        final GoogleAuthorizationCodeFlow flow =
-                new GoogleAuthorizationCodeFlow.Builder(
-                        HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(DATA_STORE_FACTORY)
-                .setAccessType("offline")
-                .build();
-        final Credential credential = new CustomAuthorizationCodeInstalledApp(
-            flow, new LocalServerReceiver()).authorize("user");
+    private static Credential authorize(final String credentialPath, final String user)
+        throws IOException {
+        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialPath);
+        final Credential credential =
+            new CustomAuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(user);
         return credential;
     }
 
     /**
+     * Returns credentials for the given user from the given data store file.
+     *
+     * @param credentialPath
+     * @param user The user for which the credentials should be read from the data storage file
+     * @return The credentials for the given user from the given data storage file
+     * @throws IOException If there is a problem reading the credentials from the data storage file
+     */
+    private static Credential existingAuthorization(final String credentialPath, final String user) throws IOException {
+        return getAuthorizationCodeFlow(credentialPath).loadCredential(user);
+    }
+
+    private static Sheets getSheetService(final Credential credential) {
+        return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                .setApplicationName(APP_NAME).build();
+    }
+
+    /**
      * Build and return an authorized Sheets API client service.
-     * @param applicationName
+     *
+     * Used to do the interactive authorization
+     *
+     * @param credentialPath The path to where the credentials should be saved
+     * @param user The user whose credentials should be used.
      * @param config whether the instance is for configuration
      * @return an authorized Sheets API client service
-     * @throws IOException
-     * @throws GeneralSecurityException
+     * @throws IOException If there is a problem reading the credentials from the data storage file
+     * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    public static Sheets getSheetsService(final String applicationName, final boolean config) throws IOException, GeneralSecurityException {
-        if (!config) {
-            final Credential credential = authorize();
-            return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-                    .setApplicationName(applicationName)
-                    .build();
-        } else {
-            return null;
+    private static Sheets getAuthSheetsService(final String credentialPath,
+        final String user) throws IOException, GeneralSecurityException {
+            final Credential credential = authorize(credentialPath, user);
+            Sheets service = getSheetService(credential);
+            testService(service);
+            return service;
+    }
+
+
+    private static File getDataStoreFile(final String credentialPath) {
+        return new File(credentialPath, APP_NAME);
+    }
+
+    private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final String credentialPath) throws IOException {
+        FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(getDataStoreFile(credentialPath));
+        // Load client secrets.
+        final InputStream in = GoogleSheetsConnection.class.getResourceAsStream("client_secret.json");
+        final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+
+
+        return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(dataStoreFactory).setAccessType("offline").build();
+    }
+
+    /**
+     * Tests the Sheets Service by reading a public example spreadsheet
+     *  to make sure that the credentials are still valid.
+     *
+     * @param service The sheet service to be tested
+     * @throws IOException If the service is not properly authenticated
+     */
+    private static void testService(final Sheets service) throws IOException {
+        Spreadsheet result = service.spreadsheets().get("1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms").execute();
+        if (result == null) {
+            throw new IOException("Could not get the requested data");
         }
     }
 }
