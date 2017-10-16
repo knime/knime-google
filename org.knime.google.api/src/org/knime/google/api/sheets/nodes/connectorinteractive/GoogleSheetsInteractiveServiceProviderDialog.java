@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
+final class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
 
     private GoogleInteractiveServiceProviderSettings m_settings =
             GoogleSheetsInteractiveServiceProviderModel.getSettings();

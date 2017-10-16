@@ -70,7 +70,7 @@ import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleInteractiveServiceProviderSettings {
+final class GoogleInteractiveServiceProviderSettings {
 
     private static final String DEFAULT_USERID = "sheetUser";
 
@@ -257,4 +257,6 @@ public class GoogleInteractiveServiceProviderSettings {
     public boolean inNodeCredential() {
         return m_credentialLocationModel.useDefault();
     }
+
+
 }

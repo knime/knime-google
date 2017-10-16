@@ -150,9 +150,6 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
             case DEFAULT:
                 break;
             case CUSTOM:
-                if (userId == null || userId.isEmpty()) {
-                    throw new InvalidSettingsException("Please provide a valid user id");
-                }
                 if (credentialLocation == null || credentialLocation.isEmpty()){
                     throw new InvalidSettingsException("Please provide a valid location");
                 }

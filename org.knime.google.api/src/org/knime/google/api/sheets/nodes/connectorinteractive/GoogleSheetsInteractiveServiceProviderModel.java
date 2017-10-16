@@ -72,7 +72,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
+final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
 
     private GoogleInteractiveServiceProviderSettings m_settings = getSettings();
 

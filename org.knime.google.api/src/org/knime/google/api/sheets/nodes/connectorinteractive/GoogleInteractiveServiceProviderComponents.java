@@ -54,8 +54,13 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.InvalidPathException;
+import java.security.GeneralSecurityException;
 
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -67,6 +72,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.DialogComponenCredentialLocation;
+import org.knime.google.api.util.SettingsModelCredentialLocation;
 
 import com.google.api.services.sheets.v4.Sheets;
 
@@ -75,13 +81,34 @@ import com.google.api.services.sheets.v4.Sheets;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class GoogleInteractiveServiceProviderComponents {
+final class GoogleInteractiveServiceProviderComponents {
 
     private final GoogleInteractiveServiceProviderSettings m_settings;
 
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
 
-    private DialogComponenCredentialLocation m_credentialLocationComponent;
+
+    private class DialogComponentSheetCredentialLocation extends DialogComponenCredentialLocation {
+
+        /**
+         * @param model
+         * @param historyID
+         */
+        public DialogComponentSheetCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
+            super(model, historyID);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            super.actionPerformed(e);
+            m_authTestButton.setBackground(Color.yellow);
+        }
+    }
+
+    private DialogComponentSheetCredentialLocation m_credentialLocationComponent;
 
     /**
      * Constructor.
@@ -107,8 +134,9 @@ public class GoogleInteractiveServiceProviderComponents {
      *
      * @return The component for the credential storage location
      */
-    protected DialogComponenCredentialLocation getCredentialLocationComponent() {
-        m_credentialLocationComponent = new DialogComponenCredentialLocation(m_settings.getCredentialLocationModel());
+    protected DialogComponentSheetCredentialLocation getCredentialLocationComponent() {
+        m_credentialLocationComponent = new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
+            GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName());
         return m_credentialLocationComponent;
     }
 
@@ -137,14 +165,17 @@ public class GoogleInteractiveServiceProviderComponents {
             public void actionPerformed(final ActionEvent e) {
                 Sheets service = null;
                 boolean exception = false;
-                try {
-                    service = GoogleSheetsInteractiveAuthentication
-                        .getAuthRenewedSheetsService(m_settings.getCredentialLocation(), m_settings.getUserString());
-                    m_settings.setByteFile();
-                } catch (Exception ee) {
-                    exception = true;
-                    m_authTestButton.setBackground(Color.red);
-                }
+
+                    try {
+                        service = GoogleSheetsInteractiveAuthentication
+                            .getAuthRenewedSheetsService(m_settings.getCredentialLocation(), m_settings.getUserString());
+                        m_settings.setByteFile();
+                    } catch (InvalidPathException | IOException | GeneralSecurityException | InvalidSettingsException | URISyntaxException e1) {
+                        exception = true;
+                        m_authTestButton.setBackground(Color.red);
+
+                        JOptionPane.showMessageDialog(null, "Authentication failed: " + e1.getMessage());
+                    }
                 if (service != null && !exception) {
                     m_authTestButton.setBackground(Color.green);
 

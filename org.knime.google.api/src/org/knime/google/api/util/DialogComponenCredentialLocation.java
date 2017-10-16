@@ -74,7 +74,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderDialog;
 import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
 /**
@@ -133,12 +132,13 @@ public class DialogComponenCredentialLocation extends DialogComponent implements
      * Constructor.
      *
      * @param model The settings model for this dialog
+     * @param historyID The history id for this component
      */
-    public DialogComponenCredentialLocation(final SettingsModelCredentialLocation model) {
+    public DialogComponenCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
         super(model);
         m_credentialLocationComponent =
                 new DialogComponentFileChooser(model,
-                    GoogleSheetsInteractiveServiceProviderDialog.class.getCanonicalName(),
+                    historyID,
                     JFileChooser.OPEN_DIALOG, true, "");
         m_customPanel = getCustomPanel();
         m_typeDefault = createLocationButton(CredentialLocationType.DEFAULT, m_locationType, this);
