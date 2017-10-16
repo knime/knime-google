@@ -8,22 +8,26 @@
 		<intro>
 			Create a Google Sheets connection using interactive authentication, via pop-up.
 			<p>
-			Authentication happens in the dialog. A pop-up will appear that asks the user to grant access
-			to Google Sheets and Google Drive.
+			Authentication happens in the dialog.
+			By default, received credentials will be stored in the node.
+			However, a custom credential location can be set in the dialog.
+			A custom credential location is useful for sharing the credentials via a KNIME server or for exposing the user credentials.
 			</p>
 			<p>
-			Received authentication tokens will, by default, be saved in the node. 
-			It is however possible to set a custom storage location.
+			After choosing the credential location, one must authenticate using the (Re-)Authentication button. 
+			A pop-up will appear that asks the user to grant access to Google Sheets and Google Drive. 
+			If you have already authenticated, the (Re-)Authentication will test the stored credentials in the selected location. 
+			Changing the credentials from default to custom will remove credentials that are stored in the node.
 			</p>
 			<p>
-			Access can be revoked any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
+			Access can be revoked at any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
 			</p>
 			<p>
 			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
 			</p>
 		</intro>
 		<option name="Credential Location">
-		Where the credentials received during authentication should be stored.
+		Where the credentials received during authentication will be stored.
 			<br/>
 			<b>Default</b>
 			<br/>
@@ -33,7 +37,8 @@
 			<p>
 			<b>User id</b>
 			<br/>
-			A user id under which the tokens should be saved. Specifying different user ids generates different credentials
+			A user id under which the tokens should be saved. 
+			Multiple users' credentials can be stored in the same location.
 			<br/>
 			<b>Select Directory</b>
 			<br/>
@@ -41,7 +46,8 @@
 			</p>
 		</option>
 		<option name="(Re-)Authentication">
-		This button will open a dialog to authenticate with google services.
+		This button will open a dialog to authenticate with Google Services. 
+		If you are already authenticated, it will test the stored credentials in the selected location.
 		</option>
 	</fullDescription>
 	<ports>
