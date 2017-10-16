@@ -58,9 +58,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -146,7 +146,9 @@ public final class GoogleApiConnectionPortObject extends AbstractSimplePortObjec
         }
         JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
         f.setName("Connection");
-        return new JComponent[]{new JScrollPane(f)};
+        final JScrollPane scrollPane = new JScrollPane(f);
+        scrollPane.setName("Connection");
+        return new JComponent[]{scrollPane};
     }
 
 }
