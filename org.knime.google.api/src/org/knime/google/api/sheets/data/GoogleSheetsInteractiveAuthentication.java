@@ -56,8 +56,6 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderDialog;
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -125,9 +123,9 @@ public class GoogleSheetsInteractiveAuthentication {
      */
     public static Sheets getAuthRenewedSheetsService(final String credentialPath,
         final String user) throws IOException, GeneralSecurityException {
-        try {
-            return getAuthSheetsService(credentialPath, user);
-        } catch (Exception e) {
+        try{
+                return getAuthSheetsService(credentialPath, user);
+        } catch (IOException | GeneralSecurityException e) {
             getAuthorizationCodeFlow(credentialPath).getCredentialDataStore().delete(user);
             return getAuthSheetsService(credentialPath, user);
         }
@@ -195,12 +193,13 @@ public class GoogleSheetsInteractiveAuthentication {
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final String credentialPath) throws IOException {
         FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(getDataStoreFile(credentialPath));
         // Load client secrets.
-        final InputStream in = GoogleSheetsConnection.class.getResourceAsStream("client_secret.json");
-        final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-
-        return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(dataStoreFactory).setAccessType("offline").build();
+        try (final InputStream in = GoogleSheetsConnection.class.getResourceAsStream("client_secret.json")) {
+            final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+            return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                    .setDataStoreFactory(dataStoreFactory).setAccessType("offline").build();
+        } catch (IOException e) {
+            throw e;
+        }
     }
 
     /**
