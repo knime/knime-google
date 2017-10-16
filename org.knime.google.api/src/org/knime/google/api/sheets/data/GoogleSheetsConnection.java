@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -268,9 +269,9 @@ public final class GoogleSheetsConnection {
      * @throws URISyntaxException
      */
     private String getTempCredentialPath(final String credentialByteString) throws IOException, URISyntaxException {
-        File credentialFolder = FileUtil.createTempDir("sheets");
-        createTempFromByteFile(credentialFolder, credentialByteString);
-        return credentialFolder.getPath();
+        File tempFolder = FileUtil.createTempDir("sheets");
+        createTempFromByteFile(tempFolder, credentialByteString);
+        return tempFolder.getPath();
     }
 
     /**
@@ -278,12 +279,13 @@ public final class GoogleSheetsConnection {
      * @throws URISyntaxException
      *
      */
-    private void createTempFromByteFile(final File credentialFolder, final String credentialByteString) throws IOException, URISyntaxException {
+    private void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException, URISyntaxException {
         byte[] decodeBase64 = Base64.decodeBase64(credentialByteString);
-        File storedCredential = new File(credentialFolder.getPath() + "/" +
-                GoogleSheetsInteractiveAuthentication.APP_NAME + "/StoredCredential");
-        new File(storedCredential.getParent()).mkdir();
-        Files.write(storedCredential.toPath(), decodeBase64);
+        Path credentialFolder = FileUtil.resolveToPath(FileUtil.toURL(tempFolder.getPath() + "/" +
+                GoogleSheetsInteractiveAuthentication.APP_NAME));
+        Files.createDirectory(credentialFolder);
+        Path credentialPath = FileUtil.resolveToPath(FileUtil.toURL(credentialFolder.toString() + "/StoredCredential"));
+        Files.write(credentialPath, decodeBase64);
     }
 
 }
