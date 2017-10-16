@@ -149,7 +149,9 @@ public final class GoogleSheetsConnectionPortObject extends AbstractSimplePortOb
         }
         JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
         f.setName("Connection");
-        return new JComponent[]{new JScrollPane(f)};
+        final JScrollPane scrollPane = new JScrollPane(f);
+        scrollPane.setName("Connection");
+        return new JComponent[]{scrollPane};
     }
 
 }

@@ -247,7 +247,10 @@ public final class GoogleSheetsConnection {
         } else {
             sb.append("Interactive Authentication\n");
         }
+        sb.append("\n");
         sb.append("Application name:\n" + m_applicationName + "\n");
+
+        sb.append("\n");
         if (!m_inNodeCredentials) {
             sb.append("   User id: " + m_user + "\n");
             sb.append("   Credential path: " + m_credentialPath + "\n");
