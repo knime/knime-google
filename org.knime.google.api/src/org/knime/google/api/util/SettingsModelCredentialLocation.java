@@ -91,6 +91,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
         CheckUtils.checkArgument(StringUtils.isNotEmpty(configName), "The configName must be a non-empty string");
         m_userId = "sheetUser";
         m_type = CredentialLocationType.DEFAULT;
+        // TODO Ole: What?
         m_configName = configName + "type";
     }
 
@@ -99,6 +100,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected SettingsModelCredentialLocation createClone() {
+        // TODO Ole: What?
         return new SettingsModelCredentialLocation(m_configName);
     }
 
@@ -143,16 +145,15 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         final Config config = settings.getConfig(m_configName);
         final String type = config.getString(SELECTED_TYPE);
-        final String userId = config.getString(USER_ID);
+        config.getString(USER_ID);
         final CredentialLocationType credentialType = CredentialLocationType.get(type);
+        // TODO Ole: What?
         final String credentialLocation = settings.getString(super.getConfigName());
         switch(credentialType) {
             case DEFAULT:
                 break;
             case CUSTOM:
-                if (credentialLocation == null || credentialLocation.isEmpty()){
-                    throw new InvalidSettingsException("Please provide a valid location");
-                }
+                CheckUtils.checkSetting(StringUtils.isNotEmpty(credentialLocation), "Please provide a valid location");
                 break;
             default:
                 break;
