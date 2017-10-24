@@ -49,27 +49,32 @@
 package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.InvalidPathException;
-import java.security.GeneralSecurityException;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ViewUtils;
+import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.DialogComponenCredentialLocation;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
@@ -85,8 +90,8 @@ final class GoogleInteractiveServiceProviderComponents {
 
     private final GoogleInteractiveServiceProviderSettings m_settings;
 
+    private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new FlowLayout());
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
-
 
     private class DialogComponentSheetCredentialLocation extends DialogComponenCredentialLocation {
 
@@ -94,7 +99,8 @@ final class GoogleInteractiveServiceProviderComponents {
          * @param model
          * @param historyID
          */
-        public DialogComponentSheetCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
+        public DialogComponentSheetCredentialLocation(final SettingsModelCredentialLocation model,
+            final String historyID) {
             super(model, historyID);
         }
 
@@ -115,18 +121,8 @@ final class GoogleInteractiveServiceProviderComponents {
      *
      * @param settings The settings for the dialog components
      */
-    public GoogleInteractiveServiceProviderComponents(
-        final GoogleInteractiveServiceProviderSettings settings) {
+    public GoogleInteractiveServiceProviderComponents(final GoogleInteractiveServiceProviderSettings settings) {
         m_settings = settings;
-    }
-
-    /**
-     * Returns the {@link JButton} for the authentication test.
-     *
-     * @return The button for the authentication test
-     */
-    protected JButton getAuthTestButton() {
-        return m_authTestButton;
     }
 
     /**
@@ -134,9 +130,10 @@ final class GoogleInteractiveServiceProviderComponents {
      *
      * @return The component for the credential storage location
      */
-    protected DialogComponentSheetCredentialLocation getCredentialLocationComponent() {
-        m_credentialLocationComponent = new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
-            GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName());
+    DialogComponentSheetCredentialLocation getCredentialLocationComponent() {
+        m_credentialLocationComponent =
+            new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
+                GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName());
         return m_credentialLocationComponent;
     }
 
@@ -145,7 +142,7 @@ final class GoogleInteractiveServiceProviderComponents {
      *
      * @return The Panel containing the dialog components
      */
-    public JPanel getPanel() {
+    JPanel getPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -159,55 +156,83 @@ final class GoogleInteractiveServiceProviderComponents {
         panel.add(getCredentialLocationComponent().getComponentPanel(), gbc);
         gbc.gridy++;
         m_authTestButton.setBackground(Color.yellow);
-        m_authTestButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                Sheets service = null;
-                boolean exception = false;
-
-                    try {
-                        service = GoogleSheetsInteractiveAuthentication
-                            .getAuthRenewedSheetsService(m_settings.getCredentialLocation(), m_settings.getUserString());
-                        m_settings.setByteFile();
-                    } catch (InvalidPathException | IOException | GeneralSecurityException | InvalidSettingsException | URISyntaxException e1) {
-                        exception = true;
-                        m_authTestButton.setBackground(Color.red);
-
-                        JOptionPane.showMessageDialog(null, "Authentication failed: " + e1.getMessage());
-                    }
-                if (service != null && !exception) {
-                    m_authTestButton.setBackground(Color.green);
-
-                } else {
-                    m_authTestButton.setBackground(Color.red);
-                }
-            }
-        });
+        m_authTestButton.addActionListener(e -> onAuthButtonPressed());
+        m_panelWithAuthButtonOrProgressBar.add(m_authTestButton);
         gbc.gridwidth = 2;
-        panel.add(getAuthTestButton(), gbc);
+        panel.add(m_panelWithAuthButtonOrProgressBar, gbc);
         return panel;
     }
 
+    /** Validates the Service and opens the browser window for authentication if necessary. It does all sorts of
+     * SwingWorker voodoo to handle the event that the user doesn't enter anything in the browser window.
+     */
+    private final void onAuthButtonPressed() {
+
+        SwingWorkerWithContext<Sheets, Void> openBrowserSwingWorker = new SwingWorkerWithContext<Sheets, Void>() {
+
+            @Override
+            protected Sheets doInBackgroundWithContext() throws Exception {
+                return GoogleSheetsInteractiveAuthentication.getAuthRenewedSheetsService(
+                    m_settings.getCredentialLocation(), m_settings.getUserString());
+            }
+
+            @Override
+            protected void doneWithContext() {
+                try {
+                    if (isCancelled()) {
+                        m_authTestButton.setBackground(Color.yellow);
+                        return;
+                    }
+                    get();
+                    m_settings.setByteFile();
+                    m_authTestButton.setBackground(Color.green);
+                } catch (InterruptedException e) {
+                    m_authTestButton.setBackground(Color.yellow);
+                } catch (URISyntaxException | IOException | ExecutionException e) {
+                    m_authTestButton.setBackground(Color.red);
+                    JOptionPane.showMessageDialog(null, "Authentication failed: "
+                            + ExceptionUtils.getRootCauseMessage(e));
+                } finally {
+                    setAuthPanelComponent(m_authTestButton);
+                }
+            }
+        };
+        openBrowserSwingWorker.execute();
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            NodeLogger.getLogger(GoogleInteractiveServiceProviderComponents.class).coding("Ingoring AWT Interrupt");
+        }
+        if (!openBrowserSwingWorker.isDone()) {
+            JProgressBar b = new JProgressBar();
+            b.setIndeterminate(true);
+            b.setStringPainted(true);
+            b.setString("    Authenticating in browser window...   ");
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.addActionListener(e -> openBrowserSwingWorker.cancel(true));
+            setAuthPanelComponent(ViewUtils.getInFlowLayout(b, cancelButton));
+        }
+
+    }
+
     /**
-    *
-    * This method has to be called in {@link NodeDialogPane}.
-    *
-    * @param settings
-    *            The node settings.
-    * @param specs
-    *            The specs of inputs.
-    * @throws NotConfigurableException
-    */
-   public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
-       m_credentialLocationComponent.loadSettingsFrom(settings, specs);
-       m_authTestButton.setBackground(Color.yellow);
-       try {
-           m_settings.loadAuth(settings);
-       } catch (InvalidSettingsException e) {
-           // Not authenticated
-       }
-   }
+     *
+     * This method has to be called in {@link NodeDialogPane}.
+     *
+     * @param settings The node settings.
+     * @param specs The specs of inputs.
+     * @throws NotConfigurableException
+     */
+    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
+        m_credentialLocationComponent.loadSettingsFrom(settings, specs);
+        m_authTestButton.setBackground(Color.yellow);
+        try {
+            m_settings.loadAuth(settings);
+        } catch (InvalidSettingsException e) {
+            // Not authenticated
+        }
+    }
 
     /**
      * This method has to be called in the {@link NodeDialogPane}.
@@ -218,6 +243,15 @@ final class GoogleInteractiveServiceProviderComponents {
     public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_credentialLocationComponent.saveSettingsTo(settings);
         m_settings.saveAuth(settings);
+    }
+
+    private void setAuthPanelComponent(final JComponent comp) {
+        if (m_panelWithAuthButtonOrProgressBar.getComponent(0) != comp) {
+            m_panelWithAuthButtonOrProgressBar.removeAll();
+            m_panelWithAuthButtonOrProgressBar.add(comp);
+            m_panelWithAuthButtonOrProgressBar.revalidate();
+            m_panelWithAuthButtonOrProgressBar.repaint();
+        }
     }
 
 }
