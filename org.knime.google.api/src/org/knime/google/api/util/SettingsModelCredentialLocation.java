@@ -265,9 +265,11 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     /** Whether to use the default in node credential or the custom user id and credential location **/
     public enum CredentialLocationType implements ButtonGroupEnumInterface {
         /** Default credential location **/
-        DEFAULT("Default", "The authentication credentials will be stored in the node settings."),
+        DEFAULT("Default (authentication key saved as part of node instance)",
+            "The authentication credentials will be stored in the node settings."),
         /** Custom **/
-        CUSTOM("Custom", "Specify a custom user id and a credential location");
+        CUSTOM("Custom (authentication saved in separate file)",
+            "Specify a custom user id and a credential location");
 
         private String m_toolTip;
         private String m_text;
