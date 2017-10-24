@@ -76,7 +76,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
-import org.knime.google.api.util.DialogComponenCredentialLocation;
+import org.knime.google.api.util.DialogComponentCredentialLocation;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
 
 import com.google.api.services.sheets.v4.Sheets;
@@ -93,7 +93,7 @@ final class GoogleInteractiveServiceProviderComponents {
     private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new FlowLayout());
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
 
-    private class DialogComponentSheetCredentialLocation extends DialogComponenCredentialLocation {
+    private class DialogComponentSheetCredentialLocation extends DialogComponentCredentialLocation {
 
         /**
          * @param model

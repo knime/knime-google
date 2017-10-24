@@ -66,7 +66,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /**
- * The SettingsModel for the {@link DialogComponenCredentialLocation}
+ * The SettingsModel for the {@link DialogComponentCredentialLocation}
  *
  * @author Ole Ostergaard, KNIME GmbH
  */

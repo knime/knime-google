@@ -87,7 +87,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-public class DialogComponenCredentialLocation extends DialogComponent implements ActionListener {
+public class DialogComponentCredentialLocation extends DialogComponent implements ActionListener {
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);
     private static final int LEFT_INSET = 23;
@@ -134,7 +134,7 @@ public class DialogComponenCredentialLocation extends DialogComponent implements
      * @param model The settings model for this dialog
      * @param historyID The history id for this component
      */
-    public DialogComponenCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
+    public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
         super(model);
         m_credentialLocationComponent =
                 new DialogComponentFileChooser(model,
