@@ -52,9 +52,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.knime.core.util.FileUtil;
+import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -64,6 +69,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.Sheets;
@@ -83,7 +89,10 @@ public class GoogleSheetsInteractiveAuthentication {
     private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     /** The application name, for which the credentials are stored */
-    public static String APP_NAME = "KNIME-Google-Sheets-Interactive-Connector";
+    public static final String APP_NAME = "KNIME-Google-Sheets-Interactive-Connector";
+
+    /** The name of the credentials file created by the google API */
+    public static final String STORAGE_CREDENTIAL = "StoredCredential";
 
     /** The scopes required for the {@link GoogleSheetsInteractiveAuthentication} */
     private static final List<String> SCOPES = Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_READONLY);
@@ -113,7 +122,7 @@ public class GoogleSheetsInteractiveAuthentication {
      * the authentication tokens need to be removed before they can be renewed. This is handled.
      * The authentication is verified.
      *
-     * Used in the {@link GoogleSheetsInteractiveServiceProviderDialog}.
+     * Used in the dialog of the {@link GoogleSheetsInteractiveServiceProviderFactory} node.
      *
      * @param credentialPath The path to the data store file
      * @param user The user to be used for authentication
@@ -187,7 +196,7 @@ public class GoogleSheetsInteractiveAuthentication {
 
 
     private static File getDataStoreFile(final String credentialPath) {
-        return new File(credentialPath, APP_NAME);
+        return new File(credentialPath);
     }
 
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final String credentialPath) throws IOException {
@@ -214,5 +223,33 @@ public class GoogleSheetsInteractiveAuthentication {
         if (result == null) {
             throw new IOException("Could not get the requested data");
         }
+    }
+
+    /**
+     * Create a temporary file from a given byte string and returns it's location.
+
+     * @param credentialByteString The byte string that should be written to a temporary folder.
+     * @return The credential location
+     * @throws IOException If temporary folder cannot be created
+     * @throws URISyntaxException If the byte string file cannot be written
+     */
+    public static String getTempCredentialPath(final String credentialByteString) throws IOException, URISyntaxException{
+        File tempFolder = FileUtil.createTempDir("sheets");
+        createTempFromByteFile(tempFolder, credentialByteString);
+        return tempFolder.getPath();
+    }
+
+    /**
+     * Decodes a given byte String to a given folder.
+     *
+     * @param tempFolder The temp folder that should be populated with the decoded byte string
+     * @param credentialByteString The byte string that should be decoded to the given folder
+     * @throws IOException If there is an error when writing the temp file
+     * @throws URISyntaxException If the file cannot be decoded
+     *
+     */
+    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException, URISyntaxException {
+        byte[] decodeBase64 = Base64.decodeBase64(credentialByteString);
+        Files.write(new File(tempFolder, STORAGE_CREDENTIAL).toPath(), decodeBase64);
     }
 }

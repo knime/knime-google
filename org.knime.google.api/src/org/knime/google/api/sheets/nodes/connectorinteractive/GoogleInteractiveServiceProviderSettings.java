@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
@@ -74,7 +75,7 @@ final class GoogleInteractiveServiceProviderSettings {
 
     private static final String DEFAULT_USERID = "sheetUser";
 
-    private final String m_configName = "gsiSPS";
+    private final String m_configName = "googleSheetsInteractive";
     private static final String BYTE_FILE = "byteFile";
 
 
@@ -84,7 +85,7 @@ final class GoogleInteractiveServiceProviderSettings {
     private String m_storedCredential = null;
 
     private final SettingsModelCredentialLocation m_credentialLocationModel =
-            new SettingsModelCredentialLocation("credentialLocation");
+            new SettingsModelCredentialLocation("credentialLocation", "knime://knime.workflow/../google_authentication.keys");
 
     /**
      * Returns the {@link SettingsModelString} for the credential location
@@ -124,7 +125,7 @@ final class GoogleInteractiveServiceProviderSettings {
                 credentialFolder = FileUtil.createTempDir("sheets");
                 m_credentialTempFolder = credentialFolder.getPath();
                 if (m_storedCredential != null) {
-                    createTempFromByteFile(credentialFolder);
+                    GoogleSheetsInteractiveAuthentication.createTempFromByteFile(credentialFolder, m_storedCredential);
                 }
                 path = credentialFolder.getPath();
             } catch (IOException | URISyntaxException e) {
@@ -143,39 +144,21 @@ final class GoogleInteractiveServiceProviderSettings {
      * @return The stored credential as a byte string
      * @throws InvalidSettingsException If the user is not yet authenticated.
      */
-    public String getEncodedStoredCredential() throws InvalidSettingsException {
+    protected String getEncodedStoredCredential() throws InvalidSettingsException {
             return m_storedCredential;
-    }
-
-    /**
-     * @throws IOException
-     * @throws URISyntaxException
-     *
-     */
-    private void createTempFromByteFile(final File credentialFolder) throws IOException, URISyntaxException {
-        byte[] decodeBase64 = Base64.decodeBase64(m_storedCredential);
-        File storedCredential = new File(credentialFolder.getPath() + "/" +
-                GoogleSheetsInteractiveAuthentication.APP_NAME + "/StoredCredential");
-        new File(storedCredential.getParent()).mkdir();
-        Files.write(storedCredential.toPath(), decodeBase64);
     }
 
     /**
      * Returns the credential location.
      *
+     * @param credentialFolder  The folder containing the StoredCredential
+     *
      * @return The credential location
      * @throws IOException
      * @throws URISyntaxException
      */
-    protected String getStoredCredentialPath() throws IOException, URISyntaxException {
-        File credentialFolder = new File(m_credentialTempFolder);
-        m_credentialTempFolder = credentialFolder.getPath();
-        StringBuilder stb = new StringBuilder(credentialFolder.getPath());
-        stb.append("/");
-        stb.append(GoogleSheetsInteractiveAuthentication.APP_NAME);
-        stb.append("/");
-        stb.append("StoredCredential");
-        return stb.toString();
+    private Path getStoredCredentialPath(final File credentialFolder) throws IOException, URISyntaxException {
+        return new File(credentialFolder, "StoredCredential").toPath();
     }
 
 
@@ -219,7 +202,7 @@ final class GoogleInteractiveServiceProviderSettings {
      */
     public void setByteFile() throws IOException, URISyntaxException {
         if (inNodeCredential()) {
-            m_storedCredential = new String(Base64.encodeBase64(Files.readAllBytes(new File(getStoredCredentialPath()).toPath())));
+            m_storedCredential = new String(Base64.encodeBase64(Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder)))));
         } else {
             m_storedCredential = null;
         }

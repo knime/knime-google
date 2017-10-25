@@ -48,11 +48,8 @@
 
 package org.knime.google.api.sheets.data;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -60,10 +57,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.util.FileUtil;
 import org.knime.google.api.data.GoogleApiConnection;
 
-import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.api.services.analytics.Analytics;
 import com.google.api.services.sheets.v4.Sheets;
 
@@ -135,7 +130,7 @@ public final class GoogleSheetsConnection {
         final String storedCredential, final boolean inNodeCredentials) throws IOException, GeneralSecurityException, URISyntaxException {
         this(null, applicationName, user, storedCredential, inNodeCredentials, true, credentialPath);
         if (m_inNodeCredentials) {
-            m_credentialPath = getTempCredentialPath(m_storedCredentials);
+            m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
         }
         m_sheets = GoogleSheetsInteractiveAuthentication.getExistingAuthSheetService(m_credentialPath, m_user);
     }
@@ -172,7 +167,7 @@ public final class GoogleSheetsConnection {
 
             if (m_interactiveAuth){
                 if (m_inNodeCredentials) {
-                    m_credentialPath = getTempCredentialPath(m_storedCredentials);
+                    m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
                 }
                 m_sheets = GoogleSheetsInteractiveAuthentication.getExistingAuthSheetService(m_credentialPath, m_user);
             } else {
@@ -260,32 +255,4 @@ public final class GoogleSheetsConnection {
         }
         return sb.toString();
     }
-
-    /**
-     * Returns the credential location.
-     *
-     * @return The credential location
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    private String getTempCredentialPath(final String credentialByteString) throws IOException, URISyntaxException {
-        File tempFolder = FileUtil.createTempDir("sheets");
-        createTempFromByteFile(tempFolder, credentialByteString);
-        return tempFolder.getPath();
-    }
-
-    /**
-     * @throws IOException
-     * @throws URISyntaxException
-     *
-     */
-    private void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException, URISyntaxException {
-        byte[] decodeBase64 = Base64.decodeBase64(credentialByteString);
-        Path credentialFolder = FileUtil.resolveToPath(FileUtil.toURL(tempFolder.getPath() + "/" +
-                GoogleSheetsInteractiveAuthentication.APP_NAME));
-        Files.createDirectory(credentialFolder);
-        Path credentialPath = FileUtil.resolveToPath(FileUtil.toURL(credentialFolder.toString() + "/StoredCredential"));
-        Files.write(credentialPath, decodeBase64);
-    }
-
 }

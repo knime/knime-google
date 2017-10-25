@@ -77,7 +77,7 @@ final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
     private GoogleInteractiveServiceProviderSettings m_settings = getSettings();
 
     /**
-     * Returns the {@link GoogleInteractiveServiceProviderSettings} for this node.
+     * Returns the settings for this node for this node.
      *
      * @return The settings for this node
      */

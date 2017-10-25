@@ -74,6 +74,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
 /**
@@ -83,7 +84,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  * set the location for the key files received during the authentication process.
  *
  * It is intended to be used in dialogs of interactive authentication nodes,
- * such as {@link GoogleSheetsInteractiveServiceProviderDialog}
+ * such as the {@link GoogleSheetsInteractiveServiceProviderFactory} node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */

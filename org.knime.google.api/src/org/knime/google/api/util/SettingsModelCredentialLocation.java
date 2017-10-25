@@ -78,21 +78,24 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     private CredentialLocationType m_type;
     private final static String SELECTED_TYPE = "selectedType";
 
-    private String m_configName;
-
+    private final static String CREDENTIAL_LOCATION = "credentialLocation";
 
     /**
      * Constructor.
      * @param configName The identifier the values are stored in in the {@link NodeSettings} object.
+     * @param defaultLocation The default location for the custom credential storage
      */
-    public SettingsModelCredentialLocation(final String configName) {
-        super(configName, "");
-
-        CheckUtils.checkArgument(StringUtils.isNotEmpty(configName), "The configName must be a non-empty string");
+    public SettingsModelCredentialLocation(final String configName, final String defaultLocation) {
+        super(configName, defaultLocation);
         m_userId = "sheetUser";
         m_type = CredentialLocationType.DEFAULT;
-        // TODO Ole: What?
-        m_configName = configName + "type";
+    }
+
+    private SettingsModelCredentialLocation(final String configName, final String defaultLocation,
+        final String userId, final CredentialLocationType type) {
+        this(configName, defaultLocation);
+        m_userId = userId;
+        m_type = type;
     }
 
     /**
@@ -100,8 +103,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected SettingsModelCredentialLocation createClone() {
-        // TODO Ole: What?
-        return new SettingsModelCredentialLocation(m_configName);
+        return new SettingsModelCredentialLocation(getConfigName(), getStringValue(), m_userId, m_type);
     }
 
     /**
@@ -121,9 +123,9 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
         super.loadSettingsForDialog(settings, specs);
         final Config config;
         try {
-            config = settings.getConfig(m_configName);
+            config = settings.getConfig(getConfigName());
             setValues(CredentialLocationType.valueOf(config.getString(SELECTED_TYPE, m_type.name())),
-                config.getString(USER_ID, m_userId));
+                config.getString(USER_ID, m_userId), config.getString(CREDENTIAL_LOCATION, getStringValue()));
         } catch (InvalidSettingsException ex) {
             throw new NotConfigurableException(ex.getMessage());
         }
@@ -134,7 +136,6 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected void saveSettingsForDialog(final NodeSettingsWO settings) throws InvalidSettingsException {
-        super.saveSettingsForDialog(settings);
         saveSettingsForModel(settings);
     }
 
@@ -143,12 +144,10 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        final Config config = settings.getConfig(m_configName);
+        final Config config = settings.getConfig(getConfigName());
         final String type = config.getString(SELECTED_TYPE);
-        config.getString(USER_ID);
+        final String credentialLocation = config.getString(CREDENTIAL_LOCATION);
         final CredentialLocationType credentialType = CredentialLocationType.get(type);
-        // TODO Ole: What?
-        final String credentialLocation = settings.getString(super.getConfigName());
         switch(credentialType) {
             case DEFAULT:
                 break;
@@ -165,9 +164,10 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.loadSettingsForModel(settings);
-        Config config = settings.getConfig(m_configName);
-        setValues(CredentialLocationType.valueOf(config.getString(SELECTED_TYPE)), config.getString(USER_ID));
+        Config config = settings.getConfig(getConfigName());
+        setValues(CredentialLocationType.valueOf(config.getString(SELECTED_TYPE)),
+            config.getString(USER_ID),
+            config.getString(CREDENTIAL_LOCATION));
     }
 
     /**
@@ -175,10 +175,10 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        super.saveSettingsForModel(settings);
-        Config config = settings.addConfig(m_configName);
+        Config config = settings.addConfig(getConfigName());
         config.addString(USER_ID, m_userId);
         config.addString(SELECTED_TYPE, m_type.name());
+        config.addString(CREDENTIAL_LOCATION, getStringValue());
     }
 
     /**
@@ -186,7 +186,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " ('" + m_configName + "')";
+        return getClass().getSimpleName() + " ('" + getConfigName() + "')";
     }
 
     /**
@@ -200,6 +200,30 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
         if (changed) {
             notifyChangeListeners();
         }
+    }
+
+    /**
+     * @param type Type of credential location that is selected
+     * @param userId the given user id
+     */
+    private void setValues(final CredentialLocationType type, final String userId, final String credentialLocation) {
+        boolean changed = false;
+        setValues(type, userId);
+        changed = setLocation(credentialLocation) || changed;
+        if (changed) {
+            notifyChangeListeners();
+        }
+    }
+
+    private boolean setLocation(final String credentialLocation) {
+        boolean sameValue;
+        if (credentialLocation == null) {
+            sameValue = (getStringValue() == null);
+        } else {
+            sameValue = credentialLocation.equals(getStringValue());
+        }
+        setStringValue(credentialLocation);
+        return !sameValue;
     }
 
     private boolean setType(final CredentialLocationType type) {
@@ -256,6 +280,9 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
         Path path;
         try {
             path = FileUtil.resolveToPath(FileUtil.toURL(this.getStringValue()));
+            if (path == null) {
+                throw new InvalidSettingsException("Not a valid path");
+            }
         } catch (IOException | URISyntaxException e) {
             throw new InvalidSettingsException("Not a valid path");
         }
