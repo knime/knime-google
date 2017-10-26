@@ -6,27 +6,29 @@
 	<shortDescription>Read tables from Google Sheets.</shortDescription>
 	<fullDescription>
 		<intro>
-			Reads a google sheet, given the spreadsheet id and the specified range in A1 notation
-			<p>
-			The spreadsheet id can be found in the URL.
-			https://docs.google.com/spreadsheets/d/<b>1qpyC0XzvTcKT6EISywvqESX3A0MwQoFDE8p-Bll4hps</b>/edit#gid=0.
-			</p>
-			<p>
-				For more information on spreadsheet ids visit: 
-				<a href="https://developers.google.com/sheets/api/guides/concepts#spreadsheet_id">
-				developers.google.com/sheets/api/guides/concepts#spreadsheet_id</a>
-			</p>
+			Reads a google spreadsheet's sheet. The spreadsheet can be selected from available spreadsheets in google drive.
+			Optionally a specific range can be read from the sheet, the range must be entered in A1 notation (E.g. "A1:G10").
+			
 			<p>
 				For more information about the A1 notation visit: 
 				<a href="https://developers.google.com/sheets/api/guides/concepts#a1_notation">
 				developers.google.com/sheets/api/guides/concepts#a1_notation</a>
 			</p>
 		</intro>
-		<option name="Spreadsheet ID">
-			The spreadsheet's ID.
+		<option name="Spreadsheet">
+			The spreadsheet can be selected from available spreadsheets in google drive.
 		</option>
-		<option name="Sheet range">
-			The range of the spreadsheet that should be read. E.g. "Sheet1", "Sheet1!A1:E100"
+		<option name="Select...">
+			Opens a dialog which lists the available spreadsheets from google drive.
+		</option>
+		<option name="Open">
+			Opens the selected spreadsheet in the browser.
+		</option>
+		<option name="Sheet">
+			The sheet from the spreadsheet that should be read. Available sheets can be selected from the drop down menu.
+		</option>
+		<option name="Range">
+			A specific range that should be read from the sheet can be given in A1 notation. (E.g. "A1:G20")
 		</option>
 		<option name="Read column name">
 			Whether the first row of the sheet should be read as column names.

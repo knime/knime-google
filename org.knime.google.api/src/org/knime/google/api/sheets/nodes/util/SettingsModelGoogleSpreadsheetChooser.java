@@ -125,7 +125,6 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
         try {
             loadSettingsForModel(settings);
         } catch (InvalidSettingsException e) {
-            throw new NotConfigurableException(e.getMessage());
         }
     }
 

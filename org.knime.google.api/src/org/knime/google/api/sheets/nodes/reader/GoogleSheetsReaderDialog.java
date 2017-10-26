@@ -47,62 +47,27 @@
  */
 package org.knime.google.api.sheets.nodes.reader;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.JPanel;
-
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * The dialog to the GoogleSheetsReader node.
+ * The dialog for the GoogleSheetsReader node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
 public class GoogleSheetsReaderDialog extends NodeDialogPane {
 
-    private DialogComponentString m_spreadsheetId =
-            new DialogComponentString(GoogleSheetsReaderModel.getSpreadSheetIdModel(), "Spreadsheet id:");
-
-    private DialogComponentString m_range =
-            new DialogComponentString(GoogleSheetsReaderModel.getSheetRangeModel(), "Sheet range:");
-
-    private DialogComponentBoolean m_readColName =
-            new DialogComponentBoolean(GoogleSheetsReaderModel.getReadColNameModel(), "Read column name");
-
-    private DialogComponentBoolean m_readRowId =
-            new DialogComponentBoolean(GoogleSheetsReaderModel.getReadRowIdModel(), "Read row id");
-
+    private final GoogleSheetsReaderComponents m_components =
+            new GoogleSheetsReaderComponents(GoogleSheetsReaderModel.getSettings());
     /**
      * Constructor creating the dialogs content.
      */
     public GoogleSheetsReaderDialog() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(m_spreadsheetId.getComponentPanel(), gbc);
-        gbc.gridy++;
-        panel.add(m_range.getComponentPanel(),gbc);
-        gbc.gridy++;
-        panel.add(m_readColName.getComponentPanel(), gbc);
-        gbc.gridy++;
-        panel.add(m_readRowId.getComponentPanel(), gbc);
-        addTab("Settings", panel);
+        addTab("Settings", m_components.getPanel());
     }
 
 
@@ -111,10 +76,7 @@ public class GoogleSheetsReaderDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_spreadsheetId.saveSettingsTo(settings);
-        m_range.saveSettingsTo(settings);
-        m_readColName.saveSettingsTo(settings);
-        m_readRowId.saveSettingsTo(settings);
+        m_components.saveSettingsTo(settings);
     }
 
     /**
@@ -122,9 +84,6 @@ public class GoogleSheetsReaderDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_spreadsheetId.loadSettingsFrom(settings, specs);
-        m_range.loadSettingsFrom(settings, specs);
-        m_readColName.loadSettingsFrom(settings, specs);
-        m_readRowId.loadSettingsFrom(settings, specs);
+        m_components.loadSettingsFrom(settings, specs);
     }
 }

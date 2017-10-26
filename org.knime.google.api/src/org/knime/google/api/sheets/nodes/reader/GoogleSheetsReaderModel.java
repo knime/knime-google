@@ -68,8 +68,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -86,49 +84,17 @@ import com.google.api.services.sheets.v4.model.ValueRange;
  */
 public class GoogleSheetsReaderModel extends NodeModel {
 
-    private SettingsModelString m_spreadsheetIdModel = getSpreadSheetIdModel();
-
-    private SettingsModelString m_sheetRangeModel = getSheetRangeModel();
-
-    private SettingsModelBoolean m_readColNameModel = getReadColNameModel();
-
-    private SettingsModelBoolean m_readRowIdModel = getReadRowIdModel();
+    GoogleSheetsReaderSettings m_settings = getSettings();
 
     /**
-     * Returns the  {@link SettingsModelString} for the spreadsheet id.
+     * Returns the settings for the Google Sheets Reader.
      *
-     * @return The  {@link SettingsModelString} for the spreadsheet id
+     * @return The settings for the google sheets reader
      */
-    protected static SettingsModelString getSpreadSheetIdModel() {
-        return new SettingsModelString("spreadsheetID", "");
+    protected static GoogleSheetsReaderSettings getSettings() {
+        return new GoogleSheetsReaderSettings();
     }
 
-    /**
-     * Returns the  {@link SettingsModelString} for the sheet name.
-     *
-     * @return The  {@link SettingsModelString} for the sheet name
-     */
-    protected static SettingsModelString getSheetRangeModel() {
-        return new SettingsModelString("sheetRange", "");
-    }
-
-    /**
-     * Returns the  {@link SettingsModelBoolean} for the column name reading.
-     *
-     * @return The  {@link SettingsModelBoolean} for the column name reading
-     */
-    protected static SettingsModelBoolean getReadColNameModel() {
-        return new SettingsModelBoolean("readColName", true);
-    }
-
-    /**
-     * Returns the  {@link SettingsModelBoolean} for the row id reading.
-     *
-     * @return The  {@link SettingsModelBoolean} for the row id reading
-     */
-    protected static SettingsModelBoolean getReadRowIdModel() {
-        return new SettingsModelBoolean("readRowId", true);
-    }
 
     /**
      * Constructor of the node model.
@@ -144,9 +110,10 @@ public class GoogleSheetsReaderModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleSheetsConnection connection =
                 ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
-        ValueRange result = null;
-        result = createGetRequest(connection, m_spreadsheetIdModel.getStringValue().trim(),
-            m_sheetRangeModel.getStringValue().trim()).execute();
+
+        exec.setMessage("Requesting Google Sheet");
+        ValueRange result = createGetRequest(connection, m_settings.getSpreadSheetId(),
+            m_settings.getRange()).execute();
 
         if (result == null) {
             throw new IOException("Could not get the requested data");
@@ -154,13 +121,18 @@ public class GoogleSheetsReaderModel extends NodeModel {
 
 
        List<List<Object>> values = result.getValues();
+       if (values == null) {
+           throw new InvalidSettingsException("Specified Sheet or range is empty");
+       }
        DataTableSpec outSpec = createSpec(values.get(0));
        BufferedDataContainer outContainer = exec.createDataContainer(outSpec);
-       int i = m_readColNameModel.getBooleanValue() ? 1 : 0;
+       int i = m_settings.readColName() ? 1 : 0;
        for (; i < values.size(); i++) {
+           exec.checkCanceled();
+           exec.setProgress((i==0) ? values.size()/(i+1) : values.size()/i, "Reading row " + i);
            List<Object> row = values.get(i);
            List<DataCell> cells = new ArrayList<DataCell>(outSpec.getNumColumns());
-           int leftBound = m_readRowIdModel.getBooleanValue() ? 1 : 0;
+           int leftBound = m_settings.readRowId() ? 1 : 0;
            for (int j = leftBound; j <= outSpec.getNumColumns() - (1 - leftBound); j++) {
                String value = "";
                if (j < row.size()) {
@@ -172,9 +144,15 @@ public class GoogleSheetsReaderModel extends NodeModel {
                    cells.add(new StringCell(row.get(j).toString()));
                }
            }
-           int rowNum = m_readColNameModel.getBooleanValue() ? i-1 : i;
-           if (m_readRowIdModel.getBooleanValue()) {
-               outContainer.addRowToTable(new DefaultRow(row.get(0).toString(), cells));
+           int rowNum = m_settings.readColName() ? i-1 : i;
+           if (m_settings.readRowId()) {
+               String rowId = "";
+               if (row.size() == 0) {
+                   rowId =  "Row" + i;
+               } else {
+                   rowId = row.get(0).toString();
+               }
+               outContainer.addRowToTable(new DefaultRow(rowId, cells));
            } else {
                outContainer.addRowToTable(new DefaultRow("Row" + (rowNum), cells));
            }
@@ -184,19 +162,34 @@ public class GoogleSheetsReaderModel extends NodeModel {
     }
 
     /**
+     * Creates the get request to retrieve a spreadsheet given the spreadsheet id and the range.
+     *
+     * @param connection The connection to use
+     * @param spreadsheetId The spreadsheet id for the spreadsheet to retrieve
+     * @param sheetRange The range which should be retrieved
+     * @return A get request for the currently configured query
+     * @throws IOException If an IO error occurs
+     */
+    public Get createGetRequest(final GoogleSheetsConnection connection, final String spreadsheetId,
+        final String sheetRange) throws IOException {
+        Get get = connection.getSheetsService().spreadsheets().values().get(spreadsheetId, sheetRange);
+        return get;
+    }
+
+    /**
      * @param list Google Analytics data object
      * @return The KNIME table spec for the given data object
      */
     private DataTableSpec createSpec(final List<Object> list) {
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>(list.size());
-        int i = m_readRowIdModel.getBooleanValue() ? 1 :0;
-        if (m_readColNameModel.getBooleanValue()) {
+        int i = m_settings.readRowId() ? 1 :0;
+        if (m_settings.readColName()) {
             for (; i < list.size(); i++) {
                 colSpecs.add(new DataColumnSpecCreator(list.get(i).toString(), StringCell.TYPE).createSpec());
             }
         } else {
             for (; i < list.size(); i++) {
-                int colNumber = m_readRowIdModel.getBooleanValue() ? i-1 : i;
+                int colNumber = m_settings.readRowId() ? i-1 : i;
                 colSpecs.add(new DataColumnSpecCreator("Col"+ colNumber, StringCell.TYPE).createSpec());
             }
         }
@@ -208,6 +201,9 @@ public class GoogleSheetsReaderModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_settings.getSpreadSheetId().isEmpty() || m_settings.getSheetName().isEmpty()) {
+            throw new InvalidSettingsException("No settings available");
+        }
         // TODO make sure we at least try to guess the column types in the future. Behaviour maybe similiar to excel node. Also same missing value handling (if any?).
         return new PortObjectSpec[]{null};
     }
@@ -216,29 +212,8 @@ public class GoogleSheetsReaderModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // not used
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // not used
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_spreadsheetIdModel.saveSettingsTo(settings);
-        m_sheetRangeModel.saveSettingsTo(settings);
-        m_readColNameModel.saveSettingsTo(settings);
-        m_readRowIdModel.saveSettingsTo(settings);
+        m_settings.saveSettingsTo(settings);
     }
 
     /**
@@ -246,10 +221,7 @@ public class GoogleSheetsReaderModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_spreadsheetIdModel.validateSettings(settings);
-        m_sheetRangeModel.validateSettings(settings);
-        m_readColNameModel.validateSettings(settings);
-        m_readRowIdModel.validateSettings(settings);
+        m_settings.validateSettings(settings);
 
     }
 
@@ -258,10 +230,7 @@ public class GoogleSheetsReaderModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_spreadsheetIdModel.loadSettingsFrom(settings);
-        m_sheetRangeModel.loadSettingsFrom(settings);
-        m_readColNameModel.loadSettingsFrom(settings);
-        m_readRowIdModel.loadSettingsFrom(settings);
+        m_settings.loadValidatedSettingsFrom(settings);
     }
 
     /**
@@ -273,18 +242,20 @@ public class GoogleSheetsReaderModel extends NodeModel {
     }
 
     /**
-     * Creates the get request to retrieve a spreadsheet given the spreadsheet id and the range.
-     *
-     * @param connection The connection to use
-     * @param spreadsheetId The spreadsheet id for the spreadsheet to retreive
-     * @param sheetRange The range which should be retrieved
-     * @return A get request for the currently configured query
-     * @throws IOException If an IO error occurs
+     * {@inheritDoc}
      */
-    public Get createGetRequest(final GoogleSheetsConnection connection, final String spreadsheetId,
-        final String sheetRange) throws IOException {
-        Get get = connection.getSheetsService().spreadsheets().values().get(spreadsheetId, sheetRange);
-        return get;
+    @Override
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        //nothing to do
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        //nothing to do
     }
 
 }

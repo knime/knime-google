@@ -52,7 +52,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The factory of the GoogleAnalyticsQuery node.
+ * The factory of the GoogleSheetsReader node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
