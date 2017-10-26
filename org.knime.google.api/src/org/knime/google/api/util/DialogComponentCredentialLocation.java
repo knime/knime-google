@@ -138,9 +138,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
     public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
         super(model);
         m_credentialLocationComponent =
-                new DialogComponentFileChooser(model,
-                    historyID,
-                    JFileChooser.OPEN_DIALOG, true, "");
+            new DialogComponentFileChooser(model, historyID, JFileChooser.OPEN_DIALOG, true, "");
+        m_credentialLocationComponent.setAllowSystemPropertySubstitution(true);
         m_customPanel = getCustomPanel();
         m_typeDefault = createLocationButton(CredentialLocationType.DEFAULT, m_locationType, this);
         m_typeCustom = createLocationButton(CredentialLocationType.CUSTOM, m_locationType, this);

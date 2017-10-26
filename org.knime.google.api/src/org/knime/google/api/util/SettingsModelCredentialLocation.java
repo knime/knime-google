@@ -53,6 +53,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -64,6 +65,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
+
+import com.google.api.client.repackaged.com.google.common.base.Objects;
 
 /**
  * The SettingsModel for the {@link DialogComponentCredentialLocation}
@@ -127,7 +130,6 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
             setValues(CredentialLocationType.valueOf(config.getString(SELECTED_TYPE, m_type.name())),
                 config.getString(USER_ID, m_userId), config.getString(CREDENTIAL_LOCATION, getStringValue()));
         } catch (InvalidSettingsException ex) {
-            throw new NotConfigurableException(ex.getMessage());
         }
     }
 
@@ -271,20 +273,29 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     }
 
     /**
-     * Returns the credential path which is set when the custom credential location is chosen.
+     * Returns the credential path which is set when the custom location is chosen, system properties resolved.
      *
-     * @return The credential path which is set when the custom credential location is chosen
+     * @return Resolved credentials path.
      * @throws InvalidSettingsException If the path is invalid
      */
     public String getCredentialPath() throws InvalidSettingsException {
+        String stringValue = this.getStringValue();
+        String resolvedPropertiesValue = StrSubstitutor.replaceSystemProperties(getStringValue());
+
+        StringBuilder errorMessageBuilder = new StringBuilder();
+        errorMessageBuilder.append("Not a valid path: \"").append(resolvedPropertiesValue).append("\"");
+        if (!Objects.equal(stringValue, resolvedPropertiesValue)) {
+            errorMessageBuilder.append(" (substituted from \"").append(stringValue).append("\")");
+        }
+        String errorMessage = errorMessageBuilder.toString();
         Path path;
         try {
-            path = FileUtil.resolveToPath(FileUtil.toURL(this.getStringValue()));
+            path = FileUtil.resolveToPath(FileUtil.toURL(resolvedPropertiesValue));
             if (path == null) {
-                throw new InvalidSettingsException("Not a valid path");
+                throw new InvalidSettingsException(errorMessage);
             }
         } catch (IOException | URISyntaxException e) {
-            throw new InvalidSettingsException("Not a valid path");
+            throw new InvalidSettingsException(errorMessage, e);
         }
         return path.toString();
     }

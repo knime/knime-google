@@ -85,7 +85,7 @@ final class GoogleInteractiveServiceProviderSettings {
     private String m_storedCredential = null;
 
     private final SettingsModelCredentialLocation m_credentialLocationModel =
-            new SettingsModelCredentialLocation("credentialLocation", "knime://knime.workflow/../google_authentication.keys");
+            new SettingsModelCredentialLocation("credentialLocation", "${user.home}/knime");
 
     /**
      * Returns the {@link SettingsModelString} for the credential location
@@ -158,7 +158,7 @@ final class GoogleInteractiveServiceProviderSettings {
      * @throws URISyntaxException
      */
     private Path getStoredCredentialPath(final File credentialFolder) throws IOException, URISyntaxException {
-        return new File(credentialFolder, "StoredCredential").toPath();
+        return new File(credentialFolder, GoogleSheetsInteractiveAuthentication.STORAGE_CREDENTIAL).toPath();
     }
 
 

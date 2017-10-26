@@ -126,11 +126,11 @@ final class GoogleInteractiveServiceProviderComponents {
     }
 
     /**
-     * Returns {@link DialogComponentFileChooser} for the credential storage location.
+     * Creates and returns {@link DialogComponentFileChooser} for the credential storage location.
      *
      * @return The component for the credential storage location
      */
-    DialogComponentSheetCredentialLocation getCredentialLocationComponent() {
+    DialogComponentSheetCredentialLocation createCredentialLocationComponent() {
         m_credentialLocationComponent =
             new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
                 GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName());
@@ -153,7 +153,7 @@ final class GoogleInteractiveServiceProviderComponents {
         gbc.weighty = 0;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        panel.add(getCredentialLocationComponent().getComponentPanel(), gbc);
+        panel.add(createCredentialLocationComponent().getComponentPanel(), gbc);
         gbc.gridy++;
         m_authTestButton.setBackground(Color.yellow);
         m_authTestButton.addActionListener(e -> onAuthButtonPressed());
@@ -201,7 +201,7 @@ final class GoogleInteractiveServiceProviderComponents {
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            NodeLogger.getLogger(GoogleInteractiveServiceProviderComponents.class).coding("Ingoring AWT Interrupt");
+            NodeLogger.getLogger(GoogleInteractiveServiceProviderComponents.class).coding("Ignoring AWT Interrupt");
         }
         if (!openBrowserSwingWorker.isDone()) {
             JProgressBar b = new JProgressBar();
