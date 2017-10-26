@@ -54,6 +54,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.apache.commons.codec.binary.Base64;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -63,8 +64,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
-
-import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 
 /**
  * This class holds the settings for the GoogleInterActiveServiceProvider
@@ -202,7 +201,8 @@ final class GoogleInteractiveServiceProviderSettings {
      */
     public void setByteFile() throws IOException, URISyntaxException {
         if (inNodeCredential()) {
-            m_storedCredential = new String(Base64.encodeBase64(Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder)))));
+            m_storedCredential = new String(
+                Base64.encodeBase64(Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder)))));
         } else {
             m_storedCredential = null;
         }

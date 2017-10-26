@@ -51,6 +51,7 @@ package org.knime.google.api.util;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -65,8 +66,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
-
-import com.google.api.client.repackaged.com.google.common.base.Objects;
 
 /**
  * The SettingsModel for the {@link DialogComponentCredentialLocation}
@@ -284,7 +283,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
 
         StringBuilder errorMessageBuilder = new StringBuilder();
         errorMessageBuilder.append("Not a valid path: \"").append(resolvedPropertiesValue).append("\"");
-        if (!Objects.equal(stringValue, resolvedPropertiesValue)) {
+        if (!Objects.equals(stringValue, resolvedPropertiesValue)) {
             errorMessageBuilder.append(" (substituted from \"").append(stringValue).append("\")");
         }
         String errorMessage = errorMessageBuilder.toString();
