@@ -71,6 +71,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
@@ -114,6 +115,22 @@ public class GoogleSheetsInteractiveAuthentication {
         Sheets service =
             getSheetService(credential);
         testService(service);
+        return service;
+    }
+
+    /**
+     * Returns an authenticated Google Drive service. Given the credential path and the user.
+     *
+     * @param credentialPath The path to the credentials
+     * @param user The user that should be used for authenticating with Google Drive
+     * @return The google drive service
+     * @throws IOException
+     */
+    public static Drive getExistingAuthDriveService(final String credentialPath, final String user) throws IOException {
+        Credential credential = existingAuthorization(credentialPath, user);
+        Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                .setApplicationName(APP_NAME)
+                .build();
         return service;
     }
 

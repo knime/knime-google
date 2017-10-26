@@ -63,9 +63,7 @@ import org.knime.core.node.util.ViewUtils;
  * @author Ole Ostergaard, KNIME GmbH
  */
 public final class GoogleSheetsConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
-    /**
-     * TODO
-     */
+    /** The serializer */
     public static final class Serializer
         extends AbstractSimplePortObjectSpecSerializer<GoogleSheetsConnectionPortObjectSpec> { }
 

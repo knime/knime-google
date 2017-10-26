@@ -60,6 +60,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.services.analytics.Analytics;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 
 /**
@@ -88,6 +89,8 @@ public final class GoogleSheetsConnection {
     private String m_applicationName;
 
     private Sheets m_sheets;
+
+    private Drive m_drive;
 
     private boolean m_interactiveAuth;
 
@@ -185,6 +188,23 @@ public final class GoogleSheetsConnection {
      */
     public Sheets getSheetsService() {
         return m_sheets;
+    }
+
+    /**
+     * Get the Google Drive service associated with this Google Sheet connection.
+     *
+     * @return The Google Drive service associated with this Google Sheet connection
+     * @throws IOException
+     */
+    public Drive getDriveService() throws IOException {
+        if (m_drive == null) {
+            if (m_interactiveAuth) {
+                m_drive = GoogleSheetsInteractiveAuthentication.getExistingAuthDriveService(m_credentialPath, m_user);
+            } else {
+                m_drive = new Drive.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(), m_connection.getCredential()).build();
+            }
+        }
+        return m_drive;
     }
 
 
