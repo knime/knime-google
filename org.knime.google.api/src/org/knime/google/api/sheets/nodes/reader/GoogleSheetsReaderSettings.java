@@ -48,11 +48,13 @@
  */
 package org.knime.google.api.sheets.nodes.reader;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelOptionalString;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.google.api.sheets.nodes.util.SettingsModelGoogleSpreadsheetChooser;
 
 /**
@@ -89,11 +91,11 @@ final class GoogleSheetsReaderSettings {
     }
 
     protected String getSpreadSheetId() {
-        return m_spreadsheetSheetChoserModel.getSpreadsheetId().trim();
+        return StringUtils.trim(m_spreadsheetSheetChoserModel.getSpreadsheetId());
     }
 
     protected String getSheetName() {
-        return m_spreadsheetSheetChoserModel.getSheetName().trim();
+        return StringUtils.trim(m_spreadsheetSheetChoserModel.getSheetName());
     }
 
     protected boolean readRowId() {
@@ -109,8 +111,8 @@ final class GoogleSheetsReaderSettings {
     }
 
     protected String getRange() {
-        String range = (useCustomRange()) ?
-            getSheetName() + "!" + m_readRangeModel.getStringValue().trim() : getSheetName();
+        String range =
+            getSheetName() + (useCustomRange() ? "!" + StringUtils.trim(m_readRangeModel.getStringValue()) : "");
         return range;
     }
 
@@ -126,7 +128,10 @@ final class GoogleSheetsReaderSettings {
         m_readColNameModel.validateSettings(settings);
         m_readRowIdModel.validateSettings(settings);
         m_spreadsheetSheetChoserModel.validateSettings(settings);
-        m_readRangeModel.validateSettings(settings);
+
+        SettingsModelOptionalString rangeModelClone = m_readRangeModel.createCloneWithValidatedValue(settings);
+        CheckUtils.checkSetting(!rangeModelClone.isActive()
+            || StringUtils.isNotEmpty(rangeModelClone.getStringValue()), "No range defined");
     }
 
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {

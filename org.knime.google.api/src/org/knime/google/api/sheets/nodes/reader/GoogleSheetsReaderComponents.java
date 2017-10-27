@@ -76,7 +76,7 @@ final class GoogleSheetsReaderComponents {
 
     private final DialogComponentBoolean m_readColName;
 
-    private final  DialogComponentBoolean m_readRowId;
+    private final DialogComponentBoolean m_readRowId;
 
     private final DialogComponentGoogleSpreadsheetChooser m_spreadsheetChooser;
 
@@ -86,31 +86,31 @@ final class GoogleSheetsReaderComponents {
         m_settings = settings;
         m_readColName = new DialogComponentBoolean(m_settings.getReadColNameModel(), "Has Column Header");
         m_readRowId = new DialogComponentBoolean(m_settings.getReadRowIdModel(), "Has Row Header");
-        m_spreadsheetChooser =
-                new DialogComponentGoogleSpreadsheetChooser(m_settings.getSpreadsheetChoserModel());
+        m_spreadsheetChooser = new DialogComponentGoogleSpreadsheetChooser(m_settings.getSpreadsheetChoserModel());
         m_readRange = new DialogComponentOptionalString(m_settings.getReadRangeModel(), "Range:            ");
 
     }
 
     protected JPanel getPanel() {
-            JPanel panel = new JPanel();
-            panel.setLayout(new GridBagLayout());
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
-            gbc.anchor = GridBagConstraints.NORTHWEST;
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.weightx = 1;
-            gbc.weighty = 0;
-            gbc.gridx = 0;
-            gbc.gridy = 0;
-            panel.add(m_spreadsheetChooser.getComponentPanel(), gbc);
-            gbc.gridy++;
-            panel.add(m_readRange.getComponentPanel(), gbc);
-            gbc.gridy++;
-            panel.add(m_readColName.getComponentPanel(), gbc);
-            gbc.gridy++;
-            panel.add(m_readRowId.getComponentPanel(), gbc);
-            return panel;
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(m_spreadsheetChooser.getComponentPanel(), gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridy++;
+        panel.add(m_readRange.getComponentPanel(), gbc);
+        gbc.gridy++;
+        panel.add(m_readColName.getComponentPanel(), gbc);
+        gbc.gridy++;
+        panel.add(m_readRowId.getComponentPanel(), gbc);
+        return panel;
     }
 
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
@@ -126,13 +126,13 @@ final class GoogleSheetsReaderComponents {
             throw new NotConfigurableException("Missing Google Sheets Connection");
         }
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
-        m_spreadsheetChooser.loadSettingsFrom(settings, specs);
         try {
             m_spreadsheetChooser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
                 connectionSpec.getGoogleSheetsConnection().getSheetsService());
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");
         }
+        m_spreadsheetChooser.loadSettingsFrom(settings, specs);
 
         m_readColName.loadSettingsFrom(settings, specs);
         m_readRowId.loadSettingsFrom(settings, specs);

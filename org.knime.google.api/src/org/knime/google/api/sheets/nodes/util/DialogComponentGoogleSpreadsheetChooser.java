@@ -60,8 +60,11 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
@@ -102,6 +105,8 @@ import com.google.api.services.sheets.v4.model.Sheet;
  */
 final public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DialogComponentGoogleSpreadsheetChooser.class);
+
     private final JLabel m_spreadsheetLabel = new JLabel("Spreadsheet: ");
     private JButton m_spreadsheetSelectButton;
     private final JTextField m_spreadsheetNameField = createTextField();
@@ -122,7 +127,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
 
     private JTextField createTextField() {
         final JTextField textField = new JTextField(20);
-        textField.setSize(20, 6);
         textField.setEditable(false);
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -158,7 +162,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     private JComboBox<String> createComboBox() {
         final JComboBox<String> comboBox = new JComboBox<String>(new String[0]);
         comboBox.setEditable(false);
-        comboBox.setSize(20,6);
 
         final JTextComponent editorComponent = (JTextComponent)comboBox.getEditor().getEditorComponent();
         editorComponent.getDocument().addDocumentListener(new DocumentListener() {
@@ -199,15 +202,13 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     }
 
     private JButton getOpenSpreedSheetInBrowserButton() {
-        JButton button = new JButton("Open");
-        button.setSize(20, 6);
+        JButton button = new JButton("Open in Browser...");
         button.addActionListener(e -> onOpenSpreadsheetInBrowserButtonPressed());
         return button;
     }
 
     private JButton getSelectButton() {
         final JButton button = new JButton("Select...");
-        button.setSize(20,6);
         button.addActionListener(e -> onSelectButtonPressed());
         return button;
     }
@@ -322,24 +323,27 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.weighty = 1;
         panel.add(m_spreadsheetLabel, gbc);
         gbc.gridx++;
+        gbc.weightx = 1;
         panel.add(m_spreadsheetNameField, gbc);
         gbc.gridx++;
+        gbc.weightx = 0;
         m_panelWithSelectOrProgressBar.add(getSelectPanel());
         gbc.gridheight = 2;
         panel.add(m_panelWithSelectOrProgressBar, gbc);
         gbc.gridheight = 1;
         gbc.gridy++;
         gbc.gridx = 0;
+        gbc.weightx = 0;
         panel.add(m_sheetLabel, gbc);
         gbc.gridx++;
+        gbc.weightx = 1;
         panel.add(m_sheetCombobox, gbc);
         return panel;
     }
@@ -348,7 +352,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1;
         gbc.weighty = 0;
         gbc.gridx = 0;
@@ -362,96 +366,77 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     }
 
     private final void onOpenSpreadsheetInBrowserButtonPressed() {
-        SwingWorkerWithContext<URL, Void> retrieveSpreadsheetUrlSwingWorker =
-                new SwingWorkerWithContext<URL, Void>() {
+        SwingWorkerWithContext<URL, Void> retrieveSpreadsheetUrlSwingWorker = new SwingWorkerWithContext<URL, Void>() {
 
-                    @Override
-                    protected URL doInBackgroundWithContext() throws Exception {
-                        String spreadsheetUrl = m_sheetsService.spreadsheets().get(m_spreadsheetId).execute().getSpreadsheetUrl();
-                        return new URL(spreadsheetUrl);
-                    }
+            @Override
+            protected URL doInBackgroundWithContext() throws Exception {
+                String spreadsheetUrl =
+                    m_sheetsService.spreadsheets().get(m_spreadsheetId).execute().getSpreadsheetUrl();
+                return new URL(spreadsheetUrl);
+            }
 
-                    @Override
-                    protected void doneWithContext() {
-                        try {
-                            DesktopUtil.browse(get());
-                        } catch (InterruptedException | ExecutionException e) {
-                            JOptionPane.showMessageDialog(getParentFrame(),
-                                    "Could not retrieve Spreadsheet URL");
-                        }
+            @Override
+            protected void doneWithContext() {
+                try {
+                    DesktopUtil.browse(get());
+                } catch (InterruptedException | ExecutionException e) {
+                    String error = "Could not retrieve Spreadsheet URL";
+                    LOGGER.debug(error, e);
+                    JOptionPane.showMessageDialog(getParentFrame(), "Could not retrieve Spreadsheet URL");
+                }
 
-                    }
-                };
+            }
+        };
         retrieveSpreadsheetUrlSwingWorker.execute();
     }
 
     private final void onSelectButtonPressed() {
-        SwingWorkerWithContext<List<String>, Void> retrieveSheetsSwingWorker =
-                new SwingWorkerWithContext<List<String>, Void>() {
-                    @Override
-                    protected List<String> doInBackgroundWithContext() throws Exception {
-                        List<String> sheets = getSheets(m_spreadsheetId);
-                        return sheets;
-                    }
-
-                    @Override
-                    protected void doneWithContext() {
-                        if (isCancelled()) {
-                            return;
-                        }
-
-                        try {
-                            setAvailableSheets(get());
-                        } catch (InterruptedException e) {
-                            // do nothing
-                        } catch (ExecutionException e) {
-                            setAvailableSheets(null);
-                            JOptionPane.showMessageDialog(getParentFrame(),
-                                "Could not retrieve sheets for spreadsheet");
-                        }
-                    }
-                };
-
         SwingWorkerWithContext<File[], Void> retrieveSpreadsheetsSwingWorker =
                 new SwingWorkerWithContext<File[], Void>() {
 
-                    @Override
-                    protected File[] doInBackgroundWithContext() throws Exception {
-                        File[] spreadsheets = getSpreadsheets();
-                        return spreadsheets;
+            @Override
+            protected File[] doInBackgroundWithContext() throws Exception {
+                File[] spreadsheets = getSpreadsheets();
+                return spreadsheets;
+            }
+
+            @Override
+            protected void doneWithContext() {
+                if (isCancelled()) {
+                    return;
+                }
+                Frame frame = getParentFrame();
+                try {
+                    File[] files = get();
+
+                    Optional<File> selectedFile =
+                        Arrays.stream(files).filter(file -> file.getId().equals(m_spreadsheetId)).findFirst();
+
+                    JList<File> spreadsheetList = new JList<File>(files);
+                    spreadsheetList.setCellRenderer(new SpreadsheetCellListRenderer());
+                    spreadsheetList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+                    setSelectPanelComponent(getSelectPanel());
+                    SpreadsheetOptionPane dialog = new SpreadsheetOptionPane(frame, "Select existing spreadsheet",
+                        "Select existing spreadsheet: ", spreadsheetList);
+                    selectedFile.ifPresent(file -> spreadsheetList.setSelectedValue(file, true));
+
+                    File selectedSpreadSheet = dialog.show();
+                    if (selectedSpreadSheet != null) {
+                        setSelectedSpreadsheet(selectedSpreadSheet);
+                        runRetrieveSheetsSwingWorker(null);
                     }
-
-                    @Override
-                protected void doneWithContext() {
-                    if (isCancelled()) {
-                        return;
-                    }
-                    Frame frame = getParentFrame();
-                    try {
-                        File[] files = get();
-
-                        JList<File> spreadsheetList = new JList<File>(files);
-                        spreadsheetList.setCellRenderer(new SpreadsheetCellListRenderer());
-                        spreadsheetList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-                        setSelectPanelComponent(getSelectPanel());
-                        SpreadsheetOptionPane dialog = new SpreadsheetOptionPane(frame, "Select existing spreadsheet",
-                            "Select existing spreadsheet: ", spreadsheetList);
-
-                        File selectedSpreadSheet = dialog.show();
-                        if (selectedSpreadSheet != null) {
-                            setSelectedSpreadsheet(selectedSpreadSheet);
-                            retrieveSheetsSwingWorker.execute();
-                        }
-                    } catch (InterruptedException e) {
-                        // do nothing
-                    } catch (ExecutionException e) {
-                            JOptionPane.showMessageDialog(frame, "Could not retrieve spreadsheets. Check connection.");
-                        } finally {
-                            setSelectPanelComponent(getSelectPanel());
-                        }
-                    }
-                };
+                } catch (InterruptedException e) {
+                    // do nothing
+                } catch (ExecutionException e) {
+                    String error = "Could not retrieve spreadsheets. Check connection.";
+                    LOGGER.debug(error, e);
+                    JOptionPane.showMessageDialog(frame, error);
+                } finally {
+                    setSelectPanelComponent(getSelectPanel());
+                }
+            }
+        };
 
         retrieveSpreadsheetsSwingWorker.execute();
         try {
@@ -474,6 +459,42 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
             panel.add(cancelButton, gbc);
             setSelectPanelComponent(panel);
         }
+    }
+
+    /** Run a SwingWorker that queries and sets the sheets in a selected spreadsheet.
+     * @param defaultSheetName The sheet to activate, if present (may be null)
+     */
+    private void runRetrieveSheetsSwingWorker(final String defaultSheetName) {
+        SwingWorkerWithContext<List<String>, Void> retrieveSheetsSwingWorker =
+                new SwingWorkerWithContext<List<String>, Void>() {
+            @Override
+            protected List<String> doInBackgroundWithContext() throws Exception {
+                List<String> sheets = getSheets(m_spreadsheetId);
+                return sheets;
+            }
+
+            @Override
+            protected void doneWithContext() {
+                if (isCancelled()) {
+                    return;
+                }
+
+                try {
+                    setAvailableSheets(get());
+                    if (defaultSheetName != null) {
+                        m_sheetCombobox.setSelectedItem(defaultSheetName);
+                    }
+                } catch (InterruptedException e) {
+                    // do nothing
+                } catch (ExecutionException e) {
+                    setAvailableSheets(null);
+                    String error = "Could not retrieve sheets for spreadsheet";
+                    LOGGER.debug(error, e);
+                    JOptionPane.showMessageDialog(getParentFrame(), error);
+                }
+            }
+        };
+        retrieveSheetsSwingWorker.execute();
     }
 
     private Frame getParentFrame() {
@@ -523,8 +544,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         do {
             final FileList execute = request.execute();
             spreadsheets.addAll(execute.getFiles());
-        } while (request.getPageToken() != null &&
-                    request.getPageToken().length() > 0);
+        } while (request.getPageToken() != null && request.getPageToken().length() > 0);
         return spreadsheets.toArray(new File[spreadsheets.size()]);
     }
 
@@ -550,7 +570,13 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         setEnabledComponents(model.isEnabled());
         m_spreadsheetId = model.getSpreadsheetId();
         m_spreadsheetNameField.setText(model.getSpreadsheetName());
-        m_sheetCombobox.setSelectedItem(model.getSheetName());
+        if (IntStream.range(0, m_sheetCombobox.getItemCount())
+                .mapToObj(i -> m_sheetCombobox.getItemAt(i))
+                .anyMatch(s -> s.equals(model.getSheetName()))) {
+            m_sheetCombobox.setSelectedItem(model.getSheetName());
+        } else {
+            runRetrieveSheetsSwingWorker(model.getSheetName());
+        }
     }
 
     /**
@@ -578,8 +604,10 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
      * @throws InvalidSettingsException if the string was not accepted.
      */
     private void updateModel() throws InvalidSettingsException {
-        ((SettingsModelGoogleSpreadsheetChooser)getModel())
-                .setSpreadsheetName(m_spreadsheetNameField.getText());
+        SettingsModelGoogleSpreadsheetChooser model = (SettingsModelGoogleSpreadsheetChooser)getModel();
+        model.setSpreadsheetId(m_spreadsheetId);
+        model.setSpreadsheetName(m_spreadsheetNameField.getText());
+        model.setSpreadsheetName((String)m_sheetCombobox.getSelectedItem());
     }
 
     /**

@@ -48,6 +48,7 @@
  */
 package org.knime.google.api.sheets.nodes.util;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -55,6 +56,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *  Settings model for the {@link DialogComponentGoogleSpreadsheetChooser}
@@ -142,9 +144,12 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(m_configName);
-        config.getString(SPREADSHEET_ID);
-        config.getString(SPREADSHEET_NAME);
-        config.getString(SHEETNAME);
+        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SPREADSHEET_ID)),
+                "Spreadsheet ID must not be empty");
+        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SPREADSHEET_NAME)),
+                "Spreadsheet name must not be empty");
+        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SHEETNAME)),
+                "Sheet name must not be empty");
     }
 
     /**
@@ -155,6 +160,7 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
         Config config;
         config = settings.getConfig(m_configName);
         m_spreadsheetId = config.getString(SPREADSHEET_ID);
+
         m_spreadsheetName = config.getString(SPREADSHEET_NAME);
         m_sheetName = config.getString(SHEETNAME);
     }
