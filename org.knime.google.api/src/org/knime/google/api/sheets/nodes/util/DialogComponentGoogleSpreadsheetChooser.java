@@ -55,6 +55,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -80,9 +81,6 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.JTextComponent;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -120,8 +118,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     private Drive m_driveService;
     private Sheets m_sheetsService;
 
-    private boolean m_existingSpreadsheetIntoCB = false;
-
     private String m_spreadsheetId = "";
 
     private final JPanel m_panelWithSelectOrProgressBar = new JPanel(new GridBagLayout());
@@ -129,62 +125,20 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     private JTextField createTextField() {
         final JTextField textField = new JTextField(20);
         textField.setEditable(false);
-        textField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate(final DocumentEvent e) {
-                try {
-                    updateModel();
-                } catch (final InvalidSettingsException ise) {
-                    // Ignore it here.
-                }
-            }
-
-            @Override
-            public void insertUpdate(final DocumentEvent e) {
-                try {
-                    updateModel();
-                } catch (final InvalidSettingsException ise) {
-                    // Ignore it here.
-                }
-            }
-
-            @Override
-            public void changedUpdate(final DocumentEvent e) {
-                try {
-                    updateModel();
-                } catch (final InvalidSettingsException ise) {
-                    // Ignore it here.
-                }
-            }
-        });
         return textField;
     }
 
     private JComboBox<String> createComboBox() {
         final JComboBox<String> comboBox = new JComboBox<String>(new String[0]);
         comboBox.setEditable(false);
-
-        final JTextComponent editorComponent = (JTextComponent)comboBox.getEditor().getEditorComponent();
-        editorComponent.getDocument().addDocumentListener(new DocumentListener() {
+        comboBox.addActionListener(new ActionListener() {
 
             @Override
-            public void removeUpdate(final DocumentEvent e) {
-                updateCB();
-            }
-
-            @Override
-            public void insertUpdate(final DocumentEvent e) {
-                updateCB();
-            }
-
-            @Override
-            public void changedUpdate(final DocumentEvent e) {
-                updateCB();
-            }
-
-            private void updateCB() {
-                if (!m_existingSpreadsheetIntoCB) {
-                    comboBox.setSelectedItem(editorComponent.getText());
+            public void actionPerformed(final ActionEvent e) {
+                try {
+                    updateModel();
+                } catch (InvalidSettingsException e1) {
+                    // Ignore it here
                 }
             }
         });
@@ -263,6 +217,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
             gbc.anchor = GridBagConstraints.NORTHWEST;
             panel.add(m_label, gbc);
             gbc.gridx++;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             panel.add(scroll, gbc);
             return panel;
         }
@@ -435,6 +390,11 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                     JOptionPane.showMessageDialog(frame, error);
                 } finally {
                     setSelectPanelComponent(getSelectPanel());
+                    try {
+                        updateModel();
+                    } catch (InvalidSettingsException e) {
+                        // Ignore it here
+                    }
                 }
             }
         };
