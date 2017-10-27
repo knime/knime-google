@@ -84,6 +84,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -575,7 +576,9 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                 .anyMatch(s -> s.equals(model.getSheetName()))) {
             m_sheetCombobox.setSelectedItem(model.getSheetName());
         } else {
-            runRetrieveSheetsSwingWorker(model.getSheetName());
+            if (StringUtils.isNotEmpty(m_spreadsheetId)) {
+                runRetrieveSheetsSwingWorker(model.getSheetName());
+            }
         }
     }
 
