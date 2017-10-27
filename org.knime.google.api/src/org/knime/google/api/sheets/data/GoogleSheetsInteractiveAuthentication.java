@@ -56,9 +56,9 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 
@@ -265,8 +265,9 @@ public class GoogleSheetsInteractiveAuthentication {
      * @throws URISyntaxException If the file cannot be decoded
      *
      */
-    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException, URISyntaxException {
-        byte[] decodeBase64 = Base64.decodeBase64(credentialByteString);
+    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString)
+        throws IOException, URISyntaxException {
+        byte[] decodeBase64 = Base64.getDecoder().decode(credentialByteString);
         Files.write(new File(tempFolder, STORAGE_CREDENTIAL).toPath(), decodeBase64);
     }
 }

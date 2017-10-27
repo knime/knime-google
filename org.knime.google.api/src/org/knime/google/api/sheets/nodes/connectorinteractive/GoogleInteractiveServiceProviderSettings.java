@@ -53,8 +53,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
-import org.apache.commons.codec.binary.Base64;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -201,8 +201,8 @@ final class GoogleInteractiveServiceProviderSettings {
      */
     public void setByteFile() throws IOException, URISyntaxException {
         if (inNodeCredential()) {
-            m_storedCredential = new String(
-                Base64.encodeBase64(Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder)))));
+            m_storedCredential = Base64.getEncoder().encodeToString(
+                Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder))));
         } else {
             m_storedCredential = null;
         }
