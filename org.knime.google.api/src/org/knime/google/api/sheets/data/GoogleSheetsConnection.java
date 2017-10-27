@@ -201,7 +201,8 @@ public final class GoogleSheetsConnection {
             if (m_interactiveAuth) {
                 m_drive = GoogleSheetsInteractiveAuthentication.getExistingAuthDriveService(m_credentialPath, m_user);
             } else {
-                m_drive = new Drive.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(), m_connection.getCredential()).build();
+                m_drive = new Drive.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(),
+                    m_connection.getCredential()).setApplicationName(m_applicationName).build();
             }
         }
         return m_drive;
