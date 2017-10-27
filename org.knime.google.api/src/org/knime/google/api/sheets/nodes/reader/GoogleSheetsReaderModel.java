@@ -50,13 +50,14 @@ package org.knime.google.api.sheets.nodes.reader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.MissingCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -71,6 +72,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 
@@ -95,7 +97,6 @@ public class GoogleSheetsReaderModel extends NodeModel {
         return new GoogleSheetsReaderSettings();
     }
 
-
     /**
      * Constructor of the node model.
      */
@@ -109,54 +110,50 @@ public class GoogleSheetsReaderModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleSheetsConnection connection =
-                ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
+            ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
         exec.setMessage("Requesting Google Sheet");
-        ValueRange result = createGetRequest(connection, m_settings.getSpreadSheetId(),
-            m_settings.getRange()).execute();
+        ValueRange result =
+            createGetRequest(connection, m_settings.getSpreadSheetId(), m_settings.getRange()).execute();
 
         if (result == null) {
             throw new IOException("Could not get the requested data");
         }
 
-
-       List<List<Object>> values = result.getValues();
-       if (values == null) {
-           throw new InvalidSettingsException("Specified Sheet or range is empty");
-       }
-       DataTableSpec outSpec = createSpec(values.get(0));
-       BufferedDataContainer outContainer = exec.createDataContainer(outSpec);
-       int i = m_settings.readColName() ? 1 : 0;
-       for (; i < values.size(); i++) {
-           exec.checkCanceled();
-           exec.setProgress((i==0) ? values.size()/(i+1) : values.size()/i, "Reading row " + i);
-           List<Object> row = values.get(i);
-           List<DataCell> cells = new ArrayList<DataCell>(outSpec.getNumColumns());
-           int leftBound = m_settings.readRowId() ? 1 : 0;
-           for (int j = leftBound; j <= outSpec.getNumColumns() - (1 - leftBound); j++) {
-               String value = "";
-               if (j < row.size()) {
-                   value = row.get(j).toString();
-               }
-               if (value.equals("")) {
-                   cells.add(new MissingCell("mising"));
-               } else {
-                   cells.add(new StringCell(row.get(j).toString()));
-               }
-           }
-           int rowNum = m_settings.readColName() ? i-1 : i;
-           if (m_settings.readRowId()) {
-               String rowId = "";
-               if (row.size() == 0) {
-                   rowId =  "Row" + i;
-               } else {
-                   rowId = row.get(0).toString();
-               }
-               outContainer.addRowToTable(new DefaultRow(rowId, cells));
-           } else {
-               outContainer.addRowToTable(new DefaultRow("Row" + (rowNum), cells));
-           }
-       }
+        List<List<Object>> values = result.getValues();
+        if (values == null) {
+            throw new InvalidSettingsException("Specified Sheet or range is empty");
+        }
+        DataTableSpec outSpec = createSpec(values.get(0));
+        BufferedDataContainer outContainer = exec.createDataContainer(outSpec);
+        UniqueNameGenerator rowIDGen = new UniqueNameGenerator(Collections.emptySet());
+        int i = m_settings.readColName() ? 1 : 0;
+        for (; i < values.size(); i++) {
+            exec.checkCanceled();
+            exec.setProgress((i == 0) ? values.size() / (i + 1) : values.size() / i, "Reading row " + i);
+            List<Object> row = values.get(i);
+            List<DataCell> cells = new ArrayList<DataCell>(outSpec.getNumColumns());
+            int leftBound = m_settings.readRowId() ? 1 : 0;
+            for (int j = leftBound; j <= outSpec.getNumColumns() - (1 - leftBound); j++) {
+                String value = "";
+                if (j < row.size()) {
+                    value = row.get(j).toString();
+                }
+                if (StringUtils.isEmpty(value)) {
+                    cells.add(DataType.getMissingCell());
+                } else {
+                    cells.add(new StringCell(value));
+                }
+            }
+            int rowNum = m_settings.readColName() ? i - 1 : i;
+            String rowIdString = "Row" + (rowNum);
+            if (m_settings.readRowId()) {
+                if (row.size() > 0) {
+                    rowIdString = rowIDGen.newName(StringUtils.defaultIfBlank(row.get(0).toString(), rowIdString));
+                }
+            }
+            outContainer.addRowToTable(new DefaultRow(rowIdString, cells));
+        }
         outContainer.close();
         return new PortObject[]{outContainer.getTable()};
     }
@@ -182,16 +179,15 @@ public class GoogleSheetsReaderModel extends NodeModel {
      */
     private DataTableSpec createSpec(final List<Object> list) {
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>(list.size());
-        int i = m_settings.readRowId() ? 1 :0;
-        if (m_settings.readColName()) {
-            for (; i < list.size(); i++) {
-                colSpecs.add(new DataColumnSpecCreator(list.get(i).toString(), StringCell.TYPE).createSpec());
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(Collections.emptySet());
+        int i = m_settings.readRowId() ? 1 : 0;
+        for (; i < list.size(); i++) {
+            int colNumber = m_settings.readRowId() ? i - 1 : i;
+            String colName = StringUtils.trimToNull(list.get(i).toString());
+            if (!m_settings.readColName() || colName == null) {
+                colName = "Col" + colNumber;
             }
-        } else {
-            for (; i < list.size(); i++) {
-                int colNumber = m_settings.readRowId() ? i-1 : i;
-                colSpecs.add(new DataColumnSpecCreator("Col"+ colNumber, StringCell.TYPE).createSpec());
-            }
+            colSpecs.add(nameGen.newColumn(colName, StringCell.TYPE));
         }
         return new DataTableSpec(colSpecs.toArray(new DataColumnSpec[colSpecs.size()]));
     }
@@ -249,6 +245,7 @@ public class GoogleSheetsReaderModel extends NodeModel {
         throws IOException, CanceledExecutionException {
         //nothing to do
     }
+
     /**
      * {@inheritDoc}
      */
