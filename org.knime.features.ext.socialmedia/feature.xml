@@ -3,14 +3,14 @@
       id="org.knime.features.ext.socialmedia"
       label="KNIME Social Media Connectors (Twitter &amp; Google)"
       version="3.5.0.qualifier"
-      provider-name="KNIME GmbH, Konstanz, Germany">
+      provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
       This feature contains nodes to work with the Twitter and Google API.
    </description>
 
    <copyright>
-      Copyright by KNIME GmbH, Konstanz, Germany
+      Copyright by KNIME AG, Zurich, Switzerland
    </copyright>
 
    <license url="">

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Google API Nodes
 Bundle-SymbolicName: org.knime.google.api;singleton:=true
 Bundle-Version: 3.5.0.qualifier
-Bundle-Vendor: KNIME.com AG, Zurich, Switzerland
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.google.api.analytics.data,
  org.knime.google.api.data
 Require-Bundle: org.knime.base;bundle-version="[3.5.0,4.0.0)",
