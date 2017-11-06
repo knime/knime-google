@@ -49,7 +49,6 @@
 package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -63,6 +62,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -78,6 +78,7 @@ import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.DialogComponentCredentialLocation;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
+import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.services.sheets.v4.Sheets;
 
@@ -90,8 +91,10 @@ final class GoogleInteractiveServiceProviderComponents {
 
     private final GoogleInteractiveServiceProviderSettings m_settings;
 
-    private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new FlowLayout());
+    private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new GridBagLayout());
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
+    private final JButton m_removeInNodeCredentialsButton = new JButton("Forget Default credentials");
+
 
     private class DialogComponentSheetCredentialLocation extends DialogComponentCredentialLocation {
 
@@ -123,6 +126,7 @@ final class GoogleInteractiveServiceProviderComponents {
      */
     public GoogleInteractiveServiceProviderComponents(final GoogleInteractiveServiceProviderSettings settings) {
         m_settings = settings;
+
     }
 
     /**
@@ -147,7 +151,7 @@ final class GoogleInteractiveServiceProviderComponents {
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 1;
         gbc.weighty = 0;
@@ -158,8 +162,23 @@ final class GoogleInteractiveServiceProviderComponents {
         m_authTestButton.setBackground(Color.yellow);
         m_authTestButton.addActionListener(e -> onAuthButtonPressed());
         m_panelWithAuthButtonOrProgressBar.add(m_authTestButton);
+        gbc.insets = new Insets(5, 10, 5, 5);
         gbc.gridwidth = 2;
         panel.add(m_panelWithAuthButtonOrProgressBar, gbc);
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+        m_removeInNodeCredentialsButton.addActionListener(e -> {
+            m_settings.removeInNodeCredentials();
+            CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
+                    m_credentialLocationComponent.getModel()).getCredentialLocationType();
+            if (credentialLocationType.isDefault()) {
+                m_authTestButton.setBackground(Color.yellow);
+            }
+            JOptionPane.showMessageDialog(
+                SwingUtilities.windowForComponent(m_removeInNodeCredentialsButton),
+                "Node instance credentials have been removed.");
+        });
+        panel.add(m_removeInNodeCredentialsButton, gbc);
         return panel;
     }
 
@@ -184,14 +203,15 @@ final class GoogleInteractiveServiceProviderComponents {
                         return;
                     }
                     get();
-                    m_settings.setByteFile();
+                    m_settings.setByteString();
                     m_authTestButton.setBackground(Color.green);
                 } catch (InterruptedException e) {
                     m_authTestButton.setBackground(Color.yellow);
                 } catch (URISyntaxException | IOException | ExecutionException e) {
                     m_authTestButton.setBackground(Color.red);
-                    JOptionPane.showMessageDialog(null, "Authentication failed: "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    JOptionPane.showMessageDialog(
+                        SwingUtilities.windowForComponent(m_authTestButton),
+                        "Authentication failed: " + ExceptionUtils.getRootCauseMessage(e));
                 } finally {
                     setAuthPanelComponent(m_authTestButton);
                 }

@@ -199,13 +199,18 @@ final class GoogleInteractiveServiceProviderSettings {
      * @throws IOException
      * @throws URISyntaxException
      */
-    public void setByteFile() throws IOException, URISyntaxException {
+    public void setByteString() throws IOException, URISyntaxException {
         if (inNodeCredential()) {
             m_storedCredential = Base64.getEncoder().encodeToString(
                 Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder))));
-        } else {
-            m_storedCredential = null;
         }
+    }
+
+    /**
+     * Sets the byte String to null.
+     */
+    public void removeInNodeCredentials() {
+        m_storedCredential = null;
     }
 
     /**
@@ -214,9 +219,6 @@ final class GoogleInteractiveServiceProviderSettings {
      * @param settings
      */
     public void saveAuth(final NodeSettingsWO settings) {
-        if (!inNodeCredential()) {
-            m_storedCredential = null;
-        }
         Config config = settings.addConfig(m_configName);
         config.addString(BYTE_FILE, m_storedCredential);
     }

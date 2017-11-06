@@ -49,6 +49,9 @@
 		This button will open a dialog to authenticate with Google Services. 
 		If you are already authenticated, it will test the stored credentials in the selected location.
 		</option>
+		<option name="Remove node instance credentials">
+		This button will remove the credentials which are stored as part of the node instance.
+		</option>
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="Google Sheets Connection">A connection that can be used to

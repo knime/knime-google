@@ -130,7 +130,8 @@ public final class GoogleSheetsConnection {
      * @throws URISyntaxException
      */
     public GoogleSheetsConnection(final String applicationName, final String credentialPath, final String user,
-        final String storedCredential, final boolean inNodeCredentials) throws IOException, GeneralSecurityException, URISyntaxException {
+        final String storedCredential, final boolean inNodeCredentials)
+                throws IOException, GeneralSecurityException, URISyntaxException {
         this(null, applicationName, user, storedCredential, inNodeCredentials, true, credentialPath);
         if (m_inNodeCredentials) {
             m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
