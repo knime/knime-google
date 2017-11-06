@@ -49,13 +49,11 @@
 package org.knime.google.api.sheets.nodes.util;
 
 import java.awt.Component;
-import java.awt.Container;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -67,9 +65,11 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -81,6 +81,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -113,6 +114,8 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     private final JLabel m_sheetLabel = new JLabel("Sheet: ");
     private final JComboBox<String> m_sheetCombobox = createComboBox();
 
+    private JCheckBox m_selectFirstSheet;
+
     private JButton m_openSpreadsheetInBrowserButton;
 
     private Drive m_driveService;
@@ -131,18 +134,23 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     private JComboBox<String> createComboBox() {
         final JComboBox<String> comboBox = new JComboBox<String>(new String[0]);
         comboBox.setEditable(false);
-        comboBox.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                try {
-                    updateModel();
-                } catch (InvalidSettingsException e1) {
-                    // Ignore it here
-                }
+        comboBox.addActionListener(e -> {
+            try {
+                updateModel();
+            } catch (InvalidSettingsException e1) {
+                // Ignore it here
             }
         });
         return comboBox;
+    }
+
+    private JCheckBox createSelectFirstSheetCheckBox() {
+        JCheckBox checkbox = new JCheckBox("Select First Sheet", false);
+        checkbox.addActionListener(e -> {
+            boolean selectFirst = checkbox.isSelected();
+            m_sheetCombobox.setEnabled(!selectFirst);
+        });
+        return checkbox;
     }
 
     /**
@@ -154,6 +162,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         super(model);
         m_spreadsheetSelectButton = getSelectButton();
         m_openSpreadsheetInBrowserButton = getOpenSpreedSheetInBrowserButton();
+        m_selectFirstSheet = createSelectFirstSheetCheckBox();
     }
 
     private JButton getOpenSpreedSheetInBrowserButton() {
@@ -176,7 +185,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         private JDialog m_dialog;
         private boolean m_okay;
 
-        public SpreadsheetOptionPane(final Frame rootFrame,final String title, final String message, final JList<File> listToDisplay){
+        public SpreadsheetOptionPane(final Window rootWindow,final String title, final String message, final JList<File> listToDisplay){
             m_list = listToDisplay;
             m_list.addMouseListener(new MouseAdapter() {
                 @Override
@@ -188,17 +197,17 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                   }
             }) ;
             m_label = new JLabel(message);
-            createAndDisplayOptionPane(rootFrame);
+            createAndDisplayOptionPane(rootWindow);
             m_dialog.setTitle(title);
         }
 
-        private void createAndDisplayOptionPane(final Frame rootFrame){
+        private void createAndDisplayOptionPane(final Window rootWindow){
             setupButtons();
             JPanel pane = layoutComponents();
             m_optionPane = new JOptionPane(pane);
-            m_optionPane.setComponentOrientation(rootFrame.getComponentOrientation());
+            m_optionPane.setComponentOrientation(rootWindow.getComponentOrientation());
             m_optionPane.setOptions(new Object[]{m_okButton, m_cancelButton});
-            m_dialog = m_optionPane.createDialog(rootFrame,"Select option");
+            m_dialog = m_optionPane.createDialog(rootWindow,"Select option");
         }
 
         private void setupButtons(){
@@ -276,6 +285,8 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     public JPanel getComponentPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(), " Spreadsheet Selection "));
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.NORTHWEST;
@@ -301,6 +312,9 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         gbc.gridx++;
         gbc.weightx = 1;
         panel.add(m_sheetCombobox, gbc);
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(m_selectFirstSheet, gbc);
         return panel;
     }
 
@@ -313,7 +327,8 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         gbc.weighty = 0;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 10, 0);
+        gbc.ipady = 0;
+        gbc.insets = new Insets(0, 0, 5, 0);
         panel.add(m_spreadsheetSelectButton, gbc);
         gbc.gridy++;
         gbc.insets = new Insets(10, 0, 0, 0);
@@ -338,7 +353,8 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                 } catch (InterruptedException | ExecutionException e) {
                     String error = "Could not retrieve Spreadsheet URL";
                     LOGGER.debug(error, e);
-                    JOptionPane.showMessageDialog(getParentFrame(), "Could not retrieve Spreadsheet URL");
+                    JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(m_spreadsheetLabel),
+                        "Could not retrieve Spreadsheet URL");
                 }
 
             }
@@ -361,7 +377,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                 if (isCancelled()) {
                     return;
                 }
-                Frame frame = getParentFrame();
+                Window frame = SwingUtilities.windowForComponent(m_spreadsheetLabel);
                 try {
                     File[] files = get();
 
@@ -451,24 +467,11 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                     setAvailableSheets(null);
                     String error = "Could not retrieve sheets for spreadsheet";
                     LOGGER.debug(error, e);
-                    JOptionPane.showMessageDialog(getParentFrame(), error);
+                    JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(m_spreadsheetLabel), error);
                 }
             }
         };
         retrieveSheetsSwingWorker.execute();
-    }
-
-    private Frame getParentFrame() {
-        Frame frame = null;
-        Container container = m_panelWithSelectOrProgressBar.getParent();
-        while (container != null) {
-            if (container instanceof Frame) {
-                frame = (Frame)container;
-                break;
-            }
-            container = container.getParent();
-        }
-        return frame;
     }
 
     private void setSelectedSpreadsheet(final File selectedSpreadSheet) {
@@ -528,6 +531,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     protected void updateComponent() {
         final SettingsModelGoogleSpreadsheetChooser model = (SettingsModelGoogleSpreadsheetChooser)getModel();
+        m_selectFirstSheet.setSelected(model.getSelectFirstSheet());
         setEnabledComponents(model.isEnabled());
         m_spreadsheetId = model.getSpreadsheetId();
         m_spreadsheetNameField.setText(model.getSpreadsheetName());
@@ -551,6 +555,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         model.setSpreadsheetId(m_spreadsheetId);
         model.setSpreadsheetName(m_spreadsheetNameField.getText());
         model.setSheetname((String)m_sheetCombobox.getSelectedItem());
+        model.setSelectFirstSheet(m_selectFirstSheet.isSelected());
     }
 
     /**
@@ -579,7 +584,11 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_spreadsheetSelectButton.setEnabled(enabled);
-        m_spreadsheetNameField.setEnabled(enabled);
+        if (!m_selectFirstSheet.isSelected()) {
+            m_spreadsheetNameField.setEnabled(enabled);
+        } else {
+            m_spreadsheetNameField.setEnabled(!enabled);
+        }
     }
 
     /**
@@ -589,6 +598,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     public void setToolTipText(final String text) {
         m_spreadsheetSelectButton.setToolTipText(text);
         m_sheetCombobox.setToolTipText(text);
+        m_selectFirstSheet.setToolTipText(text);
     }
 
     private void setSelectPanelComponent(final JComponent comp) {

@@ -27,6 +27,9 @@
 		<option name="Sheet">
 			The sheet from the spreadsheet that should be read. Available sheets can be selected from the drop down menu.
 		</option>
+		<option name="Select First Sheet">
+			When selected, the first sheet of the spreadsheet will be read instead of the one selected from the drop down menu.
+		</option>
 		<option name="Range">
 			A specific range that should be read from the sheet can be given in A1 notation. (E.g. "A1:G20")
 		</option>

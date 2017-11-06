@@ -68,9 +68,12 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     private static final String SPREADSHEET_ID = "spreadsheetId";
     private static final String SPREADSHEET_NAME = "spreadsheetName";
     private static final String SHEETNAME = "sheetName";
+    private static final String SELECT_FIRST_SHEET = "firstSheet";
     private String m_spreadsheetId = "";
     private String m_spreadsheetName = "";
     private String m_sheetName = "";
+    private boolean m_selectFirst = false;
+
 
     private final String m_configName;
 
@@ -86,11 +89,12 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     }
 
     private SettingsModelGoogleSpreadsheetChooser(final String configName,
-        final String spreadsheetName, final String SpreadsheetId, final String sheetName) {
+        final String spreadsheetName, final String SpreadsheetId, final String sheetName, final boolean selectFirst) {
         m_configName = configName;
         m_spreadsheetName = spreadsheetName;
         m_spreadsheetId = SpreadsheetId;
         m_sheetName = sheetName;
+        m_selectFirst = selectFirst;
     }
 
     /**
@@ -99,7 +103,8 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelGoogleSpreadsheetChooser createClone() {
-        return new SettingsModelGoogleSpreadsheetChooser(m_configName, m_spreadsheetName, m_spreadsheetId, m_sheetName);
+        return new SettingsModelGoogleSpreadsheetChooser(
+            m_configName, m_spreadsheetName, m_spreadsheetId, m_sheetName, m_selectFirst);
     }
 
     /**
@@ -148,8 +153,10 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
                 "Spreadsheet ID must not be empty");
         CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SPREADSHEET_NAME)),
                 "Spreadsheet name must not be empty");
-        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SHEETNAME)),
-                "Sheet name must not be empty");
+        if (!config.getBoolean(SELECT_FIRST_SHEET)) {
+            CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SHEETNAME)),
+                    "Sheet name must not be empty");
+        }
     }
 
     /**
@@ -163,6 +170,8 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
 
         m_spreadsheetName = config.getString(SPREADSHEET_NAME);
         m_sheetName = config.getString(SHEETNAME);
+
+        m_selectFirst = config.getBoolean(SELECT_FIRST_SHEET);
     }
 
     /**
@@ -174,6 +183,7 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
         config.addString(SPREADSHEET_ID, m_spreadsheetId);
         config.addString(SPREADSHEET_NAME, m_spreadsheetName);
         config.addString(SHEETNAME, m_sheetName);
+        config.addBoolean(SELECT_FIRST_SHEET, m_selectFirst);
     }
 
     /**
@@ -212,6 +222,15 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     }
 
     /**
+     * Returns whether or not the first sheet should be selected.
+     *
+     * @return Whether or not the first sheet should be selected
+     */
+    public boolean getSelectFirstSheet() {
+        return m_selectFirst;
+    }
+
+    /**
      * Sets the spreadsheet id.
      *
      * @param spreadsheetId The spreadsheet id to be set
@@ -238,4 +257,14 @@ final public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
     public void setSheetname(final String sheetName) {
         m_sheetName = sheetName;
     }
+
+    /**
+     * Sets whether or not the first sheet should be selected.
+     *
+     * @param selectFirst Whether or not the first sheet should be selected
+     */
+    public void setSelectFirstSheet(final boolean selectFirst) {
+        m_selectFirst = selectFirst;
+    }
+
 }

@@ -106,13 +106,16 @@ final class GoogleSheetsReaderSettings {
         return m_readColNameModel.getBooleanValue();
     }
 
-    private boolean useCustomRange() {
+    protected boolean useCustomRange() {
         return m_readRangeModel.isActive();
     }
 
+    protected boolean selectFirstSheet() {
+        return m_spreadsheetSheetChoserModel.getSelectFirstSheet();
+    }
+
     protected String getRange() {
-        String range =
-            getSheetName() + (useCustomRange() ? "!" + StringUtils.trim(m_readRangeModel.getStringValue()) : "");
+        String range = (useCustomRange() ? "!" + StringUtils.trim(m_readRangeModel.getStringValue()) : "");
         return range;
     }
 

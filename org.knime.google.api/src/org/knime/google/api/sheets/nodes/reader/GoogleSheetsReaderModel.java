@@ -66,6 +66,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -77,6 +78,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Get;
+import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 /**
@@ -85,6 +87,8 @@ import com.google.api.services.sheets.v4.model.ValueRange;
  * @author Ole Ostergaard, KNIME GmbH
  */
 public class GoogleSheetsReaderModel extends NodeModel {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleSheetsReaderModel.class);
 
     GoogleSheetsReaderSettings m_settings = getSettings();
 
@@ -113,16 +117,22 @@ public class GoogleSheetsReaderModel extends NodeModel {
             ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
         exec.setMessage("Requesting Google Sheet");
-        ValueRange result =
-            createGetRequest(connection, m_settings.getSpreadSheetId(), m_settings.getRange()).execute();
 
-        if (result == null) {
-            throw new IOException("Could not get the requested data");
+        ValueRange result = null;
+        try {
+                String range = m_settings.selectFirstSheet() ?
+                    getFirstSheet(connection, m_settings.getSpreadSheetId()) : m_settings.getSheetName();
+                range += m_settings.getRange();
+                result =
+                        createGetRequest(connection, m_settings.getSpreadSheetId(),range).execute();
+        } catch (IOException e) {
+            throw new IOException("Could not fetch sheet name for given spreadsheet id.");
         }
+
 
         List<List<Object>> values = result.getValues();
         if (values == null) {
-            throw new InvalidSettingsException("Specified Sheet or range is empty");
+            throw new InvalidSettingsException("Specified Sheet or range is empty.");
         }
         DataTableSpec outSpec = createSpec(values.get(0));
         BufferedDataContainer outContainer = exec.createDataContainer(outSpec);
@@ -167,10 +177,16 @@ public class GoogleSheetsReaderModel extends NodeModel {
      * @return A get request for the currently configured query
      * @throws IOException If an IO error occurs
      */
-    public Get createGetRequest(final GoogleSheetsConnection connection, final String spreadsheetId,
+    private Get createGetRequest(final GoogleSheetsConnection connection, final String spreadsheetId,
         final String sheetRange) throws IOException {
         Get get = connection.getSheetsService().spreadsheets().values().get(spreadsheetId, sheetRange);
         return get;
+    }
+
+    private String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId) throws IOException {
+        LOGGER.debug("Fetching first sheet name for spreadsheet id: " + spreadsheetId);
+        List<Sheet> sheets = connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSheets();
+        return sheets.get(0).getProperties().getTitle();
     }
 
     /**
