@@ -64,9 +64,9 @@ import org.knime.google.api.sheets.nodes.util.SettingsModelGoogleSpreadsheetChoo
  */
 final class GoogleSheetsReaderSettings {
 
-    private SettingsModelBoolean m_readColNameModel = new SettingsModelBoolean("readColName", true);
+    private SettingsModelBoolean m_hasColumnHeaderModel = new SettingsModelBoolean("hasColumnHeader", true);
 
-    private SettingsModelBoolean m_readRowIdModel = new SettingsModelBoolean("readRowId", true);
+    private SettingsModelBoolean m_hasRowHeaderModel = new SettingsModelBoolean("hasRowHeader", true);
 
     private SettingsModelGoogleSpreadsheetChooser m_spreadsheetSheetChoserModel =
             new SettingsModelGoogleSpreadsheetChooser("spreadsheet");
@@ -79,11 +79,11 @@ final class GoogleSheetsReaderSettings {
     }
 
     protected SettingsModelBoolean getReadColNameModel() {
-        return m_readColNameModel;
+        return m_hasColumnHeaderModel;
     }
 
     protected SettingsModelBoolean getReadRowIdModel() {
-        return m_readRowIdModel;
+        return m_hasRowHeaderModel;
     }
 
     protected SettingsModelGoogleSpreadsheetChooser getSpreadsheetChoserModel() {
@@ -98,12 +98,12 @@ final class GoogleSheetsReaderSettings {
         return StringUtils.trim(m_spreadsheetSheetChoserModel.getSheetName());
     }
 
-    protected boolean readRowId() {
-        return m_readRowIdModel.getBooleanValue();
+    protected boolean hasRowHeader() {
+        return m_hasRowHeaderModel.getBooleanValue();
     }
 
-    protected boolean readColName() {
-        return m_readColNameModel.getBooleanValue();
+    protected boolean hasColumnHeader() {
+        return m_hasColumnHeaderModel.getBooleanValue();
     }
 
     protected boolean useCustomRange() {
@@ -121,15 +121,15 @@ final class GoogleSheetsReaderSettings {
 
 
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_readColNameModel.saveSettingsTo(settings);
-        m_readRowIdModel.saveSettingsTo(settings);
+        m_hasColumnHeaderModel.saveSettingsTo(settings);
+        m_hasRowHeaderModel.saveSettingsTo(settings);
         m_spreadsheetSheetChoserModel.saveSettingsTo(settings);
         m_readRangeModel.saveSettingsTo(settings);
     }
 
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_readColNameModel.validateSettings(settings);
-        m_readRowIdModel.validateSettings(settings);
+        m_hasColumnHeaderModel.validateSettings(settings);
+        m_hasRowHeaderModel.validateSettings(settings);
         m_spreadsheetSheetChoserModel.validateSettings(settings);
 
         SettingsModelOptionalString rangeModelClone = m_readRangeModel.createCloneWithValidatedValue(settings);
@@ -138,8 +138,8 @@ final class GoogleSheetsReaderSettings {
     }
 
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_readColNameModel.loadSettingsFrom(settings);
-        m_readRowIdModel.loadSettingsFrom(settings);
+        m_hasColumnHeaderModel.loadSettingsFrom(settings);
+        m_hasRowHeaderModel.loadSettingsFrom(settings);
         m_spreadsheetSheetChoserModel.loadSettingsFrom(settings);
         m_readRangeModel.loadSettingsFrom(settings);
     }

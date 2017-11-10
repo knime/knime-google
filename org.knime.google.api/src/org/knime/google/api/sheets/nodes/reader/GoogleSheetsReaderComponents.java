@@ -74,20 +74,20 @@ final class GoogleSheetsReaderComponents {
 
     private final GoogleSheetsReaderSettings m_settings;
 
-    private final DialogComponentBoolean m_readColName;
+    private final DialogComponentBoolean m_hasColumnHeaderComponent;
 
-    private final DialogComponentBoolean m_readRowId;
+    private final DialogComponentBoolean m_hasRowHeaderComponent;
 
     private final DialogComponentGoogleSpreadsheetChooser m_spreadsheetChooser;
 
-    private final DialogComponentOptionalString m_readRange;
+    private final DialogComponentOptionalString m_readRangeComponent;
 
     GoogleSheetsReaderComponents(final GoogleSheetsReaderSettings settings) {
         m_settings = settings;
-        m_readColName = new DialogComponentBoolean(m_settings.getReadColNameModel(), "Has Column Header");
-        m_readRowId = new DialogComponentBoolean(m_settings.getReadRowIdModel(), "Has Row Header");
+        m_hasColumnHeaderComponent = new DialogComponentBoolean(m_settings.getReadColNameModel(), "Has Column Header");
+        m_hasRowHeaderComponent = new DialogComponentBoolean(m_settings.getReadRowIdModel(), "Has Row Header");
         m_spreadsheetChooser = new DialogComponentGoogleSpreadsheetChooser(m_settings.getSpreadsheetChoserModel());
-        m_readRange = new DialogComponentOptionalString(m_settings.getReadRangeModel(), "Range:            ");
+        m_readRangeComponent = new DialogComponentOptionalString(m_settings.getReadRangeModel(), "Range:            ");
 
     }
 
@@ -105,19 +105,19 @@ final class GoogleSheetsReaderComponents {
         panel.add(m_spreadsheetChooser.getComponentPanel(), gbc);
         gbc.fill = GridBagConstraints.NONE;
         gbc.gridy++;
-        panel.add(m_readRange.getComponentPanel(), gbc);
+        panel.add(m_readRangeComponent.getComponentPanel(), gbc);
         gbc.gridy++;
-        panel.add(m_readColName.getComponentPanel(), gbc);
+        panel.add(m_hasColumnHeaderComponent.getComponentPanel(), gbc);
         gbc.gridy++;
-        panel.add(m_readRowId.getComponentPanel(), gbc);
+        panel.add(m_hasRowHeaderComponent.getComponentPanel(), gbc);
         return panel;
     }
 
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_readColName.saveSettingsTo(settings);
-        m_readRowId.saveSettingsTo(settings);
+        m_hasColumnHeaderComponent.saveSettingsTo(settings);
+        m_hasRowHeaderComponent.saveSettingsTo(settings);
         m_spreadsheetChooser.saveSettingsTo(settings);
-        m_readRange.saveSettingsTo(settings);
+        m_readRangeComponent.saveSettingsTo(settings);
     }
 
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
@@ -134,9 +134,9 @@ final class GoogleSheetsReaderComponents {
         }
         m_spreadsheetChooser.loadSettingsFrom(settings, specs);
 
-        m_readColName.loadSettingsFrom(settings, specs);
-        m_readRowId.loadSettingsFrom(settings, specs);
-        m_readRange.loadSettingsFrom(settings, specs);
+        m_hasColumnHeaderComponent.loadSettingsFrom(settings, specs);
+        m_hasRowHeaderComponent.loadSettingsFrom(settings, specs);
+        m_readRangeComponent.loadSettingsFrom(settings, specs);
     }
 
 }

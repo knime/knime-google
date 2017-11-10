@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
@@ -73,6 +74,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
@@ -120,30 +122,27 @@ public class GoogleSheetsReaderModel extends NodeModel {
 
         ValueRange result = null;
         try {
-                String range = m_settings.selectFirstSheet() ?
-                    getFirstSheet(connection, m_settings.getSpreadSheetId()) : m_settings.getSheetName();
-                range += m_settings.getRange();
-                result =
-                        createGetRequest(connection, m_settings.getSpreadSheetId(),range).execute();
+            String range = m_settings.selectFirstSheet() ? getFirstSheet(connection, m_settings.getSpreadSheetId())
+                : m_settings.getSheetName();
+            range += m_settings.getRange();
+            result =
+                createGetRequest(connection, m_settings.getSpreadSheetId(), range).setMajorDimension("ROWS").execute();
         } catch (IOException e) {
-            throw new IOException("Could not fetch sheet name for given spreadsheet id.");
+            throw new IOException("Could not fetch sheet name for given spreadsheet id: " + e.getMessage(), e);
         }
-
 
         List<List<Object>> values = result.getValues();
-        if (values == null) {
-            throw new InvalidSettingsException("Specified Sheet or range is empty.");
-        }
-        DataTableSpec outSpec = createSpec(values.get(0));
+        CheckUtils.checkSettingNotNull(values, "Specified Sheet or range is empty."); // also fails for empty sheets
+        DataTableSpec outSpec = createSpec(result);
         BufferedDataContainer outContainer = exec.createDataContainer(outSpec);
         UniqueNameGenerator rowIDGen = new UniqueNameGenerator(Collections.emptySet());
-        int i = m_settings.readColName() ? 1 : 0;
+        int i = m_settings.hasColumnHeader() ? 1 : 0;
         for (; i < values.size(); i++) {
             exec.checkCanceled();
             exec.setProgress((i == 0) ? values.size() / (i + 1) : values.size() / i, "Reading row " + i);
             List<Object> row = values.get(i);
             List<DataCell> cells = new ArrayList<DataCell>(outSpec.getNumColumns());
-            int leftBound = m_settings.readRowId() ? 1 : 0;
+            int leftBound = m_settings.hasRowHeader() ? 1 : 0;
             for (int j = leftBound; j <= outSpec.getNumColumns() - (1 - leftBound); j++) {
                 String value = "";
                 if (j < row.size()) {
@@ -155,9 +154,9 @@ public class GoogleSheetsReaderModel extends NodeModel {
                     cells.add(new StringCell(value));
                 }
             }
-            int rowNum = m_settings.readColName() ? i - 1 : i;
+            int rowNum = m_settings.hasColumnHeader() ? i - 1 : i;
             String rowIdString = "Row" + (rowNum);
-            if (m_settings.readRowId()) {
+            if (m_settings.hasRowHeader()) {
                 if (row.size() > 0) {
                     rowIdString = rowIDGen.newName(StringUtils.defaultIfBlank(row.get(0).toString(), rowIdString));
                 }
@@ -190,17 +189,24 @@ public class GoogleSheetsReaderModel extends NodeModel {
     }
 
     /**
-     * @param list Google Analytics data object
+     * @param result Google Analytics data object
      * @return The KNIME table spec for the given data object
      */
-    private DataTableSpec createSpec(final List<Object> list) {
-        List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>(list.size());
+    private DataTableSpec createSpec(final ValueRange result) {
+        CheckUtils.checkArgument(result.size() > 0, "Unable to deal with empty ValueRange");
+        int numberOfColumns = result.getValues().stream().collect(Collectors.summarizingInt(List::size)).getMax();
+
+        List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>(numberOfColumns);
         UniqueNameGenerator nameGen = new UniqueNameGenerator(Collections.emptySet());
-        int i = m_settings.readRowId() ? 1 : 0;
-        for (; i < list.size(); i++) {
-            int colNumber = m_settings.readRowId() ? i - 1 : i;
-            String colName = StringUtils.trimToNull(list.get(i).toString());
-            if (!m_settings.readColName() || colName == null) {
+        int i = m_settings.hasRowHeader() ? 1 : 0;
+        List<Object> firstRow = result.getValues().get(0);
+        for (; i < numberOfColumns; i++) {
+            int colNumber = m_settings.hasRowHeader() ? i - 1 : i;
+            String colName = "";
+            if (firstRow.size() > i && m_settings.hasColumnHeader()) {
+                colName = StringUtils.trimToEmpty(firstRow.get(i).toString());
+            }
+            if (!m_settings.hasColumnHeader() || colName.isEmpty()) {
                 colName = "Col" + colNumber;
             }
             colSpecs.add(nameGen.newColumn(colName, StringCell.TYPE));
@@ -216,7 +222,8 @@ public class GoogleSheetsReaderModel extends NodeModel {
         if (m_settings.getSpreadSheetId().isEmpty() || m_settings.getSheetName().isEmpty()) {
             throw new InvalidSettingsException("No settings available");
         }
-        // TODO make sure we at least try to guess the column types in the future. Behaviour maybe similiar to excel node. Also same missing value handling (if any?).
+        // TODO make sure we at least try to guess the column types in the future.
+        // Behaviour maybe similiar to excel node. Also same missing value handling (if any?).
         return new PortObjectSpec[]{null};
     }
 
