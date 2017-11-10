@@ -53,6 +53,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
@@ -93,7 +94,6 @@ final class GoogleInteractiveServiceProviderComponents {
 
     private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new GridBagLayout());
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
-    private final JButton m_removeInNodeCredentialsButton = new JButton("Forget Default credentials");
 
 
     private class DialogComponentSheetCredentialLocation extends DialogComponentCredentialLocation {
@@ -101,10 +101,11 @@ final class GoogleInteractiveServiceProviderComponents {
         /**
          * @param model
          * @param historyID
+         * @param removeDefaultCredentialsAction
          */
         public DialogComponentSheetCredentialLocation(final SettingsModelCredentialLocation model,
-            final String historyID) {
-            super(model, historyID);
+            final String historyID, final ActionListener removeDefaultCredentialsAction) {
+            super(model, historyID, removeDefaultCredentialsAction);
         }
 
         /**
@@ -137,7 +138,17 @@ final class GoogleInteractiveServiceProviderComponents {
     DialogComponentSheetCredentialLocation createCredentialLocationComponent() {
         m_credentialLocationComponent =
             new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
-                GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName());
+                GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName(), e -> {
+                    m_settings.removeInNodeCredentials();
+                    CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
+                            m_credentialLocationComponent.getModel()).getCredentialLocationType();
+                    if (credentialLocationType.isDefault()) {
+                        m_authTestButton.setBackground(Color.yellow);
+                    }
+                    JOptionPane.showMessageDialog(
+                        SwingUtilities.windowForComponent(m_authTestButton),
+                        "Node instance credentials have been removed.");
+                });
         return m_credentialLocationComponent;
     }
 
@@ -165,20 +176,6 @@ final class GoogleInteractiveServiceProviderComponents {
         gbc.insets = new Insets(5, 10, 5, 5);
         gbc.gridwidth = 2;
         panel.add(m_panelWithAuthButtonOrProgressBar, gbc);
-        gbc.gridy++;
-        gbc.gridwidth = 1;
-        m_removeInNodeCredentialsButton.addActionListener(e -> {
-            m_settings.removeInNodeCredentials();
-            CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
-                    m_credentialLocationComponent.getModel()).getCredentialLocationType();
-            if (credentialLocationType.isDefault()) {
-                m_authTestButton.setBackground(Color.yellow);
-            }
-            JOptionPane.showMessageDialog(
-                SwingUtilities.windowForComponent(m_removeInNodeCredentialsButton),
-                "Node instance credentials have been removed.");
-        });
-        panel.add(m_removeInNodeCredentialsButton, gbc);
         return panel;
     }
 

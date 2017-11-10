@@ -60,6 +60,7 @@ import java.util.Enumeration;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -83,34 +84,38 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  * The Dialog component provides two options, either Default (in-node) authentication or Custom, so that the user can
  * set the location for the key files received during the authentication process.
  *
- * It is intended to be used in dialogs of interactive authentication nodes,
- * such as the {@link GoogleSheetsInteractiveServiceProviderFactory} node.
+ * It is intended to be used in dialogs of interactive authentication nodes, such as the
+ * {@link GoogleSheetsInteractiveServiceProviderFactory} node.
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
 public class DialogComponentCredentialLocation extends DialogComponent implements ActionListener {
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);
+
     private static final int LEFT_INSET = 23;
 
     private final ButtonGroup m_locationType = new ButtonGroup();
 
     private final JRadioButton m_typeDefault;
+
     private final JRadioButton m_typeCustom;
 
+    private final JButton m_RemoveInstanceCredentials;
+
     private final JTextField m_userIdField = new JTextField(20);
+
     private final DialogComponentFileChooser m_credentialLocationComponent;
 
+    private final Component m_defaultPanel;
     private final Component m_customPanel;
-
 
     private final String m_label = "Credential Location";
 
     private JPanel m_rootPanel;
 
-
-    private JRadioButton createLocationButton(final CredentialLocationType type,
-        final ButtonGroup group, final ActionListener l) {
+    private JRadioButton createLocationButton(final CredentialLocationType type, final ButtonGroup group,
+        final ActionListener l) {
         String buttonLabel = type.getText();
         String toolTip = type.getToolTip();
 
@@ -134,12 +139,18 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
      *
      * @param model The settings model for this dialog
      * @param historyID The history id for this component
+     * @param removeInstanceAction The action that should be performed when pressing the "Forget Default credentials"
+     *            button
      */
-    public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID) {
+    public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID,
+        final ActionListener removeInstanceAction) {
         super(model);
+        m_RemoveInstanceCredentials = new JButton("Forget Default Credentials");
+        m_RemoveInstanceCredentials.addActionListener(removeInstanceAction);
         m_credentialLocationComponent =
             new DialogComponentFileChooser(model, historyID, JFileChooser.OPEN_DIALOG, true, "");
         m_credentialLocationComponent.setAllowSystemPropertySubstitution(true);
+        m_defaultPanel = getDefaultPanel();
         m_customPanel = getCustomPanel();
         m_typeDefault = createLocationButton(CredentialLocationType.DEFAULT, m_locationType, this);
         m_typeCustom = createLocationButton(CredentialLocationType.CUSTOM, m_locationType, this);
@@ -178,9 +189,11 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.insets = NEUTRAL_INSET;
-        credentialBox.setBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " " + m_label + " "));
+        credentialBox
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " " + m_label + " "));
         credentialBox.add(m_typeDefault, gbc);
+        gbc.gridy++;
+        credentialBox.add(m_defaultPanel, gbc);
         gbc.gridy++;
         credentialBox.add(m_typeCustom, gbc);
         gbc.gridy++;
@@ -196,6 +209,20 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
 
     private Dimension getMaxDim(final Dimension d1, final Dimension d2) {
         return new Dimension(Math.max(d1.width, d2.width), Math.max(d1.height, d2.height));
+    }
+
+    private JPanel getDefaultPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        panel.add(m_RemoveInstanceCredentials, gbc);
+        return panel;
     }
 
     private JPanel getCustomPanel() {
@@ -224,7 +251,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
     }
 
     private void updateModel() {
-        final CredentialLocationType type = CredentialLocationType.get(m_locationType.getSelection().getActionCommand());
+        final CredentialLocationType type =
+            CredentialLocationType.get(m_locationType.getSelection().getActionCommand());
         String userId = null;
         switch (type) {
             case DEFAULT:
@@ -238,6 +266,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         final SettingsModelCredentialLocation model = (SettingsModelCredentialLocation)getModel();
         model.setValues(type, userId);
     }
+
     /**
      * {@inheritDoc}
      */
@@ -263,6 +292,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
     }
 
     private void updatePanel() {
+        m_defaultPanel.setVisible(m_typeDefault.isSelected());
         m_customPanel.setVisible(m_typeCustom.isSelected());
     }
 

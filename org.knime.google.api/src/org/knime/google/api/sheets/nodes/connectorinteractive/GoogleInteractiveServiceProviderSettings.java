@@ -203,6 +203,8 @@ final class GoogleInteractiveServiceProviderSettings {
         if (inNodeCredential()) {
             m_storedCredential = Base64.getEncoder().encodeToString(
                 Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder))));
+        } else {
+            removeInNodeCredentials();
         }
     }
 
@@ -219,6 +221,9 @@ final class GoogleInteractiveServiceProviderSettings {
      * @param settings
      */
     public void saveAuth(final NodeSettingsWO settings) {
+        if (!inNodeCredential()) {
+            removeInNodeCredentials();
+        }
         Config config = settings.addConfig(m_configName);
         config.addString(BYTE_FILE, m_storedCredential);
     }

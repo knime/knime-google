@@ -17,7 +17,7 @@
 			After choosing the credential location, one must authenticate using the (Re-)Authentication button. 
 			A pop-up will appear that asks the user to grant access to Google Sheets and Google Drive. 
 			If you have already authenticated, the (Re-)Authentication will test the stored credentials in the selected location. 
-			Changing the credentials from default to custom will remove credentials that are stored in the node.
+			When choosing and confirming the custom credentials the default credentials will be forgotten, they can also manually be forgotten using the corresponding button.
 			</p>
 			<p>
 			Access can be revoked at any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
@@ -30,9 +30,13 @@
 		Where the credentials received during authentication will be stored.
 			<br/>
 			<b>Default</b>
+			<p>
+			Credentials will be stored in the node instance.
 			<br/>
-			Credentials will be stored in the node settings.
+			<b>Forget Default Credentials</b>
 			<br/>
+			This button will remove the credentials which are stored as part of the node instance.
+			</p>
 			<b>Custom</b>
 			<p>
 			<b>User id</b>
@@ -49,9 +53,7 @@
 		This button will open a dialog to authenticate with Google Services. 
 		If you are already authenticated, it will test the stored credentials in the selected location.
 		</option>
-		<option name="Remove node instance credentials">
-		This button will remove the credentials which are stored as part of the node instance.
-		</option>
+		
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="Google Sheets Connection">A connection that can be used to
