@@ -114,7 +114,7 @@ final class GoogleInteractiveServiceProviderComponents {
      * @return The component for the credential storage location
      */
     DialogComponentCredentialLocation createCredentialLocationComponent() {
-        Action removeDefaultCredentialsAction = new AbstractAction("Forget instance credentials") {
+        Action removeDefaultCredentialsAction = new AbstractAction("Forget Default Credentials") {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 m_settings.removeInNodeCredentials();
