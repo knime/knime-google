@@ -54,6 +54,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.Observable;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
@@ -70,21 +72,25 @@ import org.knime.google.api.util.SettingsModelCredentialLocation;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
-final class GoogleInteractiveServiceProviderSettings {
+final class GoogleInteractiveServiceProviderSettings extends Observable {
 
     private static final String DEFAULT_USERID = "sheetUser";
-
-    private final String m_configName = "googleSheetsInteractive";
     private static final String BYTE_FILE = "byteFile";
 
+    private final String m_configName = "googleSheetsInteractive";
 
+    private final SettingsModelCredentialLocation m_credentialLocationModel;
 
-    private String m_credentialTempFolder = null;
+    private String m_credentialTempFolder;
 
-    private String m_storedCredential = null;
+    private String m_storedCredential;
 
-    private final SettingsModelCredentialLocation m_credentialLocationModel =
-            new SettingsModelCredentialLocation("credentialLocation", "${user.home}/knime");
+    /**
+     *
+     */
+    GoogleInteractiveServiceProviderSettings() {
+        m_credentialLocationModel = new SettingsModelCredentialLocation("credentialLocation", "${user.home}/knime");
+    }
 
     /**
      * Returns the {@link SettingsModelString} for the credential location
@@ -141,10 +147,9 @@ final class GoogleInteractiveServiceProviderSettings {
      * Returns the StoredCredential file as a byte string.
      *
      * @return The stored credential as a byte string
-     * @throws InvalidSettingsException If the user is not yet authenticated.
      */
-    protected String getEncodedStoredCredential() throws InvalidSettingsException {
-            return m_storedCredential;
+    protected String getEncodedStoredCredential() {
+        return m_storedCredential;
     }
 
     /**
@@ -193,6 +198,8 @@ final class GoogleInteractiveServiceProviderSettings {
         Config config = settings.getConfig(m_configName);
         m_storedCredential = config.getString(BYTE_FILE);
         m_credentialLocationModel.loadSettingsFrom(settings);
+        setChanged();
+        notifyObservers();
     }
 
     /**
@@ -203,16 +210,22 @@ final class GoogleInteractiveServiceProviderSettings {
         if (inNodeCredential()) {
             m_storedCredential = Base64.getEncoder().encodeToString(
                 Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder))));
+            setChanged();
         } else {
             removeInNodeCredentials();
         }
+        notifyObservers();
     }
 
     /**
      * Sets the byte String to null.
      */
     public void removeInNodeCredentials() {
+        if (m_storedCredential != null) {
+            setChanged();
+        }
         m_storedCredential = null;
+        notifyObservers();
     }
 
     /**
@@ -236,7 +249,12 @@ final class GoogleInteractiveServiceProviderSettings {
      */
     public void loadAuth(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(m_configName);
+        String oldStoredCredential = m_storedCredential;
         m_storedCredential = config.getString(BYTE_FILE);
+        if (!Objects.equals(oldStoredCredential, m_storedCredential)) {
+            setChanged();
+        }
+        notifyObservers();
     }
 
     /**

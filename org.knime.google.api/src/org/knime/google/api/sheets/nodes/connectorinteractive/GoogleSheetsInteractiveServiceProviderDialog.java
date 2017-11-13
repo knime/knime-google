@@ -61,15 +61,15 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 final class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
 
-    private GoogleInteractiveServiceProviderSettings m_settings =
-            GoogleSheetsInteractiveServiceProviderModel.getSettings();
-    private GoogleInteractiveServiceProviderComponents m_components =
-            new GoogleInteractiveServiceProviderComponents(m_settings);
+    private final GoogleInteractiveServiceProviderSettings m_settings;
+    private final GoogleInteractiveServiceProviderComponents m_components;
 
     /**
      * Constructor creating the dialogs content.
      */
     public GoogleSheetsInteractiveServiceProviderDialog() {
+        m_settings = GoogleSheetsInteractiveServiceProviderModel.getSettings();
+        m_components = new GoogleInteractiveServiceProviderComponents(m_settings);
         addTab("Authentication", m_components.getPanel());
     }
 

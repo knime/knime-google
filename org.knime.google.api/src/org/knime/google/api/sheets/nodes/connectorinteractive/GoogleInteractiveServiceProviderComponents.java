@@ -53,11 +53,13 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Observer;
 import java.util.concurrent.ExecutionException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -95,30 +97,7 @@ final class GoogleInteractiveServiceProviderComponents {
     private final JPanel m_panelWithAuthButtonOrProgressBar = new JPanel(new GridBagLayout());
     private final JButton m_authTestButton = new JButton("(Re-)Authentication");
 
-
-    private class DialogComponentSheetCredentialLocation extends DialogComponentCredentialLocation {
-
-        /**
-         * @param model
-         * @param historyID
-         * @param removeDefaultCredentialsAction
-         */
-        public DialogComponentSheetCredentialLocation(final SettingsModelCredentialLocation model,
-            final String historyID, final ActionListener removeDefaultCredentialsAction) {
-            super(model, historyID, removeDefaultCredentialsAction);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void actionPerformed(final ActionEvent e) {
-            super.actionPerformed(e);
-            m_authTestButton.setBackground(Color.yellow);
-        }
-    }
-
-    private DialogComponentSheetCredentialLocation m_credentialLocationComponent;
+    private DialogComponentCredentialLocation m_credentialLocationComponent;
 
     /**
      * Constructor.
@@ -127,7 +106,6 @@ final class GoogleInteractiveServiceProviderComponents {
      */
     public GoogleInteractiveServiceProviderComponents(final GoogleInteractiveServiceProviderSettings settings) {
         m_settings = settings;
-
     }
 
     /**
@@ -135,20 +113,28 @@ final class GoogleInteractiveServiceProviderComponents {
      *
      * @return The component for the credential storage location
      */
-    DialogComponentSheetCredentialLocation createCredentialLocationComponent() {
-        m_credentialLocationComponent =
-            new DialogComponentSheetCredentialLocation(m_settings.getCredentialLocationModel(),
-                GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName(), e -> {
-                    m_settings.removeInNodeCredentials();
-                    CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
-                            m_credentialLocationComponent.getModel()).getCredentialLocationType();
-                    if (credentialLocationType.isDefault()) {
-                        m_authTestButton.setBackground(Color.yellow);
-                    }
-                    JOptionPane.showMessageDialog(
-                        SwingUtilities.windowForComponent(m_authTestButton),
-                        "Node instance credentials have been removed.");
-                });
+    DialogComponentCredentialLocation createCredentialLocationComponent() {
+        Action removeDefaultCredentialsAction = new AbstractAction("Forget instance credentials") {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_settings.removeInNodeCredentials();
+                CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
+                        m_credentialLocationComponent.getModel()).getCredentialLocationType();
+                if (credentialLocationType.isDefault()) {
+                    m_authTestButton.setBackground(Color.yellow);
+                }
+            }
+        };
+        Observer observer = (observable, updateObject) -> {
+            removeDefaultCredentialsAction.setEnabled(
+                m_settings.inNodeCredential() &&
+                m_settings.getEncodedStoredCredential() != null);
+        };
+        observer.update(null, null); // call the lamda above to update enable-state
+        m_settings.addObserver(observer);
+        m_credentialLocationComponent = new DialogComponentCredentialLocation(m_settings.getCredentialLocationModel(),
+            GoogleSheetsInteractiveServiceProviderModel.class.getCanonicalName(), removeDefaultCredentialsAction);
+        m_credentialLocationComponent.getModel().addChangeListener(e -> m_authTestButton.setBackground(Color.YELLOW));
         return m_credentialLocationComponent;
     }
 

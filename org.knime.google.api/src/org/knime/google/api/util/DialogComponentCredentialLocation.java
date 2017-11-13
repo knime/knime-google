@@ -58,6 +58,7 @@ import java.awt.event.ActionListener;
 import java.util.Enumeration;
 
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -101,18 +102,16 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
 
     private final JRadioButton m_typeCustom;
 
-    private final JButton m_RemoveInstanceCredentials;
+    private final JButton m_removeInstanceCredentials;
 
-    private final JTextField m_userIdField = new JTextField(20);
+    private final JTextField m_userIdField;
 
     private final DialogComponentFileChooser m_credentialLocationComponent;
 
     private final Component m_defaultPanel;
     private final Component m_customPanel;
 
-    private final String m_label = "Credential Location";
-
-    private JPanel m_rootPanel;
+    private final JPanel m_rootPanel;
 
     private JRadioButton createLocationButton(final CredentialLocationType type, final ButtonGroup group,
         final ActionListener l) {
@@ -139,14 +138,14 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
      *
      * @param model The settings model for this dialog
      * @param historyID The history id for this component
-     * @param removeInstanceAction The action that should be performed when pressing the "Forget Default credentials"
-     *            button
+     * @param removeInstanceAction The action that performs removal of instance credentials (the ones that are stored in
+     *            the node
      */
     public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID,
-        final ActionListener removeInstanceAction) {
+        final Action removeInstanceAction) {
         super(model);
-        m_RemoveInstanceCredentials = new JButton("Forget Default Credentials");
-        m_RemoveInstanceCredentials.addActionListener(removeInstanceAction);
+        m_userIdField = new JTextField(20);
+        m_removeInstanceCredentials = new JButton(removeInstanceAction);
         m_credentialLocationComponent =
             new DialogComponentFileChooser(model, historyID, JFileChooser.OPEN_DIALOG, true, "");
         m_credentialLocationComponent.setAllowSystemPropertySubstitution(true);
@@ -190,7 +189,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         gbc.weighty = 1;
         gbc.insets = NEUTRAL_INSET;
         credentialBox
-            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " " + m_label + " "));
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Credential Location "));
         credentialBox.add(m_typeDefault, gbc);
         gbc.gridy++;
         credentialBox.add(m_defaultPanel, gbc);
@@ -221,7 +220,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         gbc.gridwidth = 1;
         gbc.weightx = 0;
         gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
-        panel.add(m_RemoveInstanceCredentials, gbc);
+        panel.add(m_removeInstanceCredentials, gbc);
         return panel;
     }
 
