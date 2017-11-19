@@ -78,8 +78,9 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 
 /**
+ * This class handles the interactive authentication for google sheets.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetsInteractiveAuthentication {
 

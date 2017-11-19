@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,122 +41,84 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Aug 21, 2017 (oole): created
+ *   Nov 14, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.connector;
+package org.knime.google.api.sheets.nodes.spreadsheetwriter;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
-import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
-import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterSettings;
 
 /**
- * The model to the GoogleSheetsConnector node.
+ * The settings for the {@link GoogleSpreadsheetWriterModel}.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetsConnectorModel extends NodeModel {
+public class GoogleSpreadsheetWriterSettings extends AbstractGoogleSheetWriterSettings {
 
-    private GoogleSheetsConnectorConfiguration m_config = new GoogleSheetsConnectorConfiguration();
+    private SettingsModelString m_spreadsheetNameModel = getSpreadsheetNameModel();
+
+    private SettingsModelString m_sheetNameModel = getSheetnameModel();
 
     /**
-     * Constructor of the node model.
+     * Returns the {@link SettingsModelString} for the spreadsheet name.
+     *
+     * @return The {@link SettingsModelString} for the spreadsheet name
      */
-    protected GoogleSheetsConnectorModel() {
-        super(new PortType[]{GoogleApiConnectionPortObject.TYPE},
-                new PortType[]{GoogleSheetsConnectionPortObject.TYPE});
+    protected static SettingsModelString getSpreadsheetNameModel() {
+        return new SettingsModelString("spreadsheetName", "");
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the {@link SettingsModelString} for the sheet name.
+     *
+     * @return The {@link SettingsModelString} for the sheet name
      */
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec(inObjects[0].getSpec()))};
+    protected static SettingsModelString getSheetnameModel() {
+        return new SettingsModelString("sheetName", "");
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the entered spreadsheet name.
+     *
+     * @return The entered spreadsheet name
      */
-    @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec(inSpecs[0])};
+    protected String getSpreadsheetName() {
+        return m_spreadsheetNameModel.getStringValue();
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the entered sheet name.
+     *
+     * @return The entered sheet name
      */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // not used
+    protected String getSheetName() {
+        return m_sheetNameModel.getStringValue();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // not used
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        super.saveSettingsTo(settings);
+        m_spreadsheetNameModel.saveSettingsTo(settings);
+        m_sheetNameModel.saveSettingsTo(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-    }
+        super.validateSettings(settings);
+        m_spreadsheetNameModel.validateSettings(settings);
+        m_sheetNameModel.validateSettings(settings);
+        }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        GoogleSheetsConnectorConfiguration config = new GoogleSheetsConnectorConfiguration();
-        m_config = config;
+        super.loadValidatedSettingsFrom(settings);
+        m_spreadsheetNameModel.loadSettingsFrom(settings);
+        m_sheetNameModel.loadSettingsFrom(settings);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // not used
-    }
-
-    /**
-     * @return The spec of this node, containing the GoogleApiConnection for the current configuration
-     * @throws InvalidSettingsException If the current configuration is not valid
-     */
-    private GoogleSheetsConnectionPortObjectSpec createSpec(final PortObjectSpec inSpec)
-            throws InvalidSettingsException {
-        return new GoogleSheetsConnectionPortObjectSpec(
-                m_config.createGoogleSheetsConnection(((GoogleApiConnectionPortObjectSpec)inSpec)
-                        .getGoogleApiConnection()));
-    }
-
 }

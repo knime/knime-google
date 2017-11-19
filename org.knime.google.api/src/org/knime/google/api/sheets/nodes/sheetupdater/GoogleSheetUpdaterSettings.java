@@ -2,7 +2,7 @@
  * ------------------------------------------------------------------------
  *
  *  Copyright by KNIME AG, Zurich, Switzerland
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -44,104 +44,125 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 4, 2017 (oole): created
+ *   Nov 14, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.reader;
+package org.knime.google.api.sheets.nodes.sheetupdater;
 
-import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelOptionalString;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterSettings;
 import org.knime.google.api.sheets.nodes.util.SettingsModelGoogleSpreadsheetAndSheetChooser;
 
 /**
- * Settings for the {@link GoogleSheetsReaderModel}.
+ * The settings for the {@link GoogleSheetUpdaterModel}.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-final class GoogleSheetsReaderSettings {
+public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings{
 
-    private SettingsModelBoolean m_hasColumnHeaderModel = new SettingsModelBoolean("hasColumnHeader", true);
+    private SettingsModelGoogleSpreadsheetAndSheetChooser m_spreadsheetChoserModel = getSpreadsheetChoserModel();
 
-    private SettingsModelBoolean m_hasRowHeaderModel = new SettingsModelBoolean("hasRowHeader", true);
+    private SettingsModelOptionalString m_rangeModel = getRangeModel();
 
-    private SettingsModelGoogleSpreadsheetAndSheetChooser m_spreadsheetSheetChoserModel =
-            new SettingsModelGoogleSpreadsheetAndSheetChooser("spreadsheet");
+    private SettingsModelBoolean m_appendModel = getAppendModel();
 
-    private SettingsModelOptionalString m_readRangeModel = new SettingsModelOptionalString("readRange", "", false);
-
-
-    protected SettingsModelOptionalString getReadRangeModel() {
-        return m_readRangeModel;
+    /**
+     * Returns the {@link SettingsModelBoolean} for appending.
+     *
+     * @return The {@link SettingsModelBoolean} for appending
+     */
+    protected static SettingsModelBoolean getAppendModel() {
+        return new SettingsModelBoolean("append", false);
     }
 
-    protected SettingsModelBoolean getReadColNameModel() {
-        return m_hasColumnHeaderModel;
+
+    /**
+     * Returns the {@link SettingsModelOptionalString} for the range.
+     *
+     * @return The {@link SettingsModelOptionalString} for the range
+     */
+    protected static SettingsModelOptionalString getRangeModel() {
+        return new SettingsModelOptionalString("range", "", false);
     }
 
-    protected SettingsModelBoolean getReadRowIdModel() {
-        return m_hasRowHeaderModel;
+    /**
+     * Returns the {@link SettingsModelGoogleSpreadsheetAndSheetChooser} for the spreadsheet and sheet.
+     *
+     * @return The {@link SettingsModelGoogleSpreadsheetAndSheetChooser} for the spreadsheet and sheet
+     */
+    protected static SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
+        return new SettingsModelGoogleSpreadsheetAndSheetChooser("spreadsheetChooser");
     }
 
-    protected SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
-        return m_spreadsheetSheetChoserModel;
+    /**
+     * Returns the selected spreadsheet's id.
+     *
+     * @return The selected spreadsheet's id
+     */
+    protected String getSpreadsheetId() {
+        return m_spreadsheetChoserModel.getSpreadsheetId();
     }
 
-    protected String getSpreadSheetId() {
-        return StringUtils.trim(m_spreadsheetSheetChoserModel.getSpreadsheetId());
-    }
-
+    /**
+     * Returns the selected sheet name.
+     *
+     * @return The selected sheet name
+     */
     protected String getSheetName() {
-        return StringUtils.trim(m_spreadsheetSheetChoserModel.getSheetName());
+        return m_spreadsheetChoserModel.getSheetName();
     }
 
-    protected boolean hasRowHeader() {
-        return m_hasRowHeaderModel.getBooleanValue();
+    /**
+     * Returns whether of not the restricted range should be used.
+     *
+     * @return Whether or not the restricted range should be used
+     */
+    protected boolean useRange() {
+        return m_rangeModel.isActive();
     }
 
-    protected boolean hasColumnHeader() {
-        return m_hasColumnHeaderModel.getBooleanValue();
-    }
-
-    protected boolean useCustomRange() {
-        return m_readRangeModel.isActive();
-    }
-
-    protected boolean selectFirstSheet() {
-        return m_spreadsheetSheetChoserModel.getSelectFirstSheet();
-    }
-
+    /**
+     * Returns the restricted range.
+     *
+     * @return The restricted range
+     */
     protected String getRange() {
-        String range = (useCustomRange() ? "!" + StringUtils.trim(m_readRangeModel.getStringValue()) : "");
-        return range;
+        return m_rangeModel.getStringValue().trim();
     }
 
+    /**
+     * Returns whether or not the data should be appended to the existing sheet.
+     *
+     * @return Whether or not the data should be appended to the existing sheet
+     */
+    protected boolean append() {
+        return m_appendModel.getBooleanValue();
+    }
 
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_hasColumnHeaderModel.saveSettingsTo(settings);
-        m_hasRowHeaderModel.saveSettingsTo(settings);
-        m_spreadsheetSheetChoserModel.saveSettingsTo(settings);
-        m_readRangeModel.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
+        m_spreadsheetChoserModel.saveSettingsTo(settings);
+        m_rangeModel.saveSettingsTo(settings);
+        m_appendModel.saveSettingsTo(settings);
     }
 
+    @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_hasColumnHeaderModel.validateSettings(settings);
-        m_hasRowHeaderModel.validateSettings(settings);
-        m_spreadsheetSheetChoserModel.validateSettings(settings);
-
-        SettingsModelOptionalString rangeModelClone = m_readRangeModel.createCloneWithValidatedValue(settings);
-        CheckUtils.checkSetting(!rangeModelClone.isActive()
-            || StringUtils.isNotEmpty(rangeModelClone.getStringValue()), "No range defined");
+        super.validateSettings(settings);
+        m_spreadsheetChoserModel.validateSettings(settings);
+        m_rangeModel.validateSettings(settings);
+        m_appendModel.validateSettings(settings);
     }
 
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_hasColumnHeaderModel.loadSettingsFrom(settings);
-        m_hasRowHeaderModel.loadSettingsFrom(settings);
-        m_spreadsheetSheetChoserModel.loadSettingsFrom(settings);
-        m_readRangeModel.loadSettingsFrom(settings);
+        super.loadValidatedSettingsFrom(settings);
+        m_spreadsheetChoserModel.loadSettingsFrom(settings);
+        m_rangeModel.loadSettingsFrom(settings);
+        m_appendModel.loadSettingsFrom(settings);
     }
-
 }

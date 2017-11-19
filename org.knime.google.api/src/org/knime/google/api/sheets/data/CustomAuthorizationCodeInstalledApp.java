@@ -63,7 +63,7 @@ import com.google.api.client.util.Preconditions;
  * Custom {@link AuthorizationCodeInstalledApp} to fix GTK3/2 problems. Uses {@link DesktopUtil#browse(java.net.URL)}
  * instead of {@link Desktop#isDesktopSupported()} which crashes when launched without the GTK version being set to 2.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
 

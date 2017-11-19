@@ -68,7 +68,7 @@ import com.google.api.services.sheets.v4.Sheets;
  *
  * Use the {@link Analytics} object returned by {@link #getSheetsService()} to communicate with the Google Analytics API.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public final class GoogleSheetsConnection {
 

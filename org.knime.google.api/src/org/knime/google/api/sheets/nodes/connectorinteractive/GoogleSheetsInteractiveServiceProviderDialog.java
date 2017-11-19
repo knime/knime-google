@@ -55,9 +55,9 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * The dialog for the GoogleSheetsReader node.
+ * The dialog to the GoogleSheetsReader node.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 final class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
 

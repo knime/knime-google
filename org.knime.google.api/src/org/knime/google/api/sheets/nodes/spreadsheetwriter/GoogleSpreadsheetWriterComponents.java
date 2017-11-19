@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,50 +41,87 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Aug 21, 2017 (oole): created
+ *   Nov 14, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.reader;
+package org.knime.google.api.sheets.nodes.spreadsheetwriter;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterComponents;
 
 /**
- * The dialog to the GoogleSheetsReader node.
+ * The components for the {@link GoogleSpreadsheetWriterModel}.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetsReaderDialog extends NodeDialogPane {
+public class GoogleSpreadsheetWriterComponents extends AbstractGoogleSheetWriterComponents {
 
-    private final GoogleSheetsReaderComponents m_components =
-            new GoogleSheetsReaderComponents(GoogleSheetsReaderModel.getSettings());
-    /**
-     * Constructor creating the dialogs content.
-     */
-    public GoogleSheetsReaderDialog() {
-        addTab("Settings", m_components.getPanel());
-    }
+    private final DialogComponentString m_spreadsheetName =
+            new DialogComponentString(GoogleSpreadsheetWriterSettings.getSpreadsheetNameModel(), "Spreadsheet name:");
 
+    private final DialogComponentString m_sheetName =
+            new DialogComponentString(GoogleSpreadsheetWriterSettings.getSheetnameModel(), "Sheet name:            ");
 
     /**
      * {@inheritDoc}
      */
+    @Override
+    protected JPanel getSpreadsheetPanel() {
+        JPanel panel = new JPanel();
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Spreadsheet Settings "));
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(m_spreadsheetName.getComponentPanel(), gbc);
+        gbc.gridy++;
+        panel.add(m_sheetName.getComponentPanel(), gbc);
+        return panel;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JPanel addWriterComponents(final JPanel panel, final GridBagConstraints gbc) {
+        //nothing to do
+        return panel;
+    }
+
+
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_components.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
+        m_spreadsheetName.saveSettingsTo(settings);
+        m_sheetName.saveSettingsTo(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_components.loadSettingsFrom(settings, specs);
+        super.loadSettingsFrom(settings, specs);
+        m_spreadsheetName.loadSettingsFrom(settings, specs);
+        m_sheetName.loadSettingsFrom(settings, specs);
     }
+
+
+
 }

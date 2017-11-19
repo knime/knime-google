@@ -68,9 +68,9 @@ import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
 
 /**
- * This class holds the settings for the GoogleInterActiveServiceProvider
+ * Settings for the {@link GoogleSheetsInteractiveServiceProviderModel}.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 final class GoogleInteractiveServiceProviderSettings extends Observable {
 

@@ -68,9 +68,9 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 
 /**
- * The model of the GoogleSheetsConnector node.
+ * The model to the GoogleSheetsConnector node.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
 

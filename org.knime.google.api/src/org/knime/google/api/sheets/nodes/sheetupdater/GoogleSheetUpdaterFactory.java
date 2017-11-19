@@ -45,113 +45,57 @@
  * History
  *   Aug 21, 2017 (oole): created
  */
-package org.knime.google.api.sheets.data;
+package org.knime.google.api.sheets.nodes.sheetupdater;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.port.AbstractSimplePortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Port object containing a {@link GoogleSheetsConnection}.
+ * The factory to the Google Sheets Updater node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public final class GoogleSheetsConnectionPortObject extends AbstractSimplePortObject {
-    /** The Serializer **/
-    public static final class Serializer
-        extends AbstractSimplePortObjectSerializer<GoogleSheetsConnectionPortObject> { }
-
-    private GoogleSheetsConnectionPortObjectSpec m_spec;
+public class GoogleSheetUpdaterFactory extends NodeFactory<GoogleSheetUpdaterModel> {
 
     /**
-     * The type of this port.
+     * {@inheritDoc}
      */
-    @SuppressWarnings("hiding")
-    public static final PortType TYPE =
-        PortTypeRegistry.getInstance().getPortType(GoogleSheetsConnectionPortObject.class);
-
-    /**
-     * Constructor used by the framework.
-     */
-    public GoogleSheetsConnectionPortObject() {
-        // used by the framework
-    }
-
-    /**
-     * @param spec The specification of this port object.
-     */
-    public GoogleSheetsConnectionPortObject(final GoogleSheetsConnectionPortObjectSpec spec) {
-        m_spec = spec;
-    }
-
-    /**
-     * @return The contained GoogleSheetsConnection object
-     */
-    public GoogleSheetsConnection getGoogleSheetsConnection() {
-        return m_spec.getGoogleSheetsConnection();
+    @Override
+    public GoogleSheetUpdaterModel createNodeModel() {
+        return new GoogleSheetUpdaterModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getSummary() {
-        return m_spec.getGoogleSheetsConnection().toString();
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PortObjectSpec getSpec() {
-        return m_spec;
+    public NodeView<GoogleSheetUpdaterModel> createNodeView(final int viewIndex, final GoogleSheetUpdaterModel nodeModel) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
-        // nothing to do
+    protected boolean hasDialog() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void load(final ModelContentRO model, final PortObjectSpec spec, final ExecutionMonitor exec)
-            throws InvalidSettingsException, CanceledExecutionException {
-        m_spec = (GoogleSheetsConnectionPortObjectSpec)spec;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JComponent[] getViews() {
-        String text;
-        if (getGoogleSheetsConnection() != null) {
-            text = "<html>" + getGoogleSheetsConnection().toString().replace("\n", "<br>") + "</html>";
-        } else {
-            text = "No connection available";
-        }
-        JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
-        f.setName("Connection");
-        final JScrollPane scrollPane = new JScrollPane(f);
-        scrollPane.setName("Connection");
-        return new JComponent[]{scrollPane};
+    protected NodeDialogPane createNodeDialogPane() {
+        return new GoogleSheetUpdaterDialog();
     }
 
 }

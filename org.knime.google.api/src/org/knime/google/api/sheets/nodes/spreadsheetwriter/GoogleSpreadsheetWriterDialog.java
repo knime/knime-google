@@ -45,7 +45,7 @@
  * History
  *   Aug 21, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.reader;
+package org.knime.google.api.sheets.nodes.spreadsheetwriter;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -55,18 +55,18 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * The dialog to the GoogleSheetsReader node.
+ * The dialog to the Google Spreadsheet Writer node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetsReaderDialog extends NodeDialogPane {
+public class GoogleSpreadsheetWriterDialog extends NodeDialogPane {
 
-    private final GoogleSheetsReaderComponents m_components =
-            new GoogleSheetsReaderComponents(GoogleSheetsReaderModel.getSettings());
+    private GoogleSpreadsheetWriterComponents m_components = new GoogleSpreadsheetWriterComponents();
+
     /**
      * Constructor creating the dialogs content.
      */
-    public GoogleSheetsReaderDialog() {
+    public GoogleSpreadsheetWriterDialog() {
         addTab("Settings", m_components.getPanel());
     }
 

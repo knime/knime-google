@@ -2,7 +2,7 @@
  * ------------------------------------------------------------------------
  *
  *  Copyright by KNIME AG, Zurich, Switzerland
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -44,15 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 4, 2017 (oole): created
+ *   Nov 14, 2017 (oole): created
  */
-package org.knime.google.api.sheets.nodes.reader;
+package org.knime.google.api.sheets.nodes.sheetappender;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -60,83 +61,75 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentOptionalString;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
-import org.knime.google.api.sheets.nodes.util.DialogComponentGoogleSpreadsheetAndSheetChooser;
+import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterComponents;
+import org.knime.google.api.sheets.nodes.util.DialogComponentGoogleSpreadsheetChooser;
 
 /**
- * Components for the {@link GoogleSheetsReaderDialog}.
+ * The components for the {@link GoogleSheetAppenderModel}.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-final class GoogleSheetsReaderComponents {
+public class GoogleSheetAppenderComponents extends AbstractGoogleSheetWriterComponents {
 
-    private final GoogleSheetsReaderSettings m_settings;
+    private final DialogComponentGoogleSpreadsheetChooser m_spreadsheetChoser =
+            new DialogComponentGoogleSpreadsheetChooser(GoogleSheetAppenderSettings.getSpreadsheetChoserModel());
 
-    private final DialogComponentBoolean m_hasColumnHeaderComponent;
+    private final DialogComponentString m_sheetName =
+            new DialogComponentString(GoogleSheetAppenderSettings.getSheetnameModel(), "Sheet name:      ");
 
-    private final DialogComponentBoolean m_hasRowHeaderComponent;
 
-    private final DialogComponentGoogleSpreadsheetAndSheetChooser m_spreadsheetChooser;
+    private final DialogComponentBoolean m_createUniqueSheetName =
+            new DialogComponentBoolean(
+                GoogleSheetAppenderSettings.getCreateUniqueSheetNameModel(), "Create unique sheet name");
 
-    private final DialogComponentOptionalString m_readRangeComponent;
-
-    GoogleSheetsReaderComponents(final GoogleSheetsReaderSettings settings) {
-        m_settings = settings;
-        m_hasColumnHeaderComponent = new DialogComponentBoolean(m_settings.getReadColNameModel(), "Has Column Header");
-        m_hasRowHeaderComponent = new DialogComponentBoolean(m_settings.getReadRowIdModel(), "Has Row Header");
-        m_spreadsheetChooser = new DialogComponentGoogleSpreadsheetAndSheetChooser(m_settings.getSpreadsheetChoserModel());
-        m_readRangeComponent = new DialogComponentOptionalString(m_settings.getReadRangeModel(), "Range:            ");
-
-    }
-
-    protected JPanel getPanel() {
+    @Override
+    protected JPanel getSpreadsheetPanel() {
         JPanel panel = new JPanel();
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Spreadsheet Settings "));
         panel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(m_spreadsheetChooser.getComponentPanel(), gbc);
+        GridBagConstraints gbc = getDefaultGBC();
+        panel.add(m_spreadsheetChoser.getComponentPanel(), gbc);
+        gbc.gridy++;
         gbc.fill = GridBagConstraints.NONE;
-        gbc.gridy++;
-        panel.add(m_readRangeComponent.getComponentPanel(), gbc);
-        gbc.gridy++;
-        panel.add(m_hasColumnHeaderComponent.getComponentPanel(), gbc);
-        gbc.gridy++;
-        panel.add(m_hasRowHeaderComponent.getComponentPanel(), gbc);
+        gbc.insets = new Insets(5, 10, 5, 5);
+        panel.add(m_sheetName.getComponentPanel(), gbc);
         return panel;
     }
 
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_hasColumnHeaderComponent.saveSettingsTo(settings);
-        m_hasRowHeaderComponent.saveSettingsTo(settings);
-        m_spreadsheetChooser.saveSettingsTo(settings);
-        m_readRangeComponent.saveSettingsTo(settings);
+    @Override
+    protected JPanel addWriterComponents(final JPanel panel, final GridBagConstraints gbc) {
+        gbc.gridy++;
+        panel.add(m_createUniqueSheetName.getComponentPanel(), gbc);
+        return panel;
     }
 
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        super.saveSettingsTo(settings);
+        m_spreadsheetChoser.saveSettingsTo(settings);
+        m_sheetName.saveSettingsTo(settings);
+        m_createUniqueSheetName.saveSettingsTo(settings);
+    }
+
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, specs);
+        m_spreadsheetChoser.loadSettingsFrom(settings, specs);
+
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google Sheets Connection");
         }
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
         try {
-            m_spreadsheetChooser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
+            m_spreadsheetChoser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
                 connectionSpec.getGoogleSheetsConnection().getSheetsService());
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");
         }
-        m_spreadsheetChooser.loadSettingsFrom(settings, specs);
-
-        m_hasColumnHeaderComponent.loadSettingsFrom(settings, specs);
-        m_hasRowHeaderComponent.loadSettingsFrom(settings, specs);
-        m_readRangeComponent.loadSettingsFrom(settings, specs);
+        m_sheetName.loadSettingsFrom(settings, specs);
+        m_createUniqueSheetName.loadSettingsFrom(settings, specs);
     }
-
 }

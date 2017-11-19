@@ -52,9 +52,9 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The factory of the GoogleSheetsReader node.
+ * The factory to the GoogleSheetsReader node.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetsReaderFactory extends NodeFactory<GoogleSheetsReaderModel> {
 

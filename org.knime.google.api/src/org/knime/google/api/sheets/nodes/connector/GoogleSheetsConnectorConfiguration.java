@@ -54,7 +54,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 /**
  * Configuration of the GoogleSheetsConnector node.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetsConnectorConfiguration {
 

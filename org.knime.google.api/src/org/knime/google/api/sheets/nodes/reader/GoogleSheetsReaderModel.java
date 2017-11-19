@@ -84,9 +84,9 @@ import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 /**
- * The model for the GoogleSheetsReader node.
+ * The model to the GoogleSheetsReader node.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetsReaderModel extends NodeModel {
 

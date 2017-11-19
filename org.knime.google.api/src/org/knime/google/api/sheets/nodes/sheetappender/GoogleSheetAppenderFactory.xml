@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheets.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Sheet Appender</name>
+	<shortDescription>Appends a new sheet to an existing spreadsheet in Google Sheets.</shortDescription>
+	<fullDescription>
+		<intro>
+			Writes the input table to a new sheet in an existing spreadsheet in Google Sheets.
+		</intro>
+		<option name="Spreadsheet">
+			The spreadsheet can be selected from available spreadsheets in google drive.
+		</option>
+		<option name="Sheet name">
+			The name of the sheet to which the table should be written.
+		</option>
+		<option name="Add column header">
+			Whether the column names should be written in the first row.
+		</option>
+		<option name="Add row header">
+			Whether the row ids should be written in the first column.
+		</option>
+		<option name="For missing values write">
+		Enter a pattern that is set for missing data values. 
+		If not specified, the corresponding cell of the sheet stays empty.
+		</option>
+		<option name="Create unique sheet name">
+		The node will create a unique sheet name based on the given sheet name if the sheet should already exist.
+		(Example: Should 'SheetOne' already exist the unique sheet name will be 'SheetOne (#1)')
+		</option>
+		<option name="Open spreadsheet after execution">
+		Opens the spreadsheet after it has been successfully written. 
+		The spreadsheet will be opened in the systems's default browser.
+		</option>
+		
+		<option name="Exclude/Include columns">
+			Select the columns that will be written to the sheet file. 
+			If the columns in the input table should change, they will automatically be excluded.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Sheets Connection">A Google Sheets connection.</inPort>
+		<inPort index="1" name="Buffered data table">Table to be written to a google sheet</inPort>
+		<outPort name="Table" index="0">Table containing the spreadsheet name, sheet name and spreadsheet ID.</outPort>
+	</ports>
+</knimeNode>

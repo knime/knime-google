@@ -86,9 +86,9 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
 import com.google.api.services.sheets.v4.Sheets;
 
 /**
- * This class holds the components for the GoogleInterActiveServiceProvider
+ * The components for the {@link GoogleSheetsInteractiveServiceProviderModel}.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 final class GoogleInteractiveServiceProviderComponents {
 
