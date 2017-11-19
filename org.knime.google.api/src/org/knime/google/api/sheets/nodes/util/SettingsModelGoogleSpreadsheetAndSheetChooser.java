@@ -54,23 +54,22 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- *  Settings model for the {@link DialogComponentGoogleSpreadsheetChooser}.
+ *  Settings model for the {@link DialogComponentGoogleSpreadsheetAndSheetChooser}.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
+final public class SettingsModelGoogleSpreadsheetAndSheetChooser extends SettingsModelGoogleSpreadsheetChooser {
 
-    private static final String SPREADSHEET_ID = "spreadsheetId";
-    private static final String SPREADSHEET_NAME = "spreadsheetName";
-    private String m_spreadsheetId = "";
-    private String m_spreadsheetName = "";
+    private static final String SHEETNAME = "sheetName";
+    private static final String SELECT_FIRST_SHEET = "firstSheet";
+    private String m_sheetName = "";
+    private boolean m_selectFirst = false;
 
-    private final String m_configName;
+
 
     /**
      * Creates a new object holding a string value.
@@ -78,32 +77,24 @@ public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      */
-    public SettingsModelGoogleSpreadsheetChooser(final String configName) {
-        m_configName = configName;
+    public SettingsModelGoogleSpreadsheetAndSheetChooser(final String configName) {
+        super(configName);
     }
 
-    /**
-     * Constructor.
-     *
-     * @param configName The config name
-     * @param spreadsheetName The spreadsheet name
-     * @param SpreadsheetId The spreadsheet id
-     */
-    protected SettingsModelGoogleSpreadsheetChooser(final String configName,
-        final String spreadsheetName, final String SpreadsheetId) {
-        m_configName = configName;
-        m_spreadsheetName = spreadsheetName;
-        m_spreadsheetId = SpreadsheetId;
+    private SettingsModelGoogleSpreadsheetAndSheetChooser(final String configName,
+        final String spreadsheetName, final String SpreadsheetId, final String sheetName, final boolean selectFirst) {
+        super(configName, spreadsheetName, SpreadsheetId);
+        m_sheetName = sheetName;
+        m_selectFirst = selectFirst;
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected SettingsModelGoogleSpreadsheetChooser createClone() {
-        return new SettingsModelGoogleSpreadsheetChooser(
-            m_configName, m_spreadsheetName, m_spreadsheetId);
+    protected SettingsModelGoogleSpreadsheetAndSheetChooser createClone() {
+        return new SettingsModelGoogleSpreadsheetAndSheetChooser(
+            getConfigName(), getSpreadsheetName(), getSpreadsheetId(), m_sheetName, m_selectFirst);
     }
 
     /**
@@ -111,15 +102,7 @@ public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
      */
     @Override
     protected String getModelTypeID() {
-        return "SMID_spreadsheetchoser";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getConfigName() {
-        return m_configName;
+        return "SMID_spreadsheetandsheetchoser";
     }
 
     /**
@@ -142,29 +125,18 @@ public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
         saveSettingsForModel(settings);
     }
 
+
     /**
      * {@inheritDoc}
+     * @throws InvalidSettingsException
      */
     @Override
-    protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        Config config = settings.getConfig(m_configName);
-        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SPREADSHEET_ID)),
-                "Spreadsheet ID must not be empty");
-        CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SPREADSHEET_NAME)),
-                "Spreadsheet name must not be empty");
-
-
-    }
-
-    /**
-     * Validate additional settings.
-     * Can be used when extending this settings model.
-     *
-     * @param config The config's name
-     * @throws InvalidSettingsException If the settings are invalid
-     */
     protected void validateAdditionalSettingsForModel(final Config config) throws InvalidSettingsException {
-        // do nothing
+        super.validateAdditionalSettingsForModel(config);
+        if (!config.getBoolean(SELECT_FIRST_SHEET)) {
+            CheckUtils.checkSetting(StringUtils.isNotEmpty(config.getString(SHEETNAME)),
+                    "Sheet name must not be empty");
+        }
     }
 
     /**
@@ -172,49 +144,17 @@ public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        Config config;
-        config = settings.getConfig(m_configName);
-        m_spreadsheetId = config.getString(SPREADSHEET_ID);
-        m_spreadsheetName = config.getString(SPREADSHEET_NAME);
+        super.loadSettingsForModel(settings);
+        Config config = settings.getConfig(getConfigName());
+        m_sheetName = config.getString(SHEETNAME);
+        m_selectFirst = config.getBoolean(SELECT_FIRST_SHEET);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        Config config = settings.addConfig(m_configName);
-        config.addString(SPREADSHEET_ID, m_spreadsheetId);
-        config.addString(SPREADSHEET_NAME, m_spreadsheetName);
-        saveAdditionalSettingsForModel(config);
-
-    }
-
-    /**
-     * Save additional settings.
-     * Can be used when extending this settings model.
-     *
-     * @param config The config's name
-     */
     protected void saveAdditionalSettingsForModel(final Config config) {
-        // do notthing
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + " ('" + m_configName + "')";
-    }
-
-    /**
-     * Returns the spreadsheet id.
-     *
-     * @return The spreadsheet id
-     */
-    public String getSpreadsheetId() {
-        return m_spreadsheetId;
+        super.saveAdditionalSettingsForModel(config);
+        config.addString(SHEETNAME, m_sheetName);
+        config.addBoolean(SELECT_FIRST_SHEET, m_selectFirst);
     }
 
     /**
@@ -222,25 +162,36 @@ public class SettingsModelGoogleSpreadsheetChooser extends SettingsModel {
      *
      * @return The spreadsheet name
      */
-    public String getSpreadsheetName() {
-        return m_spreadsheetName;
+    public String getSheetName() {
+        return m_sheetName;
     }
 
     /**
-     * Sets the spreadsheet id.
+     * Returns whether or not the first sheet should be selected.
      *
-     * @param spreadsheetId The spreadsheet id to be set
+     * @return Whether or not the first sheet should be selected
      */
-    public void setSpreadsheetId(final String spreadsheetId) {
-        m_spreadsheetId = spreadsheetId;
+    public boolean getSelectFirstSheet() {
+        return m_selectFirst;
+    }
+
+
+    /**
+     * Sets the sheet name.
+     *
+     * @param sheetName The sheet name to be set
+     */
+    public void setSheetname(final String sheetName) {
+        m_sheetName = sheetName;
     }
 
     /**
-     * Sets the spreadsheet name.
+     * Sets whether or not the first sheet should be selected.
      *
-     * @param spreadsheetName The spreadsheet name to be set
+     * @param selectFirst Whether or not the first sheet should be selected
      */
-    public void setSpreadsheetName(final String spreadsheetName) {
-        m_spreadsheetName = spreadsheetName;
+    public void setSelectFirstSheet(final boolean selectFirst) {
+        m_selectFirst = selectFirst;
     }
+
 }

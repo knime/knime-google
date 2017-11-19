@@ -63,14 +63,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.IntStream;
 
-import javax.swing.BorderFactory;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -83,7 +78,6 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -96,25 +90,19 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.model.Sheet;
 
 /**
- * A {@link DialogComponent} that allows to choose from existing Google spreadsheets and the available sheets.
+ * A {@link DialogComponent} that allows to choose from existing Google spreadsheets.
  *
- * @author Ole Ostergaard, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-final public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
+public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DialogComponentGoogleSpreadsheetChooser.class);
 
     private final JLabel m_spreadsheetLabel = new JLabel("Spreadsheet: ");
     private JButton m_spreadsheetSelectButton;
     private final JTextField m_spreadsheetNameField = createTextField();
-
-    private final JLabel m_sheetLabel = new JLabel("Sheet: ");
-    private final JComboBox<String> m_sheetCombobox = createComboBox();
-
-    private JCheckBox m_selectFirstSheet;
 
     private JButton m_openSpreadsheetInBrowserButton;
 
@@ -131,28 +119,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         return textField;
     }
 
-    private JComboBox<String> createComboBox() {
-        final JComboBox<String> comboBox = new JComboBox<String>(new String[0]);
-        comboBox.setEditable(false);
-        comboBox.addActionListener(e -> {
-            try {
-                updateModel();
-            } catch (InvalidSettingsException e1) {
-                // Ignore it here
-            }
-        });
-        return comboBox;
-    }
-
-    private JCheckBox createSelectFirstSheetCheckBox() {
-        JCheckBox checkbox = new JCheckBox("Select First Sheet", false);
-        checkbox.addActionListener(e -> {
-            boolean selectFirst = checkbox.isSelected();
-            m_sheetCombobox.setEnabled(!selectFirst);
-        });
-        return checkbox;
-    }
-
     /**
      * Constructor.
      *
@@ -162,7 +128,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         super(model);
         m_spreadsheetSelectButton = getSelectButton();
         m_openSpreadsheetInBrowserButton = getOpenSpreedSheetInBrowserButton();
-        m_selectFirstSheet = createSelectFirstSheetCheckBox();
     }
 
     private JButton getOpenSpreedSheetInBrowserButton() {
@@ -285,8 +250,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     public JPanel getComponentPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), " Spreadsheet Selection "));
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.NORTHWEST;
@@ -304,18 +267,28 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         m_panelWithSelectOrProgressBar.add(getSelectPanel());
         gbc.gridheight = 2;
         panel.add(m_panelWithSelectOrProgressBar, gbc);
-        gbc.gridheight = 1;
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.weightx = 0;
-        panel.add(m_sheetLabel, gbc);
-        gbc.gridx++;
-        gbc.weightx = 1;
-        panel.add(m_sheetCombobox, gbc);
-        gbc.gridx = 0;
-        gbc.gridy++;
-        panel.add(m_selectFirstSheet, gbc);
+        final JPanel additionalPanel = getAdditionalSelectionPanel();
+        if (additionalPanel != null) {
+            gbc.gridheight = 1;
+            gbc.gridwidth = 2;
+            gbc.gridy++;
+            gbc.gridx = 0;
+            gbc.weightx = 1;
+
+            panel.add(additionalPanel, gbc);
+        }
         return panel;
+    }
+
+    /**
+     * Returns an additional panel to be placed under the spreadsheet selection.
+     *
+     * (E.g. A sheet selection panel)
+     *
+     * @return Additional panel for the spreadsheet selection
+     */
+    protected JPanel getAdditionalSelectionPanel() {
+        return null;
     }
 
     private JPanel getSelectPanel() {
@@ -396,7 +369,7 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
                     File selectedSpreadSheet = dialog.show();
                     if (selectedSpreadSheet != null) {
                         setSelectedSpreadsheet(selectedSpreadSheet);
-                        runRetrieveSheetsSwingWorker(null);
+                        runAdditionalSelectAction();
                     }
                 } catch (InterruptedException e) {
                     // do nothing
@@ -438,58 +411,19 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         }
     }
 
-    /** Run a SwingWorker that queries and sets the sheets in a selected spreadsheet.
-     * @param defaultSheetName The sheet to activate, if present (may be null)
+    /**
+     * Additional action that can be performed after spreadsheet selection.
+     * Can be used when extending this dialog component's functionality.
      */
-    private void runRetrieveSheetsSwingWorker(final String defaultSheetName) {
-        SwingWorkerWithContext<List<String>, Void> retrieveSheetsSwingWorker =
-                new SwingWorkerWithContext<List<String>, Void>() {
-            @Override
-            protected List<String> doInBackgroundWithContext() throws Exception {
-                List<String> sheets = getSheets(m_spreadsheetId);
-                return sheets;
-            }
-
-            @Override
-            protected void doneWithContext() {
-                if (isCancelled()) {
-                    return;
-                }
-
-                try {
-                    setAvailableSheets(get());
-                    if (defaultSheetName != null) {
-                        m_sheetCombobox.setSelectedItem(defaultSheetName);
-                    }
-                } catch (InterruptedException e) {
-                    // do nothing
-                } catch (ExecutionException e) {
-                    setAvailableSheets(null);
-                    String error = "Could not retrieve sheets for spreadsheet";
-                    LOGGER.debug(error, e);
-                    JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(m_spreadsheetLabel), error);
-                }
-            }
-        };
-        retrieveSheetsSwingWorker.execute();
+    protected void runAdditionalSelectAction() {
+        // do nothing
     }
+
 
     private void setSelectedSpreadsheet(final File selectedSpreadSheet) {
         m_spreadsheetNameField.setText(selectedSpreadSheet.getName());
         m_spreadsheetId = selectedSpreadSheet.getId();
         m_spreadsheetNameField.setToolTipText("Id: " + m_spreadsheetId);
-    }
-
-    private void setAvailableSheets(final List<String> sheets) {
-        final DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>)m_sheetCombobox.getModel();
-        model.removeAllElements();
-        // Add new elements
-        if (sheets != null) {
-            for (final String string : sheets) {
-                model.addElement(string);
-            }
-            m_sheetCombobox.setSelectedIndex(0);
-        }
     }
 
     /**
@@ -513,37 +447,14 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     }
 
     /**
-     * Returns a list of available spreadsheet names and the corresponding spreadsheet id.
-     *
-     * @return A list of available spreadsheet names and the corresponding spreadsheet id
-     * @throws IOException If the spreadsheets cannot be listed
-     */
-    private List<String> getSheets(final String spreadsheetId) throws IOException {
-        List<Sheet> sheets = m_sheetsService.spreadsheets().get(spreadsheetId).execute().getSheets();
-        List<String> sheetNames = new ArrayList<String>();
-        sheets.forEach((sheet) -> sheetNames.add(sheet.getProperties().getTitle()));
-        return sheetNames;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void updateComponent() {
         final SettingsModelGoogleSpreadsheetChooser model = (SettingsModelGoogleSpreadsheetChooser)getModel();
-        m_selectFirstSheet.setSelected(model.getSelectFirstSheet());
         setEnabledComponents(model.isEnabled());
         m_spreadsheetId = model.getSpreadsheetId();
         m_spreadsheetNameField.setText(model.getSpreadsheetName());
-        if (IntStream.range(0, m_sheetCombobox.getItemCount())
-                .mapToObj(i -> m_sheetCombobox.getItemAt(i))
-                .anyMatch(s -> s.equals(model.getSheetName()))) {
-            m_sheetCombobox.setSelectedItem(model.getSheetName());
-        } else {
-            if (StringUtils.isNotEmpty(m_spreadsheetId)) {
-                runRetrieveSheetsSwingWorker(model.getSheetName());
-            }
-        }
     }
 
     /**
@@ -554,8 +465,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
         final SettingsModelGoogleSpreadsheetChooser model = (SettingsModelGoogleSpreadsheetChooser)getModel();
         model.setSpreadsheetId(m_spreadsheetId);
         model.setSpreadsheetName(m_spreadsheetNameField.getText());
-        model.setSheetname((String)m_sheetCombobox.getSelectedItem());
-        model.setSelectFirstSheet(m_selectFirstSheet.isSelected());
     }
 
     /**
@@ -571,11 +480,10 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
      *
      * @throws InvalidSettingsException if the string was not accepted.
      */
-    private void updateModel() throws InvalidSettingsException {
+    protected void updateModel() throws InvalidSettingsException {
         SettingsModelGoogleSpreadsheetChooser model = (SettingsModelGoogleSpreadsheetChooser)getModel();
         model.setSpreadsheetId(m_spreadsheetId);
         model.setSpreadsheetName(m_spreadsheetNameField.getText());
-        model.setSpreadsheetName((String)m_sheetCombobox.getSelectedItem());
     }
 
     /**
@@ -584,11 +492,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_spreadsheetSelectButton.setEnabled(enabled);
-        if (!m_selectFirstSheet.isSelected()) {
-            m_spreadsheetNameField.setEnabled(enabled);
-        } else {
-            m_spreadsheetNameField.setEnabled(!enabled);
-        }
     }
 
     /**
@@ -597,8 +500,6 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
     @Override
     public void setToolTipText(final String text) {
         m_spreadsheetSelectButton.setToolTipText(text);
-        m_sheetCombobox.setToolTipText(text);
-        m_selectFirstSheet.setToolTipText(text);
     }
 
     private void setSelectPanelComponent(final JComponent comp) {
@@ -608,5 +509,23 @@ final public class DialogComponentGoogleSpreadsheetChooser extends DialogCompone
             m_panelWithSelectOrProgressBar.revalidate();
             m_panelWithSelectOrProgressBar.repaint();
         }
+    }
+
+    /**
+     * Returns the sheet service used in the dialog component.
+     *
+     * @return The sheet service used in the dialog component
+     */
+    protected Sheets getSheetService() {
+        return m_sheetsService;
+    }
+
+    /**
+     * Returns the spreadsheet id that is momentarily used in the dialog component.
+     *
+     * @return The spreadsheet id momentarily used in the dialog component
+     */
+    protected String getSpreadSheetId() {
+        return m_spreadsheetId;
     }
 }
