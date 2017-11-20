@@ -47,6 +47,9 @@
 		<option name="Append to sheet">
 		When this option is selected, the data table content will be appended to the end of the selected sheet.
 		</option>
+		<option name="Clear sheet before writing">
+		When this option is selected the sheet, or the selected range of the sheet will be cleared before writing. This deletes the content in the specified sheet/range.
+		</option>
 		<option name="Open spreadsheet after execution">
 		Opens the spreadsheet after it has been successfully written. 
 		The spreadsheet will be opened in the systems's default browser.

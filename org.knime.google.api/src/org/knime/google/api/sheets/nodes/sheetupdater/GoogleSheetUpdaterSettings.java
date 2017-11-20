@@ -61,24 +61,40 @@ import org.knime.google.api.sheets.nodes.util.SettingsModelGoogleSpreadsheetAndS
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings{
+class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings{
 
-    private SettingsModelGoogleSpreadsheetAndSheetChooser m_spreadsheetChoserModel = getSpreadsheetChoserModel();
+    private SettingsModelGoogleSpreadsheetAndSheetChooser m_spreadsheetChoserModel =
+            new SettingsModelGoogleSpreadsheetAndSheetChooser("spreadsheetChooser");
 
-    private SettingsModelOptionalString m_rangeModel = getRangeModel();
+    private SettingsModelOptionalString m_rangeModel =
+            new SettingsModelOptionalString("range", "", false);
 
-    private SettingsModelBoolean m_appendModel = getAppendModel();
+    private SettingsModelBoolean m_appendModel;
 
-    private SettingsModelBoolean m_clearSheetModel = getClearSheetModel();
+    private SettingsModelBoolean m_clearSheetModel;
 
-    /**
-     * Returns the {@link SettingsModelBoolean} for appending.
-     *
-     * @return The {@link SettingsModelBoolean} for appending
-     */
-    protected static SettingsModelBoolean getAppendModel() {
-        return new SettingsModelBoolean("append", false);
+    private boolean changedByAction = false;
+
+    GoogleSheetUpdaterSettings() {
+        m_appendModel = new SettingsModelBoolean("append", false);
+        m_clearSheetModel = new SettingsModelBoolean("clearSheet", false);
+        m_appendModel.addChangeListener(e -> {
+            if (!changedByAction) {
+                changedByAction = true;
+                m_clearSheetModel.setEnabled(!m_appendModel.getBooleanValue());
+                changedByAction = false;
+            }
+        });
+        m_clearSheetModel.addChangeListener(e -> {
+            if (!changedByAction) {
+                changedByAction = true;
+                m_appendModel.setEnabled(!m_clearSheetModel.getBooleanValue());
+                changedByAction = false;
+            }
+        });
+
     }
+
 
 
     /**
@@ -86,8 +102,17 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
      *
      * @return The {@link SettingsModelOptionalString} for the range
      */
-    protected static SettingsModelOptionalString getRangeModel() {
-        return new SettingsModelOptionalString("range", "", false);
+    protected SettingsModelOptionalString getRangeModel() {
+        return m_rangeModel;
+    }
+
+    /**
+     * Returns the {@link SettingsModelBoolean} for appending.
+     *
+     * @return The {@link SettingsModelBoolean} for appending
+     */
+    protected SettingsModelBoolean getAppendModel() {
+        return m_appendModel;
     }
 
     /**
@@ -95,8 +120,8 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
      *
      * @return The {@link SettingsModelBoolean} for the sheet clearing before writing
      */
-    protected static SettingsModelBoolean getClearSheetModel() {
-        return new SettingsModelBoolean("clearSheet", false);
+    protected SettingsModelBoolean getClearSheetModel() {
+        return m_clearSheetModel;
     }
 
     /**
@@ -104,8 +129,8 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
      *
      * @return The {@link SettingsModelGoogleSpreadsheetAndSheetChooser} for the spreadsheet and sheet
      */
-    protected static SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
-        return new SettingsModelGoogleSpreadsheetAndSheetChooser("spreadsheetChooser");
+    protected SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
+        return m_spreadsheetChoserModel;
     }
 
     /**

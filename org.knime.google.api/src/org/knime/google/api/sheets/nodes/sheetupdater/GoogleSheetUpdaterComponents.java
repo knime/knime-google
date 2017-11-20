@@ -73,18 +73,19 @@ import org.knime.google.api.sheets.nodes.util.DialogComponentGoogleSpreadsheetAn
  */
 public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterComponents {
 
+    GoogleSheetUpdaterSettings m_settings = new GoogleSheetUpdaterSettings();
+
     private final DialogComponentGoogleSpreadsheetAndSheetChooser m_spreadsheetChoser =
-            new DialogComponentGoogleSpreadsheetAndSheetChooser(GoogleSheetUpdaterSettings.getSpreadsheetChoserModel());
+            new DialogComponentGoogleSpreadsheetAndSheetChooser(m_settings.getSpreadsheetChoserModel());
 
     private final DialogComponentOptionalString m_range =
-            new DialogComponentOptionalString(GoogleSheetUpdaterSettings.getRangeModel(), "Range:");
+            new DialogComponentOptionalString(m_settings.getRangeModel(), "Range:");
 
     private final DialogComponentBoolean m_append =
-            new DialogComponentBoolean(GoogleSheetUpdaterSettings.getAppendModel(), "Append to sheet");
+            new DialogComponentBoolean(m_settings.getAppendModel(), "Append to sheet");
 
     private final DialogComponentBoolean m_clearSheet =
-            new DialogComponentBoolean(GoogleSheetUpdaterSettings.getClearSheetModel(), "Clear sheet before writing");
-
+            new DialogComponentBoolean(m_settings.getClearSheetModel(), "Clear sheet before writing");
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
