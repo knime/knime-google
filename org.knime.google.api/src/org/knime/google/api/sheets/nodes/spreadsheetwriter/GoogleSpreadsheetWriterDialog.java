@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSpreadsheetWriterDialog extends NodeDialogPane {
+final class GoogleSpreadsheetWriterDialog extends NodeDialogPane {
 
     private GoogleSpreadsheetWriterComponents m_components = new GoogleSpreadsheetWriterComponents();
 

@@ -59,7 +59,7 @@ import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterSettings;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSpreadsheetWriterSettings extends AbstractGoogleSheetWriterSettings {
+final class GoogleSpreadsheetWriterSettings extends AbstractGoogleSheetWriterSettings {
 
     private SettingsModelString m_spreadsheetNameModel = getSpreadsheetNameModel();
 

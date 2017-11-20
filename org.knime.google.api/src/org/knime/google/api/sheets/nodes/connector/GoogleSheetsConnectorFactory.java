@@ -56,7 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetsConnectorFactory extends NodeFactory<GoogleSheetsConnectorModel> {
+public final class GoogleSheetsConnectorFactory extends NodeFactory<GoogleSheetsConnectorModel> {
 
     /**
      * {@inheritDoc}

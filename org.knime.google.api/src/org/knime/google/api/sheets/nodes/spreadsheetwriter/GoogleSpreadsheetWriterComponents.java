@@ -68,7 +68,7 @@ import org.knime.google.api.sheets.nodes.util.AbstractGoogleSheetWriterComponent
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSpreadsheetWriterComponents extends AbstractGoogleSheetWriterComponents {
+final class GoogleSpreadsheetWriterComponents extends AbstractGoogleSheetWriterComponents {
 
     private final DialogComponentString m_spreadsheetName =
             new DialogComponentString(GoogleSpreadsheetWriterSettings.getSpreadsheetNameModel(), "Spreadsheet name:");

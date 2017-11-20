@@ -71,7 +71,7 @@ import org.knime.google.api.sheets.nodes.util.DialogComponentGoogleSpreadsheetAn
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterComponents {
+final class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterComponents {
 
     GoogleSheetUpdaterSettings m_settings = new GoogleSheetUpdaterSettings();
 

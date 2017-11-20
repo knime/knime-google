@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetsReaderDialog extends NodeDialogPane {
+final class GoogleSheetsReaderDialog extends NodeDialogPane {
 
     private final GoogleSheetsReaderComponents m_components =
             new GoogleSheetsReaderComponents(GoogleSheetsReaderModel.getSettings());

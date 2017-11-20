@@ -61,7 +61,7 @@ import org.knime.google.api.sheets.nodes.util.SettingsModelGoogleSpreadsheetChoo
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetAppenderSettings extends AbstractGoogleSheetWriterSettings {
+final class GoogleSheetAppenderSettings extends AbstractGoogleSheetWriterSettings {
     private SettingsModelGoogleSpreadsheetChooser m_spreadsheetChoserModel = getSpreadsheetChoserModel();
 
     private SettingsModelString m_sheetNameModel = getSheetnameModel();

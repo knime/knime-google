@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetAppenderDialog extends NodeDialogPane {
+final class GoogleSheetAppenderDialog extends NodeDialogPane {
 
     private GoogleSheetAppenderComponents m_components = new GoogleSheetAppenderComponents();
 

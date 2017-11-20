@@ -65,7 +65,7 @@ import com.google.api.client.util.Preconditions;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
+class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
 
     /**
      * Constructor.

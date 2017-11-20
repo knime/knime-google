@@ -72,7 +72,7 @@ import org.knime.google.api.sheets.nodes.util.DialogComponentGoogleSpreadsheetCh
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetAppenderComponents extends AbstractGoogleSheetWriterComponents {
+final class GoogleSheetAppenderComponents extends AbstractGoogleSheetWriterComponents {
 
     private final DialogComponentGoogleSpreadsheetChooser m_spreadsheetChoser =
             new DialogComponentGoogleSpreadsheetChooser(GoogleSheetAppenderSettings.getSpreadsheetChoserModel());
