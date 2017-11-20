@@ -3,65 +3,61 @@
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Google Sheet Updater</name>
-	<shortDescription>Updates values in an existing sheet.</shortDescription>
+	<shortDescription>This node updates values in an existing sheet.</shortDescription>
 	<fullDescription>
 		<intro>
-			This node writes the input data table to an existing google sheet.
+			This node writes the input data table to an existing Google sheet.
 			
-			The data table's content can either overwrite the sheets existing content or be
-			appended at the end of the existing table.
+			It can overwrite some or all of the content of a sheet or append to the content of a sheet.
 			
-			What is being overwritten depends on the input table's size.
-			
-			Additionally the data table content can be written to a specific range, given in A1 notation.
-			If the input table size does not correspond to the size of the given A1 notation execution will fail.
+			If only part of the content of a sheet is to be overwritten, the relevant range can be specified in A1 notation.
+			The size of the input table must not exceed the size of the selected range, otherwise execution will fail.
 		</intro>
 		<option name="Spreadsheet">
-			The spreadsheet can be selected from available spreadsheets in google drive.
+			The spreadsheet can be selected from the spreadsheets available on Google Drive.
 		</option>
 		<option name="Select...">
-			Opens a dialog which lists the available spreadsheets from google drive.
+			Opens a dialog that lists the spreadsheets available on Google Drive.
 		</option>
 		<option name="Open">
 			Opens the selected spreadsheet in the browser.
 		</option>
 		<option name="Sheet">
-			The sheet from the spreadsheet that should be read. Available sheets can be selected from the drop down menu.
+			The sheet from the spreadsheet that should be updated. Available sheets can be selected from the drop-down menu.
 		</option>
 		<option name="Select First Sheet">
-			When selected, the first sheet of the spreadsheet will be read instead of the one selected from the drop down menu.
+			When selected, the first sheet of the spreadsheet will be updated instead of the one selected from the drop-down menu.
 		</option>
 		<option name="Range">
-			A specific range to which the data table content should be written can be given in A1 notation. (E.g. "A1:G20")
+			Here the range that should be updated from the sheet can be specified in A1 notation. (E.g. "A1:G20")
 		</option>
 		<option name="Add column header">
-			Whether the column names should be written in the first row.
+			Here you determine whether the column names should be written in the first row.
 		</option>
 		<option name="Add row header">
-			Whether the row ids should be written in the first column.
+			Here you determine whether the row ID's should be written in the first column.
 		</option>
 		<option name="For missing values write">
-		Enter a pattern that is set for missing data values. 
-		If not specified, the corresponding cell of the sheet stays empty.
+		By selecting this option, you can specify a string you want to substitute for missing values.
+		If the option is left unchecked, the cells with missing values remain empty.
 		</option>
 		<option name="Append to sheet">
-		When this option is selected, the data table content will be appended to the end of the selected sheet.
+		When this option is selected, the data table content will be appended to the selected sheet.
 		</option>
 		<option name="Clear sheet before writing">
-		When this option is selected the sheet, or the selected range of the sheet will be cleared before writing. This deletes the content in the specified sheet/range.
+		When this option is selected, the sheet or the selected range of the sheet will be cleared before writing. This deletes the content in the specified sheet/range.
 		</option>
 		<option name="Open spreadsheet after execution">
-		Opens the spreadsheet after it has been successfully written. 
+		Opens the spreadsheet after it has been written successfully. 
 		The spreadsheet will be opened in the systems's default browser.
 		</option>
 		<option name="Exclude/Include columns">
 			Select the columns that will be written to the sheet file. 
-			If the columns in the input table should change, they will automatically be excluded.
+			If the columns in the input table change, they will automatically be excluded.
 		</option>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Google Sheets Connection">A Google Sheets connection.</inPort>
-		<inPort index="1" name="Buffered data table">Table to be written to a google sheet</inPort>
-		<outPort name="Table" index="0">Table containing the spreadsheet name, sheet name and spreadsheet ID.</outPort>
+		<inPort index="1" name="Buffered data table">Table to be written to a Google sheet</inPort>
 	</ports>
 </knimeNode>

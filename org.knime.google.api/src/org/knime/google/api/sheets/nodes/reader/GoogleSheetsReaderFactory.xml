@@ -2,42 +2,42 @@
 <knimeNode icon="./googlesheets.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Spreadsheet Reader</name>
+	<name>Google Sheet Reader</name>
 	<shortDescription>Read tables from Google Sheets.</shortDescription>
 	<fullDescription>
 		<intro>
-			Reads a google spreadsheet's sheet. The spreadsheet can be selected from available spreadsheets in google drive.
-			Optionally a specific range can be read from the sheet, the range must be entered in A1 notation (E.g. "A1:G10").
+			This node reads a tab ("sheet") of a Google spreadsheet. The spreadsheet can be selected from the spreadsheets available on Google Drive.
+			Optionally, a specific range can be read from the sheet.  The range must be entered in A1 notation (E.g. "A1:G10").
 			
 			<p>
-				For more information about the A1 notation visit: 
+				For more information about A1 notation visit: 
 				<a href="https://developers.google.com/sheets/api/guides/concepts#a1_notation">
 				developers.google.com/sheets/api/guides/concepts#a1_notation</a>
 			</p>
 		</intro>
 		<option name="Spreadsheet">
-			The spreadsheet can be selected from available spreadsheets in google drive.
+			The spreadsheet can be selected from the spreadsheets available on Google Drive.
 		</option>
 		<option name="Select...">
-			Opens a dialog which lists the available spreadsheets from google drive.
+			Opens a dialog that lists the spreadsheets available on Google Drive.
 		</option>
 		<option name="Open">
 			Opens the selected spreadsheet in the browser.
 		</option>
 		<option name="Sheet">
-			The sheet from the spreadsheet that should be read. Available sheets can be selected from the drop down menu.
+			The sheet from the spreadsheet that should be read. Available sheets can be selected from the drop-down menu.
 		</option>
 		<option name="Select First Sheet">
-			When selected, the first sheet of the spreadsheet will be read instead of the one selected from the drop down menu.
+			When selected, the first sheet of the spreadsheet will be read instead of the one selected from the drop-down menu.
 		</option>
 		<option name="Range">
-			A specific range that should be read from the sheet can be given in A1 notation. (E.g. "A1:G20")
+			Here the range that should be read from the sheet can be specified in A1 notation. (E.g. "A1:G20")
 		</option>
 		<option name="Read column name">
-			Whether the first row of the sheet should be read as column names.
+			Here you can specify whether the first row of the sheet should be read as column names.
 		</option>
 		<option name="Read row id">
-			Whether the first column of the sheet should be read as row ids.
+			Here you can specify whether the first column of the sheet should be read as row ID's.
 		</option>
 	</fullDescription>
 	<ports>

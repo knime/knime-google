@@ -3,14 +3,14 @@
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Google Sheets Service Provider</name>
-	<shortDescription>Create a connection to the Google Sheets API.</shortDescription>
+	<shortDescription>This node creates a connection to the Google Sheets API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Provides a connection to the Google Sheets service.
-			There is no configuration. The Service Account mail, the P12 key and the scopes are used to create
+			This node provides a connection to the Google Sheets service.
+			There is no configuration. The Service Account mail, the P12 key, and the scopes are used to create
 			a Google Sheets service.
 			
-			To be able to access user spreadsheets, they need to be shared with the service account.
+			Before you can access user spreadsheets, you have to share them with the service account.
 			<p>
 			For details on service accounts see: <a href="https://developers.google.com/identity/protocols/OAuth2ServiceAccount">developers.google.com/identity/protocols/OAuth2ServiceAccount</a>.
 			</p>

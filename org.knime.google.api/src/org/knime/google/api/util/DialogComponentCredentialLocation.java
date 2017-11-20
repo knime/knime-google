@@ -234,7 +234,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         gbc.gridwidth = 1;
         gbc.weightx = 0;
         gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
-        panel.add(new JLabel("User id: "), gbc);
+        panel.add(new JLabel("User ID: "), gbc);
         gbc.gridx = 1;
         gbc.insets = NEUTRAL_INSET;
         gbc.ipadx = 10;

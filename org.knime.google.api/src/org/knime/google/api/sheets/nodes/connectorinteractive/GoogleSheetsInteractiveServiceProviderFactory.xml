@@ -6,18 +6,18 @@
 	<shortDescription>Create a Google Sheets connection.</shortDescription>
 	<fullDescription>
 		<intro>
-			Create a Google Sheets connection using interactive authentication, via pop-up.
+			This node creates a Google Sheets connection using interactive authentication, via pop-up.
 			<p>
-			Authentication happens in the dialog.
-			By default, received credentials will be stored in the node.
-			However, a custom credential location can be set in the dialog.
+			Authentication happens in the configuration window.
+			By default, credentials are stored in the node.
+			Custom credentials can be set in the configuration window.
 			A custom credential location is useful for sharing the credentials via a KNIME server or for exposing the user credentials.
 			</p>
 			<p>
 			After choosing the credential location, one must authenticate using the (Re-)Authentication button. 
 			A pop-up will appear that asks the user to grant access to Google Sheets and Google Drive. 
 			If you have already authenticated, the (Re-)Authentication will test the stored credentials in the selected location. 
-			When choosing and confirming the custom credentials the default credentials will be forgotten, they can also manually be forgotten using the corresponding button.
+			When choosing and confirming the custom credentials, the default credentials will be deleted. They can be manually deleted by clicking on the "Forget Default Credentials" button.
 			</p>
 			<p>
 			Access can be revoked at any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
@@ -27,7 +27,7 @@
 			</p>
 		</intro>
 		<option name="Credential Location">
-		Where the credentials received during authentication will be stored.
+		This option determines where the credentials received during authentication will be stored.
 			<br/>
 			<b>Default</b>
 			<p>
@@ -35,13 +35,13 @@
 			<br/>
 			<b>Forget Default Credentials</b>
 			<br/>
-			This button will remove the credentials which are stored as part of the node instance.
+			This button removes the credentials that are stored as part of the node instance.
 			</p>
 			<b>Custom</b>
 			<p>
-			<b>User id</b>
+			<b>User ID</b>
 			<br/>
-			A user id under which the tokens should be saved. 
+			The user ID under which the tokens should be saved. 
 			Multiple users' credentials can be stored in the same location.
 			<br/>
 			<b>Select Directory</b>
@@ -50,8 +50,8 @@
 			</p>
 		</option>
 		<option name="(Re-)Authentication">
-		This button will open a dialog to authenticate with Google Services. 
-		If you are already authenticated, it will test the stored credentials in the selected location.
+		Clicking on this button will open a dialog for authenticating with Google Services. 
+		If you are already authenticated, it will verify the stored credentials in the selected location.
 		</option>
 		
 	</fullDescription>
