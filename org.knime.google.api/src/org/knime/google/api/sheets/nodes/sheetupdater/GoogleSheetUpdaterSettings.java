@@ -69,6 +69,8 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
 
     private SettingsModelBoolean m_appendModel = getAppendModel();
 
+    private SettingsModelBoolean m_clearSheetModel = getClearSheetModel();
+
     /**
      * Returns the {@link SettingsModelBoolean} for appending.
      *
@@ -86,6 +88,15 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
      */
     protected static SettingsModelOptionalString getRangeModel() {
         return new SettingsModelOptionalString("range", "", false);
+    }
+
+    /**
+     * Returns the {@link SettingsModelBoolean} for the sheet clearing before writing.
+     *
+     * @return The {@link SettingsModelBoolean} for the sheet clearing before writing
+     */
+    protected static SettingsModelBoolean getClearSheetModel() {
+        return new SettingsModelBoolean("clearSheet", false);
     }
 
     /**
@@ -115,6 +126,7 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
         return m_spreadsheetChoserModel.getSpreadsheetName();
     }
 
+    /**
      * Returns the selected sheet name.
      *
      * @return The selected sheet name
@@ -150,12 +162,22 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
         return m_appendModel.getBooleanValue();
     }
 
+    /**
+     * Returns whether or not the sheet should be cleared before writing.
+     *
+     * @return Whether or not the sheet should be cleared before writing
+     */
+    protected boolean clearSheet() {
+        return m_clearSheetModel.getBooleanValue();
+    }
+
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
         m_spreadsheetChoserModel.saveSettingsTo(settings);
         m_rangeModel.saveSettingsTo(settings);
         m_appendModel.saveSettingsTo(settings);
+        m_clearSheetModel.saveSettingsTo(settings);
     }
 
     @Override
@@ -164,6 +186,7 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
         m_spreadsheetChoserModel.validateSettings(settings);
         m_rangeModel.validateSettings(settings);
         m_appendModel.validateSettings(settings);
+        m_clearSheetModel.validateSettings(settings);
     }
 
     @Override
@@ -172,5 +195,6 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
         m_spreadsheetChoserModel.loadSettingsFrom(settings);
         m_rangeModel.loadSettingsFrom(settings);
         m_appendModel.loadSettingsFrom(settings);
+        m_clearSheetModel.loadSettingsFrom(settings);
     }
 }

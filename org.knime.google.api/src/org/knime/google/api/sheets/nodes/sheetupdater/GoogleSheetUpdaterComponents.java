@@ -82,6 +82,9 @@ public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterCompo
     private final DialogComponentBoolean m_append =
             new DialogComponentBoolean(GoogleSheetUpdaterSettings.getAppendModel(), "Append to sheet");
 
+    private final DialogComponentBoolean m_clearSheet =
+            new DialogComponentBoolean(GoogleSheetUpdaterSettings.getClearSheetModel(), "Clear sheet before writing");
+
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
@@ -89,6 +92,7 @@ public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterCompo
         m_spreadsheetChoser.saveSettingsTo(settings);
         m_range.saveSettingsTo(settings);
         m_append.saveSettingsTo(settings);
+        m_clearSheet.saveSettingsTo(settings);
     }
 
     @Override
@@ -108,6 +112,7 @@ public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterCompo
         }
         m_range.loadSettingsFrom(settings, specs);
         m_append.loadSettingsFrom(settings, specs);
+        m_clearSheet.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -117,6 +122,8 @@ public class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterCompo
     protected JPanel addWriterComponents(final JPanel panel, final GridBagConstraints gbc) {
         gbc.gridy++;
         panel.add(m_append.getComponentPanel(), gbc);
+        gbc.gridy++;
+        panel.add(m_clearSheet.getComponentPanel(), gbc);
         return panel;
     }
 

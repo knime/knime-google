@@ -69,6 +69,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
 
+import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 /**
@@ -110,6 +111,10 @@ public class GoogleSheetUpdaterModel extends NodeModel {
         String sheetRange = !m_settings.useRange() ?
             m_settings.getSheetName() : m_settings.getSheetName() + "!" + m_settings.getRange();
 
+        if (m_settings.clearSheet()){
+            connection.getSheetsService().spreadsheets().values().clear(
+                m_settings.getSpreadsheetId(), sheetRange, new ClearValuesRequest()).execute();
+        }
         if (m_settings.append()) {
             GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
                 m_settings.getSheetName(), m_settings.addRowHeader(), m_settings.addColumnHeader(),
