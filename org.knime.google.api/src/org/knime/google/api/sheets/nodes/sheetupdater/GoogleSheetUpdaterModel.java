@@ -96,6 +96,7 @@ public class GoogleSheetUpdaterModel extends NodeModel {
         GoogleSheetsConnection connection =
                 ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
+        exec.setMessage("Updating Sheet");
         // column filter
         BufferedDataTable table = (BufferedDataTable)inObjects[1];
         DataTableSpec spec = table.getSpec();
@@ -112,11 +113,11 @@ public class GoogleSheetUpdaterModel extends NodeModel {
         if (m_settings.append()) {
             GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
                 m_settings.getSheetName(), m_settings.addRowHeader(), m_settings.addColumnHeader(),
-                m_settings.handleMissingValues(), m_settings.getMissingValuePattern());
+                m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
         } else {
             updateSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
                 sheetRange, m_settings.addRowHeader(), m_settings.addColumnHeader(),
-                m_settings.handleMissingValues(), m_settings.getMissingValuePattern());
+                m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
         }
 
         if (m_settings.openAfterExecution()) {
@@ -125,7 +126,7 @@ public class GoogleSheetUpdaterModel extends NodeModel {
 
         }
 
-        pushFlowvariables(m_settings.getSpreadsheetId(), spreadsheetId, m_settings.getSheetName());
+        pushFlowvariables(m_settings.getSpreadsheetName(), spreadsheetId, m_settings.getSheetName());
 
         return new PortObject[]{};
     }
@@ -135,30 +136,32 @@ public class GoogleSheetUpdaterModel extends NodeModel {
      * provided the given google sheets connection. Using the passed settings.
      *
      *
-     * @param sheetConnection
-     * @param dataTable
-     * @param writeRaw
-     * @param spreadsheetId
-     * @param sheetName
-     * @param addRowHeader
-     * @param addColumnHeader
-     * @param handleMissingValues
-     * @param missingValuePattern
-     * @throws IOException
+     * @param sheetConnection The sheets connection to be used
+     * @param dataTable The data table to be written to google sheets
+     * @param writeRaw Whether the table should be written to google sheets in raw format
+     * @param spreadsheetId The designated spreadsheet id
+     * @param sheetName The designated sheet name
+     * @param addRowHeader Whether the row header should be written to the sheet
+     * @param addColumnHeader Whether the column header should be written to the sheet
+     * @param handleMissingValues Whether missing values should be handled specially
+     * @param missingValuePattern The missing value pattern that should be used, when handling them specially
+     * @param exec The node execution context
+     * @throws IOException If the spreadsheet cannot be written
+     * @throws CanceledExecutionException If execution is canceled
      */
     public static void updateSpreadsheet(final GoogleSheetsConnection sheetConnection,
         final BufferedDataTable dataTable, final boolean writeRaw, final String spreadsheetId, final String sheetName,
         final boolean addRowHeader, final boolean addColumnHeader, final boolean handleMissingValues,
-        final String missingValuePattern) throws IOException {
+        final String missingValuePattern, final ExecutionContext exec) throws IOException, CanceledExecutionException {
         final String valueInputOption = writeRaw ? "RAW" : "USER_ENTERED";
 
         ValueRange body =
                 GoogleSpreadsheetWriterModel.collectSheetData(dataTable, addRowHeader, addColumnHeader,
-                    handleMissingValues, missingValuePattern);
+                    handleMissingValues, missingValuePattern, exec);
 
+        exec.setMessage("Updating Sheet.");
         sheetConnection.getSheetsService().spreadsheets().
-        values().update(spreadsheetId, sheetName,body).
-        setValueInputOption(valueInputOption).execute();
+            values().update(spreadsheetId, sheetName,body).setValueInputOption(valueInputOption).execute();
     }
 
 
@@ -193,6 +196,12 @@ public class GoogleSheetUpdaterModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_settings.getSpreadsheetId().trim().isEmpty()) {
+            throw new InvalidSettingsException("Spreadsheet selection must not be empty!");
+        }
+        if (m_settings.getSheetName().trim().isEmpty()) {
+            throw new InvalidSettingsException("Sheet name must not be empty!");
+        }
         return new PortObjectSpec[]{};
     }
 

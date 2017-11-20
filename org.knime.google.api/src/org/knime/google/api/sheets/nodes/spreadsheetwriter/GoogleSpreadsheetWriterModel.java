@@ -110,6 +110,7 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         GoogleSheetsConnection connection =
                 ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
+        exec.setMessage("Writing Spreadsheet.");
         // column filter
         BufferedDataTable table = (BufferedDataTable)inObjects[1];
         DataTableSpec spec = table.getSpec();
@@ -118,13 +119,12 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         rearranger.keepOnly(filter.getIncludes());
         table = exec.createColumnRearrangeTable(table, rearranger, exec);
 
-
         String spreadsheetId = createSpreadsheet(connection, m_settings.getSpreadsheetName(), m_settings.getSheetName());
 
 
         writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
             m_settings.getSheetName(), m_settings.addRowHeader(), m_settings.addColumnHeader(),
-            m_settings.handleMissingValues(), m_settings.getMissingValuePattern());
+            m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {
             openSpreadsheetInBrowser(
@@ -183,24 +183,28 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * provided the given google sheets connection. Using the passed settings.
      *
      *
-     * @param sheetConnection
-     * @param dataTable
-     * @param writeRaw
-     * @param spreadsheetId
-     * @param sheetName
-     * @param addRowHeader
-     * @param addColumnHeader
-     * @param handleMissingValues
-     * @param missingValuePattern
-     * @throws IOException
+     * @param sheetConnection The sheets connection to be used
+     * @param dataTable The data table to be written to google sheets
+     * @param writeRaw Whether the table should be written to google sheets in raw format
+     * @param spreadsheetId The designated spreadsheet id
+     * @param sheetName The designated sheet name
+     * @param addRowHeader Whether the row header should be written to the sheet
+     * @param addColumnHeader Whether the column header should be written to the sheet
+     * @param handleMissingValues Whether missing values should be handled specially
+     * @param missingValuePattern The missing value pattern that should be used, when handling them specially
+     * @param exec The nodes execution monitor
+     * @throws IOException If the spreadsheet cannot be written
+     * @throws CanceledExecutionException If execution is canceled
      */
     public static void writeSpreadsheet(final GoogleSheetsConnection sheetConnection, final BufferedDataTable dataTable,
         final boolean writeRaw, final String spreadsheetId, final String sheetName,final boolean addRowHeader,
-        final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern) throws IOException {
+        final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern,
+        final ExecutionContext exec) throws IOException, CanceledExecutionException {
         final String valueInputOption = writeRaw ? "RAW" : "USER_ENTERED";
 
         ValueRange body =
-            collectSheetData(dataTable, addRowHeader, addColumnHeader, handleMissingValues, missingValuePattern);
+            collectSheetData(dataTable, addRowHeader, addColumnHeader, handleMissingValues, missingValuePattern, exec);
+        exec.setMessage("Writing Sheet.");
         sheetConnection.getSheetsService().spreadsheets().values()
                 .append(spreadsheetId, sheetName, body)
                 .setValueInputOption(valueInputOption)
@@ -216,10 +220,13 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * @param handleMissingValues Whether missing values should be handled specially
      * @param missingValuePattern The pattern that should be used for missing values,
      *          when they should be handled specially.
+     * @param exec The nodes execution context
      * @return The ValueRange that can be written to google sheets
+     * @throws CanceledExecutionException If execution is canceled
      */
     public static ValueRange collectSheetData(final BufferedDataTable dataTable, final boolean addRowHeader,
-        final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern) {
+        final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern,
+        final ExecutionContext exec) throws CanceledExecutionException {
         List<List<Object>> sheetData = new ArrayList<List<Object>>();
         if (addColumnHeader) {
             DataTableSpec dataTableSpec = dataTable.getDataTableSpec();
@@ -229,28 +236,32 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
                 headers.add("Row ID");
             }
             for (int i = 0; i < tableColumnNames.length; i++) {
+                exec.checkCanceled();
                 headers.add(tableColumnNames[i].toString());
             }
             sheetData.add(headers);
         }
         CloseableRowIterator iterator = dataTable.iterator();
+        long size = dataTable.size();
         for (int i = 0; i < dataTable.size(); i++) {
-            DataRow next = iterator.next();
-            Iterator<DataCell> iterator2 = next.iterator();
+            exec.setProgress(size/(i+1), "Preparing data table for google sheets.");
+            DataRow row = iterator.next();
+            Iterator<DataCell> rowIterator = row.iterator();
             List<Object> sheetRow = new ArrayList<Object>();
             if (addRowHeader) {
-               sheetRow.add(next.getKey().toString());
+               sheetRow.add(row.getKey().toString());
             }
-            while (iterator2.hasNext()) {
-                DataCell next2 = iterator2.next();
-                if (next2.isMissing()){
+            while (rowIterator.hasNext()) {
+                exec.checkCanceled();
+                DataCell cell = rowIterator.next();
+                if (cell.isMissing()){
                     if (handleMissingValues) {
                         sheetRow.add(missingValuePattern);
                     } else {
                         sheetRow.add("");
                     }
                 } else {
-                    sheetRow.add(next2.toString());
+                    sheetRow.add(cell.toString());
                 }
             }
             sheetData.add(sheetRow);
@@ -293,6 +304,12 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_settings.getSpreadsheetName().trim().isEmpty()) {
+            throw new InvalidSettingsException("Spreadsheet name must not be empty!");
+        }
+        if (m_settings.getSheetName().trim().isEmpty()) {
+            throw new InvalidSettingsException("Sheet name must not be empty!");
+        }
         return new PortObjectSpec[]{};
     }
 

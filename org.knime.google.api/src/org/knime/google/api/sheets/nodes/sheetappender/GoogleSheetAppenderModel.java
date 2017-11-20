@@ -103,6 +103,7 @@ public class GoogleSheetAppenderModel extends NodeModel {
         GoogleSheetsConnection connection =
                 ((GoogleSheetsConnectionPortObject)inObjects[0]).getGoogleSheetsConnection();
 
+        exec.setMessage("Appending Sheet.");
         // column filter
         BufferedDataTable table = (BufferedDataTable)inObjects[1];
         DataTableSpec spec = table.getSpec();
@@ -117,7 +118,7 @@ public class GoogleSheetAppenderModel extends NodeModel {
 
         GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
             sheetName, m_settings.addRowHeader(), m_settings.addColumnHeader(),
-            m_settings.handleMissingValues(), m_settings.getMissingValuePattern());
+            m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {
             GoogleSpreadsheetWriterModel.openSpreadsheetInBrowser(
@@ -203,6 +204,12 @@ public class GoogleSheetAppenderModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_settings.getSpreadsheetId().trim().isEmpty()) {
+            throw new InvalidSettingsException("Spreadsheet selection must not be empty!");
+        }
+        if (m_settings.getSheetName().trim().isEmpty()) {
+            throw new InvalidSettingsException("Sheet name must not be empty!");
+        }
         return new PortObjectSpec[]{};
     }
 

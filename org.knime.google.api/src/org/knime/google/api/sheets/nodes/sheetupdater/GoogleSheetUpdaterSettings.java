@@ -107,6 +107,14 @@ public class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSetting
     }
 
     /**
+     * Returns the selected spreadsheet's name.
+     *
+     * @return The selected spreadsheet's name
+     */
+    protected String getSpreadsheetName() {
+        return m_spreadsheetChoserModel.getSpreadsheetName();
+    }
+
      * Returns the selected sheet name.
      *
      * @return The selected sheet name
