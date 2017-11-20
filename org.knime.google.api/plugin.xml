@@ -25,13 +25,19 @@
             after="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory"
             category-path="/labs/googleapilabs/googlesheets"
             deprecated="false"
-            factory-class="org.knime.google.api.sheets.nodes.writer.GoogleSheetsWriterFactory">
+            factory-class="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory">
       </node>
       <node
-            after="org.knime.google.api.sheets.nodes.writer.GoogleSheetsWriterFactory"
+            after="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory"
             category-path="/labs/googleapilabs/googlesheets"
             deprecated="false"
-            factory-class="org.knime.google.api.sheets.nodes.specificwriter.GoogleSheetsSpecificWriterFactory">
+            factory-class="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory">
+      </node>
+      <node
+            after="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory"
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.sheetupdater.GoogleSheetUpdaterFactory">
       </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
