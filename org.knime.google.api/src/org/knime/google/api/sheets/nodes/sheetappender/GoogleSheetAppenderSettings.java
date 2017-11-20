@@ -136,6 +136,7 @@ public class GoogleSheetAppenderSettings extends AbstractGoogleSheetWriterSettin
         super.saveSettingsTo(settings);
         m_spreadsheetChoserModel.saveSettingsTo(settings);
         m_sheetNameModel.saveSettingsTo(settings);
+        m_createUniqueSheetNameModel.saveSettingsTo(settings);
     }
 
     @Override
@@ -143,6 +144,7 @@ public class GoogleSheetAppenderSettings extends AbstractGoogleSheetWriterSettin
         super.validateSettings(settings);
         m_spreadsheetChoserModel.validateSettings(settings);
         m_sheetNameModel.validateSettings(settings);
+        m_createUniqueSheetNameModel.validateSettings(settings);
         }
 
     @Override
@@ -150,5 +152,6 @@ public class GoogleSheetAppenderSettings extends AbstractGoogleSheetWriterSettin
         super.loadValidatedSettingsFrom(settings);
         m_spreadsheetChoserModel.loadSettingsFrom(settings);
         m_sheetNameModel.loadSettingsFrom(settings);
+        m_createUniqueSheetNameModel.loadSettingsFrom(settings);
     }
 }
