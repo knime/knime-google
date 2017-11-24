@@ -124,7 +124,8 @@ final class GoogleSheetAppenderComponents extends AbstractGoogleSheetWriterCompo
         }
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
         try {
-            m_spreadsheetChoser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
+            m_spreadsheetChoser.loadSettingsFrom(settings, specs,
+                connectionSpec.getGoogleSheetsConnection().getDriveService(),
                 connectionSpec.getGoogleSheetsConnection().getSheetsService());
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");

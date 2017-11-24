@@ -127,12 +127,12 @@ final class GoogleSheetsReaderComponents {
         }
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
         try {
-            m_spreadsheetChooser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
-                connectionSpec.getGoogleSheetsConnection().getSheetsService());
+            m_spreadsheetChooser.loadSettingsFrom(settings, specs,
+                connectionSpec.getGoogleSheetsConnection().getDriveService(),
+                connectionSpec.getGoogleSheetsConnection().getSheetsService())  ;
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");
         }
-        m_spreadsheetChooser.loadSettingsFrom(settings, specs);
 
         m_hasColumnHeaderComponent.loadSettingsFrom(settings, specs);
         m_hasRowHeaderComponent.loadSettingsFrom(settings, specs);

@@ -80,6 +80,7 @@ import javax.swing.SwingUtilities;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
@@ -236,13 +237,29 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
 
 
     /**
+     * Loads the settings and sets the sheet and drive service needed for the components functionality.
+     *
+     * This should be called in the Node dialog.
+     *
+     * @param settings The settings to load from
+     * @param specs The specs to load from
+     * @param driveService The drive service
+     * @param sheetService The sheet service
+     * @throws NotConfigurableException If the settings are invalid
+     */
+    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs, final Drive driveService, final Sheets sheetService) throws NotConfigurableException {
+        setServices(driveService, sheetService);
+        super.loadSettingsFrom(settings, specs);
+    }
+
+    /**
      * Set the Google Drive and Google Sheet service that should be used in the dialog component.
      * This function should be called during leadSettings in the node dialog.
      *
      * @param driveService The Google Drive service that should be used for the dialog component
      * @param sheetService The Google Sheet service that should be used for the dialog component
      */
-    public void setServices(final Drive driveService, final Sheets sheetService) {
+    private void setServices(final Drive driveService, final Sheets sheetService) {
         m_driveService = driveService;
         m_sheetsService = sheetService;
     }

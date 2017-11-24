@@ -99,15 +99,14 @@ final class GoogleSheetUpdaterComponents extends AbstractGoogleSheetWriterCompon
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadSettingsFrom(settings, specs);
-        m_spreadsheetChoser.loadSettingsFrom(settings, specs);
-
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google Sheets Connection");
         }
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
         try {
-            m_spreadsheetChoser.setServices(connectionSpec.getGoogleSheetsConnection().getDriveService(),
-                connectionSpec.getGoogleSheetsConnection().getSheetsService());
+        m_spreadsheetChoser.loadSettingsFrom(settings, specs,
+            connectionSpec.getGoogleSheetsConnection().getDriveService(),
+            connectionSpec.getGoogleSheetsConnection().getSheetsService());
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");
         }
