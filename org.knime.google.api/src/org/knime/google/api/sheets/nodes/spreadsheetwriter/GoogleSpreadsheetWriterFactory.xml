@@ -2,11 +2,15 @@
 <knimeNode icon="./googlesheets.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Sheet Writer</name>
+	<name>Google Sheets Writer</name>
 	<shortDescription>This node writes the input data table to a new Google Sheets spreadsheet.</shortDescription>
 	<fullDescription>
 		<intro>
 			This node writes the input data table to a new Google Sheets spreadsheet.
+			<p>
+			If you want to overwrite or append data to an existing sheet, you cannot use the Google Sheets Writer node;
+			you must use the Google Sheets Updater node.
+			</p>
 		</intro>
 		<option name="Spreadsheet name">
 			The name of the spreadsheet to be created.

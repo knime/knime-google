@@ -2,7 +2,7 @@
 <knimeNode icon="./googlesheets.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Sheet Updater</name>
+	<name>Google Sheets Updater</name>
 	<shortDescription>This node updates values in an existing sheet.</shortDescription>
 	<fullDescription>
 		<intro>
