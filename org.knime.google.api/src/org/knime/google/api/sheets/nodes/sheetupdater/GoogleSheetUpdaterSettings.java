@@ -82,13 +82,21 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
             if (!changedByAction) {
                 changedByAction = true;
                 m_clearSheetModel.setEnabled(!m_appendModel.getBooleanValue());
+                m_rangeModel.setEnabled(!m_appendModel.getBooleanValue());
                 changedByAction = false;
             }
         });
         m_clearSheetModel.addChangeListener(e -> {
             if (!changedByAction) {
                 changedByAction = true;
-                m_appendModel.setEnabled(!m_clearSheetModel.getBooleanValue());
+                m_appendModel.setEnabled(!m_clearSheetModel.getBooleanValue() && !m_rangeModel.isActive());
+                changedByAction = false;
+            }
+        });
+        m_rangeModel.addChangeListener(e -> {
+            if (!changedByAction) {
+                changedByAction = true;
+                m_appendModel.setEnabled(!m_clearSheetModel.getBooleanValue() && !m_rangeModel.isActive());
                 changedByAction = false;
             }
         });
