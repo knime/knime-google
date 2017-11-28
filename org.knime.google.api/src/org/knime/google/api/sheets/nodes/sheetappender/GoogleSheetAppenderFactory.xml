@@ -10,6 +10,14 @@
 		</intro>
 		<option name="Spreadsheet">
 			The spreadsheet can be selected from the spreadsheets available on Google Drive.
+			You can see the unique spreadsheet ID by hovering over the name.
+		</option>
+		<option name="Select...">
+			Opens a dialog which lists the available spreadsheets from google drive. 
+			In the dialog you can see the unique spreadsheet ID by hovering over the names.
+		</option>
+		<option name="Open in Browser...">
+			Opens the selected spreadsheet in the browser.
 		</option>
 		<option name="Sheet name">
 			The name of the sheet to which the table should be written.
