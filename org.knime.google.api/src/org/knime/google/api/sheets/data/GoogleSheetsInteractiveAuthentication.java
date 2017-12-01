@@ -84,6 +84,9 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  */
 public class GoogleSheetsInteractiveAuthentication {
 
+    /** The name of the client secret JSON file **/
+    private static final String CLIENT_SECRET = "client_secret_google_sheets.json";
+
     /** Global instance of the JSON factory. */
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
@@ -220,7 +223,7 @@ public class GoogleSheetsInteractiveAuthentication {
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final String credentialPath) throws IOException {
         FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(getDataStoreFile(credentialPath));
         // Load client secrets.
-        try (final InputStream in = GoogleSheetsConnection.class.getResourceAsStream("client_secret.json")) {
+        try (final InputStream in = GoogleSheetsConnection.class.getResourceAsStream(CLIENT_SECRET)) {
             final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
             return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
                     .setDataStoreFactory(dataStoreFactory).setAccessType("offline").build();
