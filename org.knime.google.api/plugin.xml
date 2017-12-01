@@ -41,20 +41,20 @@
       </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
-      <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API" path="/social-media" />
-      <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics" path="/social-media/googleapi" />
+      <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API Connectors" path="/social-media" />
+      <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics Connectors" path="/social-media/googleapi" />
       <category
             description="Nodes to access various Google APIs"
             icon="icons/googleapicategory.png"
             level-id="googleapilabs"
-            name="Google API (labs)"
+            name="Google API Connectors (labs)"
             path="/labs">
       </category>
       <category
             description="Nodes for interaction with Google Sheets"
             icon="icons/googlesheetscategory.png"
             level-id="googlesheets"
-            name="Google Sheets"
+            name="Google Sheets Connectors"
             path="/labs/googleapilabs">
       </category>
    </extension>

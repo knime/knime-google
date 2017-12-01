@@ -17,9 +17,9 @@
    xml:space="preserve"
    inkscape:version="0.91 r13725"
    sodipodi:docname="googleapiconnector-icon.svg"
-   inkscape:export-filename="/home/oole/git/knime/knime-socialmedia/org.knime.google.api/src/org/knime/google/api/nodes/connector/googleapiconnector-icon.png"
-   inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90"><metadata
+   inkscape:export-filename="/home/oole/git/knime/knime-socialmedia/org.knime.google.api/icons/googleapiconnector.png"
+   inkscape:export-xdpi="95"
+   inkscape:export-ydpi="95"><metadata
      id="metadata27"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -37,7 +37,7 @@
      id="namedview23"
      showgrid="false"
      inkscape:zoom="20.85965"
-     inkscape:cx="-8.1205971"
+     inkscape:cx="-9.2758603"
      inkscape:cy="7.720306"
      inkscape:window-x="0"
      inkscape:window-y="24"
@@ -86,10 +86,7 @@
        transform="matrix(0.25881905,-0.96592583,0.96592583,0.25881905,0,0)" /></g><g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="t 1"><path
-       d="m 15.735577,10.339698 c -0.2,-0.2 -0.5,-0.2 -0.7,0 l -1.2,1.2 -1,-1 1.1,-1.3000003 c 0.2,-0.2 0.2,-0.5 0,-0.7 -0.2,-0.2 -0.5,-0.2 -0.7,0 l -1.2,1.2 -0.8,-0.8 -2.7000005,2.7000003 c -0.2,0.2 -0.2,0.6 0,0.8 l 3.3000005,3.3 c 0.2,0.2 0.6,0.2 0.8,0 l 2.7,-2.7 -0.8,-0.8 1.2,-1.2 c 0.2,-0.2 0.2,-0.5 0,-0.7 z"
-       id="path21"
-       inkscape:connector-curvature="0" /></g><path
+     inkscape:label="t 1" /><path
      style="fill:#c3392e;fill-opacity:1;stroke:#c3392e;stroke-width:9.59068871;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      id="path4175-7"
      sodipodi:type="arc"
