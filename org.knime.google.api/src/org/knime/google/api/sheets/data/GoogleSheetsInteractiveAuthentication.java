@@ -52,15 +52,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import org.apache.commons.lang.ObjectUtils.Null;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
+import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -70,7 +71,9 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.Sheets;
@@ -93,9 +96,6 @@ public class GoogleSheetsInteractiveAuthentication {
     /** Global instance of the HTTP transport. */
     private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    /** The application name, for which the credentials are stored */
-    public static final String APP_NAME = "KNIME-Google-Sheets-Interactive-Connector";
-
     /** The name of the credentials file created by the google API */
     public static final String STORAGE_CREDENTIAL = "StoredCredential";
 
@@ -106,18 +106,18 @@ public class GoogleSheetsInteractiveAuthentication {
      * Returns a {@link Sheets} service for the given user from the given application name
      * and the path for the data store file. The authentication is verified.
      *
+     * @param locationType The {@link CredentialLocationType} used for authentication
      * @param credentialPath the path for the data store file
      * @param user the user for which the credentials should be used
      * @return A sheets service authenticated for the given user, with credentials read from
      * the given location of the data store file
      * @throws IOException If there is a problem reading the credentials from the data storage file
-     * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    public static Sheets getExistingAuthSheetService(final String credentialPath,
-        final String user) throws IOException, GeneralSecurityException {
-        Credential credential = existingAuthorization(credentialPath, user);
-        Sheets service =
-            getSheetService(credential);
+    public static Sheets getExistingAuthSheetService(final CredentialLocationType locationType,
+        final String credentialPath, final String user) throws IOException {
+        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
+        Credential credential = getAuthorizationCodeFlow(credentialDataStoreFactory).loadCredential(user);
+        Sheets service = getSheetService(credential);
         testService(service);
         return service;
     }
@@ -125,15 +125,18 @@ public class GoogleSheetsInteractiveAuthentication {
     /**
      * Returns an authenticated Google Drive service. Given the credential path and the user.
      *
-     * @param credentialPath The path to the credentials
+     * @param locationType The {@link CredentialLocationType} used for authentication
+     * @param credentialPath The path to the credentials or {@link Null}.
      * @param user The user that should be used for authenticating with Google Drive
      * @return The google drive service
-     * @throws IOException
+     * @throws IOException If the credential storage cannot be accesssed
      */
-    public static Drive getExistingAuthDriveService(final String credentialPath, final String user) throws IOException {
-        Credential credential = existingAuthorization(credentialPath, user);
+    public static Drive getExistingAuthDriveService(final CredentialLocationType locationType,
+        final String credentialPath, final String user) throws IOException {
+        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
+        Credential credential = getAuthorizationCodeFlow(credentialDataStoreFactory).loadCredential(user);
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-                .setApplicationName(APP_NAME)
+                .setApplicationName(GoogleSheetsConnection.APP_NAME)
                 .build();
         return service;
     }
@@ -144,20 +147,21 @@ public class GoogleSheetsInteractiveAuthentication {
      * The authentication is verified.
      *
      * Used in the dialog of the {@link GoogleSheetsInteractiveServiceProviderFactory} node.
-     *
+     * @param locationType The {@link CredentialLocationType} used for authentication
      * @param credentialPath The path to the data store file
      * @param user The user to be used for authentication
      * @return An authenticated sheet service.
      * @throws IOException If there is a problem reading the credentials from the data storage file
      * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    public static Sheets getAuthRenewedSheetsService(final String credentialPath,
+    public static Sheets getAuthRenewedSheetsService(final CredentialLocationType locationType, final String credentialPath,
         final String user) throws IOException, GeneralSecurityException {
+        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
         try{
-                return getAuthSheetsService(credentialPath, user);
+            return getAuthSheetsService(credentialDataStoreFactory, user);
         } catch (IOException | GeneralSecurityException e) {
-            getAuthorizationCodeFlow(credentialPath).getCredentialDataStore().delete(user);
-            return getAuthSheetsService(credentialPath, user);
+            getAuthorizationCodeFlow(credentialDataStoreFactory).getCredentialDataStore().delete(user);
+            return getAuthSheetsService(credentialDataStoreFactory, user);
         }
     }
 
@@ -170,29 +174,17 @@ public class GoogleSheetsInteractiveAuthentication {
      * @return an authorized Credential object.
      * @throws IOException If there is a problem reading the credentials from the data storage file
      */
-    private static Credential authorize(final String credentialPath, final String user)
+    private static Credential authorize(final DataStoreFactory credentialDataStore, final String user)
         throws IOException {
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialPath);
+        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStore);
         final Credential credential =
             new CustomAuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(user);
         return credential;
     }
 
-    /**
-     * Returns credentials for the given user from the given data store file.
-     *
-     * @param credentialPath
-     * @param user The user for which the credentials should be read from the data storage file
-     * @return The credentials for the given user from the given data storage file
-     * @throws IOException If there is a problem reading the credentials from the data storage file
-     */
-    private static Credential existingAuthorization(final String credentialPath, final String user) throws IOException {
-        return getAuthorizationCodeFlow(credentialPath).loadCredential(user);
-    }
-
     private static Sheets getSheetService(final Credential credential) {
         return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-                .setApplicationName(APP_NAME).build();
+                .setApplicationName(GoogleSheetsConnection.APP_NAME).build();
     }
 
     /**
@@ -207,26 +199,20 @@ public class GoogleSheetsInteractiveAuthentication {
      * @throws IOException If there is a problem reading the credentials from the data storage file
      * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    private static Sheets getAuthSheetsService(final String credentialPath,
+    private static Sheets getAuthSheetsService(final DataStoreFactory credentialDataStoreFactory,
         final String user) throws IOException, GeneralSecurityException {
-            final Credential credential = authorize(credentialPath, user);
+            final Credential credential = authorize(credentialDataStoreFactory, user);
             Sheets service = getSheetService(credential);
             testService(service);
             return service;
     }
 
-
-    private static File getDataStoreFile(final String credentialPath) {
-        return new File(credentialPath);
-    }
-
-    private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final String credentialPath) throws IOException {
-        FileDataStoreFactory dataStoreFactory = new FileDataStoreFactory(getDataStoreFile(credentialPath));
+    private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final DataStoreFactory credentialDataStoreFactory) throws IOException {
         // Load client secrets.
         try (final InputStream in = GoogleSheetsConnection.class.getResourceAsStream(CLIENT_SECRET)) {
             final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
             return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                    .setDataStoreFactory(dataStoreFactory).setAccessType("offline").build();
+                    .setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
         } catch (IOException e) {
             throw e;
         }
@@ -252,9 +238,8 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param credentialByteString The byte string that should be written to a temporary folder.
      * @return The credential location
      * @throws IOException If temporary folder cannot be created
-     * @throws URISyntaxException If the byte string file cannot be written
      */
-    public static String getTempCredentialPath(final String credentialByteString) throws IOException, URISyntaxException{
+    public static String getTempCredentialPath(final String credentialByteString) throws IOException {
         File tempFolder = FileUtil.createTempDir("sheets");
         createTempFromByteFile(tempFolder, credentialByteString);
         return tempFolder.getPath();
@@ -266,12 +251,46 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param tempFolder The temp folder that should be populated with the decoded byte string
      * @param credentialByteString The byte string that should be decoded to the given folder
      * @throws IOException If there is an error when writing the temp file
-     * @throws URISyntaxException If the file cannot be decoded
-     *
      */
-    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString)
-        throws IOException, URISyntaxException {
+    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException {
         byte[] decodeBase64 = Base64.getDecoder().decode(credentialByteString);
         Files.write(new File(tempFolder, STORAGE_CREDENTIAL).toPath(), decodeBase64);
+    }
+
+    /**
+     * Returns the encoded storage credential from the given path
+     *
+     * @param tempfolder The path of the Credentials
+     * @return The base64 encoded file storage credential file from the given folder
+     * @throws IOException If the path cannot be read
+     */
+    public static String getByteStringFromFile(final String tempfolder) throws IOException {
+        return Base64.getEncoder().encodeToString(
+            Files.readAllBytes(new File(tempfolder, STORAGE_CREDENTIAL).toPath()));
+    }
+
+
+    /**
+     * Returns the {@link DataStoreFactory} corresponding to the given {@link CredentialLocationType}.
+     *
+     * @param locationType The {@link CredentialLocationType} for which the {@link DataStoreFactory} should be returned
+     * @param credentialPath The credential path for appropriate credential location types
+     * @return The {@link DataStoreFactory} corresponding to the given {@link CredentialLocationType} and path
+     * @throws IOException If the {@link DataStoreFactory} cannot be created
+     */
+    private static DataStoreFactory getCredentialDataStoreFactory(final CredentialLocationType locationType, final String credentialPath) throws IOException {
+        DataStoreFactory credentialDataStoreFactory = null;
+        switch(locationType) {
+            case MEMORY:
+                credentialDataStoreFactory = MemoryDataStoreFactory.getDefaultInstance();
+                break;
+            case DEFAULT:
+                credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
+                break;
+            case CUSTOM:
+                credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
+                break;
+        }
+        return credentialDataStoreFactory;
     }
 }
