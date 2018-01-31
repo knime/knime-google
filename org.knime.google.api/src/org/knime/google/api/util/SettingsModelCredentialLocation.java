@@ -90,7 +90,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     public SettingsModelCredentialLocation(final String configName, final String defaultLocation) {
         super(configName, defaultLocation);
         m_userId = "sheetUser";
-        m_type = CredentialLocationType.DEFAULT;
+        m_type = CredentialLocationType.MEMORY;
     }
 
     private SettingsModelCredentialLocation(final String configName, final String defaultLocation,
@@ -146,10 +146,12 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         final Config config = settings.getConfig(getConfigName());
-        final String type = config.getString(SELECTED_TYPE);
         final String credentialLocation = config.getString(CREDENTIAL_LOCATION);
-        final CredentialLocationType credentialType = CredentialLocationType.get(type);
+        final String credentialLocationType = config.getString(SELECTED_TYPE);
+        final CredentialLocationType credentialType = CredentialLocationType.get(credentialLocationType);
         switch(credentialType) {
+            case MEMORY:
+                break;
             case DEFAULT:
                 break;
             case CUSTOM:
@@ -165,8 +167,9 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        Config config = settings.getConfig(getConfigName());
-        setValues(CredentialLocationType.valueOf(config.getString(SELECTED_TYPE)),
+        final Config config = settings.getConfig(getConfigName());
+        final String credentialType = config.getString(SELECTED_TYPE);
+        setValues(CredentialLocationType.valueOf(credentialType),
             config.getString(USER_ID),
             config.getString(CREDENTIAL_LOCATION));
     }
@@ -301,7 +304,10 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
 
     /** Whether to use the default in node credential or the custom user id and credential location **/
     public enum CredentialLocationType implements ButtonGroupEnumInterface {
-        /** Default credential location **/
+        /** Memory credential location, the default **/
+        MEMORY("In-Memory (authentication key stored in memory)",
+            "The authentication credentials will be stored in memory. And are discarded when exiting KNIME."),
+        /** In-Memory credential location, is not actually default anymore **/
         DEFAULT("Default (authentication key saved as part of node instance)",
             "The authentication credentials will be stored in the node settings."),
         /** Custom **/
@@ -345,7 +351,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
          */
         @Override
         public boolean isDefault() {
-            return this.equals(DEFAULT);
+            return this.equals(MEMORY);
         }
 
         /**
@@ -357,5 +363,4 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
             return valueOf(actionCommand);
         }
     }
-
 }

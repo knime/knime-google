@@ -106,6 +106,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
 
     private final JTextField m_userIdField;
 
+    private JRadioButton m_typeMemory;
+
     private final DialogComponentFileChooser m_credentialLocationComponent;
 
     private final Component m_defaultPanel;
@@ -154,6 +156,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         m_typeDefault = createLocationButton(CredentialLocationType.DEFAULT, m_locationType, this);
         m_typeCustom = createLocationButton(CredentialLocationType.CUSTOM, m_locationType, this);
 
+        m_typeMemory = createLocationButton(CredentialLocationType.MEMORY, m_locationType, this);
+
         m_rootPanel = getRootPanel();
 
         getComponentPanel().setLayout(new GridBagLayout());
@@ -190,6 +194,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         gbc.insets = NEUTRAL_INSET;
         credentialBox
             .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Credential Location "));
+        credentialBox.add(m_typeMemory, gbc);
+        gbc.gridy++;
         credentialBox.add(m_typeDefault, gbc);
         gbc.gridy++;
         credentialBox.add(m_defaultPanel, gbc);
@@ -197,6 +203,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
         credentialBox.add(m_typeCustom, gbc);
         gbc.gridy++;
         credentialBox.add(m_customPanel, gbc);
+
 
         final Dimension origSize = credentialBox.getPreferredSize();
         final Dimension preferredSize = m_customPanel.getPreferredSize();
@@ -254,6 +261,8 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
             CredentialLocationType.get(m_locationType.getSelection().getActionCommand());
         String userId = null;
         switch (type) {
+            case MEMORY:
+                break;
             case DEFAULT:
                 break;
             case CUSTOM:
@@ -328,6 +337,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
+        m_typeMemory.setEnabled(enabled);
         m_userIdField.setEnabled(enabled);
         m_typeDefault.setEnabled(enabled);
         m_typeCustom.setEnabled(enabled);
