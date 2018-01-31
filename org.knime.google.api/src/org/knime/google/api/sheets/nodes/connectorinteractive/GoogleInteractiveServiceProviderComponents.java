@@ -120,7 +120,7 @@ final class GoogleInteractiveServiceProviderComponents {
                 m_settings.removeInNodeCredentials();
                 CredentialLocationType credentialLocationType = ((SettingsModelCredentialLocation)
                         m_credentialLocationComponent.getModel()).getCredentialLocationType();
-                if (credentialLocationType.isDefault()) {
+                if (credentialLocationType.equals(CredentialLocationType.DEFAULT)) {
                     m_authTestButton.setBackground(Color.yellow);
                 }
             }
@@ -174,7 +174,7 @@ final class GoogleInteractiveServiceProviderComponents {
 
             @Override
             protected Sheets doInBackgroundWithContext() throws Exception {
-                return GoogleSheetsInteractiveAuthentication.getAuthRenewedSheetsService(
+                return GoogleSheetsInteractiveAuthentication.getAuthRenewedSheetsService(m_settings.getLocationType(),
                     m_settings.getCredentialLocation(), m_settings.getUserString());
             }
 

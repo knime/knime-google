@@ -51,9 +51,6 @@ package org.knime.google.api.sheets.nodes.connectorinteractive;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.Observable;
 
@@ -66,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.util.SettingsModelCredentialLocation;
+import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
 /**
  * Settings for the {@link GoogleSheetsInteractiveServiceProviderModel}.
@@ -86,7 +84,7 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
     private String m_storedCredential;
 
     /**
-     *
+     * Constructor/
      */
     GoogleInteractiveServiceProviderSettings() {
         m_credentialLocationModel = new SettingsModelCredentialLocation("credentialLocation", "${user.home}/knime");
@@ -108,10 +106,16 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
      */
     public String getUserString(){
         String userId;
-        if (inNodeCredential()) {
-            userId = DEFAULT_USERID;
-        } else {
-            userId = m_credentialLocationModel.getUserId();
+        switch (getLocationType()) {
+            case MEMORY: case DEFAULT:
+                userId = DEFAULT_USERID;
+                break;
+            case CUSTOM:
+                userId = m_credentialLocationModel.getUserId();
+                break;
+            default:
+                userId = DEFAULT_USERID;
+                break;
         }
         return userId;
     }
@@ -123,21 +127,29 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
      * @throws InvalidSettingsException
      */
     public String getCredentialLocation() throws InvalidSettingsException {
-        String path;
-        if (inNodeCredential()) {
-            File credentialFolder = null;
-            try {
-                credentialFolder = FileUtil.createTempDir("sheets");
-                m_credentialTempFolder = credentialFolder.getPath();
-                if (m_storedCredential != null) {
-                    GoogleSheetsInteractiveAuthentication.createTempFromByteFile(credentialFolder, m_storedCredential);
+        String path= null;
+        switch(getLocationType()) {
+            case DEFAULT:
+                File credentialFolder = null;
+                try {
+                    credentialFolder = FileUtil.createTempDir("sheets");
+                    m_credentialTempFolder = credentialFolder.getPath();
+                    if (m_storedCredential != null) {
+                        GoogleSheetsInteractiveAuthentication.createTempFromByteFile(credentialFolder,
+                            m_storedCredential);
+                    }
+                    path = credentialFolder.getPath();
+                } catch (IOException e) {
+                    throw new InvalidSettingsException("Could not create temporary Credentials file");
                 }
-                path = credentialFolder.getPath();
-            } catch (IOException | URISyntaxException e) {
-                throw new InvalidSettingsException("Could not create temporary Credentials file");
-            }
-        } else {
-            path = m_credentialLocationModel.getCredentialPath();
+                break;
+            case CUSTOM:
+                path = m_credentialLocationModel.getCredentialPath();
+            case MEMORY:
+                break;
+            default:
+                break;
+
         }
         return path;
     }
@@ -151,20 +163,6 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
     protected String getEncodedStoredCredential() {
         return m_storedCredential;
     }
-
-    /**
-     * Returns the credential location.
-     *
-     * @param credentialFolder  The folder containing the StoredCredential
-     *
-     * @return The credential location
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    private Path getStoredCredentialPath(final File credentialFolder) throws IOException, URISyntaxException {
-        return new File(credentialFolder, GoogleSheetsInteractiveAuthentication.STORAGE_CREDENTIAL).toPath();
-    }
-
 
     /**
      * This method has to be called in the {@link NodeModel}.
@@ -208,8 +206,7 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
      */
     public void setByteString() throws IOException, URISyntaxException {
         if (inNodeCredential()) {
-            m_storedCredential = Base64.getEncoder().encodeToString(
-                Files.readAllBytes(getStoredCredentialPath(new File(m_credentialTempFolder))));
+            m_storedCredential = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(m_credentialTempFolder);
             setChanged();
         } else {
             removeInNodeCredentials();
@@ -266,5 +263,12 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
         return m_credentialLocationModel.useDefault();
     }
 
-
+    /**
+     * Returns the selected credential location type
+     *
+     * @return The selected credential location type
+     */
+    public CredentialLocationType getLocationType() {
+        return m_credentialLocationModel.getCredentialLocationType();
+    }
 }

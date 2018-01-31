@@ -50,7 +50,6 @@ package org.knime.google.api.sheets.nodes.connectorinteractive;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -65,7 +64,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
-import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 
 /**
  * The model to the GoogleSheetsConnector node.
@@ -125,11 +123,9 @@ final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
         }
         try {
             return new GoogleSheetsConnectionPortObjectSpec(
-                new GoogleSheetsConnection(
-                    GoogleSheetsInteractiveAuthentication.APP_NAME, m_settings.getCredentialLocation(),
-                    m_settings.getUserString(), m_settings.getEncodedStoredCredential(),
-                    m_settings.inNodeCredential()));
-        } catch (IOException | GeneralSecurityException | URISyntaxException e) {
+                new GoogleSheetsConnection( m_settings.getCredentialLocation(),
+                    m_settings.getUserString(), m_settings.getLocationType()));
+        } catch (IOException e) {
             throw new InvalidSettingsException("(Re-)Authenticate using the settings dialog.\n");
         }
     }

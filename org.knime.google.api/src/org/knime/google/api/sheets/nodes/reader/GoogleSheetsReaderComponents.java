@@ -129,7 +129,7 @@ final class GoogleSheetsReaderComponents {
         try {
             m_spreadsheetChooser.loadSettingsFrom(settings, specs,
                 connectionSpec.getGoogleSheetsConnection().getDriveService(),
-                connectionSpec.getGoogleSheetsConnection().getSheetsService())  ;
+                connectionSpec.getGoogleSheetsConnection().getSheetsService());
         } catch (IOException e) {
             throw new NotConfigurableException("Invalid Google Sheets Connection");
         }

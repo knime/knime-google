@@ -182,7 +182,8 @@ public class GoogleSheetsReaderModel extends NodeModel {
         return get;
     }
 
-    private String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId) throws IOException {
+    private String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId)
+            throws IOException {
         LOGGER.debug("Fetching first sheet name for spreadsheet id: " + spreadsheetId);
         List<Sheet> sheets = connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSheets();
         return sheets.get(0).getProperties().getTitle();

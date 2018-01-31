@@ -154,10 +154,11 @@ public class GoogleSheetUpdaterModel extends NodeModel {
      * @throws IOException If the spreadsheet cannot be written
      * @throws CanceledExecutionException If execution is canceled
      */
-    public static void updateSpreadsheet(final GoogleSheetsConnection sheetConnection,
+    private static void updateSpreadsheet(final GoogleSheetsConnection sheetConnection,
         final BufferedDataTable dataTable, final boolean writeRaw, final String spreadsheetId, final String sheetName,
         final boolean addRowHeader, final boolean addColumnHeader, final boolean handleMissingValues,
-        final String missingValuePattern, final ExecutionContext exec) throws IOException, CanceledExecutionException {
+        final String missingValuePattern, final ExecutionContext exec)
+                throws IOException, CanceledExecutionException {
         final String valueInputOption = writeRaw ? "RAW" : "USER_ENTERED";
 
         ValueRange body =

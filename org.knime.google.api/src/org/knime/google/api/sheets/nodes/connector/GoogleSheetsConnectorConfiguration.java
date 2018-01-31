@@ -65,7 +65,7 @@ final  class GoogleSheetsConnectorConfiguration {
      */
     public GoogleSheetsConnection createGoogleSheetsConnection(final GoogleApiConnection googleApiConnection)
             throws InvalidSettingsException {
-        return new GoogleSheetsConnection(googleApiConnection, "KNIME-Google-Sheets-Connector");
+        return new GoogleSheetsConnection(googleApiConnection);
     }
 
 }

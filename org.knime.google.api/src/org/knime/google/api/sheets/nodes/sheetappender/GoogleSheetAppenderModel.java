@@ -141,7 +141,6 @@ public class GoogleSheetAppenderModel extends NodeModel {
      */
     private static String createSheet(final GoogleSheetsConnection sheetConnection, final String spreadsheetId,
         final String sheetName, final boolean createUniqueSheetName) throws IOException {
-
         Spreadsheet spreadsheet = sheetConnection.getSheetsService().spreadsheets().get(spreadsheetId).execute();
 
         List<Sheet> existingSheets = spreadsheet.getSheets();
