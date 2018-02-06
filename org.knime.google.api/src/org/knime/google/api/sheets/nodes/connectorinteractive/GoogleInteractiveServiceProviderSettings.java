@@ -84,15 +84,13 @@ final class GoogleInteractiveServiceProviderSettings extends Observable {
     private String m_storedCredential;
 
     /**
-     * Constructor/
+     * Constructor
      */
     GoogleInteractiveServiceProviderSettings() {
         m_credentialLocationModel = new SettingsModelCredentialLocation("credentialLocation", "${user.home}/knime");
     }
 
     /**
-     * Returns the {@link SettingsModelString} for the credential location
-     *
      * @return The {@link SettingsModelString} for the credential location
      */
     protected SettingsModelCredentialLocation getCredentialLocationModel() {

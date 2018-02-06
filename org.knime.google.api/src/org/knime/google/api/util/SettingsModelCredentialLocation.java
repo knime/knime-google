@@ -305,8 +305,8 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     /** Whether to use the default in node credential or the custom user id and credential location **/
     public enum CredentialLocationType implements ButtonGroupEnumInterface {
         /** Memory credential location, the default **/
-        MEMORY("In-Memory (authentication key stored in memory)",
-            "The authentication credentials will be stored in memory. And are discarded when exiting KNIME."),
+        MEMORY("In-Memory (authentication key kept in memory)",
+            "The authentication credentials will be kept in memory; they are discarded when exiting KNIME."),
         /** In-Memory credential location, is not actually default anymore **/
         DEFAULT("Default (authentication key saved as part of node instance)",
             "The authentication credentials will be stored in the node settings."),

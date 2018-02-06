@@ -57,6 +57,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
@@ -108,17 +109,17 @@ public final class GoogleSheetsConnection {
     /**
      * Creates a new {@link GoogleSheetsConnection} using the given {@link GoogleApiConnection}.
      *
-     * @param connection The used GoogleApiConnection
+     * @param connection The used GoogleApiConnection (not null)
      */
     public GoogleSheetsConnection(final GoogleApiConnection connection) {
-        m_connection = connection;
+        m_connection = CheckUtils.checkArgumentNotNull(connection);
         m_interactiveAuth = false;
     }
 
     /**
      * Creates a new {@link GoogleSheetsConnection} using O2Auth web authentication.
      * This creates a pop-up to confirm access to the necessary scopes.
-     *z
+     *
      * @param credentialPath The path on which the credentials for the interactive service provider are stored
      * @param user The user which should be used for the connection
      * @param credentialLocationType The credential location type
@@ -128,7 +129,7 @@ public final class GoogleSheetsConnection {
         final CredentialLocationType credentialLocationType) throws IOException{
         this(null, user, credentialLocationType, true, credentialPath);
         if (m_credentialLocationType.equals(CredentialLocationType.DEFAULT)) {
-                m_storedCredentials = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(credentialPath);
+            m_storedCredentials = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(credentialPath);
         }
     }
 
@@ -160,15 +161,16 @@ public final class GoogleSheetsConnection {
                 if (model.containsKey(CFG_IN_NODE_CREDENTIAL)) {
                     boolean inNodeCredentials = model.getBoolean(CFG_IN_NODE_CREDENTIAL);
                     m_credentialLocationType =
-                            inNodeCredentials ? CredentialLocationType.DEFAULT: CredentialLocationType.CUSTOM;
+                            inNodeCredentials ? CredentialLocationType.DEFAULT : CredentialLocationType.CUSTOM;
 
                 } else {
-                    m_credentialLocationType = CredentialLocationType.valueOf(model.getString(CFG_CREDENTIAL_LOCATION_TYPE));
+                    m_credentialLocationType =
+                            CredentialLocationType.valueOf(model.getString(CFG_CREDENTIAL_LOCATION_TYPE));
                 }
 
                 if (m_credentialLocationType.equals(CredentialLocationType.DEFAULT)
                         && !((new File(m_credentialPath)).exists())) {
-                        m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
+                    m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
                 }
             } else {
                 m_connection = new GoogleApiConnection(model);
