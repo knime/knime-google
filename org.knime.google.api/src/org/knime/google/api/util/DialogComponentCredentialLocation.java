@@ -90,6 +90,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
+@Deprecated
 public class DialogComponentCredentialLocation extends DialogComponent implements ActionListener {
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);

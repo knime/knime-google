@@ -70,6 +70,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 final class GoogleInteractiveServiceProviderSettings extends Observable {
 
     private static final String DEFAULT_USERID = "sheetUser";

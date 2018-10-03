@@ -85,6 +85,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 public class GoogleSheetsInteractiveAuthentication {
 
     /** The name of the client secret JSON file **/

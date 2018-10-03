@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 public class GoogleSheetsInteractiveServiceProviderFactory extends NodeFactory<GoogleSheetsInteractiveServiceProviderModel> {
 
     /**

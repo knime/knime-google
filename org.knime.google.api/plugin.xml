@@ -7,10 +7,10 @@
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory"  />
       <node
             category-path="/labs/googleapilabs/googlesheets"
+            deprecated="true"
             factory-class="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory">
       </node>
       <node
-            after="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory"
             category-path="/labs/googleapilabs/googlesheets"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory">

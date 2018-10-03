@@ -72,6 +72,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Ole Ostergaard, KNIME GmbH
  */
+@Deprecated
 public class SettingsModelCredentialLocation extends SettingsModelString {
 
     private String m_userId;
@@ -303,6 +304,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
     }
 
     /** Whether to use the default in node credential or the custom user id and credential location **/
+    @Deprecated
     public enum CredentialLocationType implements ButtonGroupEnumInterface {
         /** Memory credential location, the default **/
         MEMORY("In-Memory (authentication key kept in memory)",

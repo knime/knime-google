@@ -59,6 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 final class GoogleSheetsInteractiveServiceProviderDialog extends NodeDialogPane {
 
     private final GoogleInteractiveServiceProviderSettings m_settings;

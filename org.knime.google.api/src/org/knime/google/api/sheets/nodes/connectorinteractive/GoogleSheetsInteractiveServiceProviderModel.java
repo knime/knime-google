@@ -70,6 +70,7 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
 
     private GoogleInteractiveServiceProviderSettings m_settings = getSettings();

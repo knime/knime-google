@@ -90,6 +90,7 @@ import com.google.api.services.sheets.v4.Sheets;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 final class GoogleInteractiveServiceProviderComponents {
 
     private final GoogleInteractiveServiceProviderSettings m_settings;
