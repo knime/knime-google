@@ -61,6 +61,7 @@ import java.util.List;
 import org.apache.commons.lang.ObjectUtils.Null;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.nodes.authconnector.auth.CustomAuthorizationCodeInstalledApp;
+import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 
@@ -211,7 +212,7 @@ public class GoogleSheetsInteractiveAuthentication {
 
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final DataStoreFactory credentialDataStoreFactory) throws IOException {
         // Load client secrets.
-        try (final InputStream in = GoogleSheetsConnection.class.getResourceAsStream(CLIENT_SECRET)) {
+        try (final InputStream in = GoogleAuthentication.class.getResourceAsStream(CLIENT_SECRET)) {
             final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
             return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
                     .setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
