@@ -2,7 +2,7 @@
 <knimeNode icon="./googleanalyticsconnector.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Analytics Connector</name>
+	<name>Google Analytics Connection</name>
 	<shortDescription>Create a connection to the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
