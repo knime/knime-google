@@ -40,6 +40,11 @@
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.sheetupdater.GoogleSheetUpdaterFactory">
       </node>
+      <node
+            category-path="/labs/googleapilabs"
+            deprecated="false"
+            factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory">
+      </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API Connectors" path="/social-media" />
