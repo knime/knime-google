@@ -60,6 +60,7 @@ import java.util.List;
 
 import org.apache.commons.lang.ObjectUtils.Null;
 import org.knime.core.util.FileUtil;
+import org.knime.google.api.nodes.authconnector.auth.CustomAuthorizationCodeInstalledApp;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
 

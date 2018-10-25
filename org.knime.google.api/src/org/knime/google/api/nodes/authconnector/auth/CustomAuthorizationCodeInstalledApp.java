@@ -46,7 +46,7 @@
  * History
  *   Aug 31, 2017 (oole): created
  */
-package org.knime.google.api.sheets.data;
+package org.knime.google.api.nodes.authconnector.auth;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -65,7 +65,7 @@ import com.google.api.client.util.Preconditions;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
+public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
 
     /**
      * Constructor.
@@ -73,7 +73,8 @@ class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp 
      * @param flow authorization code flow
      * @param receiver verification code receiver
      */
-    public CustomAuthorizationCodeInstalledApp(final AuthorizationCodeFlow flow, final VerificationCodeReceiver receiver) {
+    public CustomAuthorizationCodeInstalledApp(final AuthorizationCodeFlow flow,
+        final VerificationCodeReceiver receiver) {
         super(flow, receiver);
     }
 
@@ -82,9 +83,9 @@ class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp 
      */
     @Override
     protected void onAuthorization(final AuthorizationCodeRequestUrl authorizationUrl) throws IOException {
-          Preconditions.checkNotNull(authorizationUrl);
-          // Attempt to open it in the browser
-          DesktopUtil.browse(authorizationUrl.toURL());
-      }
+        Preconditions.checkNotNull(authorizationUrl);
+        // Attempt to open it in the browser
+        DesktopUtil.browse(authorizationUrl.toURL());
+    }
 
 }
