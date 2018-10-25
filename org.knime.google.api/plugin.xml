@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension-point id="knimeGoogleAuthScope" name="KnimeGoogleAuthScope" schema="schema/KnimeGoogleAuthScope.exsd"/>
    <extension point="org.knime.workbench.repository.nodes">
       <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory"  />
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory"  />
@@ -87,5 +88,20 @@
             specClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec"
             specSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec$Serializer">
       </portType>
+   </extension>
+   <extension
+         point="org.knime.google.api.knimeGoogleAuthScope">
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsFullAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
    </extension>
 </plugin>
