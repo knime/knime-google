@@ -6,7 +6,7 @@
 	<shortDescription>Create a connection to the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Create a connection to the Google Analytics API.
+			Create a connection to the Google Analytics API, given a Google API connection.
 			<p>
 			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
 			</p>

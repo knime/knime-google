@@ -72,7 +72,6 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
-import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 
 /**
  * Settings for the GoogleAuthModel
@@ -112,14 +111,14 @@ final class GoogleAuthNodeSettings {
     /**
      *
      */
-    public GoogleAuthNodeSettings() {
+    GoogleAuthNodeSettings() {
         m_credentialFileLocation = new SettingsModelString(CREDENTIAL_LOCATION, "${user.home}/knime");
     }
 
     /**
      * @return The {@link SettingsModelString} for the credential location
      */
-    protected SettingsModelString getCredentialFileLocationModel() {
+    SettingsModelString getCredentialFileLocationModel() {
         return m_credentialFileLocation;
     }
 
@@ -129,7 +128,7 @@ final class GoogleAuthNodeSettings {
      * @return The credential location
      * @throws InvalidSettingsException
      */
-    protected String getCredentialLocation() throws InvalidSettingsException {
+    String getCredentialLocation() throws InvalidSettingsException {
         String path = null;
         switch (getCredentialLocationType()) {
             case NODE:
@@ -176,11 +175,11 @@ final class GoogleAuthNodeSettings {
         return path;
     }
 
-    protected void removeInNodeCredentials() {
+    void removeInNodeCredentials() {
         m_storedCredential = null;
     }
 
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    void saveSettingsTo(final NodeSettingsWO settings) {
         // save authentication
         if (!getCredentialLocationType().equals(GoogleAuthLocationType.NODE)) {
             removeInNodeCredentials();
@@ -198,7 +197,7 @@ final class GoogleAuthNodeSettings {
 
     }
 
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(CONFIG_NAME);
 
         config.getString(CREDENTIAL_BYTE_FILE);
@@ -210,7 +209,7 @@ final class GoogleAuthNodeSettings {
         m_credentialFileLocation.validateSettings(settings);
     }
 
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(CONFIG_NAME);
         m_storedCredential = config.getString(CREDENTIAL_BYTE_FILE);
         m_type = GoogleAuthLocationType.get(config.getString(CREDENTIAL_LOCATION_TYPE));
@@ -221,15 +220,15 @@ final class GoogleAuthNodeSettings {
         m_credentialFileLocation.loadSettingsFrom(settings);
     }
 
-    protected GoogleAuthLocationType getCredentialLocationType() {
+    GoogleAuthLocationType getCredentialLocationType() {
         return m_type;
     }
 
-    protected List<KnimeGoogleAuthScope> getSelectedKnimeAuthScopes() {
+    List<KnimeGoogleAuthScope> getSelectedKnimeAuthScopes() {
         return m_knimeGoogleAuthScopes;
     }
 
-    protected List<KnimeGoogleAuthScope> getRelevantKnimeAuthScopes() {
+    List<KnimeGoogleAuthScope> getRelevantKnimeAuthScopes() {
         if (m_useAllscopes) {
             return KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes();
         } else {
@@ -237,11 +236,11 @@ final class GoogleAuthNodeSettings {
         }
     }
 
-    protected void setKnimeGoogleAuthScopes(final List<KnimeGoogleAuthScope> authScopes) {
+    void setKnimeGoogleAuthScopes(final List<KnimeGoogleAuthScope> authScopes) {
         m_knimeGoogleAuthScopes = authScopes;
     }
 
-    protected void setCredentialLocationType(final GoogleAuthLocationType type) {
+    void setCredentialLocationType(final GoogleAuthLocationType type) {
         m_type = type;
     }
 
@@ -250,7 +249,7 @@ final class GoogleAuthNodeSettings {
      *
      * @return The stored credential as a byte string
      */
-    protected String getEncodedStoredCredential() {
+    String getEncodedStoredCredential() {
         return m_storedCredential;
     }
 
@@ -258,9 +257,9 @@ final class GoogleAuthNodeSettings {
      * @throws IOException
      * @throws URISyntaxException
      */
-    protected void setByteString() throws IOException, URISyntaxException {
+    void setByteString() throws IOException, URISyntaxException {
         if (m_type.equals(GoogleAuthLocationType.NODE)) {
-            m_storedCredential = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(m_credentialTempFolder);
+            m_storedCredential = GoogleAuthentication.getByteStringFromFile(m_credentialTempFolder);
         } else {
             removeInNodeCredentials();
         }
@@ -273,7 +272,7 @@ final class GoogleAuthNodeSettings {
      * @param specs The input specs
      * @throws NotConfigurableException
      */
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+    void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
         try {
             loadValidatedSettingsFrom(settings);
@@ -282,15 +281,15 @@ final class GoogleAuthNodeSettings {
         }
     }
 
-    public void setAllScopes(final boolean selectAllScopes) {
+    void setAllScopes(final boolean selectAllScopes) {
         m_useAllscopes = selectAllScopes;
     }
 
-    public Boolean useAllScopes() {
+    Boolean useAllScopes() {
         return m_useAllscopes;
     }
 
-    protected void setIsAuthenticated(final Boolean isAuthenticated) {
+    void setIsAuthenticated(final Boolean isAuthenticated) {
         m_isAuthenticated = isAuthenticated;
     }
 
@@ -303,7 +302,7 @@ final class GoogleAuthNodeSettings {
      * @return The spec of this node, containing the GoogleApiConnection for the current configuration, if possible
      * @throws InvalidSettingsException If the current configuration is not valid
      */
-    protected Optional<GoogleApiConnection> createGoogleApiConnection(final boolean isDuringExecute)
+    Optional<GoogleApiConnection> createGoogleApiConnection(final boolean isDuringExecute)
         throws InvalidSettingsException {
         try {
             if (!isDuringExecute) {

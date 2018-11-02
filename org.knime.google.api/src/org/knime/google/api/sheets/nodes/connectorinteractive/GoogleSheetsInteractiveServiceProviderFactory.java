@@ -52,7 +52,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The factory to the GoogleAnalyticsConnector node.
+ * The factory to the GoogleInteractiveServiceProvider node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */

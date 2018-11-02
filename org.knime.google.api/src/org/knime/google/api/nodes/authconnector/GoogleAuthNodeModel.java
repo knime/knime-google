@@ -71,7 +71,7 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
  */
 final class GoogleAuthNodeModel extends NodeModel {
 
-    private GoogleAuthNodeSettings m_settings = getSettings();
+    private final GoogleAuthNodeSettings m_settings = getSettings();
 
     /**
      * Returns the settings for this node for this node.

@@ -145,7 +145,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     /**
      * Constructor creating the dialogs content.
      */
-    public GoogleAuthNodeDialogPane() {
+    GoogleAuthNodeDialogPane() {
         addTab("Authentication", getAuthPanel());
     }
 

@@ -6,7 +6,7 @@
          <meta.schema plugin="org.knime.google.api" id="knimeGoogleAuthScope" name="KnimeGoogleAuthScope"/>
       </appinfo>
       <documentation>
-         Extensionpoint for registering a set of Google Scopes described as a KnimeGoogleAuthScope.
+         Extension point for registering a set of Google Scopes described as a KnimeGoogleAuthScope.
       </documentation>
    </annotation>
 
@@ -72,14 +72,6 @@ org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope interface
       </documentation>
    </annotation>
 
-   <annotation>
-      <appinfo>
-         <meta.section type="examples"/>
-      </appinfo>
-      <documentation>
-         	
-      </documentation>
-   </annotation>
 
 
 

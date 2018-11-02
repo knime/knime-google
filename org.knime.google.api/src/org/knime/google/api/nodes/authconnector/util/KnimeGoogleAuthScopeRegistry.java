@@ -135,7 +135,7 @@ public final class KnimeGoogleAuthScopeRegistry {
                 }
             }
         } catch (final Exception e) {
-            LOGGER.error("Exception while registering aggregation operator extensions", e);
+            LOGGER.error("Exception while registering KnimeGoogleAuthScope extensions", e);
         }
     }
 
