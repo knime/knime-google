@@ -163,7 +163,7 @@ public final class KnimeGoogleAuthScopeRegistry {
     public String[] getAllKnimeGoogleScopeIds() {
         List<String> allScopes = new ArrayList<String>();
         for (KnimeGoogleAuthScope scope : m_knimeGoogleAuthScopes) {
-            allScopes.add(scope.getAuthScopeName());
+            allScopes.add(scope.getScopeID());
         }
         return allScopes.toArray(new String[allScopes.size()]);
     }
@@ -175,7 +175,7 @@ public final class KnimeGoogleAuthScopeRegistry {
      * @return The Google scopes for the provided {@link KnimeGoogleAuthScope}s
      */
     public static String[] getKnimeGoogleScopeIds(final List<KnimeGoogleAuthScope> knimeScopes) {
-        List<String> collect = knimeScopes.stream().map(s -> s.getAuthScopeName()).collect(Collectors.toList());
+        List<String> collect = knimeScopes.stream().map(s -> s.getScopeID()).collect(Collectors.toList());
         return collect.toArray(new String[collect.size()]);
     }
 
@@ -201,7 +201,7 @@ public final class KnimeGoogleAuthScopeRegistry {
      */
     public List<KnimeGoogleAuthScope> getScopesFromString(final List<String> scopeStringList) {
         List<KnimeGoogleAuthScope> kList = getKnimeGoogleAuthScopes().stream()
-            .filter(k -> scopeStringList.stream().anyMatch(s -> s.equals(k.getAuthScopeName())))
+            .filter(k -> scopeStringList.stream().anyMatch(s -> s.equals(k.getScopeID())))
             .collect(Collectors.toList());
         return kList;
     }

@@ -57,8 +57,15 @@ import java.util.List;
  */
 public interface KnimeGoogleAuthScope {
 
+     /**
+      * Returns the {@link KnimeGoogleAuthScope}'s ID.
+      *
+      * @return The {@link KnimeGoogleAuthScope}'s ID
+      */
+     public String getScopeID();
+
     /**
-     * Returns the name of this KnimeGoogleAuthScope
+     * Returns the name of this KnimeGoogleAuthScope.
      *
      * @return The name of` this KnimeGoogleAuthScope
      */
@@ -66,6 +73,7 @@ public interface KnimeGoogleAuthScope {
 
     /**
      * Returns a list of scopes needed for this KnimeGoogleAuthScope.
+     * (e.g. {@code com.google.api.services.analytics.AnalyticsScopes.ANALYTICS})
      *
      * @return A list of scopes for this KnimeGoogleAuthScope
      */

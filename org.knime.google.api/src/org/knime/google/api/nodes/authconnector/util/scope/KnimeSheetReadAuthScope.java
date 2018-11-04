@@ -63,6 +63,8 @@ import com.google.api.services.sheets.v4.SheetsScopes;
  */
 public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
 
+    private static final String SCOPE_ID = "GoogleSheetsRead";
+
     private static final String SCOPE_NAME = "Google Sheets nodes (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
@@ -80,6 +82,14 @@ public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
      */
     public static KnimeSheetReadAuthScope getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getScopeID() {
+        return SCOPE_ID;
     }
 
     /**

@@ -61,6 +61,8 @@ import com.google.api.services.analytics.AnalyticsScopes;
  */
 public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
 
+    private static final String SCOPE_ID = "GoogleAnalyticsRead";
+
     private static final String SCOPE_NAME = "Google Analytics Connection (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(AnalyticsScopes.ANALYTICS_READONLY);
@@ -76,6 +78,14 @@ public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
      */
     public static KnimeAnalyticsReadAuthScope getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getScopeID() {
+        return SCOPE_ID;
     }
 
     /**

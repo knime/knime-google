@@ -61,6 +61,8 @@ import com.google.api.services.analytics.AnalyticsScopes;
  */
 public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
 
+    private static final String SCOPE_ID = "GoogleAnalyticsFull";
+
     private static final String SCOPE_NAME = "Google Analytics Connection (Full)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
@@ -73,6 +75,7 @@ public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
 
     private static final KnimeAnalyticsFullAuthScope INSTANCE = new KnimeAnalyticsFullAuthScope();
 
+
     /**
      * Returns the only instance of this class.
      *
@@ -80,6 +83,15 @@ public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
      */
     public static KnimeAnalyticsFullAuthScope getInstance() {
         return INSTANCE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getScopeID() {
+        return SCOPE_ID;
     }
 
     /**
