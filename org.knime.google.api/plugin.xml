@@ -45,6 +45,11 @@
             deprecated="false"
             factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory">
       </node>
+      <node
+            category-path="/labs/googleapilabs"
+            deprecated="false"
+            factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
+      </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
       <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API Connectors" path="/social-media" />
@@ -93,6 +98,14 @@
             specClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec"
             specSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec$Serializer">
       </portType>
+      <portType
+            hidden="false"
+            name="Google Drive"
+            objectClass="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObject"
+            objectSerializer="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObject$Serializer"
+            specClass="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjectSpec"
+            specSerializer="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjectSpec$Serializer">
+      </portType>
    </extension>
    <extension
          point="org.knime.google.api.knimeGoogleAuthScope">
@@ -108,5 +121,17 @@
       <KnimeGoogleAuthScope
             KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadWriteAuthScope">
       </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
+   </extension>
+   <extension
+         point="org.knime.base.filehandling.RemoteFileHandler">
+      <RemoteFileHandler
+            RemoteFileHandler="org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler">
+      </RemoteFileHandler>
    </extension>
 </plugin>
