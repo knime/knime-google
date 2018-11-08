@@ -19,7 +19,7 @@
 		<option name="Scopes">The scopes that will be granted for this connection.</option>
 	</fullDescription>
 	<ports>
-		<outPort index="0" name="Google API Connection">A connection that can be used to
-			access various Google APIs.</outPort>
+		<outPort index="0" name="Google Service Connection">A connection that can be used to
+			access various Google services.</outPort>
 	</ports>
 </knimeNode>

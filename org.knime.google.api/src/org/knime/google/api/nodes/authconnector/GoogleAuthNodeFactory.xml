@@ -11,7 +11,7 @@
 			Authentication happens in the configuration window.
 			By default, credentials are stored in memory.
 			Custom credentials can be set in the configuration window.
-			A custom credential location is useful for sharing the credentials via a KNIME server or for exposing the user credentials.
+			A custom credential location is useful for sharing the credentials via a KNIME Server or for exposing the user credentials.
 			</p>
 			<p>
 			After choosing the credential location, one must authenticate using the "Authenticate" button. 
@@ -27,7 +27,7 @@
 			</p>
 		</intro>
 		<option name="Authenticate">
-		Clicking on this button will open a dialog for authenticating with Google Services. 
+		Clicking on this button will open a dialog for authenticating with Google services. 
 		If you are already authenticated, it will verify the stored credentials in the selected location.
 		<br/>
 		<b>Status</b>
@@ -69,7 +69,7 @@
 		
 	</fullDescription>
 	<ports>
-		<outPort index="0" name="Google API Connection">A connection that can be used to
-			access various Google APIs.</outPort>
+		<outPort index="0" name="Google Service Connection">A connection that can be used to
+			access various Google services.</outPort>
 	</ports>
 </knimeNode>
