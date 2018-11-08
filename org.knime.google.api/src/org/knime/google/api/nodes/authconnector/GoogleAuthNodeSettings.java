@@ -150,6 +150,7 @@ final class GoogleAuthNodeSettings {
                 path = m_credentialFileLocation.getStringValue();
                 String resolvedPropertiesValue = StrSubstitutor.replaceSystemProperties(path);
 
+                // Check the path
                 StringBuilder errorMessageBuilder = new StringBuilder();
                 errorMessageBuilder.append("Not a valid path: \"").append(resolvedPropertiesValue).append("\"");
                 if (!Objects.equals(path, resolvedPropertiesValue)) {
@@ -165,7 +166,8 @@ final class GoogleAuthNodeSettings {
                 } catch (IOException | URISyntaxException e) {
                     throw new InvalidSettingsException(errorMessage, e);
                 }
-                path = realPath.toString();
+
+                path = resolvedPropertiesValue;
             case MEMORY:
                 break;
             default:
@@ -272,8 +274,7 @@ final class GoogleAuthNodeSettings {
      * @param specs The input specs
      * @throws NotConfigurableException
      */
-    void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
+    void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             loadValidatedSettingsFrom(settings);
         } catch (InvalidSettingsException e) {
@@ -291,6 +292,10 @@ final class GoogleAuthNodeSettings {
 
     void setIsAuthenticated(final Boolean isAuthenticated) {
         m_isAuthenticated = isAuthenticated;
+    }
+
+    boolean isAuthenticated() {
+        return m_isAuthenticated;
     }
 
     /**

@@ -52,7 +52,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.util.Base64;
 import java.util.List;
 
@@ -131,6 +133,7 @@ public class GoogleAuthentication {
         return credential;
     }
 
+
     /**
      * Returns the {@link DataStoreFactory} corresponding to the given {@link GoogleAuthLocationType}.
      *
@@ -150,7 +153,11 @@ public class GoogleAuthentication {
                 credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
                 break;
             case FILESYSTEM:
-                credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
+                try {
+                    credentialDataStoreFactory = new FileDataStoreFactory(new File(FileUtil.resolveToPath(FileUtil.toURL(credentialPath)).toString()));
+                } catch (InvalidPathException | URISyntaxException e) {
+                    throw new IOException("Credential path could not be processed");
+                }
                 break;
         }
         return credentialDataStoreFactory;

@@ -103,6 +103,9 @@ final class GoogleAuthNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_settings.isAuthenticated()) {
+            throw new InvalidSettingsException("Please authenticate using the node dialog.");
+        }
         return createSpec(false).map(c -> new PortObjectSpec[]{c}).orElse(null);
     }
 
