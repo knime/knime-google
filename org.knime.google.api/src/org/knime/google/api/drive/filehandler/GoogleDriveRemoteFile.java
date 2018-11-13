@@ -226,8 +226,14 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
             for (final TeamDrive teamDrive : teamDrives) {
 
+                final String name = teamDrive.getName();
+                if (name .contains("/")) {
+                    continue;
+                }
+                name.replace("'", "\\'");
+
                 final URI teamURI = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
-                    getURI().getPort(), TEAM_DRIVES_FOLDER + teamDrive.getName() + "/", getURI().getQuery(),
+                    getURI().getPort(), TEAM_DRIVES_FOLDER + name + "/", getURI().getQuery(),
                     getURI().getFragment());
                 LOGGER.debug("Team drive URI: " + teamURI);
                 remoteFiles.add(new GoogleDriveRemoteFile(teamURI,
@@ -260,9 +266,14 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) || file.getMimeType().equals(FOLDER)) {
                 final String folderPostFix = (file.getMimeType().equals(FOLDER)) ? "/" : "";
 
+                final String name = file.getName();
+                if (name.contains("/" )) {
+                    continue;
+                }
+                name.replace("'", "\\'");
 
                 final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), getURI().getPort(),
-                    m_fullPath + file.getName() + folderPostFix, getURI().getQuery(), getURI().getFragment());
+                    m_fullPath + name + folderPostFix, getURI().getQuery(), getURI().getFragment());
 
 
                 LOGGER.debug("Google Drive Remote URI: " + uri.toString());
@@ -493,7 +504,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         String qString = "trashed = false and (";
         for (int i = 0; i < pathElementStringArray.length; i++) {
 
-            qString += "name = '" + pathElementStringArray[i] + "'";
+            qString += "name = '" + pathElementStringArray[i].replace("'", "\\'") + "'";
 
             if (i < pathElementStringArray.length - 1) {
                 qString += " or ";
@@ -524,7 +535,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
             for (final File file : files) {
                 // If name matches and has the correct parent
-                if (file.getName().equals(pathElementStringArray[i]) && file.getParents().contains(parent)) {
+                if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) ||
+                        file.getName().equals(pathElementStringArray[i])
+                        && (!(file.getParents() != null) || file.getParents().contains(parent))) {
                     fileFound = true;
                     if (i == pathElementStringArray.length - 1) {
                         // Last element, this it the file we want
@@ -568,8 +581,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             metadata.addParentId(parent);
             return metadata;
         } else {
-            // Not all parent directories found, bad path was specified
-            throw new NoSuchElementException("Could not resolve all parent locations for path: " + getFullPath());
+            return metadata;
         }
     }
 
