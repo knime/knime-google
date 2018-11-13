@@ -14,6 +14,8 @@
         </p>
         <p>
         Only non-native Google file types are supported (i.e. Google Docs, Google Sheets, etc. are not supported due to API restrictions).
+        <br/>
+        Also files and folders with "/" in the name will be ignored.
         </p>
         </intro>
     </fullDescription>

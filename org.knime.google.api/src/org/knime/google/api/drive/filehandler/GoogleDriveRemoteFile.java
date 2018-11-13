@@ -233,6 +233,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
                 final String name = teamDrive.getName();
                 if (name .contains("/")) {
+                    LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
                     continue;
                 }
                 name.replace("'", "\\'");
@@ -273,6 +274,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
                 final String name = file.getName();
                 if (name.contains("/" )) {
+                    LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
                     continue;
                 }
                 name.replace("'", "\\'");
