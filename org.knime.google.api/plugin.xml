@@ -6,6 +6,7 @@
       <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory"  />
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory"  />
       <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory"  />
+      <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory" />
       <node
             category-path="/labs/googleapilabs/googlesheets"
             deprecated="true"
@@ -43,11 +44,6 @@
       <node
             category-path="/labs/googleapilabs"
             deprecated="false"
-            factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory">
-      </node>
-      <node
-            category-path="/labs/googleapilabs"
-            deprecated="false"
             factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
       </node>
    </extension>
@@ -58,7 +54,7 @@
             description="Nodes to access various Google APIs"
             icon="icons/googleapicategory.png"
             level-id="googleapilabs"
-            name="Google API Connectors (labs)"
+            name="Google API Connectors (Labs)"
             path="/labs">
       </category>
       <category
