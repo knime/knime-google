@@ -158,10 +158,10 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     @Override
     protected boolean isContainer() throws Exception {
         if (m_isContainer == null) {
-            if (m_fullPath.equals(DEFAULT_CONTAINER) || m_fullPath.equals(TEAM_DRIVES_FOLDER)) {
+            if (getFullPath().equals(DEFAULT_CONTAINER) || getFullPath().equals(TEAM_DRIVES_FOLDER)) {
                 m_isContainer = true;
             } else {
-                final String[] elements = m_fullPath.split("/");
+                final String[] elements = getFullPath().split("/");
                 if (elements.length == 3 && elements[0].isEmpty() && elements[1].equals(TEAM_DRIVES)) {
                     m_isContainer = true;
                 } else {
@@ -221,7 +221,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         LOGGER.debug("Listing directory files for: " + getFullPath());
 
         // List the team drives if current file path is /TeamDrives/
-        if (m_fullPath.equals(TEAM_DRIVES_FOLDER)) {
+        if (getFullPath().equals(TEAM_DRIVES_FOLDER)) {
             final List<GoogleDriveRemoteFile> remoteFiles = new ArrayList<GoogleDriveRemoteFile>();
             final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
             for (final TeamDrive teamDrive : teamDrives) {
@@ -273,7 +273,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 name.replace("'", "\\'");
 
                 final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), getURI().getPort(),
-                    m_fullPath + name + folderPostFix, getURI().getQuery(), getURI().getFragment());
+                    getFullPath() + name + folderPostFix, getURI().getQuery(), getURI().getFragment());
 
 
                 LOGGER.debug("Google Drive Remote URI: " + uri.toString());
