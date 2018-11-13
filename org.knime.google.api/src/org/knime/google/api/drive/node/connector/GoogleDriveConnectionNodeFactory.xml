@@ -13,10 +13,6 @@
         There is no configuration. This node supports a user's "My Drive" and "Team Drives".
         </p>
         <p>
-        Currently, the Google Sheets Service Provider and Google Sheets Interactive Service Provider nodes 
-        can be used for the input port. This node will use that incoming connection to broker a connection to Google Drive. 
-        </p>
-        <p>
         Only non-native Google file types are supported (i.e. Google Docs, Google Sheets, etc. are not supported due to API restrictions).
         </p>
         </intro>
