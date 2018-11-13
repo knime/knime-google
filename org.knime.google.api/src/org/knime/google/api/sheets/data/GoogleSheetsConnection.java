@@ -52,8 +52,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -192,7 +192,7 @@ public final class GoogleSheetsConnection {
                 m_sheets = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthSheetService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                m_sheets = new Sheets.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(),
+                m_sheets = new Sheets.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                     m_connection.getCredential()).setApplicationName(APP_NAME).build();
             }
         }
@@ -211,7 +211,7 @@ public final class GoogleSheetsConnection {
                 m_drive = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthDriveService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                m_drive = new Drive.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(),
+                m_drive = new Drive.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                     m_connection.getCredential()).setApplicationName(APP_NAME).build();
             }
         }

@@ -54,8 +54,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -106,7 +106,7 @@ public final class GoogleAnalyticsConnection {
         Map<String, String> accountIdToName = new HashMap<String, String>();
         Map<String, String> webpropertyIdToName = new HashMap<String, String>();
         Analytics analytics =
-                new Analytics.Builder(connection.getHttpTransport(), connection.getJsonFactory(),
+                new Analytics.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                         connection.getCredential()).setApplicationName("KNIME-Profiles-Scan").build();
         Accounts accounts = analytics.management().accounts().list().execute();
         Webproperties webproperties = analytics.management().webproperties().list(ALL_WILDCARD).execute();
@@ -138,7 +138,7 @@ public final class GoogleAnalyticsConnection {
         m_profileId = profileId;
         m_applicationName = applicationName;
         m_analytics =
-                new Analytics.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(),
+                new Analytics.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                         m_connection.getCredential()).setApplicationName(m_applicationName).build();
     }
 
@@ -154,7 +154,7 @@ public final class GoogleAnalyticsConnection {
             m_profileId = model.getString(CFG_PROFILE_ID);
             m_applicationName = model.getString(CFG_APPLICATION_NAME);
             m_analytics =
-                    new Analytics.Builder(m_connection.getHttpTransport(), m_connection.getJsonFactory(),
+                    new Analytics.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                             m_connection.getCredential()).setApplicationName(m_applicationName).build();
         } catch (GeneralSecurityException | IOException e) {
             throw new InvalidSettingsException(e);

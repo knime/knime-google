@@ -58,7 +58,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
-import org.apache.commons.lang.ObjectUtils.Null;
+import org.apache.commons.lang3.ObjectUtils.Null;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.nodes.authconnector.auth.CustomAuthorizationCodeInstalledApp;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
