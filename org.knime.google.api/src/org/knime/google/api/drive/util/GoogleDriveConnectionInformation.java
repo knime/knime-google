@@ -62,7 +62,8 @@ import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler;
 
 /**
- * TODO (short) javadoc comment
+ * Extended {@link CloudConnectionInformation} for the Google Drive Connection.
+ *
  * @author jtyler
  */
 public class GoogleDriveConnectionInformation extends CloudConnectionInformation {

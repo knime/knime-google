@@ -76,7 +76,12 @@ import com.google.api.services.drive.model.TeamDrive;
 /**
  * Implementation of {@link CloudRemoteFile} for Google Drive
  *
+ *  For Google Drive Containers either the Users Google Drive (called MyDrive) or team drives,
+ *  A team drive called exampleTeamDrive would be on the path /TeamDrvies/exampleTeamDrive,
+ *  and would be represented by a container internally.
+ *
  * @author jtyler
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection> {
 
@@ -286,7 +291,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     }
 
     /**
-     * {@inheritDoc}
+     * To get an idea of the notion of containers in Google Drive see {@link GoogleDriveRemoteFile}'s documentation.
      */
     @Override
     public String getContainerName() throws Exception {
@@ -298,7 +303,6 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             } else if (getFullPath().equals(TEAM_DRIVES_FOLDER)) {
                 m_containerName = TEAM_DRIVES;
             } else {
-                // TODO document notion of "container" for teamdrives in class javadoc and reference it here
                 final String[] elements = getFullPath().split("/");
                 if (elements.length < 3 || (elements[0] != null && !elements[0].isEmpty())) {
                     throw new InvalidSettingsException("Invalid path. Container could not be determined.");
@@ -385,7 +389,6 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
             return true;
         } catch (final GoogleJsonResponseException ex) {
-            // TODO double check that the stacktrace is in the log (understand what the framework does the
             throw new Exception(ex.getStatusMessage(), ex);
         }
     }
@@ -481,7 +484,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 metadata.setTeamId(teamId);
                 // Handle Team drive directory roots
                 if (getFullPath().equals(TEAM_DRIVES_FOLDER + getContainerName() + "/")) {
-                    // TODO set why this is the file ID
+                    // The file id for the team drive container is the team drive's id.
                     metadata.setFileId(teamId);
                     return metadata;
                 }
