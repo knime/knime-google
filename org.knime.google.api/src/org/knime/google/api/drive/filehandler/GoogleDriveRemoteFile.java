@@ -238,8 +238,14 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 }
                 name.replace("'", "\\'");
 
+                final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
+                // Use TeamDriveID as File ID for top drive roots
+                metadata.setFileId(teamDrive.getId());
+                metadata.setMimeType(FOLDER);
+                metadata.setTeamId(teamDrive.getId());
+
                 final URI teamURI = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
-                    getURI().getPort(), TEAM_DRIVES_FOLDER + name + "/", getURI().getQuery(),
+                    getURI().getPort(), TEAM_DRIVES_FOLDER + name + "/", metadata.toQueryString(),
                     getURI().getFragment());
                 LOGGER.debug("Team drive URI: " + teamURI);
                 remoteFiles.add(new GoogleDriveRemoteFile(teamURI,
@@ -279,8 +285,22 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 }
                 name.replace("'", "\\'");
 
+                final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
+
+                metadata.setFileId(file.getId());
+                metadata.setMimeType(file.getMimeType());
+                if (!file.getMimeType().equals(FOLDER)) {
+                    metadata.setFileSize(file.getSize());
+                }
+                metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
+                metadata.setParents(file.getParents());
+
+                if (m_fileMetadata.fromTeamDrive()) {
+                    metadata.setTeamId(m_fileMetadata.getTeamId());
+                }
+
                 final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), getURI().getPort(),
-                    getFullPath() + name + folderPostFix, getURI().getQuery(), getURI().getFragment());
+                    getFullPath() + name + folderPostFix, metadata.toQueryString(), getURI().getFragment());
 
 
                 LOGGER.debug("Google Drive Remote URI: " + uri.toString());
