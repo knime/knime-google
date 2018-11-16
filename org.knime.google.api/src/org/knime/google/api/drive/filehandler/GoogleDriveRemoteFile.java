@@ -48,6 +48,7 @@
  */
 package org.knime.google.api.drive.filehandler;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
@@ -436,6 +437,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
      */
     @Override
     public InputStream openInputStream() throws Exception {
+        if (!doestBlobExist(getContainerName(), getBlobName())) {
+            throw new IOException("\"" + getFullPath() + "\" Does not exist.");
+        }
         return getService().files().get(m_fileMetadata.getFileId()).executeMediaAsInputStream();
     }
 
