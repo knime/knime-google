@@ -72,14 +72,16 @@ import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.TeamDrive;
+import com.google.api.services.drive.model.TeamDriveList;
 
 /**
  * Implementation of {@link CloudRemoteFile} for Google Drive
  *
- *  For Google Drive Containers either the Users Google Drive (called MyDrive) or team drives,
- *  A team drive called exampleTeamDrive would be on the path /TeamDrvies/exampleTeamDrive,
- *  and would be represented by a container internally.
+ * For Google Drive Containers either the Users Google Drive (called MyDrive) or team drives, A team drive called
+ * exampleTeamDrive would be on the path /TeamDrvies/exampleTeamDrive, and would be represented by a container
+ * internally.
  *
  * @author jtyler
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
@@ -185,7 +187,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     protected boolean doestBlobExist(final String containerName, final String blobName) throws Exception {
         // This can get called to verify a file was deleted successfully.
         // So lets reset the metadata
-        m_fileMetadata = getMetadata();
+        if (m_fileMetadata == null) {
+            m_fileMetadata = getMetadata();
+        }
         if (m_fileMetadata.getFileId() != null) {
             return true;
         } else {
@@ -225,91 +229,106 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     protected GoogleDriveRemoteFile[] listDirectoryFiles() throws Exception {
 
         LOGGER.debug("Listing directory files for: " + getFullPath());
-
-        // List the team drives if current file path is /TeamDrives/
-        if (getFullPath().equals(TEAM_DRIVES_FOLDER)) {
-            final List<GoogleDriveRemoteFile> remoteFiles = new ArrayList<GoogleDriveRemoteFile>();
-            final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
-            for (final TeamDrive teamDrive : teamDrives) {
-
-                final String name = teamDrive.getName();
-                if (name .contains("/")) {
-                    LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
-                    continue;
-                }
-                name.replace("'", "\\'");
-
-                final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
-                // Use TeamDriveID as File ID for top drive roots
-                metadata.setFileId(teamDrive.getId());
-                metadata.setMimeType(FOLDER);
-                metadata.setTeamId(teamDrive.getId());
-
-                final URI teamURI = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
-                    getURI().getPort(), TEAM_DRIVES_FOLDER + name + "/", metadata.toQueryString(),
-                    getURI().getFragment());
-                LOGGER.debug("Team drive URI: " + teamURI);
-                remoteFiles.add(new GoogleDriveRemoteFile(teamURI,
-                    (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor()));
-            }
-            return remoteFiles.toArray(new GoogleDriveRemoteFile[remoteFiles.size()]);
-        }
-
-        // Build File list (with support for team drives)
-        com.google.api.services.drive.Drive.Files.List request = getService().files().list()
-            .setQ("'" + m_fileMetadata.getFileId() + "' in parents and trashed = false").setFields(FIELD_STRING);
-
-        if (m_fileMetadata.fromTeamDrive()) {
-            request = request.setCorpora("teamDrive").setSupportsTeamDrives(true).setIncludeTeamDriveItems(true)
-                .setTeamDriveId(m_fileMetadata.getTeamId());
-        }
-
         final List<GoogleDriveRemoteFile> remoteFileList = new ArrayList<GoogleDriveRemoteFile>();
-        final List<File> driveFiles = request.setOrderBy("name").execute().getFiles();
 
-        if (driveFiles == null || driveFiles.isEmpty()) {
-            return new GoogleDriveRemoteFile[0];
-        }
+        String pageToken = null;
 
-        for (final File file : driveFiles) {
+        if (getFullPath().equals(TEAM_DRIVES_FOLDER)) {
+            do {
+                // Loop while we still get a valid nextPageToken.
+                // The pageToken is null if there is no next page.
+                final TeamDriveList teamDrives = getService().teamdrives().list()
+                        .setPageToken(pageToken)
+                        .execute();
 
-            // Google Drive API only allows downloading of non Google file types.
-            // (meaning native Google Docs, Spreadsheets, etc. can not be directly downloaded via
-            // the API). Let's filter those files out, but keep folder references.
-            if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) || file.getMimeType().equals(FOLDER)) {
-                final String folderPostFix = (file.getMimeType().equals(FOLDER)) ? "/" : "";
+                for (final TeamDrive teamDrive : teamDrives.getTeamDrives()) {
 
-                final String name = file.getName();
-                if (name.contains("/" )) {
-                    LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
-                    continue;
+                    final String name = teamDrive.getName();
+                    if (name .contains("/")) {
+                        LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
+                        continue;
+                    }
+                    name.replace("'", "\\'");
+
+                    final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
+                    // Use TeamDriveID as File ID for top drive roots
+                    metadata.setFileId(teamDrive.getId());
+                    metadata.setMimeType(FOLDER);
+                    metadata.setTeamId(teamDrive.getId());
+
+                    final URI teamURI = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
+                        getURI().getPort(), TEAM_DRIVES_FOLDER + name + "/", metadata.toQueryString(),
+                        getURI().getFragment());
+                    LOGGER.debug("Team drive URI: " + teamURI);
+                    remoteFileList.add(new GoogleDriveRemoteFile(teamURI,
+                        (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor()));
                 }
-                name.replace("'", "\\'");
-
-                final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
-
-                metadata.setFileId(file.getId());
-                metadata.setMimeType(file.getMimeType());
-                if (!file.getMimeType().equals(FOLDER)) {
-                    metadata.setFileSize(file.getSize());
-                }
-                metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
-                metadata.setParents(file.getParents());
+                pageToken = teamDrives.getNextPageToken();
+            } while (pageToken != null);
+        } else {
+            do {
+                // Loop while we still get a valid nextPageToken.
+                // The pageToken is null if there is no next page.
+                // Build File list (with support for team drives)
+                // If a field is set, all necessary fields have to be set manually.
+                com.google.api.services.drive.Drive.Files.List fileRequest = getService().files().list()
+                        .setQ("'" + m_fileMetadata.getFileId() + "' in parents and trashed = false")
+                        .setSpaces("drive")
+                        .setFields("nextPageToken, " + FIELD_STRING)
+                        .setPageToken(pageToken)
+                        .setOrderBy("name");
 
                 if (m_fileMetadata.fromTeamDrive()) {
-                    metadata.setTeamId(m_fileMetadata.getTeamId());
+                    fileRequest = fileRequest.setCorpora("teamDrive").setSupportsTeamDrives(true).setIncludeTeamDriveItems(true)
+                        .setTeamDriveId(m_fileMetadata.getTeamId());
                 }
 
-                final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), getURI().getPort(),
-                    getFullPath() + name + folderPostFix, metadata.toQueryString(), getURI().getFragment());
+                FileList fileList = fileRequest.execute();
 
 
-                LOGGER.debug("Google Drive Remote URI: " + uri.toString());
-                final GoogleDriveRemoteFile remoteFile = new GoogleDriveRemoteFile(uri,
-                    (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
-                remoteFileList.add(remoteFile);
-            }
+                for (final File file : fileList.getFiles()) {
+
+                    // Google Drive API only allows downloading of non Google file types.
+                    // (meaning native Google Docs, Spreadsheets, etc. can not be directly downloaded via
+                    // the API). Let's filter those files out, but keep folder references.
+                    if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) || file.getMimeType().equals(FOLDER)) {
+                        final String folderPostFix = (file.getMimeType().equals(FOLDER)) ? "/" : "";
+
+                        final String name = file.getName();
+                        if (name.contains("/" )) {
+                            LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
+                            continue;
+                        }
+                        name.replace("'", "\\'");
+
+                        final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
+
+                        metadata.setFileId(file.getId());
+                        metadata.setMimeType(file.getMimeType());
+                        if (!file.getMimeType().equals(FOLDER)) {
+                            metadata.setFileSize(file.getSize());
+                        }
+                        metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
+                        metadata.setParents(file.getParents());
+
+                        if (m_fileMetadata.fromTeamDrive()) {
+                            metadata.setTeamId(m_fileMetadata.getTeamId());
+                        }
+
+                        final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), getURI().getPort(),
+                            getFullPath() + name + folderPostFix, metadata.toQueryString(), getURI().getFragment());
+
+
+                        LOGGER.debug("Google Drive Remote URI: " + uri.toString());
+                        final GoogleDriveRemoteFile remoteFile = new GoogleDriveRemoteFile(uri,
+                            (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
+                        remoteFileList.add(remoteFile);
+                    }
+                }
+                pageToken = fileList.getNextPageToken();
+            } while (pageToken != null);
         }
+
         return remoteFileList.toArray(new GoogleDriveRemoteFile[remoteFileList.size()]);
     }
 
@@ -543,59 +562,71 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
         LOGGER.debug("Q-String: ( " + qString + " )");
 
-        // Handle My Drive and Team Drive files/folders
-        com.google.api.services.drive.Drive.Files.List request = driveFiles.list();
-        if (metadata.fromTeamDrive()) {
-            request = request.setCorpora("teamDrive").setSupportsTeamDrives(true).setIncludeTeamDriveItems(true)
-                .setTeamDriveId(metadata.getTeamId());
-        }
+
+        boolean parentsValidated = false;
+        String parent = rootId;
 
         // Retrieve files that match names in qString
         // This could return file/folder name duplicates, so the next check the the parent is also in the path
-        final List<File> files = request.setFields(FIELD_STRING).setQ(qString).execute().getFiles();
+        String pageToken = null;
+        do {
+            // Loop while we still get a valid nextPageToken.
+            // The pageToken is null if there is no next page.
+            // Build File list (with support for team drives)
+            com.google.api.services.drive.Drive.Files.List fileRequest = getService().files().list()
+                    .setQ(qString)
+                    .setSpaces("drive")
+                    .setFields("nextPageToken, " + FIELD_STRING)
+                    .setPageToken(pageToken);
 
-        // Use file IDs and parent information to find the right file id by
-        // iterating through each element in the path
-        String parent = rootId;
-        boolean parentsValidated = false;
-        for (int i = 0; i < pathElementStringArray.length; i++) {
+            if (m_fileMetadata.fromTeamDrive()) {
+                fileRequest = fileRequest.setCorpora("teamDrive").setSupportsTeamDrives(true).setIncludeTeamDriveItems(true)
+                        .setTeamDriveId(m_fileMetadata.getTeamId());
+            }
 
-            boolean fileFound = false;
+            FileList fileList = fileRequest.execute();
 
-            for (final File file : files) {
-                // If name matches and has the correct parent
-                if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) ||
-                        file.getName().equals(pathElementStringArray[i])
-                        && (!(file.getParents() != null) || file.getParents().contains(parent))) {
-                    fileFound = true;
-                    if (i == pathElementStringArray.length - 1) {
-                        // Last element, this it the file we want
-                        metadata.setFileId(file.getId());
-                        metadata.setMimeType(file.getMimeType());
-                        if (!file.getMimeType().equals(FOLDER)) {
-                            metadata.setFileSize(file.getSize());
+            // Use file IDs and parent information to find the right file id by
+            // iterating through each element in the path
+            for (int i = 0; i < pathElementStringArray.length; i++) {
+
+                boolean fileFound = false;
+
+                for (final File file : fileList.getFiles()) {
+                    // If name matches and has the correct parent
+                    if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) || file.getName().equals(pathElementStringArray[i])
+                            && (!(file.getParents() != null) || file.getParents().contains(parent))) {
+                        fileFound = true;
+                        if (i == pathElementStringArray.length - 1) {
+                            // Last element, this it the file we want
+                            metadata.setFileId(file.getId());
+                            metadata.setMimeType(file.getMimeType());
+                            if (!file.getMimeType().equals(FOLDER)) {
+                                metadata.setFileSize(file.getSize());
+                            }
+                            metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
+                            metadata.addParentId(parent);
+                            return metadata;
+                        } else {
+                            // Haven't made it to end of path yet. Set this file ID as new parent
+                            parent = file.getId();
                         }
-                        metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
-                        metadata.addParentId(parent);
-                        return metadata;
-                    } else {
-                        // Haven't made it to end of path yet. Set this file ID as new parent
-                        parent = file.getId();
                     }
                 }
-            }
 
-            // If the current file was found and we aren't to the end of the blob path,
-            // then the parents are still valid.
-            // We don't check this for the last file in the array because it could be a
-            // new file being created
-            if (fileFound) {
-                parentsValidated = true;
-            } else if (i < pathElementStringArray.length - 1) {
-                parentsValidated = false;
-                break;
+                // If the current file was found and we aren't to the end of the blob path,
+                // then the parents are still valid.
+                // We don't check this for the last file in the array because it could be a
+                // new file being created
+                if (fileFound) {
+                    parentsValidated = true;
+                } else if (i < pathElementStringArray.length - 1) {
+                    parentsValidated = false;
+                    break;
+                }
             }
-        }
+            pageToken = fileList.getNextPageToken();
+        } while (pageToken != null);
 
         // In the case that the blob path only has a length of one, the parents are containers and have
         // already been validated. Override parentsValidated to true
