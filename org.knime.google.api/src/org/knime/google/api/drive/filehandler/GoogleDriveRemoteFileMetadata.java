@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 18, 2018 (jtyler): created
  */
@@ -57,7 +57,8 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * 
+ * Metadata object for {@link GoogleDriveRemoteFile}s.
+ *
  * @author jtyler
  */
 final class GoogleDriveRemoteFileMetadata {
@@ -82,17 +83,17 @@ final class GoogleDriveRemoteFileMetadata {
 
     /**
      * Parse Google Drive file metadata from the query parameters set in a URI resource
-     * 
+     *
      * @param uri
      * @throws Exception
      */
-    GoogleDriveRemoteFileMetadata(URI uri) throws Exception {
+    GoogleDriveRemoteFileMetadata(final URI uri) throws Exception {
         if (StringUtils.isNotEmpty(uri.getQuery())) {
             loadFromQueryString(uri.getQuery());
         }
     }
 
-    private void loadFromQueryString(String queryString) throws Exception {
+    private void loadFromQueryString(final String queryString) throws Exception {
 
         Map<String, String> parameterMap = new HashMap<String, String>();
         String[] parameterList = queryString.split("&");
@@ -105,42 +106,42 @@ final class GoogleDriveRemoteFileMetadata {
             }
 
             parameterMap.put(nameValueList[0], nameValueList[1]);
+        }
 
-            // Set required fields
-            // File ID
-            if (parameterMap.containsKey("fileid")) {
-                m_fileId = parameterMap.get("fileid");
-            } else {
-                throw new Exception("Cannot parse query string. fileid not present.");
-            }
+        // Set required fields
+        // File ID
+        if (parameterMap.containsKey("fileid")) {
+            m_fileId = parameterMap.get("fileid");
+        } else {
+            throw new Exception("Cannot parse query string. fileid not present.");
+        }
 
-            // Set optional fields
-            // MIME Type
-            if (parameterMap.containsKey("fileid")) {
-                m_fileId = parameterMap.get("fileid");
-            }
+        // Set optional fields
+        // MIME Type
+        if (parameterMap.containsKey("fileid")) {
+            m_fileId = parameterMap.get("fileid");
+        }
 
-            // Team Drive ID
-            if (parameterMap.containsKey("teamid")) {
-                m_teamId = parameterMap.get("teamid");
-            }
+        // Team Drive ID
+        if (parameterMap.containsKey("teamid")) {
+            m_teamId = parameterMap.get("teamid");
+        }
 
-            // File size
-            if (parameterMap.containsKey("size")) {
-                m_lastModified = Long.parseLong(parameterMap.get("size"));
-            }
+        // File size
+        if (parameterMap.containsKey("size")) {
+            m_lastModified = Long.parseLong(parameterMap.get("size"));
+        }
 
-            // Last modified
-            if (parameterMap.containsKey("modified")) {
-                m_lastModified = Long.parseLong(parameterMap.get("modified"));
-            }
+        // Last modified
+        if (parameterMap.containsKey("modified")) {
+            m_lastModified = Long.parseLong(parameterMap.get("modified"));
+        }
 
-            // Parents
-            if (parameterMap.containsKey("parents")) {
-                m_parents = new ArrayList<String>();
-                for (String parent : parameterMap.get("parents").split(",")) {
-                    m_parents.add(parent);
-                }
+        // Parents
+        if (parameterMap.containsKey("parents")) {
+            m_parents = new ArrayList<String>();
+            for (String parent : parameterMap.get("parents").split(",")) {
+                m_parents.add(parent);
             }
         }
     }
@@ -197,7 +198,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param fileId the fileId to set
      */
-    void setFileId(String fileId) {
+    void setFileId(final String fileId) {
         m_fileId = fileId;
     }
 
@@ -211,7 +212,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param mimeType the mimeType to set
      */
-    void setMimeType(String mimeType) {
+    void setMimeType(final String mimeType) {
         m_mimeType = mimeType;
     }
 
@@ -225,7 +226,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param teamId the teamId to set
      */
-    void setTeamId(String teamId) {
+    void setTeamId(final String teamId) {
         m_teamId = teamId;
     }
 
@@ -239,7 +240,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param parentId Add a parent ID to the list of parents
      */
-    void addParentId(String parentId) {
+    void addParentId(final String parentId) {
         // Initialize parent list if it has not been.
         if (m_parents == null) {
             m_parents = new ArrayList<String>();
@@ -250,7 +251,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param parents Set all parents via String List
      */
-    void setParents(List<String> parents) {
+    void setParents(final List<String> parents) {
         m_parents = parents;
     }
 
@@ -264,7 +265,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param fileSize the fileSize to set
      */
-    void setFileSize(long fileSize) {
+    void setFileSize(final long fileSize) {
         m_fileSize = fileSize;
     }
 
@@ -278,7 +279,7 @@ final class GoogleDriveRemoteFileMetadata {
     /**
      * @param lastModified the lastModified to set
      */
-    void setLastModified(long lastModified) {
+    void setLastModified(final long lastModified) {
         m_lastModified = lastModified;
     }
 
