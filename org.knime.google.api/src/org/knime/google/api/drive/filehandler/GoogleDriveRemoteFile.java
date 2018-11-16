@@ -186,7 +186,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     protected boolean doestBlobExist(final String containerName, final String blobName) throws Exception {
         // This can get called to verify a file was deleted successfully.
         // So lets reset the metadata
-        m_fileMetadata = getMetadata();
+        if (m_fileMetadata == null) {
+            m_fileMetadata = getMetadata();
+        }
         if (m_fileMetadata.getFileId() != null) {
             return true;
         } else {
