@@ -502,19 +502,16 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         if (teamDriveName.equals(MY_DRIVE)) {
             return null;
         }
-        final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
-        for (final TeamDrive teamDrive : teamDrives) {
-            if (teamDrive.getName().equals(teamDriveName)) {
-                return teamDrive.getId();
-            }
+        if (m_fileMetadata == null) {
+            m_fileMetadata = getMetadata();
         }
-        throw new NoSuchElementException("Team Drive: '" + teamDriveName + "' could not be found.");
+        return m_fileMetadata.getTeamId();
     }
 
     private GoogleDriveRemoteFileMetadata getMetadata() throws Exception {
 
         final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
-        String teamId;
+        String teamId = null;
 
         // Handle top level folders (MyDrive and TeamDrives)
         if (getFullPath().equals("/")) {
@@ -524,7 +521,12 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             metadata.setFileId("root");
             return metadata;
         } else {
-            teamId = getTeamId(getContainerName());
+            final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
+            for (final TeamDrive teamDrive : teamDrives) {
+                if (teamDrive.getName().equals(getContainerName())) {
+                    teamId = teamDrive.getId();
+                }
+            }
             if (teamId != null) {
                 metadata.setTeamId(teamId);
                 // Handle Team drive directory roots
@@ -579,9 +581,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                     .setFields("nextPageToken, " + FIELD_STRING)
                     .setPageToken(pageToken);
 
-            if (m_fileMetadata.fromTeamDrive()) {
+            if (metadata.fromTeamDrive()) {
                 fileRequest = fileRequest.setCorpora("teamDrive").setSupportsTeamDrives(true).setIncludeTeamDriveItems(true)
-                        .setTeamDriveId(m_fileMetadata.getTeamId());
+                        .setTeamDriveId(metadata.getTeamId());
             }
 
             FileList fileList = fileRequest.execute();
