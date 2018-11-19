@@ -71,6 +71,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.Drive.Files;
+import com.google.api.services.drive.Drive.Files.Create;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.TeamDrive;
@@ -534,8 +535,15 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             // Media type is null. Google will determine the type based on file
             final InputStreamContent content = new InputStreamContent(null, in);
 
-            final File driveFile = getService().files().create(fileMetadata, content)
-                .setFields("id, parents, size, mimeType, modifiedTime").setSupportsTeamDrives(true).execute();
+            Create request = getService().files().create(fileMetadata, content)
+            .setFields("id, parents, size, mimeType, modifiedTime").setSupportsTeamDrives(true);
+
+            // If file size < 5 mb enable direct upload. To prevent bad request errors.
+            if (file.getSize() < 5 * 1024 * 1024L) {
+                request.getMediaHttpUploader().setDirectUploadEnabled(true);
+            }
+
+            final File driveFile = request.execute();
 
             LOGGER.debug("Creating new file: " + getBlobName() + " , file id: " + driveFile.getId());
 
