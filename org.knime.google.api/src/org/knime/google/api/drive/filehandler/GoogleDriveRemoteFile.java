@@ -372,7 +372,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                             (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
                         remoteFileList.add(remoteFile);
                     } else {
-                        LOGGER.warn("Skipping file because native Google file formats are not downloadable via the API: " + getFullPath() + "'" + name + "'");
+                        LOGGER
+                            .warn("Skipping file because native Google file formats are not downloadable via the API: "
+                                + getFullPath() + "'" + file.getName() + "'");
                     }
                 }
                 pageToken = fileList.getNextPageToken();
