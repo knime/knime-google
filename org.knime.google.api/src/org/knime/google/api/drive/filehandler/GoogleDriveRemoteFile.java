@@ -574,10 +574,12 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             metadata.setFileId("root");
             return metadata;
         } else {
-            final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
-            for (final TeamDrive teamDrive : teamDrives) {
-                if (teamDrive.getName().equals(getContainerName())) {
-                    teamId = teamDrive.getId();
+            if (getContainerName().equals(DEFAULT_CONTAINER.replaceAll("/", ""))) {
+                final List<TeamDrive> teamDrives = getService().teamdrives().list().execute().getTeamDrives();
+                for (final TeamDrive teamDrive : teamDrives) {
+                    if (teamDrive.getName().equals(getContainerName())) {
+                        teamId = teamDrive.getId();
+                    }
                 }
             }
             if (teamId != null) {
