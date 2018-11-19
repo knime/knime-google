@@ -287,10 +287,6 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
                 for (final File file : fileList.getFiles()) {
 
-                    // Google Drive API only allows downloading of non Google file types.
-                    // (meaning native Google Docs, Spreadsheets, etc. can not be directly downloaded via
-                    // the API). Let's filter those files out, but keep folder references.
-
                     final String name = file.getName();
                     if (name.contains("/")) {
                         LOGGER.warn("Skipping folder because of character: " + getFullPath() + "'" + name + "'");
@@ -375,7 +371,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                             (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
                         remoteFileList.add(remoteFile);
                     } else {
-                        System.out.println("GOOGLETYPE!!!");
+                        LOGGER.warn("Skipping file because native Google file formats are not downloadable via the API: " + getFullPath() + "'" + name + "'");
                     }
                 }
                 pageToken = fileList.getNextPageToken();
