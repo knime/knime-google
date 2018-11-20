@@ -73,6 +73,8 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
+import com.google.api.client.auth.oauth2.Credential;
+
 /**
  * Settings for the GoogleAuthModel
  *
@@ -94,6 +96,8 @@ final class GoogleAuthNodeSettings {
 
     private static final String IS_AUTHENTICATED = "isAuthenticated";
 
+    private static final String ACCESS_TOKEN_HASH = "accessTokenHash";
+
     private final SettingsModelString m_credentialFileLocation;
 
     private GoogleAuthLocationType m_type = GoogleAuthLocationType.MEMORY;
@@ -107,6 +111,8 @@ final class GoogleAuthNodeSettings {
     private String m_storedCredential;
 
     private boolean m_isAuthenticated;
+
+    private int m_accessTokenHash = "".hashCode();
 
     /**
      *
@@ -194,6 +200,7 @@ final class GoogleAuthNodeSettings {
             KnimeGoogleAuthScopeRegistry.getKnimeGoogleScopeIds(m_knimeGoogleAuthScopes));
         config.addBoolean(ALL_SCOPES, m_useAllscopes);
         config.addBoolean(IS_AUTHENTICATED, m_isAuthenticated);
+        config.addInt(ACCESS_TOKEN_HASH, m_accessTokenHash);
 
         m_credentialFileLocation.saveSettingsTo(settings);
 
@@ -207,7 +214,7 @@ final class GoogleAuthNodeSettings {
         config.getStringArray(KNIME_SCOPES);
         config.getBoolean(ALL_SCOPES);
         config.getBoolean(IS_AUTHENTICATED);
-
+        config.getInt(ACCESS_TOKEN_HASH);
         m_credentialFileLocation.validateSettings(settings);
     }
 
@@ -219,6 +226,7 @@ final class GoogleAuthNodeSettings {
             .getScopesFromString(Arrays.asList(config.getStringArray(KNIME_SCOPES)));
         m_useAllscopes = config.getBoolean(ALL_SCOPES);
         m_isAuthenticated = config.getBoolean(IS_AUTHENTICATED);
+        m_accessTokenHash = config.getInt(ACCESS_TOKEN_HASH);
         m_credentialFileLocation.loadSettingsFrom(settings);
     }
 
@@ -267,6 +275,10 @@ final class GoogleAuthNodeSettings {
         }
     }
 
+    void setAccessTokenHash(final int credentialHash) {
+        m_accessTokenHash = credentialHash;
+    }
+
     /**
      * Has to be loaded from the node dialog
      *
@@ -310,14 +322,24 @@ final class GoogleAuthNodeSettings {
     Optional<GoogleApiConnection> createGoogleApiConnection(final boolean isDuringExecute)
         throws InvalidSettingsException {
         try {
-            if (!isDuringExecute) {
-                return Optional.empty();
-            }
             String credentialLocation = getCredentialLocation();
             if (getCredentialLocationType().equals(GoogleAuthLocationType.NODE)
                 && !(new File(credentialLocation).exists())) {
                 credentialLocation = GoogleAuthentication.getTempCredentialPath(m_storedCredential);
             }
+            if (!isDuringExecute) {
+                Credential noAuthCredential = GoogleAuthentication.getNoAuthCredential(getCredentialLocationType(), getCredentialLocation(), getRelevantKnimeAuthScopes());
+                if (noAuthCredential == null) {
+                    throw new InvalidSettingsException("No valid credentials found. Please authenticate using the node dialog.");
+                }
+                // If the accessTokenHash changes it means that the credentials got overwritten or exchanged,
+                // so they should be verified using the node dialog.
+                if (noAuthCredential.getAccessToken().hashCode() != m_accessTokenHash) {
+                    throw new InvalidSettingsException("Credentials changed. Please authenticate using the node dialog.");
+                }
+                return Optional.empty();
+            }
+
             return Optional.of(
                 new GoogleApiConnection(getCredentialLocationType(), credentialLocation, getRelevantKnimeAuthScopes()));
         } catch (IOException e) {

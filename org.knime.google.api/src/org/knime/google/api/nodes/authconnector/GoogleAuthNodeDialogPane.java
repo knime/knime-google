@@ -202,6 +202,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                     }
                     Credential credential = GoogleAuthentication.getCredential(m_settings.getCredentialLocationType(),
                         m_settings.getCredentialLocation(), m_settings.getRelevantKnimeAuthScopes());
+                    m_settings.setAccessTokenHash(credential.getAccessToken().hashCode());
                     return credential;
                 }
 
@@ -382,6 +383,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                     m_settings.getCredentialLocation());
             }
             m_isAuthenticated = false;
+            m_settings.setAccessTokenHash("".hashCode());
             setAuthenticationStatus();
         } catch (IOException | InvalidSettingsException e) {
             // Ignore: During credential clearing, this can mean that maybe the file got deleted manually.
