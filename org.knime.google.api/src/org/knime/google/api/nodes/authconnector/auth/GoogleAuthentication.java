@@ -90,7 +90,7 @@ public class GoogleAuthentication {
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     /** The name of the client secret JSON file **/
-    private static final String CLIENT_SECRET = "client_secret_google_sheets.json";
+    private static final String CLIENT_SECRET = "knime_client_secret-ap_3_7_0.json";
 
     private static final String DEFAULT_KNIME_USER = "knimeGoogleUser";
 

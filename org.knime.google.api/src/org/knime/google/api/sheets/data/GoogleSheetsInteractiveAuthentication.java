@@ -91,7 +91,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
 public class GoogleSheetsInteractiveAuthentication {
 
     /** The name of the client secret JSON file **/
-    private static final String CLIENT_SECRET = "client_secret_google_sheets.json";
+    private static final String CLIENT_SECRET = "knime_client_secret_deprecated.json";
 
     /** Global instance of the JSON factory. */
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
