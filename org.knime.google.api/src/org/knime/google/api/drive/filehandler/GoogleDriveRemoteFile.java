@@ -448,6 +448,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         CheckUtils.checkState(m_fileMetadata.getFileId() != null, "File '%s' can't be deleted (does it exist)?",
             getFullPath());
         getService().files().delete(m_fileMetadata.getFileId()).setSupportsTeamDrives(true).execute();
+        m_fileMetadata = null;
         return true;
     }
 
