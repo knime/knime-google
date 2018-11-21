@@ -654,9 +654,10 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
 
                 for (final File file : fileList.getFiles()) {
                     // If name matches and has the correct parent
+                    // If the Google  MIME type can be folder but not any other Google MIME Type
                     if (file.getName().equals(pathElementStringArray[i])
-                        || !file.getMimeType().contains(GOOGLE_MIME_TYPE)
-                            && (!(file.getParents() != null) || file.getParents().contains(parent))) {
+                            && (!(file.getParents() != null) || file.getParents().contains(parent))
+                            && (file.getMimeType().contains(FOLDER) || !file.getMimeType().contains(GOOGLE_MIME_TYPE))) {
                         fileFound = true;
                         if (i == pathElementStringArray.length - 1) {
                             // Last element, this it the file we want
