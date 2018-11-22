@@ -670,8 +670,10 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                             metadata.addParentId(parent);
                             return metadata;
                         } else {
-                            // Haven't made it to end of path yet. Set this file ID as new parent
-                            parent = file.getId();
+                            if (file.getMimeType().contains(FOLDER)) {
+                                // Haven't made it to end of path yet. Set this file ID as new parent
+                                parent = file.getId();
+                            }
                         }
                     }
                 }
