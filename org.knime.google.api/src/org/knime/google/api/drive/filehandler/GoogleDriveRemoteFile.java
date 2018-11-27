@@ -466,6 +466,16 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     @Override
     protected boolean createDirectory(final String dirName) throws Exception {
 
+        // If the parent is null, the parent was not available during metadata retrieval
+        // For example when creating a directory inside a not existing directory
+        // This circumvents Google latency problems for newly created parent folders.
+        for (int i = 1 ; (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) && i < 6 ; i++) {
+            m_fileMetadata = getMetadata();
+            if (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) {
+                Thread.sleep(i* 1000);
+            }
+        }
+
         final File fileMetadata = new File();
         fileMetadata.setName(getName());
         fileMetadata.setParents(m_fileMetadata.getParents());
@@ -532,6 +542,16 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         try (final InputStream in = file.openInputStream()) {
             final File fileMetadata = new File();
             fileMetadata.setName(getName());
+
+            // If the parent is null, the parent was not available during metadata retrieval
+            // For example when creating a directory inside a not existing directory
+            // This circumvents Google latency problems for newly created parent folders.
+            for (int i = 1 ; (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) && i < 6 ; i++) {
+                m_fileMetadata = getMetadata();
+                if (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) {
+                    Thread.sleep(i* 1000);
+                }
+            }
 
             fileMetadata.setParents(m_fileMetadata.getParents());
             DriveRequest<File> request  = null;
