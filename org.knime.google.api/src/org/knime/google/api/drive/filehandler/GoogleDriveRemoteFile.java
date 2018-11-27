@@ -640,6 +640,9 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         // Retrieve files that match names in qString
         // This could return file/folder name duplicates, so the next check the the parent is also in the path
         String pageToken = null;
+
+
+        List<File> files = new ArrayList<File>();
         do {
             // Loop while we still get a valid nextPageToken.
             // The pageToken is null if there is no next page.
@@ -653,52 +656,49 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
             }
 
             FileList fileList = fileRequest.execute();
+            files.addAll(fileList.getFiles());
+            pageToken = fileList.getNextPageToken();
+        } while (pageToken != null);
 
-            // Use file IDs and parent information to find the right file id by
-            // iterating through each element in the path
-            for (int i = 0; i < pathElementStringArray.length; i++) {
+        int veryifiedFileCounter = 0;
+        // Use file IDs and parent information to find the right file id by
+        // iterating through each element in the path
+        for (int i = 0; i < pathElementStringArray.length; i++) {
+            if (veryifiedFileCounter < i) {
+                // If not all files on the path can be validated, the parent is not validated.
+                break;
+            }
 
-                boolean fileFound = false;
 
-                for (final File file : fileList.getFiles()) {
-                    // If name matches and has the correct parent
-                    // If the Google  MIME type can be folder but not any other Google MIME Type
-                    if (file.getName().equals(pathElementStringArray[i])
-                            && (!(file.getParents() != null) || file.getParents().contains(parent))
-                            && (file.getMimeType().contains(FOLDER) || !file.getMimeType().contains(GOOGLE_MIME_TYPE))) {
-                        fileFound = true;
-                        if (i == pathElementStringArray.length - 1) {
-                            // Last element, this it the file we want
-                            metadata.setFileId(file.getId());
-                            metadata.setMimeType(file.getMimeType());
-                            if (!file.getMimeType().equals(FOLDER)) {
-                                metadata.setFileSize(file.getSize());
-                            }
-                            metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
-                            metadata.addParentId(parent);
-                            return metadata;
-                        } else {
-                            if (file.getMimeType().contains(FOLDER)) {
-                                // Haven't made it to end of path yet. Set this file ID as new parent
-                                parent = file.getId();
+            for (final File file : files) {
+                // If name matches and has the correct parent
+                // If the Google  MIME type can be folder but not any other Google MIME Type
+                if (file.getName().equals(pathElementStringArray[i])
+                        && (!(file.getParents() != null) || file.getParents().contains(parent))
+                        && (file.getMimeType().contains(FOLDER) || !file.getMimeType().contains(GOOGLE_MIME_TYPE))) {
+                    if (i == pathElementStringArray.length - 1) {
+                        // Last element, this it the file we want
+                        metadata.setFileId(file.getId());
+                        metadata.setMimeType(file.getMimeType());
+                        if (!file.getMimeType().equals(FOLDER)) {
+                            metadata.setFileSize(file.getSize());
+                        }
+                        metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
+                        metadata.addParentId(parent);
+                        return metadata;
+                    } else {
+                        if (file.getMimeType().contains(FOLDER)) {
+                            veryifiedFileCounter++;
+                            // Haven't made it to end of path yet. Set this file ID as new parent
+                            parent = file.getId();
+                            if (i == pathElementStringArray.length - 2) {
+                                parentsValidated = true;
                             }
                         }
                     }
                 }
-
-                // If the current file was found and we aren't to the end of the blob path,
-                // then the parents are still valid.
-                // We don't check this for the last file in the array because it could be a
-                // new file being created
-                if (fileFound) {
-                    parentsValidated = true;
-                } else if (i < pathElementStringArray.length - 1) {
-                    parentsValidated = false;
-                    break;
-                }
             }
-            pageToken = fileList.getNextPageToken();
-        } while (pageToken != null);
+        }
 
         // In the case that the blob path only has a length of one, the parents are containers and have
         // already been validated. Override parentsValidated to true
