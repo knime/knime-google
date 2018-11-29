@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.ext.socialmedia"
-      label="KNIME Social Media Connectors (Twitter &amp; Google)"
+      label="KNIME Twitter &amp; Google Connectors"
       version="3.7.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
