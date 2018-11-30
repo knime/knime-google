@@ -432,6 +432,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 Thread.sleep(i* 1000);
             }
         }
+
         // If the parent is still unknown throw exception, otherwise the folder ends up in the Google Drive root.
         if (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) {
             throw new IOException("The parent folder for " + getFullPath() + dirName + " could not be verified.");
@@ -656,7 +657,6 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 break;
             }
 
-
             for (final File file : files) {
                 // If name matches and has the correct parent
                 // If the Google  MIME type can be folder but not any other Google MIME Type
@@ -664,6 +664,10 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                         && (!(file.getParents() != null) || file.getParents().contains(parent))
                         && (file.getMimeType().contains(FOLDER) || !file.getMimeType().contains(GOOGLE_MIME_TYPE))) {
                     if (i == pathElementStringArray.length - 1) {
+                        if (isDirectory() != file.getMimeType().contains(FOLDER)) {
+                            // Means we found a file with the name of a folder
+                            continue;
+                        }
                         // Last element, this it the file we want
                         metadata.setFileId(file.getId());
                         metadata.setMimeType(file.getMimeType());
