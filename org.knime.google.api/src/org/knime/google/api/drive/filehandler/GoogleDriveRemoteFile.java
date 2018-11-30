@@ -231,7 +231,8 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
     protected GoogleDriveRemoteFile[] listDirectoryFiles() throws Exception {
 
         LOGGER.debug("Listing directory files for: " + getFullPath());
-        final List<GoogleDriveRemoteFile> remoteFileList = new ArrayList<GoogleDriveRemoteFile>();
+        final List<GoogleDriveRemoteFile> remoteDirectoryList = new ArrayList<>();
+        final List<GoogleDriveRemoteFile> remoteFileList = new ArrayList<>();
 
         String pageToken = null;
 
@@ -267,17 +268,13 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 pageToken = teamDrives.getNextPageToken();
             } while (pageToken != null);
         } else {
-            // List Folders
+            //List Everything
             do {
-                // Loop while we still get a valid nextPageToken.
-                // The pageToken is null if there is no next page.
-                // Build Folder List with support for team drives.
-                // If a field is set, all necessary fields have to be set manually.
+                // Query to retrieve all Google Files
                 com.google.api.services.drive.Drive.Files.List fileRequest = getService().files().list()
-                    .setQ("'" + m_fileMetadata.getFileId() + "' in parents and trashed = false"
-                        + " and mimeType = 'application/vnd.google-apps.folder'")
-                    .setSpaces("drive").setFields("nextPageToken, " + FIELD_STRING).setPageToken(pageToken)
-                    .setOrderBy("name");
+                        .setQ("'" + m_fileMetadata.getFileId() + "' in parents and trashed = false")
+                        .setSpaces("drive").setFields("nextPageToken, " + FIELD_STRING).setPageToken(pageToken)
+                        .setOrderBy("name");
 
                 if (m_fileMetadata.fromTeamDrive()) {
                     fileRequest = fileRequest.setCorpora("teamDrive").setSupportsTeamDrives(true)
@@ -287,80 +284,32 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 FileList fileList = fileRequest.execute();
 
                 for (final File file : fileList.getFiles()) {
-
-                    final String name = file.getName();
-                    if (name.contains("/")) {
-                        LOGGER.warn("Skipping folder because of character: " + getFullPath() + "'" + name + "'");
-                        continue;
-                    }
-                    name.replace("'", "\\'");
-
-                    final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
-
-                    metadata.setFileId(file.getId());
-                    metadata.setMimeType(file.getMimeType());
-                    metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
-                    metadata.setParents(file.getParents());
-
-                    if (m_fileMetadata.fromTeamDrive()) {
-                        metadata.setTeamId(m_fileMetadata.getTeamId());
-                    }
-
-                    final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
-                        getURI().getPort(), getFullPath() + name + "/", metadata.toQueryString(),
-                        getURI().getFragment());
-
-                    LOGGER.debug("Google Drive Remote URI: " + uri.toString());
-                    final GoogleDriveRemoteFile remoteFile = new GoogleDriveRemoteFile(uri,
-                        (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
-                    remoteFileList.add(remoteFile);
-                }
-                pageToken = fileList.getNextPageToken();
-            } while (pageToken != null);
-            // List Files
-            pageToken = null;
-            do {
-                // Loop while we still get a valid nextPageToken.
-                // The pageToken is null if there is no next page.
-                // Build File list (with support for team drives)
-                // If a field is set, all necessary fields have to be set manually.
-                com.google.api.services.drive.Drive.Files.List fileRequest = getService().files().list()
-                    .setQ("'" + m_fileMetadata.getFileId() + "' in parents and trashed = false"
-                        + " and mimeType != 'application/vnd.google-apps.*'")
-                    .setSpaces("drive").setFields("nextPageToken, " + FIELD_STRING).setPageToken(pageToken)
-                    .setOrderBy("name");
-
-                if (m_fileMetadata.fromTeamDrive()) {
-                    fileRequest = fileRequest.setCorpora("teamDrive").setSupportsTeamDrives(true)
-                        .setIncludeTeamDriveItems(true).setTeamDriveId(m_fileMetadata.getTeamId());
-                }
-
-                FileList fileList = fileRequest.execute();
-
-                for (final File file : fileList.getFiles()) {
-
                     // Google Drive API only allows downloading of non Google file types.
                     // (meaning native Google Docs, Spreadsheets, etc. can not be directly downloaded via
                     // the API). Let's filter those files out, but keep folder references.
-                    if (!file.getMimeType().contains(GOOGLE_MIME_TYPE)) {
-
-                        final String name = file.getName();
+                    if (!file.getMimeType().contains(GOOGLE_MIME_TYPE) || file.getMimeType().contains(FOLDER)) {
+                        String name = file.getName();
                         if (name.contains("/")) {
-                            LOGGER.warn("Skipping file because of character: " + getFullPath() + "'" + name + "'");
+                            LOGGER.warn("Skipping file or folder because of character: " + getFullPath() + "'" + name + "'");
                             continue;
                         }
-                        name.replace("'", "\\'");
+                        name = name.replace("'", "\\'");
 
                         final GoogleDriveRemoteFileMetadata metadata = new GoogleDriveRemoteFileMetadata();
 
                         metadata.setFileId(file.getId());
                         metadata.setMimeType(file.getMimeType());
-                        metadata.setFileSize(file.getSize());
                         metadata.setLastModified(file.getModifiedTime().getValue() / 1000);
                         metadata.setParents(file.getParents());
 
                         if (m_fileMetadata.fromTeamDrive()) {
                             metadata.setTeamId(m_fileMetadata.getTeamId());
+                        }
+
+                        if (metadata.getMimeType().equals(FOLDER)) {
+                            name = name.concat("/");
+                        } else {
+                            metadata.setFileSize(file.getSize());
                         }
 
                         final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(),
@@ -370,18 +319,26 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                         LOGGER.debug("Google Drive Remote URI: " + uri.toString());
                         final GoogleDriveRemoteFile remoteFile = new GoogleDriveRemoteFile(uri,
                             (GoogleDriveConnectionInformation)getConnectionInformation(), getConnectionMonitor());
-                        remoteFileList.add(remoteFile);
+
+                        if (metadata.getMimeType().equals(FOLDER)) {
+                            remoteDirectoryList.add(remoteFile);
+                        } else {
+                            remoteFileList.add(remoteFile);
+                        }
                     } else {
                         LOGGER
-                            .warn("Skipping file because native Google file formats are not downloadable via the API: "
-                                + getFullPath() + "'" + file.getName() + "'");
+                        .warn("Skipping file because native Google file formats are not downloadable via the API: "
+                            + getFullPath() + "'" + file.getName() + "'");
                     }
                 }
                 pageToken = fileList.getNextPageToken();
             } while (pageToken != null);
         }
 
-        return remoteFileList.toArray(new GoogleDriveRemoteFile[remoteFileList.size()]);
+        // Concatenate the two lists, folders first.
+        remoteDirectoryList.addAll(remoteFileList);
+
+        return remoteDirectoryList.toArray(new GoogleDriveRemoteFile[remoteDirectoryList.size()]);
     }
 
     /**
