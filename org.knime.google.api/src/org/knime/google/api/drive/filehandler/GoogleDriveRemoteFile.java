@@ -432,6 +432,10 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 Thread.sleep(i* 1000);
             }
         }
+        // If the parent is still unknown throw exception, otherwise the folder ends up in the Google Drive root.
+        if (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) {
+            throw new IOException("The parent folder for " + getFullPath() + dirName + " could not be verified.");
+        }
 
         final File fileMetadata = new File();
         fileMetadata.setName(getName());
@@ -510,6 +514,11 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
                 }
             }
 
+            // If the parent is still unknown throw exception, otherwise the folder ends up in the Google Drive root.
+            if (m_fileMetadata.getParents() == null || m_fileMetadata.getParents().isEmpty()) {
+                throw new IOException("The parent folder for " + getFullPath() + " could not be verified.");
+            }
+
             fileMetadata.setParents(m_fileMetadata.getParents());
             DriveRequest<File> request  = null;
 
@@ -562,6 +571,7 @@ public class GoogleDriveRemoteFile extends CloudRemoteFile<GoogleDriveConnection
         if (getFullPath().equals("/")) {
             return metadata;
         }
+
         if (getFullPath().equals(DEFAULT_CONTAINER) || getFullPath().equals(TEAM_DRIVES_FOLDER)) {
             metadata.setFileId("root");
             return metadata;
