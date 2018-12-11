@@ -400,7 +400,7 @@ public class GoogleAnalyticsQueryConfiguration {
         if (m_segment.matches("-[0-9]+")) {
             return "gaid::" + m_segment;
         } else {
-            return "dynamic::" + prependPrefixToFilters(m_segment);
+            return "sessions::condition::" + prependPrefixToFilters(m_segment);
         }
     }
 
