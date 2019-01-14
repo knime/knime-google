@@ -392,16 +392,12 @@ public class GoogleAnalyticsQueryConfiguration {
     /**
      * Returns the segment with prefix.
      *
-     * The prefix is 'gaid::' for default segments or 'dynamic::' for custom segments.
+     * The prefix is 'gaid::' for pre-defined segments.
      *
      * @return The segment with prefix
      */
     private String getSegmentWithPrefix() {
-        if (m_segment.matches("-[0-9]+")) {
-            return "gaid::" + m_segment;
-        } else {
-            return "sessions::condition::" + prependPrefixToFilters(m_segment);
-        }
+        return "gaid::" + m_segment;
     }
 
     /**
