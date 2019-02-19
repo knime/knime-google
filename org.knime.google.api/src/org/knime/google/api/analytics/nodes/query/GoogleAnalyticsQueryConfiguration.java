@@ -400,7 +400,8 @@ public class GoogleAnalyticsQueryConfiguration {
     /**
      * Returns the segment with prefix.
      *
-     * The prefix is 'gaid::' for pre-defined segments.
+     * The prefix is 'gaid::' for pre-defined and built-in segments or 'sessions::condition::' for dynamic segments.
+     * @param dynamic whether the segment is dynamic or built-in/pre-defined
      *
      * @return The segment with prefix
      */
