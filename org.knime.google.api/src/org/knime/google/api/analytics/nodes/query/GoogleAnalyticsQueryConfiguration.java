@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
 
 import com.google.api.services.analytics.Analytics.Data.Ga.Get;
+import com.google.api.services.analytics.model.Segment;
 
 /**
  * Configuration of the GoogleAnalyticsQuery node.
@@ -350,7 +351,14 @@ public class GoogleAnalyticsQueryConfiguration {
             get.setDimensions(StringUtils.join(dimensions, ","));
         }
         if (!m_segment.isEmpty()) {
-            get.setSegment(getSegmentWithPrefix());
+            boolean dynamic = true;
+            for (Segment item : connection.getAnalytics().management().segments().list().execute().getItems()) {
+                if (m_segment.equals(item.getId())) {
+                    dynamic = false;
+                    break;
+                }
+            }
+            get.setSegment(getSegmentWithPrefix(dynamic));
         }
         if (!m_filters.isEmpty()) {
             get.setFilters(prependPrefixToFilters(m_filters));
@@ -396,8 +404,12 @@ public class GoogleAnalyticsQueryConfiguration {
      *
      * @return The segment with prefix
      */
-    private String getSegmentWithPrefix() {
-        return "gaid::" + m_segment;
+    private String getSegmentWithPrefix(final boolean dynamic) {
+        if (!dynamic) {
+            return "gaid::" + m_segment;
+        } else {
+            return "sessions::condition::" + prependPrefixToFilters(m_segment);
+        }
     }
 
     /**
