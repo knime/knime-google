@@ -66,6 +66,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -75,6 +78,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -125,7 +129,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
 
     private DefaultListModel<String> m_metricsModel;
 
-    private JComboBox<String> m_segment;
+    private JComboBox<String> m_segmentPredefinedDropdown;
 
     private JTextField m_filters;
 
@@ -143,14 +147,22 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
 
     private JLabel m_warning;
 
+    private JTextField m_segmentDynamicTextField;
+
+    private JRadioButton m_segmentPredefinedButton;
+
+    private JRadioButton m_segmentDynamicButton;
+
     /**
      * Constructor creating the dialogs content.
      */
     public GoogleAnalyticsQueryDialog() {
         m_warning = new JLabel("Warning: Could not connect to the Google API");
         m_warning.setForeground(Color.RED);
-        m_segment = new JComboBox<String>(new DefaultComboBoxModel<String>());
-        m_segment.setEditable(true);
+        m_segmentPredefinedDropdown = new JComboBox<String>(new DefaultComboBoxModel<String>());
+        m_segmentDynamicTextField = new JTextField();
+        m_segmentPredefinedButton = new JRadioButton("Use predefined segment: ", true);
+        m_segmentDynamicButton = new JRadioButton("Use dynamic segment: ", false);
         m_filters = new JTextField();
         m_sort = new JTextField();
         m_startDate = new JSpinner(new SpinnerDateModel());
@@ -179,7 +191,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         gbc.gridy++;
         panel.add(new JLabel("Segment:"), gbc);
         gbc.gridy++;
-        panel.add(m_segment, gbc);
+        panel.add(createSegmentPanel(), gbc);
         gbc.gridy++;
         panel.add(new JLabel("Filters:"), gbc);
         gbc.gridy++;
@@ -205,6 +217,50 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         gbc.gridy++;
         panel.add(m_maxResults, gbc);
         addTab("Settings", panel);
+    }
+
+    /**
+     * @return the panel for segments, consisting of a dropdown and a textfield, which are toggle by radiobuttons
+     */
+    private JComponent createSegmentPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        JPanel predefinedSegmentPanel = new JPanel();
+        predefinedSegmentPanel.setLayout(new BoxLayout(predefinedSegmentPanel, BoxLayout.X_AXIS));
+        predefinedSegmentPanel.add(m_segmentPredefinedButton);
+        predefinedSegmentPanel.add(m_segmentPredefinedDropdown);
+        panel.add(predefinedSegmentPanel);
+
+        panel.add(Box.createVerticalStrut(10));
+
+        JPanel dynamicSegmentPanel = new JPanel();
+        dynamicSegmentPanel.setLayout(new BoxLayout(dynamicSegmentPanel, BoxLayout.X_AXIS));
+        dynamicSegmentPanel.add(m_segmentDynamicButton);
+        dynamicSegmentPanel.add(m_segmentDynamicTextField);
+        panel.add(dynamicSegmentPanel);
+
+        ButtonGroup segmentButtonGroup = new ButtonGroup();
+        segmentButtonGroup.add(m_segmentPredefinedButton);
+        segmentButtonGroup.add(m_segmentDynamicButton);
+
+        m_segmentPredefinedButton.addActionListener(e -> {
+            toggleSegment(true);
+        });
+        m_segmentDynamicButton.addActionListener(e -> {
+            toggleSegment(false);
+        });
+
+        return panel;
+    }
+
+    /**
+     * (De-)Activates the dropwdown and textfield for segment configuration. {@code predefined=true} deactivates the
+     * textfield and activates the dropwdown. {@code predefined=false} does the opposite.
+     */
+    private void toggleSegment(final boolean predefined) {
+        m_segmentPredefinedDropdown.setEnabled(predefined);
+        m_segmentDynamicTextField.setEnabled(!predefined);
     }
 
     /**
@@ -586,9 +642,9 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
             metrics[i] = m_metricsModel.getElementAt(i);
         }
         config.setMetrics(metrics);
-        String segment = m_segment.getEditor().getItem().toString();
-        if (m_segmentMap.containsKey(segment)) {
-            segment = m_segmentMap.get(segment);
+        String segment = m_segmentDynamicTextField.getText();
+        if (m_segmentPredefinedButton.isSelected()) {
+            segment = m_segmentMap.get(m_segmentPredefinedDropdown.getSelectedItem());
         }
         config.setSegment(segment);
         config.setFilters(m_filters.getText());
@@ -608,8 +664,9 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         GoogleAnalyticsQueryConfiguration config = new GoogleAnalyticsQueryConfiguration();
         config.loadInDialog(settings);
         String segment = config.getSegment();
+        boolean segmentIsPredefined = false;
         m_segmentMap = new TreeMap<String, String>();
-        ((DefaultComboBoxModel<String>)m_segment.getModel()).removeAllElements();
+        ((DefaultComboBoxModel<String>)m_segmentPredefinedDropdown.getModel()).removeAllElements();
         try {
             GoogleAnalyticsConnectionPortObjectSpec spec = (GoogleAnalyticsConnectionPortObjectSpec)specs[0];
             if (spec != null) {
@@ -617,9 +674,10 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
                 Segments segments = connection.getAnalytics().management().segments().list().execute();
                 for (Segment seg : segments.getItems()) {
                     m_segmentMap.put(seg.getName(), seg.getId());
-                    m_segment.addItem(seg.getName());
+                    m_segmentPredefinedDropdown.addItem(seg.getName());
                     if (segment.equals(seg.getId())) {
                         segment = seg.getName();
+                        segmentIsPredefined = true;
                     }
                 }
                 if (m_columns == null || !m_columns.getEtag().equals(getEtag(connection))) {
@@ -645,7 +703,16 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
         } catch (IOException e) {
             m_columnSelectionPanel.setVisible(false);
         }
-        m_segment.setSelectedItem(segment);
+        if(segmentIsPredefined) {
+            m_segmentPredefinedDropdown.setSelectedItem(segment);
+            m_segmentDynamicTextField.setText("");
+            m_segmentPredefinedButton.setSelected(true);
+            toggleSegment(true);
+        } else {
+            m_segmentDynamicTextField.setText(segment);
+            m_segmentDynamicButton.setSelected(true);
+            toggleSegment(false);
+        }
         m_dimensionsModel.removeAllElements();
         for (String dimension : config.getDimensions()) {
             m_dimensionsModel.addElement(dimension);

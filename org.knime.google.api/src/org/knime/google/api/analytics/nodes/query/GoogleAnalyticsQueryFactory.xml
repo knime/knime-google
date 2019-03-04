@@ -24,12 +24,17 @@
 			Specifies a subset of visits based on either an expression or a
 			filter. The subset of visits matched happens before dimensions and
 			metrics are calculated. You can either use the predefined
-			segmentations or define your own (for details see Filters).
+			segmentations or define your own (for details see <i>Filters</i> or
+			the <a href="https://developers.google.com/analytics/devguides/reporting/core/v3/segments">
+			Google Core Reporting API documentation</a>).<br />
+			<b>Note:</b> segmentations that are defined without a scope (e.g.
+			"source=~twitter") are interpreted to be <i>user conditions
+			("users::condition::ga:source=~twitter")</i>.
 			<br />
 			<br />
 			Example:
 			<br />
-			<i>source=~twitter</i>
+			<i>users::condition::ga:city==Konstanz</i>
 		</option>
 		<option name="Filters">
 			<i>(Optional)</i>

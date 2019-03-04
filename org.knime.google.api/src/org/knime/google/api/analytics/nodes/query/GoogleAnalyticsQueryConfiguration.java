@@ -408,9 +408,11 @@ public class GoogleAnalyticsQueryConfiguration {
     private String getSegmentWithPrefix(final boolean dynamic) {
         if (!dynamic) {
             return "gaid::" + m_segment;
-        } else {
-            return "sessions::condition::" + prependPrefixToFilters(m_segment);
         }
+        if (m_segment.contains("::")) {
+            return m_segment;
+        }
+        return "sessions::condition::" + prependPrefixToFilters(m_segment);
     }
 
     /**
