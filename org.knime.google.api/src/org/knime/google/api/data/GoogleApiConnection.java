@@ -48,23 +48,30 @@
 
 package org.knime.google.api.data;
 
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.google.api.data.GoogleApiConnection.ServiceAccountOAuthCredentials.CredentialsFileType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -81,6 +88,254 @@ import com.google.api.client.json.jackson2.JacksonFactory;
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public final class GoogleApiConnection {
+
+    /**
+     * Immutable OAuth client application information.
+     *
+     * @author Noemi Balassa
+     */
+    public static class OAuthClient {
+
+        private final String m_id;
+
+        private final String m_secret;
+
+        /**
+         * Constructs an {@link OAuthClient} object.
+         *
+         * @param details the credential details of a Google OAuth client.
+         */
+        public OAuthClient(final GoogleClientSecrets.Details details) {
+            m_id = requireNonNull(details, "details").getClientId();
+            m_secret = details.getClientSecret();
+        }
+
+        /**
+         * Gets the ID of the client application.
+         *
+         * @return the ID of the client application.
+         */
+        public String getId() {
+            return m_id;
+        }
+
+        /**
+         * Gets the client secret.
+         *
+         * @return the client secret.
+         */
+        public String getSecret() {
+            return m_secret;
+        }
+
+    }
+
+    /**
+     * Immutable OAuth credentials.
+     *
+     * @author Noemi Balassa
+     */
+    public interface OAuthCredentials {
+
+        /**
+         * The possible types of {@link OAuthCredentials} objects, which narrow the credentials a specific instance
+         * contains.
+         *
+         * @author Noemi Balassa
+         */
+        enum Type {
+                /**
+                 * No credentials, because the Application Default Credentials strategy is to be used.
+                 */
+                APPLICATION_DEFAULT("Application Default Credentials"),
+                /**
+                 * Credentials for service-based authentication.
+                 */
+                SERVICE_ACCOUNT("Service account"),
+                /**
+                 * Credentials for user-based authentication.
+                 */
+                USER_ACCOUNT("User account"),;
+
+            private final String m_descriptiveName;
+
+            Type(final String descriptiveName) {
+                m_descriptiveName = isBlank(descriptiveName) ? name() : descriptiveName;
+            }
+
+            @Override
+            public String toString() {
+                return m_descriptiveName;
+            }
+        }
+
+        /**
+         * Gets this object as a {@link ServiceAccountOAuthCredentials} if this object has the corresponding
+         * {@linkplain #getType() type}.
+         *
+         * @return {@linkplain Optional optionally} this object as {@link ServiceAccountOAuthCredentials} or
+         *         {@linkplain Optional#empty() empty}.
+         */
+        default Optional<ServiceAccountOAuthCredentials> asServiceAccountCredentials() {
+            return Optional.empty();
+        }
+
+        /**
+         * Gets this object as a {@link UserAccountOAuthCredentials} if this object has the corresponding
+         * {@linkplain #getType() type}.
+         *
+         * @return {@linkplain Optional optionally} this object as {@link UserAccountOAuthCredentials} or
+         *         {@linkplain Optional#empty() empty}.
+         */
+        default Optional<UserAccountOAuthCredentials> asUserAccountCredentials() {
+            return Optional.empty();
+        }
+
+        /**
+         * Gets the type of the contained OAuth credentials.
+         *
+         * @return a {@link Type} constant.
+         */
+        Type getType();
+
+    }
+
+    /**
+     * Immutable service account OAuth credentials.
+     *
+     * @author Noemi Balassa
+     */
+    public static class ServiceAccountOAuthCredentials implements OAuthCredentials {
+
+        /**
+         * The recognized types of credentials files.
+         *
+         * @author Noemi Balassa
+         */
+        public enum CredentialsFileType {
+                /**
+                 * JSON credentials file type.
+                 */
+                JSON,
+                /**
+                 * PKCS #12 credentials file type.
+                 */
+                P12,
+        }
+
+        private final Optional<ServiceAccountOAuthCredentials> m_optionalThis = Optional.of(this);
+
+        private final PrivateKey m_privateKey;
+
+        private final String m_privateKeyPath;
+
+        private final CredentialsFileType m_privateKeyType;
+
+        private final String m_serviceAccountEmail;
+
+        ServiceAccountOAuthCredentials(final PrivateKey privateKey, final String privateKeyPath,
+            final CredentialsFileType privateKeyType, final String serviceAccountEmail) {
+            m_privateKey = requireNonNull(privateKey, "privateKey");
+            m_privateKeyPath = requireNonNull(privateKeyPath, "privateKeyPath");
+            m_privateKeyType = requireNonNull(privateKeyType, "privateKeyType");
+            m_serviceAccountEmail = requireNonNull(serviceAccountEmail, "serviceAccountEmail");
+        }
+
+        @Override
+        public Optional<ServiceAccountOAuthCredentials> asServiceAccountCredentials() {
+            return m_optionalThis;
+        }
+
+        /**
+         * Gets the private key of the service account.
+         *
+         * @return a {@link PrivateKey} object.
+         */
+        public PrivateKey getPrivateKey() {
+            return m_privateKey;
+        }
+
+        /**
+         * Gets the path to the private key file.
+         *
+         * @return a file path string.
+         */
+        public String getPrivateKeyPath() {
+            return m_privateKeyPath;
+        }
+
+        /**
+         * Gets the type of the private key file.
+         *
+         * @return a {@link CredentialsFileType} constant.
+         */
+        public CredentialsFileType getPrivateKeyType() {
+            return m_privateKeyType;
+        }
+
+        /**
+         * Gets the service account email address.
+         *
+         * @return an email string.
+         */
+        public String getServiceAccountEmail() {
+            return m_serviceAccountEmail;
+        }
+
+        @Override
+        public Type getType() {
+            return Type.SERVICE_ACCOUNT;
+        }
+
+    }
+
+    /**
+     * Immutable user account OAuth credentials.
+     *
+     * @author Noemi Balassa
+     */
+    public static class UserAccountOAuthCredentials implements OAuthCredentials {
+
+        private final String m_accessToken;
+
+        private final Optional<UserAccountOAuthCredentials> m_optionalThis = Optional.of(this);
+
+        private final String m_refreshToken;
+
+        UserAccountOAuthCredentials(final String accessToken, final String refreshToken) {
+            m_accessToken = requireNonNull(accessToken, "accessToken");
+            m_refreshToken = requireNonNull(refreshToken, "refreshToken");
+        }
+
+        @Override
+        public Optional<UserAccountOAuthCredentials> asUserAccountCredentials() {
+            return m_optionalThis;
+        }
+
+        /**
+         * Gets the temporary access token.
+         *
+         * @return an access token string.
+         */
+        public String getAccessToken() {
+            return m_accessToken;
+        }
+
+        /**
+         * Gets the refresh token.
+         *
+         * @return a refresh token string.
+         */
+        public String getRefreshToken() {
+            return m_refreshToken;
+        }
+
+        @Override
+        public Type getType() {
+            return Type.USER_ACCOUNT;
+        }
+
+    }
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
@@ -100,21 +355,33 @@ public final class GoogleApiConnection {
 
     private static final String CFG_KNIME_SCOPES = "knimeScopes";
 
-    private Credential m_credential;
+    /**
+     * Gets the KNIME OAuth client application information.
+     *
+     * @return an {@link OAuthClient} object.
+     * @throws IOException if an I/O error occurs.
+     */
+    public static OAuthClient getOAuthClient() throws IOException {
+        return GoogleAuthentication.getOAuthClient();
+    }
 
-    private String m_serviceAccountEmail;
+    private final Credential m_credential;
 
-    private String m_keyFileLocation;
+    private final String m_serviceAccountEmail;
 
-    private GoogleAuthLocationType m_credentialLocationType;
+    private final String m_keyFileLocation;
 
-    private String m_credentialLocation;
+    private final GoogleAuthLocationType m_credentialLocationType;
 
-    private String m_storedCredential;
+    private final String m_credentialLocation;
 
-    private String[] m_scopes;
+    private final String m_storedCredential;
 
-    private List<KnimeGoogleAuthScope> m_knimeGoogleScopes;
+    private final String[] m_scopes;
+
+    private final List<KnimeGoogleAuthScope> m_knimeGoogleScopes;
+
+    private final Optional<OAuthCredentials> m_oAuthCredentials;
 
     /**
      * Creates a new {@link GoogleApiConnection}.
@@ -130,10 +397,17 @@ public final class GoogleApiConnection {
         m_serviceAccountEmail = serviceAccountEmail;
         m_keyFileLocation = keyFileLocation;
         m_scopes = scopes;
-        m_credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
-            .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
-            .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
+        final GoogleCredential credential =
+            new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
+                .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
+                .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
+        m_credential = credential;
         m_credentialLocationType = null;
+        m_oAuthCredentials = Optional.of(new ServiceAccountOAuthCredentials(credential.getServiceAccountPrivateKey(),
+            keyFileLocation, CredentialsFileType.P12, serviceAccountEmail));
+        m_credentialLocation = null;
+        m_storedCredential = null;
+        m_knimeGoogleScopes = null;
     }
 
     /**
@@ -146,17 +420,19 @@ public final class GoogleApiConnection {
      */
     public GoogleApiConnection(final GoogleAuthLocationType locationType, final String credentialLocation,
         final List<KnimeGoogleAuthScope> knimeGoogleScopes) throws IOException {
-        m_scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeGoogleScopes)
-            .toArray(new String[knimeGoogleScopes.size()]);
+        m_scopes =
+            KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeGoogleScopes).toArray(new String[knimeGoogleScopes.size()]);
         m_credentialLocationType = locationType;
         m_credentialLocation = credentialLocation;
-        if (m_credentialLocationType.equals(GoogleAuthLocationType.NODE)) {
-            m_storedCredential = GoogleAuthentication.getByteStringFromFile(credentialLocation);
-        }
+        m_storedCredential = m_credentialLocationType == GoogleAuthLocationType.NODE
+            ? GoogleAuthentication.getByteStringFromFile(credentialLocation) : null;
         m_knimeGoogleScopes = knimeGoogleScopes;
         m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
             m_knimeGoogleScopes);
-
+        m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
+            .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
+        m_keyFileLocation = null;
+        m_serviceAccountEmail = null;
     }
 
     /**
@@ -177,20 +453,29 @@ public final class GoogleApiConnection {
         m_keyFileLocation = keyFileLocation;
         m_scopes = scopes;
         m_credentialLocationType = locationType;
-        m_credentialLocation = credentialLocation;
         m_storedCredential = storedCredential;
         m_knimeGoogleScopes = knimeAuthScopes;
         if (locationType == null) {
-            m_credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
-                .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
-                .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
+            final GoogleCredential credential =
+                new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
+                    .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
+                    .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
+            m_credential = credential;
+            m_credentialLocation = credentialLocation;
+            m_oAuthCredentials =
+                Optional.of(new ServiceAccountOAuthCredentials(credential.getServiceAccountPrivateKey(),
+                    keyFileLocation, CredentialsFileType.P12, serviceAccountEmail));
         } else {
             if (m_credentialLocationType.equals(GoogleAuthLocationType.NODE)
-                && !(new File(m_credentialLocation).exists())) {
+                && !(new File(credentialLocation).exists())) {
                 m_credentialLocation = GoogleAuthentication.getTempCredentialPath(m_storedCredential);
+            } else {
+                m_credentialLocation = credentialLocation;
             }
             m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
                 m_knimeGoogleScopes);
+            m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
+                .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
         }
     }
 
@@ -209,9 +494,8 @@ public final class GoogleApiConnection {
                 ? GoogleAuthLocationType.valueOf(model.getString(CFG_CREDENTIAL_LOCATION_TYPE)) : null,
             model.getString(CFG_CREDENTIAL_LOCATION), model.getString(CFG_STORED_CREDENTIAL),
             model.getString(CFG_SERVICE_ACCOUNT_EMAIL), model.getString(CFG_KEY_FILE_LOCATION),
-            model.containsKey(CFG_KNIME_SCOPES) ?
-            KnimeGoogleAuthScopeRegistry.getInstance().getScopesFromString(
-                Arrays.asList(model.getStringArray(CFG_KNIME_SCOPES))) : null,
+            model.containsKey(CFG_KNIME_SCOPES) ? KnimeGoogleAuthScopeRegistry.getInstance()
+                .getScopesFromString(Arrays.asList(model.getStringArray(CFG_KNIME_SCOPES))) : null,
             model.getStringArray(CFG_SCOPES));
     }
 
@@ -234,6 +518,16 @@ public final class GoogleApiConnection {
      */
     public Credential getCredential() {
         return m_credential;
+    }
+
+    /**
+     * Gets the immutable OAuth credentials.
+     *
+     * @return {@linkplain Optional optionally} an {@link OAuthCredentials} object, or {@linkplain Optional#empty()
+     *         empty} if the credentials are not available.
+     */
+    public Optional<OAuthCredentials> getOAuthCredentials() {
+        return m_oAuthCredentials;
     }
 
     /**

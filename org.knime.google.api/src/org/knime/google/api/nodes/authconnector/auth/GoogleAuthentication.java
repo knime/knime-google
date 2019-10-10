@@ -60,6 +60,7 @@ import java.util.List;
 
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory;
+import org.knime.google.api.data.GoogleApiConnection.OAuthClient;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
@@ -93,6 +94,28 @@ public class GoogleAuthentication {
     private static final String CLIENT_SECRET = "knime_client_secret-ap_3_7_0.json";
 
     private static final String DEFAULT_KNIME_USER = "knimeGoogleUser";
+
+    private static volatile OAuthClient m_oAuthClient;
+
+    /**
+     * Gets the KNIME OAuth client application information.
+     *
+     * @return an {@link OAuthClient} object.
+     * @throws IOException if an I/O error occurs.
+     */
+    public static OAuthClient getOAuthClient() throws IOException {
+        OAuthClient client = m_oAuthClient;
+        if (client == null) {
+            synchronized (GoogleAuthentication.class) {
+                client = m_oAuthClient;
+                if (client == null) {
+                    client = new OAuthClient(loadClientSecrets().getDetails());
+                    m_oAuthClient = client;
+                }
+            }
+        }
+        return client;
+    }
 
     /**
      * If the user is already authenticated the corresponding credentials will be return, otherwise an authorization
@@ -133,7 +156,6 @@ public class GoogleAuthentication {
         return credential;
     }
 
-
     /**
      * Returns the {@link DataStoreFactory} corresponding to the given {@link GoogleAuthLocationType}.
      *
@@ -154,7 +176,8 @@ public class GoogleAuthentication {
                 break;
             case FILESYSTEM:
                 try {
-                    credentialDataStoreFactory = new FileDataStoreFactory(new File(FileUtil.resolveToPath(FileUtil.toURL(credentialPath)).toString()));
+                    credentialDataStoreFactory = new FileDataStoreFactory(
+                        new File(FileUtil.resolveToPath(FileUtil.toURL(credentialPath)).toString()));
                 } catch (InvalidPathException | URISyntaxException e) {
                     throw new IOException("Credential path could not be processed");
                 }
@@ -175,15 +198,11 @@ public class GoogleAuthentication {
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(
         final DataStoreFactory credentialDataStoreFactory, final List<KnimeGoogleAuthScope> knimeScopes)
         throws IOException {
-        try (final InputStream in = GoogleAuthentication.class.getResourceAsStream(CLIENT_SECRET)) {
-            KnimeGoogleAuthScopeRegistry.getInstance();
-            final List<String> scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeScopes);
-            final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-            return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, scopes)
-                .setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
-        } catch (IOException e) {
-            throw e;
-        }
+        final GoogleClientSecrets clientSecrets = loadClientSecrets();
+        KnimeGoogleAuthScopeRegistry.getInstance();
+        final List<String> scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeScopes);
+        return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, scopes)
+            .setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
     }
 
     /**
@@ -235,6 +254,12 @@ public class GoogleAuthentication {
     public static String getByteStringFromFile(final String tempfolder) throws IOException {
         return Base64.getEncoder()
             .encodeToString(Files.readAllBytes(new File(tempfolder, StoredCredential.DEFAULT_DATA_STORE_ID).toPath()));
+    }
+
+    private static GoogleClientSecrets loadClientSecrets() throws IOException {
+        try (final InputStream in = GoogleAuthentication.class.getResourceAsStream(CLIENT_SECRET)) {
+            return GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+        }
     }
 
 }
