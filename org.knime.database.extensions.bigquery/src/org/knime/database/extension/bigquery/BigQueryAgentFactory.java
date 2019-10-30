@@ -40,14 +40,54 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  */
 package org.knime.database.extension.bigquery;
 
+import org.knime.database.agent.AbstractDBAgentFactory;
+import org.knime.database.agent.DBAgentFactory;
+import org.knime.database.agent.loader.DBLoader;
+import org.knime.database.agent.sampling.DBSampling;
+import org.knime.database.agent.sampling.impl.DefaultDBSampling;
+import org.knime.database.agent.writer.DBWriter;
+import org.knime.database.agent.writer.impl.DefaultDBWriter;
+import org.knime.database.attribute.AttributeCollection;
+import org.knime.database.attribute.AttributeCollection.Accessibility;
+import org.knime.database.extension.bigquery.agent.BigQueryDBLoader;
+import org.knime.database.extension.bigquery.agent.BigQueryDBSampling;
+
 /**
- * This is class doesn't do anything.
+ * {@linkplain DBAgentFactory Agent factory} for the Google BigQuery database.
  *
- * @author Max Mustermann
+ * @author Noemi Balassa
  */
-public class Template {
+public class BigQueryAgentFactory extends AbstractDBAgentFactory {
+
+    private static final AttributeCollection SAMPLING_ATTRIBUTES;
+
+    static {
+        final AttributeCollection.Builder builder = AttributeCollection.builder(DefaultDBSampling.ATTRIBUTES);
+        builder.add(Accessibility.READ_ONLY, DefaultDBSampling.ATTRIBUTE_CAPABILITY_RANDOM, true);
+        SAMPLING_ATTRIBUTES = builder.build();
+    }
+
+    private static final AttributeCollection WRITER_ATTRIBUTES;
+
+    static {
+        final AttributeCollection.Builder builder = AttributeCollection.builder(DefaultDBWriter.ATTRIBUTES);
+        builder.add(Accessibility.HIDDEN, DefaultDBWriter.ATTRIBUTE_BATCH_PROCESSING_ENABLED, false);
+        WRITER_ATTRIBUTES = builder.build();
+    }
+
+    /**
+     * Constructs a {@link BigQueryAgentFactory}.
+     */
+    public BigQueryAgentFactory() {
+        putCreator(DBLoader.class, parameters -> new BigQueryDBLoader(parameters.getSessionReference()));
+        putAttributes(DBSampling.class, SAMPLING_ATTRIBUTES);
+        putCreator(DBSampling.class, parameters -> new BigQueryDBSampling(parameters.getSessionReference()));
+        putAttributes(DBWriter.class, WRITER_ATTRIBUTES);
+        putCreator(DBWriter.class, parameters -> new DefaultDBWriter(parameters.getSessionReference()));
+    }
+
 }
