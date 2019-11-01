@@ -1,0 +1,39 @@
+This plug-in makes use of the libraries listed below. The license of the different libraries and the link to it can be found in the following list and in the corresponding LICENSE.txt file in this directory. The libraries have been downloaded via Maven using the description at https://cloud.google.com/bigquery/docs/reference/libraries
+
+animal-sniffer-annotations-1.17									MIT											http://www.opensource.org/licenses/mit-license.php
+api-common-1.8.1												BSD 3-clause								https://github.com/googleapis/api-common-java/blob/master/LICENSE
+auto-value-annotations-1.6.6									Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+checker-compat-qual-2.5.5										MIT											hhttp://www.opensource.org/licenses/mit-license.php
+commons-codec-1.11												Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+error_prone_annotations-2.3.2									Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+failureaccess-1.0.1												Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+gax-1.48.1														BSD 3-clause								https://github.com/googleapis/gax-java/blob/master/LICENSE
+gax-httpjson-0.65.1												BSD 3-clause								https://github.com/googleapis/gax-java/blob/master/LICENSE
+google-api-client-1.30.2										Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-api-services-bigquery-v2-rev20190907-1.30.3				Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-auth-library-credentials-0.17.1							BSD 3-clause								hhttp://opensource.org/licenses/BSD-3-Clause
+google-auth-library-oauth2-http-0.17.1							BSD 3-clause								hhttp://opensource.org/licenses/BSD-3-Clause
+google-cloud-bigquery-1.96.0									Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-cloud-core-1.90.0										Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-cloud-core-http-1.90.0									Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-http-client-1.31.0										Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-http-client-appengine-1.31.0								Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-http-client-jackson2-1.31.0								Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+google-oauth-client-1.30.1										Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+grpc-context-1.19.0												Apache License, Version 2.0					https://opensource.org/licenses/Apache-2.0
+gson-2.7														Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+guava-28.0-android												Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+httpclient-4.5.9												Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+httpcore-4.4.11													Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+j2objc-annotations-1.3											Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+jackson-core-2.9.9												Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+javax.annotation-api-1.3.2										CDDL + GPLv2 with classpath exception		https://github.com/javaee/javax.annotation/blob/master/LICENSE
+jsr305-3.0.2													Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+listenablefuture-9999.0-empty-to-avoid-conflict-with-guava		Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+opencensus-api-0.23.0											Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+opencensus-contrib-http-util-0.21.0								Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+proto-google-common-protos-1.16.0								Apache License, Version 2.0					https://github.com/googleapis/common-protos-java/blob/master/LICENSE
+proto-google-iam-v1-0.12.0										Apache License, Version 2.0					https://www.apache.org/licenses/LICENSE-2.0.txt
+protobuf-java-3.9.1												BSD 3-clause								https://opensource.org/licenses/BSD-3-Clause
+protobuf-java-util-3.9.1										BSD 3-clause								https://opensource.org/licenses/BSD-3-Clause
+threetenbp-1.3.3												BSD 3-clause								https://raw.githubusercontent.com/ThreeTen/threetenbp/master/LICENSE.txt

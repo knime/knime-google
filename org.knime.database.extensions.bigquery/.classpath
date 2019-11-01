@@ -8,7 +8,6 @@
 	<classpathentry kind="lib" path="lib/bigquery/auto-value-annotations-1.6.6.jar"/>
 	<classpathentry kind="lib" path="lib/bigquery/checker-compat-qual-2.5.5.jar"/>
 	<classpathentry kind="lib" path="lib/bigquery/commons-codec-1.11.jar"/>
-	<classpathentry kind="lib" path="lib/bigquery/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/bigquery/error_prone_annotations-2.3.2.jar"/>
 	<classpathentry kind="lib" path="lib/bigquery/failureaccess-1.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/bigquery/gax-1.48.1.jar"/>
