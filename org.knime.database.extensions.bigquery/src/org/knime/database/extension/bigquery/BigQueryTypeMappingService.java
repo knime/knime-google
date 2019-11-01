@@ -50,6 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.blob.BinaryObjectDataCell;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
@@ -77,6 +78,7 @@ public final class BigQueryTypeMappingService
     private BigQueryTypeMappingService() {
         super(BigQuerySource.class, BigQueryDestination.class);
         final Map<DataType, SQLType> consumptionMap = new LinkedHashMap<>(getDefaultConsumptionMap());
+        consumptionMap.put(BinaryObjectDataCell.TYPE, JDBCType.VARBINARY);
         consumptionMap.put(BooleanCell.TYPE, JDBCType.BOOLEAN);
         consumptionMap.put(IntCell.TYPE, JDBCType.BIGINT);
         consumptionMap.put(ZonedDateTimeCellFactory.TYPE, JDBCType.VARCHAR);
@@ -86,6 +88,7 @@ public final class BigQueryTypeMappingService
         addColumnType(JDBCType.BOOLEAN, "bool");
         addColumnType(JDBCType.DOUBLE, "float64");
         addColumnType(JDBCType.INTEGER, "int64");
+        addColumnType(JDBCType.VARBINARY, "bytes");
         addColumnType(JDBCType.VARCHAR, "string");
     }
 
