@@ -6,13 +6,16 @@ Bundle-Version: 4.1.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.database.extension.bigquery
 Require-Bundle: org.knime.base;bundle-version="[4.0.0,5.0.0)",
+ org.knime.base.filehandling;bundle-version="[4.0.0,5.0.0)",
  org.knime.core;bundle-version="[4.0.0,5.0.0)",
+ org.knime.bigdata.fileformats;bundle-version="[4.1.0,5.0.0)",
  org.knime.database;bundle-version="[4.1.0,5.0.0)",
  org.knime.database.nodes;bundle-version="[4.1.0,5.0.0)",
  org.knime.google.api;bundle-version="[4.1.0,5.0.0)",
  org.knime.time;bundle-version="[4.0.0,5.0.0)",
  org.apache.commons.lang3;bundle-version="[3.3.1,4.0.0)",
- org.apache.commons.logging;bundle-version="1.2.0"
+ org.apache.commons.logging;bundle-version="1.2.0",
+ org.apache.parquet;bundle-version="[1.9.0,2.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/bigquery/animal-sniffer-annotations-1.17.jar,

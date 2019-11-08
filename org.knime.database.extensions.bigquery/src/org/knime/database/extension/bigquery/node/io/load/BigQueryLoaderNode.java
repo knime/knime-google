@@ -46,22 +46,67 @@ package org.knime.database.extension.bigquery.node.io.load;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.delete;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static org.knime.base.filehandling.remote.files.RemoteFileFactory.createRemoteFile;
+import static org.knime.core.util.FileUtil.createTempFile;
+import static org.knime.database.util.CsvFiles.writeCsv;
+import static org.knime.datatype.mapping.DataTypeMappingDirection.EXTERNAL_TO_KNIME;
+import static org.knime.datatype.mapping.DataTypeMappingDirection.KNIME_TO_EXTERNAL;
 
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.knime.base.node.io.csvwriter.FileWriterSettings;
+import org.knime.bigdata.fileformats.parquet.datatype.mapping.ParquetType;
+import org.knime.bigdata.fileformats.parquet.datatype.mapping.ParquetTypeMappingService;
+import org.knime.bigdata.fileformats.parquet.writer.ParquetKNIMEWriter;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.database.DBTableSpec;
+import org.knime.database.agent.loader.DBLoadTableFromFileParameters;
+import org.knime.database.agent.loader.DBLoader;
+import org.knime.database.agent.metadata.DBMetadataReader;
+import org.knime.database.datatype.mapping.DBTypeMappingRegistry;
+import org.knime.database.extension.bigquery.agent.BigQueryLoaderFileFormat;
+import org.knime.database.extension.bigquery.agent.BigQueryLoaderSettings;
+import org.knime.database.model.DBColumn;
+import org.knime.database.model.DBTable;
+import org.knime.database.node.component.PreferredHeightPanel;
 import org.knime.database.node.io.load.impl.UnconnectedCsvLoaderNode;
 import org.knime.database.node.io.load.impl.UnconnectedCsvLoaderNodeComponents;
 import org.knime.database.node.io.load.impl.UnconnectedCsvLoaderNodeSettings;
 import org.knime.database.port.DBDataPortObject;
 import org.knime.database.port.DBDataPortObjectSpec;
+import org.knime.database.port.DBSessionPortObject;
 import org.knime.database.port.DBSessionPortObjectSpec;
+import org.knime.database.session.DBSession;
+import org.knime.datatype.mapping.DataTypeMappingConfiguration;
 
 /**
  * Implementation of the loader node for the Google BigQuery database.
@@ -69,7 +114,111 @@ import org.knime.database.port.DBSessionPortObjectSpec;
  * @author Noemi Balassa
  */
 public class BigQueryLoaderNode extends UnconnectedCsvLoaderNode {
+    private static final Map<String, ParquetType> BIG_QUERY_SQL_TO_PARQUET_TYPE_MAPPING;
+    static {
+        final Map<String, ParquetType> map = new HashMap<String, ParquetType>();
+        map.put("BOOLEAN", new ParquetType(PrimitiveTypeName.BOOLEAN));
+        map.put("INT64", new ParquetType(PrimitiveTypeName.INT64));
+        map.put("NUMERIC", new ParquetType(PrimitiveTypeName.INT64, OriginalType.DECIMAL));
+        map.put("DATE", new ParquetType(PrimitiveTypeName.INT32, OriginalType.DATE));
+        map.put("DATETIME", new ParquetType(PrimitiveTypeName.INT32, OriginalType.DATE));
+        map.put("TIMESTAMP", new ParquetType(PrimitiveTypeName.INT96));
+        map.put("FLOAT64", new ParquetType(PrimitiveTypeName.DOUBLE));
+        map.put("BYTES", new ParquetType(PrimitiveTypeName.BINARY));
+        map.put("STRING", new ParquetType(PrimitiveTypeName.BINARY, OriginalType.UTF8));
+        BIG_QUERY_SQL_TO_PARQUET_TYPE_MAPPING = unmodifiableMap(map);
+    }
+
     private static final List<Charset> CHARSETS = unmodifiableList(asList(UTF_8, ISO_8859_1));
+
+    private static Box createBox(final boolean horizontal) {
+        final Box box;
+        if (horizontal) {
+            box = new Box(BoxLayout.X_AXIS);
+        } else {
+            box = new Box(BoxLayout.Y_AXIS);
+        }
+        return box;
+    }
+
+    private static JPanel createPanel() {
+        final JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        return panel;
+    }
+
+    private static void onFileFormatSelectionChange(final BigQueryLoaderNodeComponents components) {
+        final Optional<BigQueryLoaderFileFormat> optionalFileFormat =
+            BigQueryLoaderFileFormat.optionalValueOf(components.getFileFormatSelectionModel().getStringValue());
+        components.getFileFormatModel()
+            .setEnabled(optionalFileFormat.isPresent() && optionalFileFormat.get() == BigQueryLoaderFileFormat.CSV);
+    }
+
+    private static void writeParquet(final RowInput rowInput, final Path file, final DBTable table,
+        final DBSession session, final ExecutionMonitor executionMonitor) throws Exception {
+        executionMonitor.checkCanceled();
+        final DataTableSpec inputTableSpec = rowInput.getDataTableSpec();
+        try (ParquetKNIMEWriter writer = new ParquetKNIMEWriter(createRemoteFile(file.toUri(), null, null),
+            inputTableSpec, CompressionCodecName.UNCOMPRESSED.name(), -1,
+            createParquetTypeMappingConfiguration(inputTableSpec, table, session, executionMonitor))) {
+            for (DataRow row = rowInput.poll(); row != null; row = rowInput.poll()) {
+                writer.writeRow(row);
+            }
+        }
+        executionMonitor.setProgress(.2, "Temporary Parquet file has been written.");
+    }
+
+    private static DataTypeMappingConfiguration<ParquetType> createParquetTypeMappingConfiguration(
+        final DataTableSpec inputTableSpec, final DBTable targetTable, final DBSession session,
+        final ExecutionMonitor executionMonitor) throws CanceledExecutionException, SQLException {
+        final DBTableSpec targetTableSpec =
+            session.getAgent(DBMetadataReader.class).getDBTableSpec(executionMonitor, targetTable);
+        final ParquetTypeMappingService typeMappingService = ParquetTypeMappingService.getInstance();
+        final DataTypeMappingConfiguration<ParquetType> result =
+            typeMappingService.createMappingConfiguration(KNIME_TO_EXTERNAL);
+        int columnIndex = 0;
+        for (final DBColumn column : targetTableSpec) {
+            final String targetColumnTypeName = column.getColumnTypeName();
+            final ParquetType parquetType = BIG_QUERY_SQL_TO_PARQUET_TYPE_MAPPING.get(targetColumnTypeName);
+            if (parquetType == null) {
+                throw new SQLException(
+                    "Parquet type could not be found for the database type: " + targetColumnTypeName);
+            }
+            final DataType inputColumnType = inputTableSpec.getColumnSpec(columnIndex++).getType();
+            result.addRule(inputColumnType,
+                typeMappingService.getConsumptionPathsFor(inputColumnType).stream()
+                    .filter(path -> path.getConsumerFactory().getDestinationType().equals(parquetType)).findFirst()
+                    .orElseThrow(() -> new SQLException("Consumption path could not be found from " + inputColumnType
+                        + " through " + parquetType + " to " + targetColumnTypeName + '.')));
+        }
+        return result;
+    }
+
+    @Override
+    protected void buildDialog(final DialogBuilder builder, final List<DialogComponent> dialogComponents,
+        final UnconnectedCsvLoaderNodeComponents customComponents) {
+        final BigQueryLoaderNodeComponents bigQueryCustomComponents = (BigQueryLoaderNodeComponents)customComponents;
+        final JPanel optionsPanel = createPanel();
+        final Box optionsBox = createBox(false);
+        optionsPanel.add(optionsBox);
+        final JPanel tableNameComponentPanel = new PreferredHeightPanel();
+        tableNameComponentPanel.add(bigQueryCustomComponents.getTableNameComponent().getComponentPanel());
+        optionsBox.add(tableNameComponentPanel);
+        optionsBox.add(Box.createVerticalStrut(0));
+        final JPanel fileFormatSelectionComponentPanel = new PreferredHeightPanel();
+        fileFormatSelectionComponentPanel
+            .add(bigQueryCustomComponents.getFileFormatSelectionComponent().getComponentPanel());
+        optionsBox.add(fileFormatSelectionComponentPanel);
+        optionsBox.add(Box.createVerticalGlue());
+        builder.addTab(Integer.MAX_VALUE, "Options", optionsPanel, true);
+        final JPanel advancedPanel = createPanel();
+        final Box advancedBox = createBox(false);
+        advancedPanel.add(advancedBox);
+        advancedBox.add(bigQueryCustomComponents.getFileFormatComponent().getComponentPanel());
+        builder.addTab(Integer.MAX_VALUE, "Advanced", advancedPanel, true);
+        bigQueryCustomComponents.getFileFormatSelectionModel()
+            .addChangeListener(event -> onFileFormatSelectionChange(bigQueryCustomComponents));
+    }
 
     @Override
     protected DBDataPortObjectSpec configureModel(final PortObjectSpec[] inSpecs,
@@ -82,15 +231,77 @@ public class BigQueryLoaderNode extends UnconnectedCsvLoaderNode {
     }
 
     @Override
-    protected UnconnectedCsvLoaderNodeComponents createCustomDialogComponents(final DialogDelegate dialogDelegate) {
-        return new UnconnectedCsvLoaderNodeComponents(dialogDelegate, CHARSETS);
+    protected BigQueryLoaderNodeComponents createCustomDialogComponents(final DialogDelegate dialogDelegate) {
+        return new BigQueryLoaderNodeComponents(dialogDelegate, CHARSETS);
+    }
+
+    @Override
+    protected BigQueryLoaderNodeSettings createCustomModelSettings(final ModelDelegate modelDelegate) {
+        return new BigQueryLoaderNodeSettings(modelDelegate);
+    }
+
+    @Override
+    protected List<DialogComponent> createDialogComponents(final UnconnectedCsvLoaderNodeComponents customComponents) {
+        return asList(customComponents.getTableNameComponent(),
+            ((BigQueryLoaderNodeComponents)customComponents).getFileFormatSelectionComponent(),
+            customComponents.getFileFormatComponent());
+    }
+
+    @Override
+    protected List<SettingsModel> createSettingsModels(final UnconnectedCsvLoaderNodeSettings customSettings) {
+        return asList(customSettings.getTableNameModel(),
+            ((BigQueryLoaderNodeSettings)customSettings).getFileFormatSelectionModel(),
+            customSettings.getFileFormatModel());
     }
 
     @Override
     protected DBDataPortObject load(final ExecutionParameters<UnconnectedCsvLoaderNodeSettings> parameters)
         throws Exception {
-        validateColumns(false, parameters.getExecutionContext(), parameters.getRowInput().getDataTableSpec(),
-            parameters.getSessionPortObject(), parameters.getCustomSettings().getTableNameModel().toDBTable());
-        return super.load(parameters);
+        final BigQueryLoaderNodeSettings customSettings = (BigQueryLoaderNodeSettings)parameters.getCustomSettings();
+        final BigQueryLoaderFileFormat fileFormat =
+            BigQueryLoaderFileFormat.optionalValueOf(customSettings.getFileFormatSelectionModel().getStringValue())
+                .orElseThrow(() -> new InvalidSettingsException("No file format is selected."));
+        final ExecutionContext executionContext = parameters.getExecutionContext();
+        final DBSessionPortObject sessionPortObject = parameters.getSessionPortObject();
+        final DBTable table = customSettings.getTableNameModel().toDBTable();
+        validateColumns(false, executionContext, parameters.getRowInput().getDataTableSpec(), sessionPortObject, table);
+        final DBSession session = sessionPortObject.getDBSession();
+        // Create and write to the temporary file
+        final Path temporaryFile = createTempFile("knime2db", fileFormat.getFileExtension()).toPath();
+        try (AutoCloseable temporaryFileDeleter = () -> delete(temporaryFile)) {
+            final BigQueryLoaderSettings additionalSettings;
+            switch (fileFormat) {
+                case CSV:
+                    final FileWriterSettings fileWriterSettings =
+                        customSettings.getFileFormatModel().getFileWriterSettings();
+                    writeCsv(parameters.getRowInput(), temporaryFile, fileWriterSettings, executionContext);
+                    additionalSettings = new BigQueryLoaderSettings(fileFormat, fileWriterSettings);
+                    break;
+                case PARQUET:
+                    writeParquet(parameters.getRowInput(), temporaryFile, table, session, executionContext);
+                    additionalSettings = new BigQueryLoaderSettings(fileFormat, null);
+                    break;
+                default:
+                    throw new InvalidSettingsException("Unknown file format: " + fileFormat);
+            }
+            // Load the data
+            session.getAgent(DBLoader.class).load(executionContext,
+                new DBLoadTableFromFileParameters<>(null, temporaryFile.toString(), table, additionalSettings));
+        }
+        // Output
+        return new DBDataPortObject(sessionPortObject,
+            session.getAgent(DBMetadataReader.class).getDBDataObject(executionContext, table.getSchemaName(),
+                table.getName(),
+                sessionPortObject.getExternalToKnimeTypeMapping().resolve(
+                    DBTypeMappingRegistry.getInstance().getDBTypeMappingService(session.getDBType()),
+                    EXTERNAL_TO_KNIME)));
+    }
+
+    @Override
+    protected void loadDialogSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs,
+        final List<DialogComponent> dialogComponents, final UnconnectedCsvLoaderNodeComponents customComponents)
+        throws NotConfigurableException {
+        super.loadDialogSettingsFrom(settings, specs, dialogComponents, customComponents);
+        onFileFormatSelectionChange((BigQueryLoaderNodeComponents)customComponents);
     }
 }

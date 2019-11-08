@@ -63,6 +63,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.database.VariableContext;
 import org.knime.database.attribute.AttributeValueRepository;
 import org.knime.database.connection.UrlDBConnectionController;
+import org.knime.database.extension.bigquery.BigQueryProject;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.data.GoogleApiConnection.OAuthClient;
 import org.knime.google.api.data.GoogleApiConnection.OAuthCredentials;
@@ -87,6 +88,8 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
     private static final String CFG_OAUTH = "OAuth";
 
     private static final String CFG_OAUTH_TYPE = "oAuthType";
+
+    private static final String CFG_PROJECT_ID = "projectId";
 
     private static final String CFG_REFRESH_TOKEN = "refreshToken";
 
@@ -143,15 +146,26 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         return string == null ? "" : string;
     }
 
+    private volatile Optional<? extends Credentials> m_credentials = Optional.empty();
+
     private final String m_keyPath;
 
     private final String m_oAuthType;
 
+    private volatile Optional<? extends BigQueryProject> m_project = Optional.empty();
+
+    private final Optional<? extends BigQueryProject> m_projectDelegate = Optional.of(new BigQueryProject() {
+        @Override
+        public String getId() {
+            return m_projectId;
+        }
+    });
+
+    private final String m_projectId;
+
     private final String m_refreshToken;
 
     private final String m_serviceAccountId;
-
-    private volatile Optional<? extends Credentials> m_credentials = Optional.empty();
 
     /**
      * Constructs a {@link GoogleOAuthDBConnectionController} object.
@@ -164,6 +178,7 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         final NodeSettingsRO oAuthSettings = internalSettings.getNodeSettings(CFG_OAUTH);
         m_keyPath = oAuthSettings.getString(CFG_KEY_PATH, null);
         m_oAuthType = oAuthSettings.getString(CFG_OAUTH_TYPE, null);
+        m_projectId = oAuthSettings.getString(CFG_PROJECT_ID, null);
         m_refreshToken = oAuthSettings.getString(CFG_REFRESH_TOKEN, null);
         m_serviceAccountId = oAuthSettings.getString(CFG_SERVICE_ACCOUNT_ID, null);
     }
@@ -172,13 +187,15 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
      * Constructs an {@link GoogleOAuthDBConnectionController} object.
      *
      * @param jdbcUrl the database connection URL as a {@link String}.
+     * @param projectId the project ID.
      * @param googleApiConnection the Google API connection.
      * @throws NullPointerException if {@code jdbcUrl} is {@code null}.
      * @throws InvalidSettingsException if the received settings are not valid.
      */
-    public GoogleOAuthDBConnectionController(final String jdbcUrl, final GoogleApiConnection googleApiConnection)
-        throws InvalidSettingsException {
+    public GoogleOAuthDBConnectionController(final String jdbcUrl, final String projectId,
+        final GoogleApiConnection googleApiConnection) throws InvalidSettingsException {
         super(jdbcUrl);
+        m_projectId = requireNonNull(projectId, "projectId");
         if (googleApiConnection == null) {
             m_keyPath = null;
             m_oAuthType = OAUTH_TYPE_APPLICATION_DEFAULT_CREDENTIALS;
@@ -224,8 +241,8 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
     @Override
     @SuppressWarnings("unchecked") // Checked at run time.
     public <T> Optional<T> getController(final Class<? extends T> controllerType) {
-        return requireNonNull(controllerType, "controllerType").isAssignableFrom(Credentials.class)
-            ? (Optional<T>)m_credentials : Optional.empty();
+        return requireNonNull(controllerType, "controllerType") == BigQueryProject.class ? (Optional<T>)m_project
+            : controllerType == Credentials.class ? (Optional<T>)m_credentials : Optional.empty();
     }
 
     @Override
@@ -234,6 +251,7 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         final NodeSettingsWO oAuthSettings = settings.addNodeSettings(CFG_OAUTH);
         addNonNull(oAuthSettings, CFG_KEY_PATH, m_keyPath);
         addNonNull(oAuthSettings, CFG_OAUTH_TYPE, m_oAuthType);
+        addNonNull(oAuthSettings, CFG_PROJECT_ID, m_projectId);
         addNonNull(oAuthSettings, CFG_REFRESH_TOKEN, m_refreshToken);
         addNonNull(oAuthSettings, CFG_SERVICE_ACCOUNT_ID, m_serviceAccountId);
     }
@@ -242,6 +260,11 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
     protected Properties prepareJdbcProperties(final AttributeValueRepository attributeValues,
         final VariableContext variableContext, final ExecutionMonitor monitor)
         throws CanceledExecutionException, SQLException {
+        if (m_projectId == null) {
+            m_project = Optional.empty();
+            throw new SQLException("Project ID is not available.");
+        }
+        m_project = m_projectDelegate;
         final Properties jdbcProperties =
             getDerivableJdbcProperties(attributeValues).getDerivedProperties(variableContext);
         final String userOAuthType = jdbcProperties.getProperty(JDBC_PROPERTY_KEY_OAUTH_TYPE);

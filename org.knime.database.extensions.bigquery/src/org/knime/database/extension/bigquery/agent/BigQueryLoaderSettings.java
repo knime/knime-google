@@ -42,52 +42,54 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.database.extension.bigquery.node.connector;
+package org.knime.database.extension.bigquery.agent;
 
-import java.util.List;
+import static java.util.Objects.requireNonNull;
 
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.database.connection.DBConnectionController;
-import org.knime.database.extension.bigquery.connection.GoogleOAuthDBConnectionController;
-import org.knime.database.node.connector.server.UnauthenticatedServerDBConnectorNodeModel;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
+import java.util.Optional;
+
+import org.knime.base.node.io.csvwriter.FileWriterSettings;
 
 /**
- * Node model for the <em>Google BigQuery Connector</em> node.
+ * Additional settings for {@link BigQueryDBLoader}.
  *
  * @author Noemi Balassa
  */
-public class BigQueryDBConnectorNodeModel
-    extends UnauthenticatedServerDBConnectorNodeModel<BigQueryDBConnectorSettings> {
+public class BigQueryLoaderSettings {
 
-    private static final PortType[] INPUT_PORT_TYPES =
-        {PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class, true)};
+    private final BigQueryLoaderFileFormat m_fileFormat;
+
+    private final Optional<FileWriterSettings> m_fileWriterSettings;
 
     /**
-     * Constructs a {@link BigQueryDBConnectorNodeModel} object.
+     * Constructs a {@link BigQueryLoaderSettings} object.
+     *
+     * @param fileFormat the selected intermediate file format.
+     * @param fileWriterSettings the optional file writer settings.
      */
-    public BigQueryDBConnectorNodeModel() {
-        super(new BigQueryDBConnectorSettings(), INPUT_PORT_TYPES);
+    public BigQueryLoaderSettings(final BigQueryLoaderFileFormat fileFormat,
+        final FileWriterSettings fileWriterSettings) {
+        m_fileFormat = requireNonNull(fileFormat, "fileFormat");
+        m_fileWriterSettings = Optional.ofNullable(fileWriterSettings);
     }
 
-    @Override
-    protected DBConnectionController createConnectionController(final List<PortObject> inObjects,
-        final BigQueryDBConnectorSettings sessionSettings, final ExecutionMonitor monitor)
-        throws InvalidSettingsException {
-        final PortObject inObject = inObjects.get(0);
-        return new GoogleOAuthDBConnectionController(sessionSettings.getDBUrl(), sessionSettings.getDatabaseName(),
-            inObject == null ? null : ((GoogleApiConnectionPortObject)inObject).getGoogleApiConnection());
+    /**
+     * Gets the selected intermediate file format.
+     *
+     * @return a {@link BigQueryLoaderFileFormat} constant.
+     */
+    public BigQueryLoaderFileFormat getFileFormat() {
+        return m_fileFormat;
     }
 
-    @Override
-    protected DBConnectionController createConnectionController(final NodeSettingsRO internalSettings)
-        throws InvalidSettingsException {
-        return new GoogleOAuthDBConnectionController(internalSettings);
+    /**
+     * Gets the optional file writer settings.
+     *
+     * @return {@linkplain Optional optionally} the {@link FileWriterSettings} object or {@linkplain Optional#empty()
+     *         empty}.
+     */
+    public Optional<FileWriterSettings> getFileWriterSettings() {
+        return m_fileWriterSettings;
     }
 
 }

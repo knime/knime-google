@@ -42,52 +42,48 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.database.extension.bigquery.node.connector;
+package org.knime.database.extension.bigquery.node.io.load;
 
-import java.util.List;
-
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.database.connection.DBConnectionController;
-import org.knime.database.extension.bigquery.connection.GoogleOAuthDBConnectionController;
-import org.knime.database.node.connector.server.UnauthenticatedServerDBConnectorNodeModel;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.database.extension.bigquery.agent.BigQueryLoaderFileFormat;
+import org.knime.database.node.io.load.DBLoaderNode.ModelDelegate;
+import org.knime.database.node.io.load.impl.UnconnectedCsvLoaderNodeSettings;
 
 /**
- * Node model for the <em>Google BigQuery Connector</em> node.
+ * Node model settings for {@link BigQueryLoaderNode}.
  *
  * @author Noemi Balassa
  */
-public class BigQueryDBConnectorNodeModel
-    extends UnauthenticatedServerDBConnectorNodeModel<BigQueryDBConnectorSettings> {
+public class BigQueryLoaderNodeSettings extends UnconnectedCsvLoaderNodeSettings {
 
-    private static final PortType[] INPUT_PORT_TYPES =
-        {PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class, true)};
+    private final SettingsModelString m_fileFormatSelectionModel;
 
     /**
-     * Constructs a {@link BigQueryDBConnectorNodeModel} object.
+     * Constructs a {@link BigQueryLoaderNodeSettings} object.
+     *
+     * @param modelDelegate the delegate of the node model to create settings for.
      */
-    public BigQueryDBConnectorNodeModel() {
-        super(new BigQueryDBConnectorSettings(), INPUT_PORT_TYPES);
+    public BigQueryLoaderNodeSettings(final ModelDelegate modelDelegate) {
+        super(modelDelegate);
+        m_fileFormatSelectionModel = createFileFormatSelectionModel();
     }
 
-    @Override
-    protected DBConnectionController createConnectionController(final List<PortObject> inObjects,
-        final BigQueryDBConnectorSettings sessionSettings, final ExecutionMonitor monitor)
-        throws InvalidSettingsException {
-        final PortObject inObject = inObjects.get(0);
-        return new GoogleOAuthDBConnectionController(sessionSettings.getDBUrl(), sessionSettings.getDatabaseName(),
-            inObject == null ? null : ((GoogleApiConnectionPortObject)inObject).getGoogleApiConnection());
+    /**
+     * Gets the file format selection settings model.
+     *
+     * @return a {@link SettingsModelString} object.
+     */
+    public SettingsModelString getFileFormatSelectionModel() {
+        return m_fileFormatSelectionModel;
     }
 
-    @Override
-    protected DBConnectionController createConnectionController(final NodeSettingsRO internalSettings)
-        throws InvalidSettingsException {
-        return new GoogleOAuthDBConnectionController(internalSettings);
+    /**
+     * Creates the file format selection settings model.
+     *
+     * @return a {@link SettingsModelString} object.
+     */
+    protected SettingsModelString createFileFormatSelectionModel() {
+        return new SettingsModelString("fileFormatSelection", BigQueryLoaderFileFormat.PARQUET.name());
     }
 
 }

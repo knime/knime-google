@@ -293,12 +293,6 @@ public class BigQueryDBSQLDialect extends SQL92DBSQLDialect {
     }
 
     @Override
-    public SQLCommand[] getCreateTableAsSelectStatement(final DBSchemaObject schemaObject, final SQLQuery sql) {
-        return new SQLCommand[]{
-            new SQLCommand("CREATE TABLE " + createFullName(schemaObject) + " AS " + sql.getQuery())};
-    }
-
-    @Override
     public SQLQuery createLimitQueryWithOffset(final SQLQuery query, final long offset, final long count) {
         return new SQLQuery(asTable(selectAll().getPart() + "FROM (" + query.getQuery() + "\n)", getTempTableName())
             + " LIMIT " + count + " OFFSET " + offset);
@@ -319,5 +313,16 @@ public class BigQueryDBSQLDialect extends SQL92DBSQLDialect {
                 .collect(joining(",", " WHEN NOT MATCHED THEN INSERT (", ")"))
             + stream(columns).map(column -> "t." + delimit(column)).collect(joining(",", " VALUES (", ")")))};*/
         return super.createMergeStatement(schemaObject, setColumns, whereColumns);
+    }
+
+    @Override
+    public SQLCommand[] getCreateTableAsSelectStatement(final DBSchemaObject schemaObject, final SQLQuery sql) {
+        return new SQLCommand[]{
+            new SQLCommand("CREATE TABLE " + createFullName(schemaObject) + " AS " + sql.getQuery())};
+    }
+
+    @Override
+    public SQLCommand getDropTableStatement(final DBSchemaObject schemaObject, final boolean cascade) {
+        return super.getDropTableStatement(schemaObject, false);
     }
 }

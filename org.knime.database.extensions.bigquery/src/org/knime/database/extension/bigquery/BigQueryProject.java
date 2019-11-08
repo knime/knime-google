@@ -42,52 +42,20 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.database.extension.bigquery.node.connector;
-
-import java.util.List;
-
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.database.connection.DBConnectionController;
-import org.knime.database.extension.bigquery.connection.GoogleOAuthDBConnectionController;
-import org.knime.database.node.connector.server.UnauthenticatedServerDBConnectorNodeModel;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
+package org.knime.database.extension.bigquery;
 
 /**
- * Node model for the <em>Google BigQuery Connector</em> node.
+ * Immutable Google BigQuery project data.
  *
  * @author Noemi Balassa
  */
-public class BigQueryDBConnectorNodeModel
-    extends UnauthenticatedServerDBConnectorNodeModel<BigQueryDBConnectorSettings> {
-
-    private static final PortType[] INPUT_PORT_TYPES =
-        {PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class, true)};
+public interface BigQueryProject {
 
     /**
-     * Constructs a {@link BigQueryDBConnectorNodeModel} object.
+     * Gets the ID of the project.
+     *
+     * @return a string value.
      */
-    public BigQueryDBConnectorNodeModel() {
-        super(new BigQueryDBConnectorSettings(), INPUT_PORT_TYPES);
-    }
-
-    @Override
-    protected DBConnectionController createConnectionController(final List<PortObject> inObjects,
-        final BigQueryDBConnectorSettings sessionSettings, final ExecutionMonitor monitor)
-        throws InvalidSettingsException {
-        final PortObject inObject = inObjects.get(0);
-        return new GoogleOAuthDBConnectionController(sessionSettings.getDBUrl(), sessionSettings.getDatabaseName(),
-            inObject == null ? null : ((GoogleApiConnectionPortObject)inObject).getGoogleApiConnection());
-    }
-
-    @Override
-    protected DBConnectionController createConnectionController(final NodeSettingsRO internalSettings)
-        throws InvalidSettingsException {
-        return new GoogleOAuthDBConnectionController(internalSettings);
-    }
+    String getId();
 
 }

@@ -42,52 +42,90 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.database.extension.bigquery.node.connector;
+package org.knime.database.extension.bigquery.agent;
 
-import java.util.List;
+import java.util.Optional;
 
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.database.connection.DBConnectionController;
-import org.knime.database.extension.bigquery.connection.GoogleOAuthDBConnectionController;
-import org.knime.database.node.connector.server.UnauthenticatedServerDBConnectorNodeModel;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
- * Node model for the <em>Google BigQuery Connector</em> node.
+ * The intermediate file formats supported by the Google BigQuery data loader node.
  *
  * @author Noemi Balassa
  */
-public class BigQueryDBConnectorNodeModel
-    extends UnauthenticatedServerDBConnectorNodeModel<BigQueryDBConnectorSettings> {
-
-    private static final PortType[] INPUT_PORT_TYPES =
-        {PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class, true)};
+public enum BigQueryLoaderFileFormat implements ButtonGroupEnumInterface {
+        /**
+         * Apache Parquet file format.
+         */
+        PARQUET("Parquet", "Apache Parquet", ".parquet") {
+            @Override
+            public boolean isDefault() {
+                return true;
+            }
+        },
+        /**
+         * CSV file format.
+         */
+        CSV("CSV", "Comma-separated values", ".csv"),
+        ;
 
     /**
-     * Constructs a {@link BigQueryDBConnectorNodeModel} object.
+     * Gets the {@link BigQueryLoaderFileFormat} constant with the specified name.
+     *
+     * @param name the name of the constant.
+     * @return {@linkplain Optional optionally} the {@link BigQueryLoaderFileFormat} constant with the specified name or
+     *         {@linkplain Optional#empty() empty}.
      */
-    public BigQueryDBConnectorNodeModel() {
-        super(new BigQueryDBConnectorSettings(), INPUT_PORT_TYPES);
+    public static Optional<BigQueryLoaderFileFormat> optionalValueOf(final String name) {
+        if (name != null) {
+            try {
+                return Optional.of(valueOf(name));
+            } catch (IllegalArgumentException exception) {
+                // Ignored.
+            }
+        }
+        return Optional.empty();
+    }
+
+    private final String m_fileExtension;
+
+    private final String m_text;
+
+    private final String m_toolTip;
+
+    BigQueryLoaderFileFormat(final String text, final String toolTip, final String fileExtension) {
+        m_text = text;
+        m_toolTip = toolTip;
+        m_fileExtension = fileExtension;
+    }
+
+    /**
+     * Gets the file extension of the format.
+     *
+     * @return a file extension string, e.g. {@code ".txt"}.
+     */
+    public String getFileExtension() {
+        return m_fileExtension;
     }
 
     @Override
-    protected DBConnectionController createConnectionController(final List<PortObject> inObjects,
-        final BigQueryDBConnectorSettings sessionSettings, final ExecutionMonitor monitor)
-        throws InvalidSettingsException {
-        final PortObject inObject = inObjects.get(0);
-        return new GoogleOAuthDBConnectionController(sessionSettings.getDBUrl(), sessionSettings.getDatabaseName(),
-            inObject == null ? null : ((GoogleApiConnectionPortObject)inObject).getGoogleApiConnection());
+    public String getText() {
+        return m_text;
     }
 
     @Override
-    protected DBConnectionController createConnectionController(final NodeSettingsRO internalSettings)
-        throws InvalidSettingsException {
-        return new GoogleOAuthDBConnectionController(internalSettings);
+    public String getActionCommand() {
+        return name();
+    }
+
+    @Override
+    public String getToolTip() {
+        return m_toolTip;
+    }
+
+    @Override
+    public boolean isDefault() {
+        return false;
     }
 
 }

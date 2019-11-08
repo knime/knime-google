@@ -54,14 +54,14 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 
 import org.knime.base.node.io.csvwriter.FileWriterSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.database.agent.loader.DBLoadTableFromFileParameters;
 import org.knime.database.agent.loader.DBLoader;
+import org.knime.database.connection.ConnectionProvider;
+import org.knime.database.extension.bigquery.BigQueryProject;
 import org.knime.database.model.DBTable;
-import org.knime.database.session.DBSession;
 import org.knime.database.session.DBSessionReference;
 
 import com.google.auth.Credentials;
@@ -69,6 +69,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.CsvOptions;
+import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.TableDataWriteChannel;
@@ -96,27 +97,41 @@ public class BigQueryDBLoader implements DBLoader {
     @Override
     public void load(final ExecutionMonitor executionMonitor, final Object parameters) throws Exception {
         @SuppressWarnings("unchecked")
-        final DBLoadTableFromFileParameters<FileWriterSettings> loadParameters =
-            (DBLoadTableFromFileParameters<FileWriterSettings>)parameters;
-        final Optional<FileWriterSettings> additionalSettings = loadParameters.getAdditionalSettings();
-        if (!additionalSettings.isPresent()) {
-            throw new IllegalArgumentException("Missing file writer settings.");
+        final DBLoadTableFromFileParameters<BigQueryLoaderSettings> loadParameters =
+            (DBLoadTableFromFileParameters<BigQueryLoaderSettings>)parameters;
+        final BigQueryLoaderSettings additionalSettings = loadParameters.getAdditionalSettings()
+            .orElseThrow(() -> new IllegalArgumentException("Missing additional settings."));
+        final ConnectionProvider connectionProvider = m_sessionReference.get().getConnectionProvider();
+        final BigQueryProject project = connectionProvider.getController(BigQueryProject.class)
+            .orElseThrow(() -> new SQLException("BigQuery project information is not available."));
+        final FormatOptions formatOptions;
+        switch (additionalSettings.getFileFormat()) {
+            case CSV:
+                final FileWriterSettings fileWriterSettings = additionalSettings.getFileWriterSettings()
+                    .orElseThrow(() -> new IllegalArgumentException("Missing file writer settings."));
+                formatOptions = CsvOptions.newBuilder().setEncoding(getCharsetFrom(fileWriterSettings))
+                    .setFieldDelimiter(fileWriterSettings.getColSeparator())
+                    .setQuote(fileWriterSettings.getQuoteBegin()).build();
+                break;
+            case PARQUET:
+                formatOptions = FormatOptions.parquet();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported file format: " + additionalSettings.getFileFormat());
         }
-        final FileWriterSettings fileWriterSettings = additionalSettings.get();
-        final DBSession session = m_sessionReference.get();
-        // The connection is borrowed only for consistency between the nodes.
         final JobStatus jobStatus;
-        try (Connection connection = session.getConnectionProvider().getConnection(executionMonitor)) {
-            final BigQuery bigQuery = session.getConnectionProvider().getController(Credentials.class)
-                .map(credentials -> BigQueryOptions.newBuilder().setCredentials(credentials).build())
-                .orElseGet(BigQueryOptions::getDefaultInstance) // Forced line break.
+        // The connection is borrowed only for consistency between the nodes.
+        try (Connection connection = connectionProvider.getConnection(executionMonitor)) {
+            final BigQuery bigQuery = connectionProvider.getController(Credentials.class)
+                .map(credentials -> BigQueryOptions.newBuilder().setCredentials(credentials) // Forced line break.
+                    .setProjectId(project.getId()).build())
+                .orElseGet(() -> BigQueryOptions.newBuilder() // Forced line break.
+                    .setProjectId(project.getId()).build()) // Forced line break.
                 .getService();
             final DBTable table = loadParameters.getTable();
             final TableId tableId = TableId.of(table.getSchemaName(), table.getName());
-            final WriteChannelConfiguration writeChannelConfiguration = WriteChannelConfiguration.of(tableId,
-                CsvOptions.newBuilder().setEncoding(getCharsetFrom(fileWriterSettings))
-                    .setFieldDelimiter(fileWriterSettings.getColSeparator())
-                    .setQuote(fileWriterSettings.getQuoteBegin()).build());
+            final WriteChannelConfiguration writeChannelConfiguration =
+                WriteChannelConfiguration.of(tableId, formatOptions);
             // The location is not set because the dataset of the table is required. See:
             // https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get
             // https://cloud.google.com/bigquery/docs/locations#specifying_your_location
