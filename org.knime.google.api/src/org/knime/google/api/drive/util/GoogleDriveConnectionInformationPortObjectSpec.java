@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 15, 2018 (jtyler): created
  */
@@ -50,7 +50,7 @@ package org.knime.google.api.drive.util;
 
 import java.util.Objects;
 
-import org.knime.base.filehandling.remote.connectioninformation.port.ConnectionInformation;
+import org.knime.cloud.core.util.port.CloudConnectionInformation;
 import org.knime.cloud.core.util.port.CloudConnectionInformationPortObjectSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -58,14 +58,14 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * 
+ *
  * @author jtyler
  */
 public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnectionInformationPortObjectSpec {
 
     /**
      * Serializer for the framework (see plugin.xml)
-     * 
+     *
      * @noreference This class is not intended to be referenced by clients.
      */
     public static final class Serializer
@@ -75,7 +75,7 @@ public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnect
     private GoogleDriveConnectionInformation m_connectionInformation;
 
     /**
-     * 
+     *
      */
     public GoogleDriveConnectionInformationPortObjectSpec() {
     }
@@ -98,7 +98,7 @@ public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnect
      * @return The content of this port object
      */
     @Override
-    public ConnectionInformation getConnectionInformation() {
+    public CloudConnectionInformation getConnectionInformation() {
         return m_connectionInformation;
     }
 
