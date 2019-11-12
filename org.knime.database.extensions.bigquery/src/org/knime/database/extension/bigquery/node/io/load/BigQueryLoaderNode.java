@@ -87,6 +87,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.database.DBTableSpec;
 import org.knime.database.agent.loader.DBLoadTableFromFileParameters;
@@ -130,6 +131,8 @@ public class BigQueryLoaderNode extends UnconnectedCsvLoaderNode {
     }
 
     private static final List<Charset> CHARSETS = unmodifiableList(asList(UTF_8, ISO_8859_1));
+    //report progress only every x rows
+    private static final long PROGRESS_THRESHOLD = 1000;
 
     private static Box createBox(final boolean horizontal) {
         final Box box;
@@ -158,14 +161,32 @@ public class BigQueryLoaderNode extends UnconnectedCsvLoaderNode {
         final DBSession session, final ExecutionMonitor executionMonitor) throws Exception {
         executionMonitor.checkCanceled();
         final DataTableSpec inputTableSpec = rowInput.getDataTableSpec();
+        long i = 0;
+        long rowCnt = -1;
+        if (rowInput instanceof DataTableRowInput) {
+            rowCnt = ((DataTableRowInput)rowInput).getRowCount();
+        }
         try (ParquetKNIMEWriter writer = new ParquetKNIMEWriter(createRemoteFile(file.toUri(), null, null),
             inputTableSpec, CompressionCodecName.UNCOMPRESSED.name(), -1,
             createParquetTypeMappingConfiguration(inputTableSpec, table, session, executionMonitor))) {
             for (DataRow row = rowInput.poll(); row != null; row = rowInput.poll()) {
+                if (i % PROGRESS_THRESHOLD == 0) {
+                    // set the progress
+                    executionMonitor.checkCanceled();
+                    final long finalI = i;
+                    if (rowCnt <= 0) {
+                        executionMonitor.setMessage(() -> "Writing row " + finalI);
+                    } else {
+                        final long finalRowCnt = rowCnt;
+                        executionMonitor.setProgress(i / (double)rowCnt, () -> "Writing row " + finalI + " of "
+                                + finalRowCnt);
+                    }
+                }
                 writer.writeRow(row);
+                i++;
             }
         }
-        executionMonitor.setProgress(.2, "Temporary Parquet file has been written.");
+        executionMonitor.setProgress(1, "Temporary Parquet file has been written.");
     }
 
     private static DataTypeMappingConfiguration<ParquetType> createParquetTypeMappingConfiguration(
@@ -265,26 +286,31 @@ public class BigQueryLoaderNode extends UnconnectedCsvLoaderNode {
         final DBSessionPortObject sessionPortObject = parameters.getSessionPortObject();
         final DBTable table = customSettings.getTableNameModel().toDBTable();
         validateColumns(false, executionContext, parameters.getRowInput().getDataTableSpec(), sessionPortObject, table);
+        executionContext.setProgress(0.1);
         final DBSession session = sessionPortObject.getDBSession();
         // Create and write to the temporary file
         final Path temporaryFile = createTempFile("knime2db", fileFormat.getFileExtension()).toPath();
         try (AutoCloseable temporaryFileDeleter = () -> delete(temporaryFile)) {
+            executionContext.setMessage("Writing temporary file...");
+            final ExecutionMonitor subExec = executionContext.createSubProgress(0.7);
             final BigQueryLoaderSettings additionalSettings;
             switch (fileFormat) {
                 case CSV:
                     final FileWriterSettings fileWriterSettings =
                         customSettings.getFileFormatModel().getFileWriterSettings();
-                    writeCsv(parameters.getRowInput(), temporaryFile, fileWriterSettings, executionContext);
+                    writeCsv(parameters.getRowInput(), temporaryFile, fileWriterSettings, subExec);
                     additionalSettings = new BigQueryLoaderSettings(fileFormat, fileWriterSettings);
                     break;
                 case PARQUET:
-                    writeParquet(parameters.getRowInput(), temporaryFile, table, session, executionContext);
+                    writeParquet(parameters.getRowInput(), temporaryFile, table, session, subExec);
                     additionalSettings = new BigQueryLoaderSettings(fileFormat, null);
                     break;
                 default:
                     throw new InvalidSettingsException("Unknown file format: " + fileFormat);
             }
+            subExec.setProgress(1.0);
             // Load the data
+            executionContext.setMessage("Loading file into BigQuery");
             session.getAgent(DBLoader.class).load(executionContext,
                 new DBLoadTableFromFileParameters<>(null, temporaryFile.toString(), table, additionalSettings));
         }

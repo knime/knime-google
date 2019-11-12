@@ -137,12 +137,16 @@ public class BigQueryDBLoader implements DBLoader {
             // https://cloud.google.com/bigquery/docs/locations#specifying_your_location
             // E.g. JobId.newBuilder().setLocation("EU").build();
             final JobId jobId = JobId.of();
+            executionMonitor.checkCanceled();
+            executionMonitor.setMessage(
+                "Uploading data to BigQuery (this might take some time without progress changes)");
             try (TableDataWriteChannel writer = bigQuery.writer(jobId, writeChannelConfiguration)) {
                 try (OutputStream stream = Channels.newOutputStream(writer)) {
                     Files.copy(Paths.get(loadParameters.getFilePath()), stream);
                 }
                 jobStatus = writer.getJob().waitFor().getStatus();
             }
+            executionMonitor.setProgress(1, "Upload finished");
         }
         final BigQueryError error = jobStatus.getError();
         if (error != null) {
