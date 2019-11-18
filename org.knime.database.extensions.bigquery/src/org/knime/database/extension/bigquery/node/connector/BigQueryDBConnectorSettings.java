@@ -62,6 +62,7 @@ public class BigQueryDBConnectorSettings extends UnauthenticatedServerDBConnecto
             DBSQLDialectRegistry.getInstance().getDefaultFactoryFor(BigQuery.DB_TYPE);
 
     private static final int DEFAULT_PORT = 443;
+    private static final String DEFAULT_HOST = "https://www.googleapis.com/bigquery/v2";
 
     /**
      * Constructs a {@link BigQueryDBConnectorSettings} object.
@@ -72,6 +73,7 @@ public class BigQueryDBConnectorSettings extends UnauthenticatedServerDBConnecto
         setDialect(DEFAULT_DIALECT_FACTORY.getId());
         final DBDriverWrapper defaultDriver = DBDriverRegistry.getInstance().getLatestDriver(BigQuery.DB_TYPE);
         setDriver(defaultDriver == null ? null : defaultDriver.getDriverDefinition().getId());
+        setHost(DEFAULT_HOST);
         setPort(DEFAULT_PORT);
     }
 
