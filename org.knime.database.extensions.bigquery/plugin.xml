@@ -3,7 +3,7 @@
 <plugin>
    <extension point="org.knime.database.DBType">
       <DBType id="bigquery" name="Google BigQuery" description="Google BigQuery"
-            defaultAttributeDefinitionSupplier="org.knime.database.DBType$NonTransactionalAndNonFetchingDefaultAttributeSupplier$Factory"
+            defaultAttributeDefinitionSupplier="org.knime.database.extension.bigquery.BigQueryDefaultAttributeSupplier"
             urlTemplateValidator="org.knime.database.node.connector.server.ServerUrlTemplateValidator">
           <UrlTemplateExamples>
              <UrlTemplateExample template="jdbc:bigquery://&lt;host&gt;:&lt;port&gt;;ProjectId=&lt;database&gt;"/>
