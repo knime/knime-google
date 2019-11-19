@@ -47,33 +47,30 @@
  */
 package org.knime.google.api.nodes.connector;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.google.api.services.analytics.AnalyticsScopes;
-import com.google.api.services.sheets.v4.SheetsScopes;
+import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
+import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
 /**
  * Contains a map of all known scopes.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @see KnimeGoogleAuthScopeRegistry
  */
 public class GoogleApiKnownScopes {
 
     /**
      * The map containing the name (key) shown in the configuration dialog and the scopes identifier (value).
      */
-    public static final Map<String, String> MAP = new TreeMap<String, String>();
+    public static final Map<String, List<String>> MAP = new TreeMap<String, List<String>>();
 
     static {
-        MAP.put("Analytics", AnalyticsScopes.ANALYTICS);
-        MAP.put("Analytics readonly", AnalyticsScopes.ANALYTICS_READONLY);
-        MAP.put("Analytics edit", AnalyticsScopes.ANALYTICS_EDIT);
-        MAP.put("Analytics manage users", AnalyticsScopes.ANALYTICS_MANAGE_USERS);
-        MAP.put("Sheets drive", SheetsScopes.DRIVE);
-        MAP.put("Sheets drive readonly",SheetsScopes.DRIVE_READONLY);
-        MAP.put("Sheets", SheetsScopes.SPREADSHEETS);
-        MAP.put("Sheets readonly", SheetsScopes.SPREADSHEETS_READONLY);
+        final List<KnimeGoogleAuthScope> scopes =
+                KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes();
+        scopes.stream().forEach(s -> MAP.put(s.getAuthScopeName(), s.getAuthScopes()));
     }
 
 }

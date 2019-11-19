@@ -52,6 +52,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -102,9 +103,12 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
             public void actionPerformed(final ActionEvent e) {
                 String selection = (String)knownScopes.getSelectedItem();
                 String text = m_scopes.getText();
+                final List<String> addedScopes = GoogleApiKnownScopes.MAP.get(selection);
                 boolean addNewLine = !text.isEmpty() && !text.endsWith("\n");
-                String addedScope = GoogleApiKnownScopes.MAP.get(selection);
-                text += (addNewLine ? "\n" : "") + addedScope + "\n";
+                text += (addNewLine ? "\n" : "");
+                for (String addedScope : addedScopes) {
+                    text +=  addedScope + "\n";
+                }
                 m_scopes.setText(text);
             }
         });
