@@ -52,6 +52,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IExecutableExtensionFactory;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 
+import com.google.api.services.bigquery.BigqueryScopes;
+
 /**
  * Google BigQuery OAuth scope.
  *
@@ -78,7 +80,7 @@ public final class BigQueryAuthScope implements KnimeGoogleAuthScope {
      */
     static final BigQueryAuthScope INSTANCE = new BigQueryAuthScope();
 
-    private static final List<String> SCOPES = singletonList(com.google.api.services.bigquery.BigqueryScopes.BIGQUERY);
+    private static final List<String> SCOPES = singletonList(BigqueryScopes.BIGQUERY);
 
     private BigQueryAuthScope() {
         // Visibility.

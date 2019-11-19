@@ -59,10 +59,11 @@ import org.knime.database.node.connector.server.UnauthenticatedServerDBConnector
 public class BigQueryDBConnectorSettings extends UnauthenticatedServerDBConnectorSettings {
 
     private static final DBSQLDialectFactory DEFAULT_DIALECT_FACTORY =
-            DBSQLDialectRegistry.getInstance().getDefaultFactoryFor(BigQuery.DB_TYPE);
+        DBSQLDialectRegistry.getInstance().getDefaultFactoryFor(BigQuery.DB_TYPE);
+
+    private static final String DEFAULT_HOST = "https://www.googleapis.com/bigquery/v2";
 
     private static final int DEFAULT_PORT = 443;
-    private static final String DEFAULT_HOST = "https://www.googleapis.com/bigquery/v2";
 
     /**
      * Constructs a {@link BigQueryDBConnectorSettings} object.

@@ -50,6 +50,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Properties;
@@ -85,6 +88,8 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
 
     private static final String CFG_KEY_PATH = "keyPath";
 
+    private static final String CFG_KEY_TYPE = "keyType";
+
     private static final String CFG_OAUTH = "OAuth";
 
     private static final String CFG_OAUTH_TYPE = "oAuthType";
@@ -95,12 +100,17 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
 
     private static final String CFG_SERVICE_ACCOUNT_ID = "serviceAccountId";
 
+    private static final String JDBC_PROPERTY_KEY_OAUTH_PRIVATE_KEY_PATH = "OAuthPvtKeyPath";
+
+    private static final String JDBC_PROPERTY_KEY_OAUTH_SERVICE_ACCOUNT_EMAIL = "OAuthServiceAcctEmail";
+
     private static final String JDBC_PROPERTY_KEY_OAUTH_TYPE = "OAuthType";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleOAuthDBConnectionController.class);
 
-    private static final String MESSAGE_USER_OAUTH_SETTINGS_BEING_USED = "The \"" + JDBC_PROPERTY_KEY_OAUTH_TYPE
-        + "\" JDBC is explicitly specified. Only the user-provided settings are used for authentication.";
+    private static final String MESSAGE_USER_OAUTH_SETTINGS_BEING_USED =
+        "The value of the \"" + JDBC_PROPERTY_KEY_OAUTH_TYPE + "\" JDBC parameter has been explicitly specified."
+            + " Only the user-provided settings are used for authentication.";
 
     private static final String OAUTH_TYPE_APPLICATION_DEFAULT_CREDENTIALS = "3";
 
@@ -110,6 +120,8 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
 
     private static final String OAUTH_TYPE_USER = "1";
 
+    private static final char[] PASSWORD = {'n', 'o', 't', 'a', 's', 'e', 'c', 'r', 'e', 't'};
+
     private static void addNonNull(final NodeSettingsWO settings, final String key, final String value) {
         requireNonNull(settings, "settings");
         if (value != null) {
@@ -117,10 +129,53 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         }
     }
 
-    private static Optional<Credentials> createServiceAccountCredentials(final String keyPath) {
-        try (InputStream stream = Files.newInputStream(Paths.get(keyPath))) {
-            return Optional.of(ServiceAccountCredentials.fromStream(stream));
-        } catch (IOException | RuntimeException exception) {
+    private static Optional<Credentials> createServiceAccountCredentials(final String keyPath,
+        final String serviceAccountId) {
+        CredentialsFileType keyType = null;
+        final int lastDotIndex = keyPath == null ? -1 : keyPath.lastIndexOf('.');
+        if (lastDotIndex > -1) {
+            @SuppressWarnings("null") // The last condition ensures that keyPath is not null.
+            final String fileExtension = keyPath.substring(lastDotIndex + 1);
+            if (CredentialsFileType.JSON.name().equalsIgnoreCase(fileExtension)) {
+                keyType = CredentialsFileType.JSON;
+            } else if (CredentialsFileType.P12.name().equalsIgnoreCase(fileExtension)) {
+                keyType = CredentialsFileType.P12;
+            } else {
+                LOGGER.error("The found file extension does not match any of the expected credentials files ("
+                    + CredentialsFileType.JSON.name() + ", " + CredentialsFileType.P12.name() + "): \"" + fileExtension
+                    + '"');
+                return Optional.empty();
+            }
+        }
+        if (keyType == null) {
+            LOGGER.error("The credentials file type could not be determined.");
+            return Optional.empty();
+        }
+        return createServiceAccountCredentials(keyPath, keyType, serviceAccountId);
+    }
+
+    private static Optional<Credentials> createServiceAccountCredentials(final String keyPath,
+        final CredentialsFileType keyType, final String serviceAccountId) {
+        try {
+            switch (requireNonNull(keyType, "keyType")) {
+                case JSON:
+                    try (InputStream stream = Files.newInputStream(Paths.get(keyPath))) {
+                        return Optional.of(ServiceAccountCredentials.fromStream(stream));
+                    }
+                case P12:
+                    final KeyStore keyStore = KeyStore.getInstance("PKCS12");
+                    try (InputStream stream = Files.newInputStream(Paths.get(keyPath))) {
+                        keyStore.load(stream, PASSWORD);
+                    }
+                    return Optional.of(ServiceAccountCredentials.newBuilder().setClientEmail(serviceAccountId)
+                        .setPrivateKey((PrivateKey)keyStore.getKey("privatekey", PASSWORD)).build());
+                default:
+                    LOGGER
+                        .error("The service account credentials could not be obtained. Unknown credentials file type: "
+                            + keyType);
+                    return Optional.empty();
+            }
+        } catch (GeneralSecurityException | IOException | RuntimeException exception) {
             LOGGER.error("The service account credentials could not be obtained.", exception);
             return Optional.empty();
         }
@@ -150,6 +205,8 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
 
     private final String m_keyPath;
 
+    private final CredentialsFileType m_keyType;
+
     private final String m_oAuthType;
 
     private volatile Optional<? extends BigQueryProject> m_project = Optional.empty();
@@ -177,6 +234,17 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         super(internalSettings);
         final NodeSettingsRO oAuthSettings = internalSettings.getNodeSettings(CFG_OAUTH);
         m_keyPath = oAuthSettings.getString(CFG_KEY_PATH, null);
+        final String keyTypeString = oAuthSettings.getString(CFG_KEY_TYPE, null);
+        if (keyTypeString == null) {
+            m_keyType = m_keyPath == null ? null : CredentialsFileType.JSON;
+        } else {
+            try {
+                m_keyType = CredentialsFileType.valueOf(keyTypeString);
+            } catch (final IllegalArgumentException exception) {
+                throw new InvalidSettingsException("Invalid credentials file type: \"" + keyTypeString + '"',
+                    exception);
+            }
+        }
         m_oAuthType = oAuthSettings.getString(CFG_OAUTH_TYPE, null);
         m_projectId = oAuthSettings.getString(CFG_PROJECT_ID, null);
         m_refreshToken = oAuthSettings.getString(CFG_REFRESH_TOKEN, null);
@@ -198,6 +266,7 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         m_projectId = requireNonNull(projectId, "projectId");
         if (googleApiConnection == null) {
             m_keyPath = null;
+            m_keyType = null;
             m_oAuthType = OAUTH_TYPE_APPLICATION_DEFAULT_CREDENTIALS;
             m_refreshToken = null;
             m_serviceAccountId = null;
@@ -208,6 +277,7 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         switch (oAuthCredentials.getType()) {
             case APPLICATION_DEFAULT:
                 m_keyPath = null;
+                m_keyType = null;
                 m_oAuthType = OAUTH_TYPE_APPLICATION_DEFAULT_CREDENTIALS;
                 m_refreshToken = null;
                 m_serviceAccountId = null;
@@ -216,11 +286,17 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                 final ServiceAccountOAuthCredentials serviceAccountOAuthCredentials =
                     oAuthCredentials.asServiceAccountCredentials().get();
                 final CredentialsFileType keyFileType = serviceAccountOAuthCredentials.getPrivateKeyType();
-                if (keyFileType != CredentialsFileType.JSON) {
-                    throw new InvalidSettingsException(
-                        "Only JSON credentials files are supported. The received file type: " + keyFileType);
+                switch (keyFileType) {
+                    case JSON:
+                    case P12:
+                        break;
+                    default:
+                        throw new InvalidSettingsException(
+                            "Only JSON and P12 credentials files are supported. The received file type: "
+                                + keyFileType);
                 }
                 m_keyPath = serviceAccountOAuthCredentials.getPrivateKeyPath();
+                m_keyType = keyFileType;
                 m_oAuthType = OAUTH_TYPE_SERVICE_ACCOUNT;
                 m_refreshToken = null;
                 m_serviceAccountId = serviceAccountOAuthCredentials.getServiceAccountEmail();
@@ -229,6 +305,7 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                 final UserAccountOAuthCredentials userAccountOAuthCredentials =
                     oAuthCredentials.asUserAccountCredentials().get();
                 m_keyPath = null;
+                m_keyType = null;
                 m_oAuthType = OAUTH_TYPE_PRE_GENERATED_TOKENS;
                 m_refreshToken = userAccountOAuthCredentials.getRefreshToken();
                 m_serviceAccountId = null;
@@ -250,6 +327,9 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
         super.saveInternalsTo(settings);
         final NodeSettingsWO oAuthSettings = settings.addNodeSettings(CFG_OAUTH);
         addNonNull(oAuthSettings, CFG_KEY_PATH, m_keyPath);
+        if (m_keyPath != null && m_keyType != null && m_keyType != CredentialsFileType.JSON) {
+            oAuthSettings.addString(CFG_KEY_TYPE, m_keyType.name());
+        }
         addNonNull(oAuthSettings, CFG_OAUTH_TYPE, m_oAuthType);
         addNonNull(oAuthSettings, CFG_PROJECT_ID, m_projectId);
         addNonNull(oAuthSettings, CFG_REFRESH_TOKEN, m_refreshToken);
@@ -285,7 +365,9 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                     throw new SQLException("Directly supplied tokens cannot be used."
                         + " Please use the Google Authentication node for user authentication.");
                 case OAUTH_TYPE_SERVICE_ACCOUNT:
-                    m_credentials = createServiceAccountCredentials(jdbcProperties.getProperty("OAuthPvtKeyPath"));
+                    m_credentials = createServiceAccountCredentials(
+                        jdbcProperties.getProperty(JDBC_PROPERTY_KEY_OAUTH_PRIVATE_KEY_PATH),
+                        jdbcProperties.getProperty(JDBC_PROPERTY_KEY_OAUTH_SERVICE_ACCOUNT_EMAIL));
                     break;
                 case OAUTH_TYPE_USER:
                     throw new SQLException("The driver's interactive authentication process cannot be used."
@@ -315,10 +397,11 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                 m_credentials = createUserCredentials(refreshToken, client);
                 break;
             case OAUTH_TYPE_SERVICE_ACCOUNT:
-                jdbcProperties.setProperty("OAuthServiceAcctEmail", emptyIfNull(m_serviceAccountId));
+                final String serviceAccountId = emptyIfNull(m_serviceAccountId);
+                jdbcProperties.setProperty(JDBC_PROPERTY_KEY_OAUTH_SERVICE_ACCOUNT_EMAIL, serviceAccountId);
                 final String keyPath = emptyIfNull(m_keyPath);
-                jdbcProperties.setProperty("OAuthPvtKeyPath", keyPath);
-                m_credentials = createServiceAccountCredentials(keyPath);
+                jdbcProperties.setProperty(JDBC_PROPERTY_KEY_OAUTH_PRIVATE_KEY_PATH, keyPath);
+                m_credentials = createServiceAccountCredentials(keyPath, m_keyType, serviceAccountId);
                 break;
             default:
                 throw new SQLException("Unrecognized OAuth type setting: \"" + oAuthType + '"');
