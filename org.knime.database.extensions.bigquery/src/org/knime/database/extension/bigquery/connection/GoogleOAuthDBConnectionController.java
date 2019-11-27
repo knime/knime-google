@@ -72,7 +72,6 @@ import org.knime.google.api.data.GoogleApiConnection.OAuthClient;
 import org.knime.google.api.data.GoogleApiConnection.OAuthCredentials;
 import org.knime.google.api.data.GoogleApiConnection.ServiceAccountOAuthCredentials;
 import org.knime.google.api.data.GoogleApiConnection.ServiceAccountOAuthCredentials.CredentialsFileType;
-import org.knime.google.api.data.GoogleApiConnection.UserAccountOAuthCredentials;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -302,14 +301,9 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                 m_serviceAccountId = serviceAccountOAuthCredentials.getServiceAccountEmail();
                 break;
             case USER_ACCOUNT:
-                final UserAccountOAuthCredentials userAccountOAuthCredentials =
-                    oAuthCredentials.asUserAccountCredentials().get();
-                m_keyPath = null;
-                m_keyType = null;
-                m_oAuthType = OAUTH_TYPE_PRE_GENERATED_TOKENS;
-                m_refreshToken = userAccountOAuthCredentials.getRefreshToken();
-                m_serviceAccountId = null;
-                break;
+                throw new InvalidSettingsException("User authentication is not allowed."
+                    + " Please use the Google Authentication (API Key) node or application default credentials for"
+                    + " authentication with a service account.");
             default:
                 throw new InvalidSettingsException("OAuth credentials type: " + oAuthCredentials.getType());
         }
@@ -362,8 +356,10 @@ public class GoogleOAuthDBConnectionController extends UrlDBConnectionController
                     //jdbcProperties.setProperty("OAuthClientSecret", client.getSecret());
                     //LOGGER.warn("The KNIME client information is used for the OAuth process.");
                     //m_credentials = createUserCredentials(jdbcProperties.getProperty("OAuthRefreshToken"), client);
-                    throw new SQLException("Directly supplied tokens cannot be used."
-                        + " Please use the Google Authentication node for user authentication.");
+                    throw new SQLException(
+                        "Directly supplied tokens cannot be used. User authentication is not allowed."
+                            + " Please use the Google Authentication (API Key) node or application default credentials"
+                            + " for authentication with a service account.");
                 case OAUTH_TYPE_SERVICE_ACCOUNT:
                     m_credentials = createServiceAccountCredentials(
                         jdbcProperties.getProperty(JDBC_PROPERTY_KEY_OAUTH_PRIVATE_KEY_PATH),
