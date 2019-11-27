@@ -325,4 +325,10 @@ public class BigQueryDBSQLDialect extends SQL92DBSQLDialect {
     public SQLCommand getDropTableStatement(final DBSchemaObject schemaObject, final boolean cascade) {
         return super.getDropTableStatement(schemaObject, false);
     }
+
+    @Override
+    public SQLCommand[] getReplaceTableAsSelectStatement(final DBSchemaObject schemaObject, final SQLQuery sql) {
+        return new SQLCommand[]{
+            new SQLCommand("CREATE OR REPLACE TABLE " + createFullName(schemaObject) + " AS " + sql.getQuery())};
+    }
 }
