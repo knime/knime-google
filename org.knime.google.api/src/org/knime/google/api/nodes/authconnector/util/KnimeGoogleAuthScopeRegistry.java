@@ -156,6 +156,26 @@ public final class KnimeGoogleAuthScopeRegistry {
     }
 
     /**
+     * Returns the registered {@link KnimeGoogleAuthScope}s that are enabled for OAuth.
+     *
+     *@return The registered KnimeGoogleAuthScopes that are enabled for OAuth
+     */
+    public List<KnimeGoogleAuthScope> getOAuthEnabledKnimeGoogleAuthScopes() {
+        return m_knimeGoogleAuthScopes.stream().filter(KnimeGoogleAuthScope::isEnabledForOAuth)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the registered {@link KnimeGoogleAuthScope}s that are enabled for Service Accounts.
+     *
+     * @return The registered KnimeGoogleAuthScopes that are enabled for Service Accounts
+     */
+    public List<KnimeGoogleAuthScope> getServiceAccountEnabledKnimeGoogleAuthScopes() {
+        return m_knimeGoogleAuthScopes.stream().filter(KnimeGoogleAuthScope::isEnabledForServiceAccount)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Returns all knimeGoogleScope ids.
      *
      * @return All knimeGoogleScope ids

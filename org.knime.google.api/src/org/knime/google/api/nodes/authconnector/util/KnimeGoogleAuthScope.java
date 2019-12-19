@@ -86,4 +86,22 @@ public interface KnimeGoogleAuthScope {
      */
     public String getDescription();
 
+    /**
+     * Returns whether this scope is enabled for OAuth authentication.
+     *
+     * @return Whether this scope is enabled for OAuth authentication
+     */
+    public default boolean isEnabledForOAuth() {
+        return true;
+    }
+
+    /**
+     * Returns whether this scope is enabled for Service Account authentication.
+     *
+     * @return Whether this scope is enabled for Service Account authentication
+     */
+    public default boolean isEnabledForServiceAccount() {
+        return true;
+    }
+
 }

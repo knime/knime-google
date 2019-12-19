@@ -399,7 +399,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         GridBagConstraints gbc = getDefaultGBC();
         gbc.insets = PANEL_INSET;
         List<KnimeGoogleAuthScope> knimeGoogleAuthScopes =
-            KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes();
+            KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes();
         DefaultListModel<CheckboxListItem> model = new DefaultListModel<>();
         for (KnimeGoogleAuthScope scope : knimeGoogleAuthScopes) {
             model.addElement(new CheckboxListItem(scope));

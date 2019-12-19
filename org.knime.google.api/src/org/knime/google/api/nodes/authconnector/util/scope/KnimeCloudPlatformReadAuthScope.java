@@ -111,4 +111,9 @@ public class KnimeCloudPlatformReadAuthScope implements KnimeGoogleAuthScope {
         return DESC;
     }
 
+    @Override
+    public boolean isEnabledForOAuth() {
+        return false;
+    }
+
 }

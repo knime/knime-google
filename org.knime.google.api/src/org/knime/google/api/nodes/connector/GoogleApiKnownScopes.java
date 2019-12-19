@@ -69,7 +69,7 @@ public class GoogleApiKnownScopes {
 
     static {
         final List<KnimeGoogleAuthScope> scopes =
-                KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes();
+            KnimeGoogleAuthScopeRegistry.getInstance().getServiceAccountEnabledKnimeGoogleAuthScopes();
         scopes.stream().forEach(s -> MAP.put(s.getAuthScopeName(), s.getAuthScopes()));
     }
 
