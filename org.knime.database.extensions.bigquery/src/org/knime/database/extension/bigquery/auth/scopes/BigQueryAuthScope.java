@@ -106,4 +106,8 @@ public final class BigQueryAuthScope implements KnimeGoogleAuthScope {
         return "Scopes required for the Google BigQuery Connection.";
     }
 
+    @Override
+    public boolean isEnabledForOAuth() {
+        return false;
+    }
 }
