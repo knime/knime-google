@@ -240,7 +240,7 @@ final class GoogleAuthNodeSettings {
 
     List<KnimeGoogleAuthScope> getRelevantKnimeAuthScopes() {
         if (m_useAllscopes) {
-            return KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes();
+            return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes();
         } else {
             return getSelectedKnimeAuthScopes();
         }
