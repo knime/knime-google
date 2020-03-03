@@ -57,7 +57,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -104,7 +106,7 @@ final class GoogleAuthNodeSettings {
 
     private List<KnimeGoogleAuthScope> m_knimeGoogleAuthScopes = new ArrayList<>();
 
-    private boolean m_useAllscopes = true;
+    private boolean m_useAllscopes = false;
 
     private String m_credentialTempFolder;
 
@@ -119,6 +121,10 @@ final class GoogleAuthNodeSettings {
      */
     GoogleAuthNodeSettings() {
         m_credentialFileLocation = new SettingsModelString(CREDENTIAL_LOCATION, "${user.home}/knime");
+        // see AP-13792 -- Google Analytics needs to be disabled by default.
+        m_knimeGoogleAuthScopes = KnimeGoogleAuthScopeRegistry.getInstance().getKnimeGoogleAuthScopes().stream()
+            .filter(s -> StringUtils.containsAny(s.getAuthScopeName().toLowerCase(), "sheets", "drive"))
+            .collect(Collectors.toList());
     }
 
     /**
