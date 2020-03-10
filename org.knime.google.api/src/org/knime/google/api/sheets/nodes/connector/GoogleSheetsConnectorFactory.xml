@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheetsconnector.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Sheets Connection</name>
+	<shortDescription>This node creates a connection to the Google Sheets API.</shortDescription>
+	<fullDescription>
+		<intro>
+			Creates a connection to Google Sheets, given a Google API connection.
+			
+			<br/><br/>
+			When using the Google Authentication (API Key) node to provide the Google API connection, spreadsheets
+			have to be shared with the service account, before they can be accessed.
+			<p>
+			For details on service accounts see: <a href="https://developers.google.com/identity/protocols/OAuth2ServiceAccount">developers.google.com/identity/protocols/OAuth2ServiceAccount</a>.
+			</p>
+		</intro>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google API Connection">The Google API connection that will be used.</inPort>
+		<outPort index="0" name="Google Sheets Connection">A connection that can be used to
+			access Google Sheets</outPort>
+	</ports>
+</knimeNode>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googleapiconnector.png" type="Source"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Authentication (API Key)</name>
+	<shortDescription>Create a connection to access various Google APIs. (Please note that we currently only provide nodes to connect to Google Analytics.)</shortDescription>
+	<fullDescription>
+		<intro>
+	Creates a connection to access various Google APIs.
+	<p>
+	You will need to create a project at <a href="https://console.developers.google.com/project">console.developers.google.com</a>
+	. To get your credentials you have to go to 'Credentials' → 'Create new	Client ID' and create a <b>service account</b>.
+	</p>
+	Please note: The specific Google API you want to use has to be enabled
+	under 'APIs'.
+		</intro>
+		<option name="Service account email">Email address of the service account.</option>
+		<option name="P12 key file location">Path to the private P12 key file.</option>
+		<option name="Scopes">The scopes that will be granted for this connection.</option>
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="Google Service Connection">A connection that can be used to
+			access various Google services.</outPort>
+	</ports>
+</knimeNode>

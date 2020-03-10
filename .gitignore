@@ -1,5 +1,4 @@
 */bin/
-*/target/
-target/
+**/target/
 */build/
 **/.flattened-pom.xml

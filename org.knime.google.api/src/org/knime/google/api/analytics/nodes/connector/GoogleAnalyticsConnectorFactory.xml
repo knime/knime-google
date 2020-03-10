@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googleanalyticsconnector.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Analytics Connection</name>
+	<shortDescription>Create a connection to the Google Analytics API.</shortDescription>
+	<fullDescription>
+		<intro>
+			Create a connection to the Google Analytics API, given a Google API connection.
+			<p>
+			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
+			</p>
+		</intro>
+		<option name="Account">The account.</option>
+		<option name="Webproperty">The webproperty.</option>
+		<option name="Profile">The profile.</option>
+		<option name="Profile ID">The profile ID that will be used for this connection.</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google API Connection">The Google API connection that will be used.</inPort>
+		<outPort index="0" name="Google Analytics Connection">A connection that can be used to
+			access the Google Analytics API.</outPort>
+	</ports>
+</knimeNode>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="knimeGoogleAuthScope" name="KnimeGoogleAuthScope" schema="schema/KnimeGoogleAuthScope.exsd"/>
+   <extension point="org.knime.workbench.repository.nodes">
+      <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory"  />
+      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory"  />
+      <node category-path="/social-media/googleapi/googleanalytics" factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory"  />
+      <node category-path="/social-media/googleapi" factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory" />
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="true"
+            factory-class="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory">
+      </node>
+      <node
+            after="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory"
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory">
+      </node>
+      <node
+            after="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory"
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory">
+      </node>
+      <node
+            after="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory"
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory">
+      </node>
+      <node
+            after="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory"
+            category-path="/labs/googleapilabs/googlesheets"
+            deprecated="false"
+            factory-class="org.knime.google.api.sheets.nodes.sheetupdater.GoogleSheetUpdaterFactory">
+      </node>
+      <node
+            category-path="/labs/googleapilabs"
+            deprecated="false"
+            factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
+      </node>
+   </extension>
+   <extension point="org.knime.workbench.repository.categories">
+      <category description="Nodes to access various Google APIs" icon="icons/googleapicategory.png" level-id="googleapi" name="Google API Connectors" path="/social-media" />
+      <category description="Nodes to access the Google Analytics API" icon="icons/googleanalyticscategory.png" level-id="googleanalytics" name="Google Analytics Connectors" path="/social-media/googleapi" />
+      <category
+            description="Nodes to access various Google APIs"
+            icon="icons/googleapicategory.png"
+            level-id="googleapilabs"
+            name="Google API Connectors (Labs)"
+            path="/labs">
+      </category>
+      <category
+            description="Nodes for interaction with Google Sheets"
+            icon="icons/googlesheetscategory.png"
+            level-id="googlesheets"
+            name="Google Sheets Connectors"
+            path="/labs/googleapilabs">
+      </category>
+   </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#fe5617"
+            hidden="true"
+            name="Google Analytics"
+            objectClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject"
+            objectSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#4386f7"
+            hidden="true"
+            name="Google API"
+            objectClass="org.knime.google.api.data.GoogleApiConnectionPortObject"
+            objectSerializer="org.knime.google.api.data.GoogleApiConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#16a965"
+            hidden="true"
+            name="Google Sheets"
+            objectClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject"
+            objectSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            hidden="false"
+            name="Google Drive"
+            objectClass="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObject"
+            objectSerializer="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObject$Serializer"
+            specClass="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjectSpec"
+            specSerializer="org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjectSpec$Serializer">
+      </portType>
+   </extension>
+   <extension
+         point="org.knime.google.api.knimeGoogleAuthScope">
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsFullAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageFullAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
+   </extension>
+   <extension
+         point="org.knime.base.filehandling.RemoteFileHandler">
+      <RemoteFileHandler
+            RemoteFileHandler="org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler">
+      </RemoteFileHandler>
+   </extension>
+</plugin>

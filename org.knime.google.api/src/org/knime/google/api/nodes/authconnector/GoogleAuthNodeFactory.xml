@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googleapiconnector.png" type="Source"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Authentication</name>
+	<shortDescription>Authenticates for Google Services</shortDescription>
+	<fullDescription>
+		<intro>
+			This nodes authenticates for the Google services specified in the node settings.
+			<p>
+			Authentication happens in the configuration window.
+			By default, credentials are stored in memory.
+			Custom credentials can be set in the configuration window.
+			A custom credential location is useful for sharing the credentials via a KNIME Server or for exposing the user credentials.
+			</p>
+			<p>
+			After choosing the credential location, one must authenticate using the "Authenticate" button. 
+			A pop-up will appear that asks the user to grant access to the selected scopes. 
+			If you have already authenticated, the "Authenticate" will test the stored credentials in the selected location. 
+			Credentials can be manually deleted by clicking on the "Clear Selected Credentials" button.
+			</p>
+			<p>
+			Access can be revoked at any time by visiting <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>
+			</p>
+			<p>
+			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
+			</p>
+		</intro>
+		<option name="Authenticate">
+		Clicking on this button will open a dialog for authenticating with Google services. 
+		If you are already authenticated, it will verify the stored credentials in the selected location.
+		<br/>
+		<b>Status</b>
+		<p>
+		Describes the state of the authentication.
+		</p>
+		</option>
+		<option name="Credential Location">
+		This option determines where the credentials received during authentication will be stored.
+			<br/>
+			<b>Memory</b>
+			<p>
+			The authentication credentials will be kept in memory. They are discarded when exiting KNIME.
+			<br/>
+			</p>
+			<b>Custom</b>
+			<p>
+			The authentication credentials will be saved in separate file in the given directory.
+			<br/>
+			<b>Select Directory</b>
+			<br/>
+			The directory to which the credentials should be saved.
+			</p>
+			<b>Node</b>
+			<p>
+			The authentication credentials will be saved in the node settings.
+			<br/>
+			</p>
+		</option>
+		<option name="Scopes">
+			Scopes used to authenticate with Google. These can be selected according to the nodes that should be used
+			with the Google connection.
+			<br/>
+			<b>All scopes</b>
+			<p>
+			Selects all scopes, so the credentials can be used with all available Google Connection nodes.
+			</p>
+		</option>
+		
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="Google Service Connection">A connection that can be used to
+			access various Google services.</outPort>
+	</ports>
+</knimeNode>

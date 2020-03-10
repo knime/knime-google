@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./googlesheets.png" type="Manipulator"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+	<name>Google Sheets Writer</name>
+	<shortDescription>This node writes the input data table to a new Google Sheets spreadsheet.</shortDescription>
+	<fullDescription>
+		<intro>
+			This node writes the input data table to a new Google Sheets spreadsheet.
+			<p>
+			If you want to overwrite or append data to an existing sheet, you cannot use the Google Sheets Writer node;
+			you must use the Google Sheets Updater node.
+			</p>
+		</intro>
+		<option name="Spreadsheet name">
+			The name of the spreadsheet to be created.
+		</option>
+		<option name="Sheet name">
+			The name of the sheet to which the table should be written.
+		</option>
+		<option name="Add column header">
+			Here you determine whether the column names should be written in the first row.
+		</option>
+		<option name="Add row header">
+			Here you determine whether the row ID's should be written in the first column.
+		</option>
+		<option name="For missing values write">
+		By selecting this option, you can specify a string you want to substitute for missing values.
+		If the option is left unchecked, the cells with missing values remain empty.
+		</option>
+		<option name="Open spreadsheet after execution">
+		Opens the spreadsheet after it has been written successfully. 
+		The spreadsheet will be opened in the systems's default browser.
+		</option>
+		<option name="Exclude/Include columns">
+			Select the columns that will be written to the sheet file. 
+			If the columns in the input table change, they will automatically be excluded.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Sheets Connection">A Google Sheets connection.</inPort>
+		<inPort index="1" name="Buffered data table">Table to be written to a google sheet</inPort>
+	</ports>
+</knimeNode>
