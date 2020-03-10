@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.knime.features.ext.socialmedia"
+      id="org.knime.features.google.api"
       label="KNIME Google Connectors"
       version="4.2.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
-      This feature contains nodes to work with the Twitter and Google API.
+      This feature contains nodes to work with Google APIs.
    </description>
 
    <copyright>
