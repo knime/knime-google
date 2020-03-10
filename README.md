@@ -1,24 +1,17 @@
-# ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIME® Cloud Connectors
+# ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIME® Google APIs
 
 This repository contains:
 
-* [KNIME Amazon Cloud Connectors](https://hub.knime.com/knime/extensions/org.knime.features.cloud.aws/latest)  
-This extension enables the use of the KNIME filehandling nodes with Amazon S3.
-* [KNIME Amazon Machine Learning Integration](https://hub.knime.com/knime/extensions/org.knime.features.cloud.aws.mlservices/latest)  
-This extension provides nodes for interaction with Amazon Comprehend and Amazon Translate.
-* [KNIME Amazon Redshift Connector And Tools](https://hub.knime.com/knime/extensions/org.knime.features.cloud.aws.redshift/latest)  
-This extension provides nodes for interacting with Amazon Redshift.
-* [KNIME Amazon Athena Connector](https://hub.knime.com/knime/extensions/org.knime.features.cloud.aws.athena/latest)  
-This extension contains the Amazon Athena connector node.
-* [KNIME Azure Cloud Connectors](https://hub.knime.com/knime/extensions/org.knime.features.cloud.azure/latest)  
-This extension enables the use of the KNIME filehandling nodes with the Microsoft Azure Blob Storage.
+* [KNIME Google APIs](https://hub.knime.com/knime/extensions/org.knime.features.google.api/latest)  
+This extension allows to connect to various Google APIs, e.g. Google Drive, Google Sheets and Google Analytics
 * [KNIME Google Cloud Storage Connectors](https://hub.knime.com/knime/extensions/org.knime.features.cloud.google/latest)  
 This extension enables the use of the KNIME filehandling nodes with the Google Cloud Storage.
 
 
+
 ## Example Workflows on the KNIME Hub
 
-You can find example workflows on the [KNIME Hub](https://hub.knime.com/search?q=s3,redshift,athena,amazon,azure&type=Workflow).
+You can find example workflows on the [KNIME Hub](https://hub.knime.com/search?q=google&type=Workflow).
 
 ## Development Notes
 
@@ -29,4 +22,4 @@ or [GitHub](http://github.com/knime/knime-sdk-setup).
 
 ## Join the Community!
 
-* [KNIME Forum](https://tech.knime.org/forum)
+* [KNIME Forum](https://forum.knime.com/)
