@@ -2,3 +2,4 @@
 **/target/
 */build/
 **/.flattened-pom.xml
+org.knime.google.cloud.storage/knime.jar
