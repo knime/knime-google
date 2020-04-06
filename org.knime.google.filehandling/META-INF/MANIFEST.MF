@@ -2,20 +2,17 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: GoogleCloudStorageConnection-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.google.filehandling; singleton:=true
-Bundle-Version: 1.0.0.qualifier
-Bundle-ClassPath: googlecloudstorageconnection.jar
+Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: 
-Require-Bundle: org.eclipse.core.runtime,
- org.knime.workbench.core,
- org.knime.workbench.repository,
+Require-Bundle: org.knime.workbench.repository,
  org.knime.base,
  org.knime.google.api;bundle-version="4.2.0",
  org.knime.filehandling.core;bundle-version="4.2.0",
- org.knime.cloud.core;bundle-version="4.2.0",
  org.knime.base.filehandling;bundle-version="4.2.0",
  com.google.api-client.google-api-client;bundle-version="1.23.1",
  com.google.oauth-client;bundle-version="1.23.0",
  com.google.apis.google-api-services-storage;bundle-version="0.0.0",
  com.google.http-client.google-http-client;bundle-version="1.23.0"
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
 
