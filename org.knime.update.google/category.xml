@@ -12,7 +12,12 @@
    <feature id="org.knime.features.google.cloud.storage.source" version="0.0.0">
        <category name="knime-google" />
    </feature>
-
+   <feature id="org.knime.features.google.filehandling" version="0.0.0">
+       <category name="knime-google" />
+   </feature>
+   <feature id="org.knime.features.google.filehandling.source" version="0.0.0">
+       <category name="knime-google" />
+   </feature>
    <category-def name="knime-google" label="Build artifacts from knime-google">
        <description>Build artifacts from knime-google</description>
    </category-def>
