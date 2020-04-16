@@ -48,11 +48,21 @@
  */
 package org.knime.google.filehandling.testing;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.testing.FSTestInitializer;
+import org.knime.filehandling.core.util.CheckedExceptionSupplier;
 import org.knime.google.filehandling.connections.GoogleCloudStorageConnection;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
+import org.knime.google.filehandling.util.GoogleCloudStorageClient;
+
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.services.storage.model.StorageObject;
 
 /**
  * Cloud storage test initializer.
@@ -63,6 +73,9 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
 
     private final String m_bucket;
     private final GoogleCloudStorageConnection m_fsConnection;
+    private final GoogleCloudStorageFileSystem m_filesystem;
+    private final GoogleCloudStorageClient m_client;
+    private final String m_uniquePrefix;
 
     /**
      * Creates initializer.
@@ -73,8 +86,11 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
      *            fs connection.
      */
     public GoogleCloudStorageTestInitializer(final String bucket, final GoogleCloudStorageConnection fsConnection) {
-        this.m_bucket = bucket;
-        this.m_fsConnection = fsConnection;
+        m_bucket = bucket;
+        m_fsConnection = fsConnection;
+        m_filesystem = (GoogleCloudStorageFileSystem) fsConnection.getFileSystem();
+        m_client = m_filesystem.getClient();
+        m_uniquePrefix = UUID.randomUUID().toString();
     }
 
     @Override
@@ -84,20 +100,63 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
 
     @Override
     public Path getRoot() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_filesystem.getPath("/", m_bucket, m_uniquePrefix + "/");
     }
 
     @Override
-    public Path createFile(final String... pathComponents) {
-        // TODO Auto-generated method stub
-        return null;
+    public Path createFile(final String... pathComponents) throws IOException {
+        return createFileWithContent("", pathComponents);
     }
 
     @Override
-    public Path createFileWithContent(final String content, final String... pathComponents) {
-        // TODO Auto-generated method stub
-        return null;
+    public Path createFileWithContent(final String content, final String... pathComponents) throws IOException {
+        Path absoulutePath = //
+                Arrays //
+                        .stream(pathComponents) //
+                        .reduce( //
+                                getRoot(), //
+                                (path, pathComponent) -> path.resolve(pathComponent), //
+                                (p1, p2) -> p1.resolve(p2) //
+                        ); //
+
+        final String key = absoulutePath.subpath(1, absoulutePath.getNameCount()).toString();
+        execAndRetry(() -> {
+            m_client.insertObject(m_bucket, key, content);
+            return null;
+        });
+        return absoulutePath;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void afterTestCase() throws IOException {
+        List<StorageObject> objects = m_client.listAllObjects(m_bucket, m_uniquePrefix);
+        if (objects != null) {
+            for (StorageObject o : objects) {
+                execAndRetry(() -> {
+                    m_client.deleteObject(m_bucket, o.getName());
+                    return null;
+                });
+            }
+        }
+    }
+
+    private static void execAndRetry(final CheckedExceptionSupplier<Void, IOException> request) throws IOException {
+        try {
+            request.apply();
+        } catch (GoogleJsonResponseException ex) {
+            if (ex.getStatusCode() == 429) {// Rate limit exceeded
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex1) {
+                    Thread.currentThread().interrupt();
+                }
+                request.apply();
+            } else {
+                throw ex;
+            }
+        }
+    }
 }

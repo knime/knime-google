@@ -49,6 +49,8 @@
 package org.knime.google.filehandling.nodes.connection;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Google Cloud Storage Connection node dialog.
@@ -63,5 +65,7 @@ public class GoogleCloudStorageConnectionNodeDialog extends DefaultNodeSettingsP
     protected GoogleCloudStorageConnectionNodeDialog() {
         super();
 
+        SettingsModelString projectId = GoogleCloudStorageConnectionNodeModel.createProjectIdSettings();
+        addDialogComponent(new DialogComponentString(projectId, "Project ID"));
     }
 }

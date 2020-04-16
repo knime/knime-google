@@ -59,6 +59,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -83,9 +84,16 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleCloudStorageConnectionNodeModel.class);
 
     private static final String FILE_SYSTEM_NAME = "Google Cloud Storage";
+    private static final String KEY_PROJECT_ID = "projectId";
 
     private String m_fsId;
     private GoogleCloudStorageConnection m_fsConnection;
+
+    private SettingsModelString m_projectIdSettings = createProjectIdSettings();
+
+    static SettingsModelString createProjectIdSettings() {
+        return new SettingsModelString(KEY_PROJECT_ID, "");
+    }
 
     /**
      * Creates new instance.
@@ -98,11 +106,12 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnectionPortObject apiConnection = (GoogleApiConnectionPortObject) inObjects[0];
-        m_fsConnection = new GoogleCloudStorageConnection(apiConnection.getGoogleApiConnection(), "devtest-232617");
+        m_fsConnection = new GoogleCloudStorageConnection(apiConnection.getGoogleApiConnection(),
+                m_projectIdSettings.getStringValue());
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {
-            ((GoogleCloudStorageFileSystem) m_fsConnection.getFileSystem()).getClient().listBuckets();
+            ((GoogleCloudStorageFileSystem) m_fsConnection.getFileSystem()).getClient().listBuckets(null);
         } catch (TokenResponseException e) {
             throw new InvalidSettingsException(e.getDetails().getErrorDescription(), e);
         } catch (GoogleJsonResponseException e) {
@@ -114,6 +123,9 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_projectIdSettings.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Project ID is not configured");
+        }
         m_fsId = FSConnectionRegistry.getInstance().getKey();
         return new PortObjectSpec[] { createSpec() };
     }
@@ -132,26 +144,22 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // nothing to save
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+        m_projectIdSettings.saveSettingsTo(settings);
     }
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        m_projectIdSettings.validateSettings(settings);
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        m_projectIdSettings.loadSettingsFrom(settings);
     }
 
     @Override

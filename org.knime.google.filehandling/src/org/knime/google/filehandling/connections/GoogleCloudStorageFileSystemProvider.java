@@ -61,13 +61,19 @@ import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileTime;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.filehandling.util.GoogleCloudStorageClient;
+
+import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.StorageObject;
 
 /**
  * File system provider for {@link GoogleCloudStorageFileSystem}.
@@ -76,7 +82,8 @@ import org.knime.google.api.data.GoogleApiConnection;
  */
 public class GoogleCloudStorageFileSystemProvider
         extends BaseFileSystemProvider<GoogleCloudStoragePath, GoogleCloudStorageFileSystem> {
-
+    @SuppressWarnings("unused")
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleCloudStorageFileSystemProvider.class);
     /**
      * Google Cloud Storage URI scheme.
      */
@@ -121,21 +128,59 @@ public class GoogleCloudStorageFileSystemProvider
     @Override
     protected Iterator<GoogleCloudStoragePath> createPathIterator(final GoogleCloudStoragePath dir,
             final Filter<? super Path> filter) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        return GoogleCloudStoragePathIterator.create(dir, filter);
     }
 
     @Override
     protected boolean exists(final GoogleCloudStoragePath path) throws IOException {
-        // TODO Auto-generated method stub
-        return false;
+        if (path.getBucketName() == null) {
+            // This is the fake root
+            return true;
+        }
+
+        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+        boolean exists = false;
+
+        if (path.getBlobName() != null) {// check if exact object exists
+            exists = client.getObject(path.getBucketName(), path.getBlobName()) != null;
+        }
+
+        if (!exists) {// check if prefix and bucket exists
+            // it is required to have trailing '/' at this point. Otherwise client.exists()
+            // will return true for '/bucket/foo' even if only '/bucket/foobar' exists.
+            String prefix = GoogleCloudStoragePath.ensureDirectoryPath(path.getBlobName());
+            exists = client.exists(path.getBucketName(), prefix);
+        }
+
+        return exists;
     }
 
     @Override
     protected BaseFileAttributes fetchAttributesInternal(final GoogleCloudStoragePath path, final Class<?> type)
             throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        FileTime createdAt = FileTime.fromMillis(0);
+        FileTime modifiedAt = createdAt;
+        long size = 0;
+
+        if (path.getBucketName() != null) {
+            GoogleCloudStorageClient client = path.getFileSystem().getClient();
+
+            if (path.getBlobName() == null) {
+                Bucket bucket = client.getBucket(path.getBucketName());
+                createdAt = FileTime.fromMillis(bucket.getTimeCreated().getValue());
+                modifiedAt = FileTime.fromMillis(bucket.getUpdated().getValue());
+            } else {
+                StorageObject object = client.getObject(path.getBucketName(), path.getBlobName());
+                if (object != null) {
+                    createdAt = FileTime.fromMillis(object.getTimeCreated().getValue());
+                    modifiedAt = FileTime.fromMillis(object.getUpdated().getValue());
+                    size = object.getSize().longValue();
+                }
+            }
+        }
+        return new BaseFileAttributes(!path.isDirectory() && path.getBlobName() != null, path, modifiedAt, modifiedAt,
+                createdAt, size, false, false, null);
+
     }
 
     @Override

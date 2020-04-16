@@ -89,4 +89,26 @@ public class GoogleCloudStoragePath extends BlobStorePath {
         super(fileSystem, bucket, blob);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public GoogleCloudStorageFileSystem getFileSystem() {
+        return (GoogleCloudStorageFileSystem) super.getFileSystem();
+    }
+
+    /**
+     * Appends trailing '/' to the provided blob name if it doesn't have one.
+     *
+     * @param blob
+     *            The object name.
+     * @return The object name with the trailing '/' or <code>null</code> if
+     *         provided object name is <code>null</code>.
+     */
+    public static String ensureDirectoryPath(final String blob) {
+        if (blob != null && !blob.endsWith(GoogleCloudStorageFileSystem.PATH_SEPARATOR)) {
+            return blob + GoogleCloudStorageFileSystem.PATH_SEPARATOR;
+        }
+        return blob;
+    }
 }

@@ -65,7 +65,10 @@ import org.knime.google.filehandling.util.GoogleCloudStorageClient;
  * @author Alexander Bondaletov
  */
 public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStoragePath> {
-    private static final String PATH_SEPARATOR = "/";
+    /**
+     * Character to use as path separator
+     */
+    public static final String PATH_SEPARATOR = "/";
 
     private final GoogleCloudStorageClient m_client;
     private final GoogleCloudStoragePath m_workingDirectory;
