@@ -52,16 +52,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +76,8 @@ import org.knime.filehandling.core.connections.base.attributes.BaseFileAttribute
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.StorageObject;
 
@@ -114,15 +120,21 @@ public class GoogleCloudStorageFileSystemProvider
     @Override
     protected InputStream newInputStreamInternal(final GoogleCloudStoragePath path, final OpenOption... options)
             throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            return path.getFileSystem().getClient().getObjectStream(path.getBucketName(), path.getBlobName());
+        } catch (GoogleJsonResponseException e) {
+            if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+                throw new NoSuchFileException(path.toString());
+            }
+            throw new IOException(e);
+        }
     }
 
     @Override
     protected OutputStream newOutputStreamInternal(final GoogleCloudStoragePath path, final OpenOption... options)
             throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        final Set<OpenOption> opts = new HashSet<>(Arrays.asList(options));
+        return Channels.newOutputStream(newByteChannel(path, opts));
     }
 
     @Override
@@ -233,11 +245,10 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    public SeekableByteChannel newByteChannelInternal(final Path arg0,
-            final Set<? extends OpenOption> arg1,
-            final FileAttribute<?>... arg2) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+    public SeekableByteChannel newByteChannelInternal(final Path path,
+            final Set<? extends OpenOption> options,
+            final FileAttribute<?>... attrs) throws IOException {
+        return new GoogleCloudStorageSeekableByteChannel((GoogleCloudStoragePath) path, options);
     }
 
     @Override
