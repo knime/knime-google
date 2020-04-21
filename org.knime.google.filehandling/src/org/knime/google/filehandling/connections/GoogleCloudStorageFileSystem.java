@@ -85,8 +85,12 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
      */
     public GoogleCloudStorageFileSystem(final GoogleCloudStorageFileSystemProvider provider, final URI uri,
             final GoogleApiConnection apiConnection, final long cacheTTL) {
-        super(provider, uri, "Google Cloud Storage File System", "Google Cloud Storage File System", cacheTTL,
-                Choice.CONNECTED_FS, Optional.of(uri.getHost()));
+        super(provider,
+                uri,
+                cacheTTL,
+                PATH_SEPARATOR,
+                Choice.CONNECTED_FS,
+                Optional.of(uri.getHost()));
 
         m_client = new GoogleCloudStorageClient(apiConnection, uri);
         m_workingDirectory = getPath(PATH_SEPARATOR);
