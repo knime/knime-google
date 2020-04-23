@@ -58,7 +58,6 @@ import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
-import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -238,24 +237,18 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    public void moveInternal(final GoogleCloudStoragePath source, final GoogleCloudStoragePath target,
+    protected void moveInternal(final GoogleCloudStoragePath source,
+            final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public SeekableByteChannel newByteChannelInternal(final Path path,
+    protected SeekableByteChannel newByteChannelInternal(
+            final GoogleCloudStoragePath path,
             final Set<? extends OpenOption> options,
             final FileAttribute<?>... attrs) throws IOException {
-        return new GoogleCloudStorageSeekableByteChannel((GoogleCloudStoragePath) path, options);
+        return new GoogleCloudStorageSeekableByteChannel(path, options);
     }
-
-    @Override
-    public void setAttribute(final Path arg0, final String arg1, final Object arg2, final LinkOption... arg3)
-            throws IOException {
-        // TODO Auto-generated method stub
-
-    }
-
 }
