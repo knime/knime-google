@@ -214,7 +214,8 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    public void createDirectory(final Path arg0, final FileAttribute<?>... arg1) throws IOException {
+    protected void createDirectoryInternal(final GoogleCloudStoragePath arg0, final FileAttribute<?>... arg1)
+            throws IOException {
         // TODO Auto-generated method stub
 
     }
