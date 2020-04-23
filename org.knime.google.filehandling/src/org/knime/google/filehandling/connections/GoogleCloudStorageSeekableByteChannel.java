@@ -54,14 +54,14 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.Set;
 
-import org.knime.filehandling.core.connections.FSTempFileSeekableByteChannel;
+import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
 
 /**
- * Google Cloud Storage implementation of {@link FSTempFileSeekableByteChannel}.
+ * Google Cloud Storage implementation of {@link TempFileSeekableByteChannel}.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageSeekableByteChannel extends FSTempFileSeekableByteChannel<GoogleCloudStoragePath> {
+public class GoogleCloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<GoogleCloudStoragePath> {
 
     /**
      * Creates new instance.
