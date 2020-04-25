@@ -123,9 +123,9 @@ public class GoogleCloudStorageClient {
      * @param bucket
      *            bucket name.
      * @param prefix
-     *            object name prefix
+     *            (Optional) Separator-terminated object name prefix
      * @param pageToken
-     *            continuation token
+     *            (Optional) Continuation token
      * @return {@link Objects} instance.
      * @throws IOException
      */
@@ -152,7 +152,7 @@ public class GoogleCloudStorageClient {
      * @param bucket
      *            the bucket name.
      * @param prefix
-     *            the prefix.
+     *            (Optional) Separator-terminated object name prefix
      * @return list of objects
      * @throws IOException
      */
@@ -180,7 +180,7 @@ public class GoogleCloudStorageClient {
      * @param bucket
      *            The bucket name.
      * @param prefix
-     *            The object name of prefix. Could be null.
+     *            (Optional) Separator-terminated object name prefix
      * @return true when the given buckets exists and object with the given prefix
      *         exists or no prefix provided.
      * @throws IOException
@@ -199,6 +199,38 @@ public class GoogleCloudStorageClient {
             }
             throw e;
         }
+    }
+
+    /**
+     *
+     * @param bucket
+     *            The bucket name.
+     * @param prefix
+     *            (Optional) Separator-terminated prefix representing a directory.
+     * @return <code>true</code> if the directory represented by the bucket name and
+     *         prefix exists and not empty. Returns <code>false</code> otherwise.
+     * @throws IOException
+     */
+    public boolean isNotEmpty(final String bucket, final String prefix) throws IOException {
+        try {
+            Objects objects = m_storage.objects().list(bucket).setDelimiter(GoogleCloudStorageFileSystem.PATH_SEPARATOR)
+                    .setPrefix(prefix).setMaxResults(2L).execute();
+
+            if (objects.getPrefixes() != null && !objects.getPrefixes().isEmpty()) {
+                return true;
+            }
+
+            if (objects.getItems() != null) {
+                return objects.getItems().stream().anyMatch(o -> !o.getName().equals(prefix));
+            }
+
+        } catch (GoogleJsonResponseException e) {
+            if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND && prefix == null) {
+                return false;
+            }
+            throw e;
+        }
+        return false;
     }
 
     /**

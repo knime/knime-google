@@ -56,8 +56,10 @@ import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -66,6 +68,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -172,6 +175,7 @@ public class GoogleCloudStorageFileSystemProvider
         FileTime createdAt = FileTime.fromMillis(0);
         FileTime modifiedAt = createdAt;
         long size = 0;
+        boolean objectExists = false;
 
         if (path.getBucketName() != null) {
             GoogleCloudStorageClient client = path.getFileSystem().getClient();
@@ -186,18 +190,38 @@ public class GoogleCloudStorageFileSystemProvider
                     createdAt = FileTime.fromMillis(object.getTimeCreated().getValue());
                     modifiedAt = FileTime.fromMillis(object.getUpdated().getValue());
                     size = object.getSize().longValue();
+                    objectExists = true;
                 }
             }
         }
-        return new BaseFileAttributes(!path.isDirectory() && path.getBlobName() != null, path, modifiedAt, modifiedAt,
-                createdAt, size, false, false, null);
+        return new BaseFileAttributes(!path.isDirectory() && objectExists, path, modifiedAt, modifiedAt, createdAt,
+                size, false, false, null);
 
     }
 
     @Override
     protected void deleteInternal(final GoogleCloudStoragePath path) throws IOException {
-        // TODO Auto-generated method stub
+        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+        String blobName = path.getBlobName();
 
+        if (Files.isDirectory(path)) {
+            blobName = GoogleCloudStoragePath.ensureDirectoryPath(blobName);
+            if (client.isNotEmpty(path.getBucketName(), blobName)) {
+                throw new DirectoryNotEmptyException(path.toString());
+            }
+        }
+
+        if (path.getBlobName() != null) {
+            client.deleteObject(path.getBucketName(), blobName);
+        } else {
+            client.deleteBucket(path.getBucketName());
+        }
+
+        // it is possible that parent directory(-s) only existed in a form of a prefix
+        // and got deleted as a result of deleting the object
+        if (!existsCached((GoogleCloudStoragePath) path.getParent())) {
+            Files.createDirectories(path.getParent());
+        }
     }
 
     @Override
@@ -209,21 +233,41 @@ public class GoogleCloudStorageFileSystemProvider
     @Override
     public void copyInternal(final GoogleCloudStoragePath source, final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
-        // TODO Auto-generated method stub
+        GoogleCloudStorageClient client = source.getFileSystem().getClient();
+
+        if (!Files.isDirectory(source)) {
+            client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
+                    target.getBlobName());
+        } else {
+            if (client.isNotEmpty(target.getBucketName(),
+                    GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
+                throw new DirectoryNotEmptyException(
+                        String.format("Target directory %s exists and is not empty", target.toString()));
+            }
+            createDirectory(target);
+        }
 
     }
 
+    @SuppressWarnings("resource")
     @Override
-    protected void createDirectoryInternal(final GoogleCloudStoragePath arg0, final FileAttribute<?>... arg1)
+    protected void createDirectoryInternal(final GoogleCloudStoragePath path,
+            final FileAttribute<?>... arg1)
             throws IOException {
-        // TODO Auto-generated method stub
 
+        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+
+        if (path.getBlobName() != null) {
+            String blob = GoogleCloudStoragePath.ensureDirectoryPath(path.getBlobName());
+            client.insertObject(path.getBucketName(), blob, "");
+        } else {
+            client.insertBucket(path.getBucketName());
+        }
     }
 
     @Override
-    public FileStore getFileStore(final Path arg0) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+    public FileStore getFileStore(final Path path) throws IOException {
+        return path.getFileSystem().getFileStores().iterator().next();
     }
 
     @Override
@@ -232,8 +276,7 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    public boolean isHidden(final Path arg0) throws IOException {
-        // TODO Auto-generated method stub
+    public boolean isHidden(final Path path) throws IOException {
         return false;
     }
 
@@ -241,7 +284,30 @@ public class GoogleCloudStorageFileSystemProvider
     protected void moveInternal(final GoogleCloudStoragePath source,
             final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
-        // TODO Auto-generated method stub
+        GoogleCloudStorageClient client = source.getFileSystem().getClient();
+
+        if (Files.isDirectory(target) && client.isNotEmpty(target.getBucketName(),
+                GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
+            throw new DirectoryNotEmptyException(target.toString());
+        }
+
+        if (Files.isDirectory(source)) {
+            String srcPath = GoogleCloudStoragePath.ensureDirectoryPath(source.getBlobName());
+            List<StorageObject> list = client.listAllObjects(source.getBucketName(),
+                    srcPath);
+            if (list != null) {
+                for (StorageObject so : list) {
+                    String targetName = so.getName().replaceFirst(srcPath,
+                            GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()));
+                    client.rewriteObject(so.getBucket(), so.getName(), target.getBucketName(), targetName);
+                    delete(new GoogleCloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
+                }
+            }
+        } else {
+            client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
+                    target.getBlobName());
+            delete(source);
+        }
 
     }
 

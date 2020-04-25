@@ -59,6 +59,7 @@ import org.knime.filehandling.core.testing.FSTestInitializer;
 import org.knime.filehandling.core.util.CheckedExceptionSupplier;
 import org.knime.google.filehandling.connections.GoogleCloudStorageConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
+import org.knime.google.filehandling.connections.GoogleCloudStoragePath;
 import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -131,8 +132,20 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
      * {@inheritDoc}
      */
     @Override
+    public void beforeTestCase() throws IOException {
+        GoogleCloudStoragePath root = (GoogleCloudStoragePath) getRoot();
+        execAndRetry(() -> {
+            m_client.insertObject(root.getBucketName(), root.getBlobName(), "");
+            return null;
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void afterTestCase() throws IOException {
-        List<StorageObject> objects = m_client.listAllObjects(m_bucket, m_uniquePrefix);
+        List<StorageObject> objects = m_client.listAllObjects(m_bucket, m_uniquePrefix + "/");
         if (objects != null) {
             for (StorageObject o : objects) {
                 execAndRetry(() -> {

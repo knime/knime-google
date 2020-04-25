@@ -118,14 +118,23 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
      *            {@link Filter} instance.
      * @throws IOException
      */
-    protected GoogleCloudStoragePathIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter)
-            throws IOException {
+    protected GoogleCloudStoragePathIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter) {
         m_path = path;
         m_fs = path.getFileSystem();
         m_client = m_fs.getClient();
         m_filter = filter;
 
         initialized = false;
+    }
+
+    /**
+     * Performs initialization by fetching the first path. Cannot be called in the
+     * base class constructor, so has to be called in the derived classes
+     * constructors.
+     *
+     * @throws IOException
+     */
+    protected void init() throws IOException {
         m_nextPath = getNextFilteredPath();
     }
 
@@ -201,6 +210,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
         private BucketIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter)
                 throws IOException {
             super(path, filter);
+            init();
         }
 
         /**
@@ -244,11 +254,14 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
 
     private static class BlobIterator extends GoogleCloudStoragePathIterator {
 
+        private String m_prefix;
         private Iterator<String> m_prefixes;
         private Iterator<StorageObject> m_objects;
 
         private BlobIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter) throws IOException {
             super(path, filter);
+            m_prefix = GoogleCloudStoragePath.ensureDirectoryPath(m_path.getBlobName());
+            init();
         }
 
         /**
@@ -256,7 +269,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
          */
         @Override
         protected String loadNextPage(final String token) throws IOException {
-            Objects objects = m_client.listObjects(m_path.getBucketName(), m_path.getBlobName(), token);
+            Objects objects = m_client.listObjects(m_path.getBucketName(), m_prefix, token);
             if (objects.getPrefixes() != null) {
                 m_prefixes = objects.getPrefixes().iterator();
             }
@@ -286,8 +299,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
             if (m_objects != null && m_objects.hasNext()) {
                 StorageObject obj = m_objects.next();
 
-                String blob = m_path.getBlobName();
-                if (blob != null && blob.equals(obj.getName())) {
+                if (m_prefix != null && m_prefix.equals(obj.getName())) {
                     // response could include an object whose name is exactly matches provided
                     // prefix which is effectively a parent directory and should be skipped
                     return getNextObject();
