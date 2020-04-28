@@ -49,8 +49,9 @@
 package org.knime.google.filehandling.nodes.connection;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Google Cloud Storage Connection node dialog.
@@ -59,13 +60,23 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class GoogleCloudStorageConnectionNodeDialog extends DefaultNodeSettingsPane {
 
+    private final GoogleCloudStorageConnectionSettings m_settings;
+
     /**
      * Creates new instance.
      */
     protected GoogleCloudStorageConnectionNodeDialog() {
         super();
+        m_settings = new GoogleCloudStorageConnectionSettings();
 
-        SettingsModelString projectId = GoogleCloudStorageConnectionNodeModel.createProjectIdSettings();
-        addDialogComponent(new DialogComponentString(projectId, "Project ID"));
+        addDialogComponent(new DialogComponentString(m_settings.getProjectIdModel(), "Project ID"));
+        addDialogComponent(new DialogComponentString(m_settings.getWorkingDirectoryModel(), "Working directory"));
+        addDialogComponent(new DialogComponentBoolean(m_settings.getNormalizePathsModel(), "Normalize paths"));
+        createNewGroup("Timeouts");
+        addDialogComponent(
+                new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "Connection timeout in seconds", 1));
+        addDialogComponent(new DialogComponentNumber(m_settings.getReadTimeoutModel(), "Read timeout in seconds", 1));
+
     }
+
 }

@@ -97,6 +97,35 @@ public class GoogleCloudStoragePath extends BlobStorePath {
         return (GoogleCloudStorageFileSystem) super.getFileSystem();
     }
 
+    @Override
+    protected boolean lastComponentUsesRelativeNotation() {
+        if (getFileSystem().normalizePaths()) {
+            return super.lastComponentUsesRelativeNotation();
+        }
+        return false;
+    }
+
+    @Override
+    public Path normalize() {
+        if (getFileSystem().normalizePaths()) {
+            return super.normalize();
+        } else {
+            return this;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Path relativize(final Path other) {
+        if (!getFileSystem().normalizePaths()) {
+            throw new IllegalArgumentException("Cannot relativize an independent paths if normalization is disabled.");
+        }
+
+        return super.relativize(other);
+    }
+
     /**
      * Appends trailing '/' to the provided blob name if it doesn't have one.
      *

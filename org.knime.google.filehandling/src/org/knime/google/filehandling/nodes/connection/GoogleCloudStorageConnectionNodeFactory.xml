@@ -3,35 +3,40 @@
     <name>Google Cloud Storage Connection (Labs)</name>
     
     <shortDescription>
-        
+        Provides a file system connection to Google Cloud Storage.
     </shortDescription>
     
     <fullDescription>
-        <intro>Insert long description here...</intro>
+        <intro>
+        		This node configures the connection information that will be used to connect to Google Cloud Storage. Using this 
+        		connection the other KNIME remote file handling nodes such as Excel Reader and Excel Writer can  
+        		download and upload files from and to Google Cloud Storage. 
+        </intro>
         
-        
-        <option name="short name of first option (like in the dialog)">description of first option</option>
-        <option name="short name of second option (like in the dialog)">description of second option</option>
-        <!-- possibly more options that can also be grouped by tabs -->
-        <!--
-        <tab name="Standard Options">
-            <option name="short name of first option (like in the dialog)">description of first option</option>
-            <option name="short name of second option (like in the dialog)">description of second option</option>
-        </tab>
-        <tab name="Advanced Options">
-            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
-        </tab>
-        -->
+        <option name="Project ID">
+        	Google Cloud project identifier.
+        	See <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Google Cloud Documentation</a> for more informations.
+        </option>
+        <option name="Working directory">
+        	The working directory.
+        </option>
+        <option name="Normalize paths">
+        	Determines if the path normalization should be applied (i.e. eliminating redundant elements of the path like "." or ".." and a preceding name). 
+        </option>
+        <option name="Connection timeout in seconds">
+        	Timeout in seconds to establish a connection or 0 for an infinite timeout. 
+        </option>
+        <option name="Read timeout in seconds">
+        	Timeout in seconds to read data from an established connection or 0 for an infinite timeout.
+        </option>
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="In-Port name">Description of first input port...</inPort>
-        <!-- possibly more input ports here-->
-        <outPort index="0" name="Out-Port name">Description of first output port...</outPort>
-        <!-- possibly more output ports here-->
+    	<inPort index="0" name="Google API Connection">
+    		The Google API connection that will be used.
+   		</inPort>
+   		<outPort index="0" name="GS File System Connection">
+   			Google Cloud Storage File System Connection
+   		</outPort>
     </ports>    
-    <views>
-        <view index="0" name="name of first view">Description of first view...</view>
-        <!--view index="1" name="name of second view">Description of second view...</view-->
-    </views>
 </knimeNode>

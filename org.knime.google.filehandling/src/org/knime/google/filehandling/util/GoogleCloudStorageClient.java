@@ -51,17 +51,19 @@ package org.knime.google.filehandling.util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
+import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.FileContent;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.storage.Storage;
@@ -92,13 +94,40 @@ public class GoogleCloudStorageClient {
      *
      * @param apiConnection
      *            google api connection.
-     * @param uri
-     *            file system URI.
+     * @param settings
+     *            Connection settings.
      */
-    public GoogleCloudStorageClient(final GoogleApiConnection apiConnection, final URI uri) {
-        this.m_projectId = uri.getHost();
+    public GoogleCloudStorageClient(final GoogleApiConnection apiConnection,
+            final GoogleCloudStorageConnectionSettings settings) {
+        this.m_projectId = settings.getProjectId();
         m_storage = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                apiConnection.getCredential()).setApplicationName(APP_NAME).build();
+                withTimeouts(apiConnection.getCredential(), settings.getConnectionTimeout(), settings.getReadTimeout()))
+                        .setApplicationName(APP_NAME).build();
+    }
+
+    /**
+     * Appends connection and read timeouts to a given
+     * {@link HttpRequestInitializer}.
+     *
+     * @param initializer
+     *            Base initializer.
+     * @param connectionTimeout
+     *            Connection timeout in seconds
+     * @param readTimeout
+     *            Read timeout in seconds
+     * @return New initializer.
+     */
+    private static HttpRequestInitializer withTimeouts(final HttpRequestInitializer initializer,
+            final int connectionTimeout, final int readTimeout) {
+        return new HttpRequestInitializer() {
+
+            @Override
+            public void initialize(final HttpRequest request) throws IOException {
+                initializer.initialize(request);
+                request.setConnectTimeout(connectionTimeout * 1000);
+                request.setReadTimeout(readTimeout * 1000);
+            }
+        };
     }
 
     /**

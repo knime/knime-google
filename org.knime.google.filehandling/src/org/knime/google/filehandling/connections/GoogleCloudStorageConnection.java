@@ -58,6 +58,7 @@ import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
 import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 /**
  * Google Cloud Storage implementation of the {@link FSConnection} interface.
@@ -78,16 +79,17 @@ public class GoogleCloudStorageConnection implements FSConnection {
      *
      * @param apiConnection
      *            google api connection
-     * @param projectId
-     *            project id
+     * @param settings
+     *            Connection settings.
      * @throws URISyntaxException
      *             should now be thrown
      * @throws IOException
      */
-    public GoogleCloudStorageConnection(final GoogleApiConnection apiConnection, final String projectId)
+    public GoogleCloudStorageConnection(final GoogleApiConnection apiConnection,
+            final GoogleCloudStorageConnectionSettings settings)
             throws URISyntaxException, IOException {
-        m_uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, projectId, null, null);
-        m_provider = new GoogleCloudStorageFileSystemProvider(apiConnection, m_cacheTTL);
+        m_uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
+        m_provider = new GoogleCloudStorageFileSystemProvider(apiConnection, m_cacheTTL, settings);
         m_filsystem = m_provider.getOrCreateFileSystem(m_uri, Collections.emptyMap());
     }
 

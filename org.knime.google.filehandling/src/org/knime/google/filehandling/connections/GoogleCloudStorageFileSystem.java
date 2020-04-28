@@ -57,6 +57,7 @@ import java.util.Optional;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 /**
@@ -71,7 +72,7 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
     public static final String PATH_SEPARATOR = "/";
 
     private final GoogleCloudStorageClient m_client;
-    private final GoogleCloudStoragePath m_workingDirectory;
+    private final boolean m_normalizePaths;
 
     /**
      * Constructs {@link GoogleCloudStorageFileSystem} for a given URI.
@@ -81,19 +82,25 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
      * @param uri
      *            the URI for the file system
      * @param apiConnection
+     *            Google API connection.
      * @param cacheTTL
+     *            The time to live for cached elements in milliseconds.
+     * @param settings
+     *            Connection settings.
      */
     public GoogleCloudStorageFileSystem(final GoogleCloudStorageFileSystemProvider provider, final URI uri,
-            final GoogleApiConnection apiConnection, final long cacheTTL) {
+            final GoogleApiConnection apiConnection, final long cacheTTL,
+            final GoogleCloudStorageConnectionSettings settings) {
         super(provider,
                 uri,
                 cacheTTL,
-                PATH_SEPARATOR,
+                settings.getWorkingDirectory().isEmpty() ? PATH_SEPARATOR
+                        : settings.getWorkingDirectory(),
                 Choice.CONNECTED_FS,
                 Optional.of(uri.getHost()));
 
-        m_client = new GoogleCloudStorageClient(apiConnection, uri);
-        m_workingDirectory = getPath(PATH_SEPARATOR);
+        m_client = new GoogleCloudStorageClient(apiConnection, settings);
+        m_normalizePaths = settings.getNormalizePaths();
     }
 
     /**
@@ -134,11 +141,9 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
     }
 
     /**
-     * {@inheritDoc}
+     * @return whether to normalize paths
      */
-    @Override
-    public GoogleCloudStoragePath getWorkingDirectory() {
-        return m_workingDirectory;
+    public boolean normalizePaths() {
+        return m_normalizePaths;
     }
-
 }

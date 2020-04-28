@@ -76,6 +76,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -99,6 +100,7 @@ public class GoogleCloudStorageFileSystemProvider
 
     private final GoogleApiConnection m_apiConnection;
     private final long m_cacheTTL;
+    private final GoogleCloudStorageConnectionSettings m_settings;
 
     /**
      * Constructs a file system provider for {@link GoogleCloudStorageFileSystem}.
@@ -107,16 +109,20 @@ public class GoogleCloudStorageFileSystemProvider
      *            google api connection.
      * @param cacheTTL
      *            the timeToLive for the attributes cache.
+     * @param settings
+     *            Connection settings.
      */
-    public GoogleCloudStorageFileSystemProvider(final GoogleApiConnection apiConnection, final long cacheTTL) {
+    public GoogleCloudStorageFileSystemProvider(final GoogleApiConnection apiConnection, final long cacheTTL,
+            final GoogleCloudStorageConnectionSettings settings) {
         this.m_apiConnection = apiConnection;
         this.m_cacheTTL = cacheTTL;
+        this.m_settings = settings;
     }
 
     @Override
     protected GoogleCloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
             throws IOException {
-        return new GoogleCloudStorageFileSystem(this, uri, m_apiConnection, m_cacheTTL);
+        return new GoogleCloudStorageFileSystem(this, uri, m_apiConnection, m_cacheTTL, m_settings);
     }
 
     @Override
