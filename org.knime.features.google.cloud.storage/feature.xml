@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.google.cloud.storage"
-      label="KNIME Google Cloud Storage Connectors"
+      label="KNIME Google Cloud Storage Connection"
       version="4.2.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
-      Google Cloud Storage Connector nodes.
+      Google Cloud Storage Connection nodes.
    </description>
 
    <copyright>
@@ -740,6 +740,12 @@ propagated with or for interoperation with KNIME.
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
+   <plugin
+         id="org.knime.google.filehandling"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
    <plugin
          id="org.knime.google.api"

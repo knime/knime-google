@@ -29,7 +29,6 @@
 		<module>org.knime.google.cloud.storage</module>
 		<module>org.knime.google.filehandling</module>
 		<module>org.knime.features.google.cloud.storage</module>
-		<module>org.knime.features.google.filehandling</module>
 		<module>org.knime.update.google</module>
 	</modules>
 
