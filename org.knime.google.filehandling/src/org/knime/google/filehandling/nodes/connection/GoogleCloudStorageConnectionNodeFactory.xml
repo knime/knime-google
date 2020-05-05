@@ -1,42 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<knimeNode icon="./default.png" type="Source" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+<knimeNode icon="./googlecsconnection16x16.png" type="Source" xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
     <name>Google Cloud Storage Connection (Labs)</name>
     
     <shortDescription>
-        Provides a file system connection to Google Cloud Storage.
+        Connects to Google Cloud Storage in order to read/write files in downstream nodes.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        		This node configures the connection information that will be used to connect to Google Cloud Storage. Using this 
-        		connection the other KNIME remote file handling nodes such as Excel Reader and Excel Writer can  
-        		download and upload files from and to Google Cloud Storage. 
+            <p>This node connects to Google Cloud Storage. The resulting output port allows downstream nodes to access
+            the Google Cloud Storage data of a <i>project</i> as a file system, e.g. to read or write files and folders,
+            or to perform other file system operations (browse/list files, copy, move, ...).
+            </p>
+            
+            <p><b>Path syntax:</b> Paths for Google Cloud Storage are specified with a UNIX-like syntax, /mybucket/myfolder/myfile. An absolute
+            for Google Cloud Storage consists of:
+                <ol>
+                    <li>A leading slash ("/").</li>
+                    <li>Followed by the name of a bucket ("mybucket" in the above example), followed by a slash.</li>
+                    <li>Followed by the name of an object within the bucket ("myfolder/myfile" in the above example).</li>
+                </ol>
+            </p>
+            
+            <p>Please note that for authentication purposes, this node requires the "Google Authentication (API key)" node to be connected to its input port.</p>
         </intro>
         
         <option name="Project ID">
-        	Google Cloud project identifier.
-        	See <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Google Cloud Documentation</a> for more informations.
+            Specifies the <a href="https://cloud.google.com/storage/docs/key-terms#projects">project</a> to which the Cloud Storage data belongs.
+            See <a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Google Cloud Documentation</a> for more informations.
         </option>
         <option name="Working directory">
-        	The working directory.
+            Specifies the <i>working directory</i> using the path syntax explained above. The working directory must be specified as an absolute path. A working directory allows downstream
+            nodes to access files/folders using <i>relative</i> paths, i.e. paths that do not have a leading slash. If not specified, the default working directory
+            is "/".
         </option>
         <option name="Normalize paths">
-        	Determines if the path normalization should be applied (i.e. eliminating redundant elements of the path like "." or ".." and a preceding name). 
+            Determines if the path normalization should be applied. Path normalization eliminates redundant components of a path like, e.g. /a/../b/./c" can be normalized to "/b/c".
+            When these redundant components like "../" or "." are part of an existing object, then normalization must be deactivated in order to access them properly.
         </option>
         <option name="Connection timeout in seconds">
-        	Timeout in seconds to establish a connection or 0 for an infinite timeout. 
+            Timeout in seconds to establish a connection or 0 for an infinite timeout. 
         </option>
         <option name="Read timeout in seconds">
-        	Timeout in seconds to read data from an established connection or 0 for an infinite timeout.
+            Timeout in seconds to read data from an established connection or 0 for an infinite timeout.
         </option>
     </fullDescription>
     
     <ports>
-    	<inPort index="0" name="Google API Connection">
-    		The Google API connection that will be used.
-   		</inPort>
-   		<outPort index="0" name="GS File System Connection">
-   			Google Cloud Storage File System Connection
-   		</outPort>
+        <inPort index="0" name="Google API Connection">
+            The Google Service Connection that carries authentication credentials. Please note that currently only the "Google Authentication (API key)" node
+            can be connected to this port. 
+        </inPort>
+        <outPort index="0" name="Google Cloud Storage File System Connection">
+            Google Cloud Storage File System Connection
+        </outPort>
     </ports>    
 </knimeNode>
