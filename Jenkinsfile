@@ -17,7 +17,7 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-            repositories: ['knime-google']
+            repositories: ['knime-google', 'knime-filehandling']
         ]
     )
 
