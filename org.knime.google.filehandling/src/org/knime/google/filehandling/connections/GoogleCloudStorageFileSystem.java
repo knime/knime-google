@@ -52,8 +52,8 @@ import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Optional;
 
+import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -91,13 +91,14 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
     public GoogleCloudStorageFileSystem(final GoogleCloudStorageFileSystemProvider provider, final URI uri,
             final GoogleApiConnection apiConnection, final long cacheTTL,
             final GoogleCloudStorageConnectionSettings settings) {
-        super(provider,
-                uri,
-                cacheTTL,
-                settings.getWorkingDirectory().isEmpty() ? PATH_SEPARATOR
-                        : settings.getWorkingDirectory(),
-                Choice.CONNECTED_FS,
-                Optional.of(uri.getHost()));
+        super(provider, //
+                uri, //
+                cacheTTL, //
+                settings.getWorkingDirectory().isEmpty() // s
+                        ? PATH_SEPARATOR //
+                        : settings
+                                .getWorkingDirectory(), //
+                new DefaultFSLocationSpec(Choice.CONNECTED_FS));
 
         m_client = new GoogleCloudStorageClient(apiConnection, settings);
         m_normalizePaths = settings.getNormalizePaths();
