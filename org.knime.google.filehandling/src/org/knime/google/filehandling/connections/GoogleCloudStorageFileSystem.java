@@ -98,10 +98,14 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
                         ? PATH_SEPARATOR //
                         : settings
                                 .getWorkingDirectory(), //
-                new DefaultFSLocationSpec(Choice.CONNECTED_FS));
+                createFSLocationSpec());
 
         m_client = new GoogleCloudStorageClient(apiConnection, settings);
         m_normalizePaths = settings.getNormalizePaths();
+    }
+
+    private static DefaultFSLocationSpec createFSLocationSpec() {
+        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, GoogleCloudStorageFileSystemProvider.SCHEME);
     }
 
     /**
