@@ -154,6 +154,7 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
                 });
             }
         }
+        m_filesystem.clearAttributesCache();
     }
 
     private static void execAndRetry(final CheckedExceptionSupplier<Void, IOException> request) throws IOException {

@@ -286,6 +286,7 @@ public class GoogleCloudStorageFileSystemProvider
         return false;
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected void moveInternal(final GoogleCloudStoragePath source,
             final GoogleCloudStoragePath target,
@@ -306,7 +307,10 @@ public class GoogleCloudStorageFileSystemProvider
                     String targetName = so.getName().replaceFirst(srcPath,
                             GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()));
                     client.rewriteObject(so.getBucket(), so.getName(), target.getBucketName(), targetName);
-                    delete(new GoogleCloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
+
+                    client.deleteObject(so.getBucket(), so.getName());
+                    getFileSystemInternal().removeFromAttributeCache(
+                            new GoogleCloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
                 }
             }
         } else {
