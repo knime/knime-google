@@ -99,16 +99,6 @@ public class GoogleCloudStorageFSConnection implements FSConnection {
         m_filesystem = provider.getOrCreateFileSystem(uri, env);
     }
 
-    /**
-     * Closes the FileSystem for this connection
-     *
-     * @throws IOException
-     *             if an I/O error occurs
-     */
-    public void closeFileSystem() throws IOException {
-        m_filesystem.close();
-    }
-
     @Override
     public FSFileSystem<?> getFileSystem() {
         return m_filesystem;

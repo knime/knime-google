@@ -55,6 +55,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -62,11 +63,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
 import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.filehandling.connections.GoogleCloudStorageConnection;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
 
 import com.google.api.client.auth.oauth2.TokenResponseException;
@@ -85,7 +87,7 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     private static final String FILE_SYSTEM_NAME = "Google Cloud Storage";
 
     private String m_fsId;
-    private GoogleCloudStorageConnection m_fsConnection;
+    private GoogleCloudStorageFSConnection m_fsConnection;
 
     private final GoogleCloudStorageConnectionSettings m_settings = new GoogleCloudStorageConnectionSettings();
 
@@ -100,7 +102,7 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnectionPortObject apiConnection = (GoogleApiConnectionPortObject) inObjects[0];
-        m_fsConnection = new GoogleCloudStorageConnection(apiConnection.getGoogleApiConnection(), m_settings);
+        m_fsConnection = new GoogleCloudStorageFSConnection(apiConnection.getGoogleApiConnection(), m_settings);
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {
@@ -153,18 +155,20 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     }
 
     @Override
-    protected void reset() {
-        try {
-            if (m_fsConnection != null) {
-                m_fsConnection.closeFileSystem();
-            }
-        } catch (final IOException ex) {
-            LOGGER.error("Exception closing file system: " + ex.getMessage(), ex);
-        } finally {
-            FSConnectionRegistry.getInstance().deregister(m_fsId);
-            m_fsId = null;
-            m_fsConnection = null;
-        }
+    protected void onDispose() {
+        // close the file system also when the workflow is closed
+        reset();
     }
 
+    @Override
+    protected void reset() {
+        if (m_fsConnection != null) {
+            // We will null the m_fsConnection field afterwards, so we need to assign it to
+            // a local variable because to avoid races.
+            final FSConnection fsConnection = m_fsConnection;
+            KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(() -> fsConnection.close());
+            m_fsConnection = null;
+        }
+        m_fsId = null;
+    }
 }
