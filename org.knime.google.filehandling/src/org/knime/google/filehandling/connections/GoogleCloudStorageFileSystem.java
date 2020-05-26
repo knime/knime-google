@@ -94,7 +94,7 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
         super(provider, //
                 uri, //
                 cacheTTL, //
-                settings.getWorkingDirectory().isEmpty() // s
+                settings.getWorkingDirectory().isEmpty() //
                         ? PATH_SEPARATOR //
                         : settings
                                 .getWorkingDirectory(), //

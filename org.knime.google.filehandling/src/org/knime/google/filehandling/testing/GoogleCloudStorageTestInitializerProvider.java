@@ -56,7 +56,8 @@ import java.util.Map;
 import org.knime.filehandling.core.testing.FSTestInitializer;
 import org.knime.filehandling.core.testing.FSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageConnection;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
 import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 import com.google.api.services.storage.StorageScopes;
@@ -75,11 +76,13 @@ public class GoogleCloudStorageTestInitializerProvider implements FSTestInitiali
             GoogleApiConnection apiConnection = new GoogleApiConnection(configuration.get("email"),
                     configuration.get("keyFilePath"), StorageScopes.DEVSTORAGE_FULL_CONTROL);
 
+            String bucket = configuration.get("bucket");
+
             GoogleCloudStorageConnectionSettings settings = new GoogleCloudStorageConnectionSettings();
             settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
+            settings.getWorkingDirectoryModel().setStringValue(GoogleCloudStorageFileSystem.PATH_SEPARATOR + bucket);
 
-            GoogleCloudStorageConnection fsConnection = new GoogleCloudStorageConnection(apiConnection, settings);
-            String bucket = configuration.get("bucket");
+            GoogleCloudStorageFSConnection fsConnection = new GoogleCloudStorageFSConnection(apiConnection, settings);
             return new GoogleCloudStorageTestInitializer(bucket, fsConnection);
         } catch (GeneralSecurityException | IOException | URISyntaxException e) {
             throw new RuntimeException(e);

@@ -51,7 +51,8 @@ package org.knime.google.filehandling.connections;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.filehandling.core.connections.FSConnection;
@@ -65,16 +66,15 @@ import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnecti
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageConnection implements FSConnection {
+public class GoogleCloudStorageFSConnection implements FSConnection {
 
-    private final URI m_uri;
-    private final GoogleCloudStorageFileSystemProvider m_provider;
-    private GoogleCloudStorageFileSystem m_filsystem;
+    private final static long CACHE_TTL_MILLIS = 6000;
 
-    private final long m_cacheTTL = 60000;
+    private final GoogleCloudStorageFileSystem m_filesystem;
+
 
     /**
-     * Creates new {@link GoogleCloudStorageConnection} for a given api connection
+     * Creates new {@link GoogleCloudStorageFSConnection} for a given api connection
      * and project.
      *
      * @param apiConnection
@@ -85,12 +85,18 @@ public class GoogleCloudStorageConnection implements FSConnection {
      *             should now be thrown
      * @throws IOException
      */
-    public GoogleCloudStorageConnection(final GoogleApiConnection apiConnection,
+    public GoogleCloudStorageFSConnection(final GoogleApiConnection apiConnection,
             final GoogleCloudStorageConnectionSettings settings)
             throws URISyntaxException, IOException {
-        m_uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
-        m_provider = new GoogleCloudStorageFileSystemProvider(apiConnection, m_cacheTTL, settings);
-        m_filsystem = m_provider.getOrCreateFileSystem(m_uri, Collections.emptyMap());
+
+        final GoogleCloudStorageFileSystemProvider provider = new GoogleCloudStorageFileSystemProvider();
+
+        final URI uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
+        final Map<String, Object> env = new HashMap<>();
+        env.put(GoogleCloudStorageFileSystemProvider.KEY_API_CONNECTION, apiConnection);
+        env.put(GoogleCloudStorageFileSystemProvider.KEY_GCS_CONNECTION_SETTINGS, settings);
+        env.put(GoogleCloudStorageFileSystemProvider.KEY_CACHE_TTL_MILLIS, CACHE_TTL_MILLIS);
+        m_filesystem = provider.getOrCreateFileSystem(uri, env);
     }
 
     /**
@@ -100,17 +106,16 @@ public class GoogleCloudStorageConnection implements FSConnection {
      *             if an I/O error occurs
      */
     public void closeFileSystem() throws IOException {
-        m_filsystem.close();
+        m_filesystem.close();
     }
 
     @Override
     public FSFileSystem<?> getFileSystem() {
-        return m_filsystem;
+        return m_filesystem;
     }
 
     @Override
     public FileSystemBrowser getFileSystemBrowser() {
         return new NioFileSystemBrowser(this);
     }
-
 }

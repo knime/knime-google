@@ -49,15 +49,15 @@
 package org.knime.google.filehandling.testing;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import org.knime.filehandling.core.connections.FSConnection;
+import org.knime.filehandling.core.connections.FSPath;
 import org.knime.filehandling.core.testing.FSTestInitializer;
 import org.knime.filehandling.core.util.CheckedExceptionSupplier;
-import org.knime.google.filehandling.connections.GoogleCloudStorageConnection;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
 import org.knime.google.filehandling.connections.GoogleCloudStoragePath;
 import org.knime.google.filehandling.util.GoogleCloudStorageClient;
@@ -73,7 +73,7 @@ import com.google.api.services.storage.model.StorageObject;
 public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
 
     private final String m_bucket;
-    private final GoogleCloudStorageConnection m_fsConnection;
+    private final GoogleCloudStorageFSConnection m_fsConnection;
     private final GoogleCloudStorageFileSystem m_filesystem;
     private final GoogleCloudStorageClient m_client;
     private final String m_uniquePrefix;
@@ -86,7 +86,7 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
      * @param fsConnection
      *            fs connection.
      */
-    public GoogleCloudStorageTestInitializer(final String bucket, final GoogleCloudStorageConnection fsConnection) {
+    public GoogleCloudStorageTestInitializer(final String bucket, final GoogleCloudStorageFSConnection fsConnection) {
         m_bucket = bucket;
         m_fsConnection = fsConnection;
         m_filesystem = (GoogleCloudStorageFileSystem) fsConnection.getFileSystem();
@@ -100,32 +100,33 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
     }
 
     @Override
-    public Path getRoot() {
+    public FSPath getRoot() {
         return m_filesystem.getPath("/", m_bucket, m_uniquePrefix + "/");
     }
 
     @Override
-    public Path createFile(final String... pathComponents) throws IOException {
+    public FSPath createFile(final String... pathComponents) throws IOException {
         return createFileWithContent("", pathComponents);
     }
 
     @Override
-    public Path createFileWithContent(final String content, final String... pathComponents) throws IOException {
-        Path absoulutePath = //
+    public FSPath createFileWithContent(final String content, final String... pathComponents) throws IOException {
+        FSPath absolutePath = //
                 Arrays //
                         .stream(pathComponents) //
                         .reduce( //
                                 getRoot(), //
-                                (path, pathComponent) -> path.resolve(pathComponent), //
-                                (p1, p2) -> p1.resolve(p2) //
+                                (path, pathComponent) -> (FSPath) path.resolve(
+                                        pathComponent), //
+                                (p1, p2) -> (FSPath) p1.resolve(p2) //
                         ); //
 
-        final String key = absoulutePath.subpath(1, absoulutePath.getNameCount()).toString();
+        final String key = absolutePath.subpath(1, absolutePath.getNameCount()).toString();
         execAndRetry(() -> {
             m_client.insertObject(m_bucket, key, content);
             return null;
         });
-        return absoulutePath;
+        return absolutePath;
     }
 
     /**

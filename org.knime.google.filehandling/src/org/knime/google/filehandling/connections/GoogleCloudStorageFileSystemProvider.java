@@ -72,7 +72,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.node.NodeLogger;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -91,45 +90,36 @@ import com.google.api.services.storage.model.StorageObject;
  */
 public class GoogleCloudStorageFileSystemProvider
         extends BaseFileSystemProvider<GoogleCloudStoragePath, GoogleCloudStorageFileSystem> {
-    @SuppressWarnings("unused")
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleCloudStorageFileSystemProvider.class);
+
+    static final String KEY_API_CONNECTION = "apiConnection";
+
+    static final String KEY_CACHE_TTL_MILLIS = "cacheTTL";
+
+    static final String KEY_GCS_CONNECTION_SETTINGS = "gcsConnectionSettings";
+
     /**
      * Google Cloud Storage URI scheme.
      */
     public static final String SCHEME = "gs";
 
-    private final GoogleApiConnection m_apiConnection;
-    private final long m_cacheTTL;
-    private final GoogleCloudStorageConnectionSettings m_settings;
-
-    /**
-     * Constructs a file system provider for {@link GoogleCloudStorageFileSystem}.
-     *
-     * @param apiConnection
-     *            google api connection.
-     * @param cacheTTL
-     *            the timeToLive for the attributes cache.
-     * @param settings
-     *            Connection settings.
-     */
-    public GoogleCloudStorageFileSystemProvider(final GoogleApiConnection apiConnection, final long cacheTTL,
-            final GoogleCloudStorageConnectionSettings settings) {
-        this.m_apiConnection = apiConnection;
-        this.m_cacheTTL = cacheTTL;
-        this.m_settings = settings;
-    }
-
     @Override
     protected GoogleCloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
             throws IOException {
-        return new GoogleCloudStorageFileSystem(this, uri, m_apiConnection, m_cacheTTL, m_settings);
+
+        final GoogleApiConnection apiConnection = (GoogleApiConnection) env.get(KEY_API_CONNECTION);
+        final GoogleCloudStorageConnectionSettings settings = (GoogleCloudStorageConnectionSettings) env
+                .get(KEY_GCS_CONNECTION_SETTINGS);
+        final long cacheTTL = (long) env.get(KEY_CACHE_TTL_MILLIS);
+
+        return new GoogleCloudStorageFileSystem(this, uri, apiConnection, cacheTTL, settings);
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected InputStream newInputStreamInternal(final GoogleCloudStoragePath path, final OpenOption... options)
             throws IOException {
         try {
-            return path.getFileSystem().getClient().getObjectStream(path.getBucketName(), path.getBlobName());
+            return getFileSystemInternal().getClient().getObjectStream(path.getBucketName(), path.getBlobName());
         } catch (GoogleJsonResponseException e) {
             if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
                 throw new NoSuchFileException(path.toString());
@@ -158,7 +148,7 @@ public class GoogleCloudStorageFileSystemProvider
             return true;
         }
 
-        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
         boolean exists = false;
 
         if (path.getBlobName() != null) {// check if exact object exists
@@ -184,7 +174,7 @@ public class GoogleCloudStorageFileSystemProvider
         boolean objectExists = false;
 
         if (path.getBucketName() != null) {
-            GoogleCloudStorageClient client = path.getFileSystem().getClient();
+            GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
             if (path.getBlobName() == null) {
                 Bucket bucket = client.getBucket(path.getBucketName());
@@ -207,7 +197,7 @@ public class GoogleCloudStorageFileSystemProvider
 
     @Override
     protected void deleteInternal(final GoogleCloudStoragePath path) throws IOException {
-        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
         String blobName = path.getBlobName();
 
         if (Files.isDirectory(path)) {
@@ -233,13 +223,12 @@ public class GoogleCloudStorageFileSystemProvider
     @Override
     public void checkAccessInternal(final GoogleCloudStoragePath path, final AccessMode... modes) throws IOException {
         // TODO Auto-generated method stub
-
     }
 
     @Override
     public void copyInternal(final GoogleCloudStoragePath source, final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
-        GoogleCloudStorageClient client = source.getFileSystem().getClient();
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
         if (!Files.isDirectory(source)) {
             client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
@@ -261,7 +250,7 @@ public class GoogleCloudStorageFileSystemProvider
             final FileAttribute<?>... arg1)
             throws IOException {
 
-        GoogleCloudStorageClient client = path.getFileSystem().getClient();
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
         if (path.getBlobName() != null) {
             String blob = GoogleCloudStoragePath.ensureDirectoryPath(path.getBlobName());
@@ -273,7 +262,7 @@ public class GoogleCloudStorageFileSystemProvider
 
     @Override
     public FileStore getFileStore(final Path path) throws IOException {
-        return path.getFileSystem().getFileStores().iterator().next();
+        return getFileSystemInternal().getFileStores().iterator().next();
     }
 
     @Override
@@ -281,17 +270,12 @@ public class GoogleCloudStorageFileSystemProvider
         return SCHEME;
     }
 
-    @Override
-    public boolean isHidden(final Path path) throws IOException {
-        return false;
-    }
-
     @SuppressWarnings("resource")
     @Override
     protected void moveInternal(final GoogleCloudStoragePath source,
             final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
-        GoogleCloudStorageClient client = source.getFileSystem().getClient();
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
         if (Files.isDirectory(target) && client.isNotEmpty(target.getBucketName(),
                 GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
