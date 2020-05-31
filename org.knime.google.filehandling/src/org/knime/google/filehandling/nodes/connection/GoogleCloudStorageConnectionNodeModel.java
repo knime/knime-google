@@ -123,7 +123,8 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     }
 
     private FileSystemPortObjectSpec createSpec() {
-        return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId);
+        return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId,
+                GoogleCloudStorageFileSystem.createFSLocationSpec());
     }
 
     @Override

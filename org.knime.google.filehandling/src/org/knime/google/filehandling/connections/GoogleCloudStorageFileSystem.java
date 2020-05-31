@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
+import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -66,12 +67,14 @@ import org.knime.google.filehandling.util.GoogleCloudStorageClient;
  * @author Alexander Bondaletov
  */
 public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStoragePath> {
+
     /**
      * Character to use as path separator
      */
     public static final String PATH_SEPARATOR = "/";
 
     private final GoogleCloudStorageClient m_client;
+
     private final boolean m_normalizePaths;
 
     /**
@@ -104,7 +107,10 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
         m_normalizePaths = settings.getNormalizePaths();
     }
 
-    private static DefaultFSLocationSpec createFSLocationSpec() {
+    /**
+     * @return the {@link FSLocationSpec} for a Google Cloud Storage file system.
+     */
+    public static FSLocationSpec createFSLocationSpec() {
         return new DefaultFSLocationSpec(Choice.CONNECTED_FS, GoogleCloudStorageFileSystemProvider.SCHEME);
     }
 
