@@ -81,17 +81,21 @@ public class GoogleCloudStorageFSConnection implements FSConnection {
      *            google api connection
      * @param settings
      *            Connection settings.
-     * @throws URISyntaxException
-     *             should now be thrown
      * @throws IOException
      */
     public GoogleCloudStorageFSConnection(final GoogleApiConnection apiConnection,
             final GoogleCloudStorageConnectionSettings settings)
-            throws URISyntaxException, IOException {
+            throws IOException {
 
         final GoogleCloudStorageFileSystemProvider provider = new GoogleCloudStorageFileSystemProvider();
 
-        final URI uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
+        final URI uri;
+        try {
+            uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException("Illegal project id: " + settings.getProjectId(), ex);
+        }
+
         final Map<String, Object> env = new HashMap<>();
         env.put(GoogleCloudStorageFileSystemProvider.KEY_API_CONNECTION, apiConnection);
         env.put(GoogleCloudStorageFileSystemProvider.KEY_GCS_CONNECTION_SETTINGS, settings);

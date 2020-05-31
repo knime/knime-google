@@ -56,7 +56,7 @@ import java.util.UUID;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSPath;
 import org.knime.filehandling.core.testing.FSTestInitializer;
-import org.knime.filehandling.core.util.CheckedExceptionSupplier;
+import org.knime.filehandling.core.util.IOESupplier;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
 import org.knime.google.filehandling.connections.GoogleCloudStoragePath;
@@ -158,9 +158,9 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
         m_filesystem.clearAttributesCache();
     }
 
-    private static void execAndRetry(final CheckedExceptionSupplier<Void, IOException> request) throws IOException {
+    private static void execAndRetry(final IOESupplier<Void> request) throws IOException {
         try {
-            request.apply();
+            request.get();
         } catch (GoogleJsonResponseException ex) {
             if (ex.getStatusCode() == 429) {// Rate limit exceeded
                 try {
@@ -168,7 +168,7 @@ public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
                 } catch (InterruptedException ex1) {
                     Thread.currentThread().interrupt();
                 }
-                request.apply();
+                request.get();
             } else {
                 throw ex;
             }

@@ -49,49 +49,68 @@
 package org.knime.google.filehandling.testing;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
+import org.knime.core.node.util.CheckUtils;
+import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.testing.FSTestInitializer;
 import org.knime.filehandling.core.testing.FSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
+import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystemProvider;
 import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 import com.google.api.services.storage.StorageScopes;
 
 /**
- * Initializer provider for cloud storaget.
+ * Initializer provider for cloud storage.
  *
  * @author Alexander Bondaletov
  */
 public class GoogleCloudStorageTestInitializerProvider implements FSTestInitializerProvider {
-    private static final String FS_NAME = "gs";
 
+    @SuppressWarnings("resource")
     @Override
-    public FSTestInitializer setup(final Map<String, String> configuration) {
+    public FSTestInitializer setup(final Map<String, String> configuration) throws IOException {
+
+        validateConfiguration(configuration);
+
+        final GoogleApiConnection apiConnection;
         try {
-            GoogleApiConnection apiConnection = new GoogleApiConnection(configuration.get("email"),
-                    configuration.get("keyFilePath"), StorageScopes.DEVSTORAGE_FULL_CONTROL);
-
-            String bucket = configuration.get("bucket");
-
-            GoogleCloudStorageConnectionSettings settings = new GoogleCloudStorageConnectionSettings();
-            settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
-            settings.getWorkingDirectoryModel().setStringValue(GoogleCloudStorageFileSystem.PATH_SEPARATOR + bucket);
-
-            GoogleCloudStorageFSConnection fsConnection = new GoogleCloudStorageFSConnection(apiConnection, settings);
-            return new GoogleCloudStorageTestInitializer(bucket, fsConnection);
-        } catch (GeneralSecurityException | IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
+            apiConnection = new GoogleApiConnection(configuration.get("email"), configuration.get("keyFilePath"),
+                    StorageScopes.DEVSTORAGE_FULL_CONTROL);
+        } catch (GeneralSecurityException e) {
+            throw new IOException(e);
         }
+
+        final String bucket = configuration.get("bucket");
+
+        final GoogleCloudStorageConnectionSettings settings = new GoogleCloudStorageConnectionSettings();
+        settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
+        settings.getWorkingDirectoryModel().setStringValue(GoogleCloudStorageFileSystem.PATH_SEPARATOR + bucket);
+
+        final GoogleCloudStorageFSConnection fsConnection = new GoogleCloudStorageFSConnection(apiConnection, settings);
+        return new GoogleCloudStorageTestInitializer(bucket, fsConnection);
     }
+
+    private static void validateConfiguration(final Map<String, String> configuration) {
+        CheckUtils.checkArgumentNotNull(configuration.get("email"), "email must be specified.");
+        CheckUtils.checkArgumentNotNull(configuration.get("keyFilePath"), "keyFilePath must be specified.");
+        CheckUtils.checkArgumentNotNull(configuration.get("projectId"), "projectId must be specified.");
+        CheckUtils.checkArgumentNotNull(configuration.get("bucket"), "bucket must be specified.");
+    }
+
 
     @Override
     public String getFSType() {
-        return FS_NAME;
+        return GoogleCloudStorageFileSystemProvider.SCHEME;
     }
 
+    @Override
+    public FSLocationSpec createFSLocationSpec(final Map<String, String> configuration) {
+        validateConfiguration(configuration);
+        return GoogleCloudStorageFileSystem.createFSLocationSpec();
+    }
 }
