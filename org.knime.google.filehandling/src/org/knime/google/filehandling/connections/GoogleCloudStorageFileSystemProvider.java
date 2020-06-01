@@ -63,6 +63,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
@@ -200,7 +201,7 @@ public class GoogleCloudStorageFileSystemProvider
         GoogleCloudStorageClient client = getFileSystemInternal().getClient();
         String blobName = path.getBlobName();
 
-        if (Files.isDirectory(path)) {
+        if (isDirectory(path)) {
             blobName = GoogleCloudStoragePath.ensureDirectoryPath(blobName);
             if (client.isNotEmpty(path.getBucketName(), blobName)) {
                 throw new DirectoryNotEmptyException(path.toString());
@@ -230,7 +231,7 @@ public class GoogleCloudStorageFileSystemProvider
             final CopyOption... options) throws IOException {
         GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
-        if (!Files.isDirectory(source)) {
+        if (!isDirectory(source)) {
             client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
                     target.getBlobName());
         } else {
@@ -242,6 +243,10 @@ public class GoogleCloudStorageFileSystemProvider
             createDirectory(target);
         }
 
+    }
+
+    private boolean isDirectory(final GoogleCloudStoragePath path) throws IOException {
+        return readAttributes(path, BasicFileAttributes.class).isDirectory();
     }
 
     @SuppressWarnings("resource")
@@ -277,12 +282,13 @@ public class GoogleCloudStorageFileSystemProvider
             final CopyOption... options) throws IOException {
         GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
-        if (Files.isDirectory(target) && client.isNotEmpty(target.getBucketName(),
+        if (isDirectory(target) && client.isNotEmpty(target
+                .getBucketName(),
                 GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
             throw new DirectoryNotEmptyException(target.toString());
         }
 
-        if (Files.isDirectory(source)) {
+        if (isDirectory(source)) {
             String srcPath = GoogleCloudStoragePath.ensureDirectoryPath(source.getBlobName());
             List<StorageObject> list = client.listAllObjects(source.getBucketName(),
                     srcPath);
