@@ -99,9 +99,9 @@ public class GoogleCloudStorageFileSystemProvider
     static final String KEY_GCS_CONNECTION_SETTINGS = "gcsConnectionSettings";
 
     /**
-     * Google Cloud Storage URI scheme.
+     * Google Cloud Storage file system type.
      */
-    public static final String SCHEME = "gs";
+    public static final String FS_TYPE = "google-cs";
 
     @Override
     protected GoogleCloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
@@ -273,7 +273,7 @@ public class GoogleCloudStorageFileSystemProvider
 
     @Override
     public String getScheme() {
-        return SCHEME;
+        return FS_TYPE;
     }
 
     @SuppressWarnings("resource")

@@ -49,13 +49,9 @@
 package org.knime.google.filehandling.testing;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSPath;
-import org.knime.filehandling.core.testing.FSTestInitializer;
+import org.knime.filehandling.core.testing.DefaultFSTestInitializer;
 import org.knime.filehandling.core.util.IOESupplier;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
@@ -70,92 +66,66 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageTestInitializer implements FSTestInitializer {
+public class GoogleCloudStorageTestInitializer
+        extends DefaultFSTestInitializer<GoogleCloudStoragePath, GoogleCloudStorageFileSystem> {
 
-    private final String m_bucket;
-    private final GoogleCloudStorageFSConnection m_fsConnection;
-    private final GoogleCloudStorageFileSystem m_filesystem;
     private final GoogleCloudStorageClient m_client;
-    private final String m_uniquePrefix;
 
     /**
      * Creates initializer.
      *
-     * @param bucket
-     *            bucket name.
      * @param fsConnection
      *            fs connection.
      */
-    public GoogleCloudStorageTestInitializer(final String bucket, final GoogleCloudStorageFSConnection fsConnection) {
-        m_bucket = bucket;
-        m_fsConnection = fsConnection;
-        m_filesystem = (GoogleCloudStorageFileSystem) fsConnection.getFileSystem();
-        m_client = m_filesystem.getClient();
-        m_uniquePrefix = UUID.randomUUID().toString();
+    public GoogleCloudStorageTestInitializer(final GoogleCloudStorageFSConnection fsConnection) {
+        super(fsConnection);
+        m_client = getFileSystem().getClient();
     }
 
     @Override
-    public FSConnection getFSConnection() {
-        return m_fsConnection;
-    }
-
-    @Override
-    public FSPath getRoot() {
-        return m_filesystem.getPath("/", m_bucket, m_uniquePrefix + "/");
-    }
-
-    @Override
-    public FSPath createFile(final String... pathComponents) throws IOException {
+    public GoogleCloudStoragePath createFile(final String... pathComponents) throws IOException {
         return createFileWithContent("", pathComponents);
     }
 
     @Override
-    public FSPath createFileWithContent(final String content, final String... pathComponents) throws IOException {
-        FSPath absolutePath = //
-                Arrays //
-                        .stream(pathComponents) //
-                        .reduce( //
-                                getRoot(), //
-                                (path, pathComponent) -> (FSPath) path.resolve(
-                                        pathComponent), //
-                                (p1, p2) -> (FSPath) p1.resolve(p2) //
-                        ); //
+    public GoogleCloudStoragePath createFileWithContent(final String content, final String... pathComponents)
+            throws IOException {
+        final GoogleCloudStoragePath path = makePath(pathComponents);
 
-        final String key = absolutePath.subpath(1, absolutePath.getNameCount()).toString();
+        final String key = path.subpath(1, path.getNameCount()).toString();
         execAndRetry(() -> {
-            m_client.insertObject(m_bucket, key, content);
+            m_client.insertObject(path.getBucketName(), key, content);
             return null;
         });
-        return absolutePath;
+        return path;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void beforeTestCase() throws IOException {
-        GoogleCloudStoragePath root = (GoogleCloudStoragePath) getRoot();
+    protected void beforeTestCaseInternal() throws IOException {
+        final GoogleCloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
+
         execAndRetry(() -> {
-            m_client.insertObject(root.getBucketName(), root.getBlobName(), "");
+            m_client.insertObject(scratchDir.getBucketName(), scratchDir.getBlobName(), "");
             return null;
         });
+
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void afterTestCase() throws IOException {
-        List<StorageObject> objects = m_client.listAllObjects(m_bucket, m_uniquePrefix + "/");
+    protected void afterTestCaseInternal() throws IOException {
+        final GoogleCloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
+
+        List<StorageObject> objects = m_client.listAllObjects(scratchDir.getBucketName(), scratchDir.getBlobName());
         if (objects != null) {
             for (StorageObject o : objects) {
                 execAndRetry(() -> {
-                    m_client.deleteObject(m_bucket, o.getName());
+                    m_client.deleteObject(scratchDir.getBucketName(), o.getName());
                     return null;
                 });
             }
         }
-        m_filesystem.clearAttributesCache();
+
+        getFileSystem().clearAttributesCache();
     }
 
     private static void execAndRetry(final IOESupplier<Void> request) throws IOException {

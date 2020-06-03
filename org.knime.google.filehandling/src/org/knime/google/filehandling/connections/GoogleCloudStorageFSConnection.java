@@ -91,7 +91,7 @@ public class GoogleCloudStorageFSConnection implements FSConnection {
 
         final URI uri;
         try {
-            uri = new URI(GoogleCloudStorageFileSystemProvider.SCHEME, settings.getProjectId(), null, null);
+            uri = new URI(GoogleCloudStorageFileSystemProvider.FS_TYPE, settings.getProjectId(), null, null);
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Illegal project id: " + settings.getProjectId(), ex);
         }

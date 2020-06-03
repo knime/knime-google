@@ -111,7 +111,7 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
      * @return the {@link FSLocationSpec} for a Google Cloud Storage file system.
      */
     public static FSLocationSpec createFSLocationSpec() {
-        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, GoogleCloudStorageFileSystemProvider.SCHEME);
+        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, GoogleCloudStorageFileSystemProvider.FS_TYPE);
     }
 
     /**

@@ -54,8 +54,7 @@ import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.filehandling.core.connections.FSLocationSpec;
-import org.knime.filehandling.core.testing.FSTestInitializer;
-import org.knime.filehandling.core.testing.FSTestInitializerProvider;
+import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
 import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
@@ -69,11 +68,11 @@ import com.google.api.services.storage.StorageScopes;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageTestInitializerProvider implements FSTestInitializerProvider {
+public class GoogleCloudStorageTestInitializerProvider extends DefaultFSTestInitializerProvider {
 
     @SuppressWarnings("resource")
     @Override
-    public FSTestInitializer setup(final Map<String, String> configuration) throws IOException {
+    public GoogleCloudStorageTestInitializer setup(final Map<String, String> configuration) throws IOException {
 
         validateConfiguration(configuration);
 
@@ -85,27 +84,29 @@ public class GoogleCloudStorageTestInitializerProvider implements FSTestInitiali
             throw new IOException(e);
         }
 
-        final String bucket = configuration.get("bucket");
+        final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"),
+                GoogleCloudStorageFileSystem.PATH_SEPARATOR);
 
         final GoogleCloudStorageConnectionSettings settings = new GoogleCloudStorageConnectionSettings();
         settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
-        settings.getWorkingDirectoryModel().setStringValue(GoogleCloudStorageFileSystem.PATH_SEPARATOR + bucket);
+        settings.getWorkingDirectoryModel().setStringValue(workingDir);
 
         final GoogleCloudStorageFSConnection fsConnection = new GoogleCloudStorageFSConnection(apiConnection, settings);
-        return new GoogleCloudStorageTestInitializer(bucket, fsConnection);
+
+        return new GoogleCloudStorageTestInitializer(fsConnection);
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {
         CheckUtils.checkArgumentNotNull(configuration.get("email"), "email must be specified.");
         CheckUtils.checkArgumentNotNull(configuration.get("keyFilePath"), "keyFilePath must be specified.");
         CheckUtils.checkArgumentNotNull(configuration.get("projectId"), "projectId must be specified.");
-        CheckUtils.checkArgumentNotNull(configuration.get("bucket"), "bucket must be specified.");
+        CheckUtils.checkArgumentNotNull(configuration.get("workingDirPrefix"), "workingDirPrefix must be specified.");
     }
 
 
     @Override
     public String getFSType() {
-        return GoogleCloudStorageFileSystemProvider.SCHEME;
+        return GoogleCloudStorageFileSystemProvider.FS_TYPE;
     }
 
     @Override
