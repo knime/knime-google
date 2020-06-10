@@ -139,7 +139,7 @@ public class GoogleCloudStorageFileSystemProvider
     @Override
     protected Iterator<GoogleCloudStoragePath> createPathIterator(final GoogleCloudStoragePath dir,
             final Filter<? super Path> filter) throws IOException {
-        return GoogleCloudStoragePathIterator.create(dir, filter);
+        return GoogleCloudStoragePathIterator.create(dir.toDirectoryPath(), filter);
     }
 
     @Override
@@ -159,7 +159,7 @@ public class GoogleCloudStorageFileSystemProvider
         if (!exists) {// check if prefix and bucket exists
             // it is required to have trailing '/' at this point. Otherwise client.exists()
             // will return true for '/bucket/foo' even if only '/bucket/foobar' exists.
-            String prefix = GoogleCloudStoragePath.ensureDirectoryPath(path.getBlobName());
+            String prefix = path.toDirectoryPath().getBlobName();
             exists = client.exists(path.getBucketName(), prefix);
         }
 
@@ -202,7 +202,7 @@ public class GoogleCloudStorageFileSystemProvider
         String blobName = path.getBlobName();
 
         if (isDirectory(path)) {
-            blobName = GoogleCloudStoragePath.ensureDirectoryPath(blobName);
+            blobName = path.toDirectoryPath().getBlobName();
             if (client.isNotEmpty(path.getBucketName(), blobName)) {
                 throw new DirectoryNotEmptyException(path.toString());
             }
@@ -235,8 +235,9 @@ public class GoogleCloudStorageFileSystemProvider
             client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
                     target.getBlobName());
         } else {
+
             if (client.isNotEmpty(target.getBucketName(),
-                    GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
+                    target.toDirectoryPath().getBlobName())) {
                 throw new DirectoryNotEmptyException(
                         String.format("Target directory %s exists and is not empty", target.toString()));
             }
@@ -257,11 +258,11 @@ public class GoogleCloudStorageFileSystemProvider
 
         GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
+        final GoogleCloudStoragePath dirPath = path.toDirectoryPath();
         if (path.getBlobName() != null) {
-            String blob = GoogleCloudStoragePath.ensureDirectoryPath(path.getBlobName());
-            client.insertObject(path.getBucketName(), blob, "");
+            client.insertObject(dirPath.getBucketName(), dirPath.getBlobName(), "");
         } else {
-            client.insertBucket(path.getBucketName());
+            client.insertBucket(dirPath.getBucketName());
         }
     }
 
@@ -280,22 +281,22 @@ public class GoogleCloudStorageFileSystemProvider
     protected void moveInternal(final GoogleCloudStoragePath source,
             final GoogleCloudStoragePath target,
             final CopyOption... options) throws IOException {
+
         GoogleCloudStorageClient client = getFileSystemInternal().getClient();
 
-        if (isDirectory(target) && client.isNotEmpty(target
-                .getBucketName(),
-                GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()))) {
+
+        if (isNonEmptyDirectory(target.toDirectoryPath())) {
             throw new DirectoryNotEmptyException(target.toString());
         }
 
         if (isDirectory(source)) {
-            String srcPath = GoogleCloudStoragePath.ensureDirectoryPath(source.getBlobName());
+            String srcPath = source.toDirectoryPath().getBlobName();
             List<StorageObject> list = client.listAllObjects(source.getBucketName(),
                     srcPath);
             if (list != null) {
                 for (StorageObject so : list) {
                     String targetName = so.getName().replaceFirst(srcPath,
-                            GoogleCloudStoragePath.ensureDirectoryPath(target.getBlobName()));
+                            target.toDirectoryPath().getBlobName());
                     client.rewriteObject(so.getBucket(), so.getName(), target.getBucketName(), targetName);
 
                     client.deleteObject(so.getBucket(), so.getName());
@@ -309,6 +310,13 @@ public class GoogleCloudStorageFileSystemProvider
             delete(source);
         }
 
+    }
+
+    private boolean isNonEmptyDirectory(final GoogleCloudStoragePath directoryPath) throws IOException {
+        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+
+        return client.isNotEmpty(directoryPath.getBucketName(),
+                directoryPath.toDirectoryPath().getBlobName());
     }
 
     @Override

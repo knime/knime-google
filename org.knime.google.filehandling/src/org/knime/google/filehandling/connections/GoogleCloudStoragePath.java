@@ -114,30 +114,17 @@ public class GoogleCloudStoragePath extends BlobStorePath {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Path relativize(final Path other) {
         if (!getFileSystem().normalizePaths()) {
-            throw new IllegalArgumentException("Cannot relativize an independent paths if normalization is disabled.");
+            throw new IllegalArgumentException("Cannot relativize paths if normalization is disabled.");
         }
 
         return super.relativize(other);
     }
 
-    /**
-     * Appends trailing '/' to the provided blob name if it doesn't have one.
-     *
-     * @param blob
-     *            The object name.
-     * @return The object name with the trailing '/' or <code>null</code> if
-     *         provided object name is <code>null</code>.
-     */
-    public static String ensureDirectoryPath(final String blob) {
-        if (blob != null && !blob.endsWith(GoogleCloudStorageFileSystem.PATH_SEPARATOR)) {
-            return blob + GoogleCloudStorageFileSystem.PATH_SEPARATOR;
-        }
-        return blob;
+    @Override
+    public GoogleCloudStoragePath toDirectoryPath() {
+        return (GoogleCloudStoragePath) super.toDirectoryPath();
     }
 }

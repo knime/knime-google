@@ -260,7 +260,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
 
         private BlobIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter) throws IOException {
             super(path, filter);
-            m_prefix = GoogleCloudStoragePath.ensureDirectoryPath(m_path.getBlobName());
+            m_prefix = m_path.getBlobName();
             init();
         }
 
