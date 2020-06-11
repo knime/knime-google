@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: GoogleCloudStorageConnection-Node extension for KNIME Workbench
-Bundle-SymbolicName: org.knime.google.filehandling; singleton:=true
+Bundle-Name: Google filehandling connector nodes
+Bundle-SymbolicName: org.knime.ext.google.filehandling;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: 
 Require-Bundle: org.knime.workbench.repository,

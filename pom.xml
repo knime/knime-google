@@ -25,10 +25,11 @@
 
 	<modules>
 		<module>org.knime.google.api</module>
-		<module>org.knime.features.google.api</module>
 		<module>org.knime.google.cloud.storage</module>
-		<module>org.knime.google.filehandling</module>
+		<module>org.knime.ext.google.filehandling</module>
+		<module>org.knime.features.google.api</module>
 		<module>org.knime.features.google.cloud.storage</module>
+		<module>org.knime.features.ext.google.filehandling</module>
 		<module>org.knime.update.google</module>
 	</modules>
 

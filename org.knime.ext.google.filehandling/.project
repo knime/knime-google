@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.google.filehandling</name>
+	<name>org.knime.ext.google.filehandling</name>
 	<comment></comment>
 	<projects>
 	</projects>
