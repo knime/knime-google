@@ -46,7 +46,7 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.nodes.connection;
+package org.knime.ext.google.filehandling.cloudstorage.node;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,12 +62,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
 import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
 
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -79,20 +79,20 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleCloudStorageConnectionNodeModel.class);
+public class CloudStorageConnectorNodeModel extends NodeModel {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CloudStorageConnectorNodeModel.class);
 
     private static final String FILE_SYSTEM_NAME = "Google Cloud Storage";
 
     private String m_fsId;
-    private GoogleCloudStorageFSConnection m_fsConnection;
+    private CloudStorageFSConnection m_fsConnection;
 
-    private final GoogleCloudStorageConnectionSettings m_settings = new GoogleCloudStorageConnectionSettings();
+    private final CloudStorageConnectorSettings m_settings = new CloudStorageConnectorSettings();
 
     /**
      * Creates new instance.
      */
-    protected GoogleCloudStorageConnectionNodeModel() {
+    protected CloudStorageConnectorNodeModel() {
         super(new PortType[] { GoogleApiConnectionPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
     }
 
@@ -100,11 +100,11 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnectionPortObject apiConnection = (GoogleApiConnectionPortObject) inObjects[0];
-        m_fsConnection = new GoogleCloudStorageFSConnection(apiConnection.getGoogleApiConnection(), m_settings);
+        m_fsConnection = new CloudStorageFSConnection(apiConnection.getGoogleApiConnection(), m_settings);
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {
-            ((GoogleCloudStorageFileSystem) m_fsConnection.getFileSystem()).getClient().listBuckets(null);
+            ((CloudStorageFileSystem) m_fsConnection.getFileSystem()).getClient().listBuckets(null);
         } catch (TokenResponseException e) {
             throw new InvalidSettingsException(e.getDetails().getErrorDescription(), e);
         } catch (GoogleJsonResponseException e) {
@@ -122,7 +122,7 @@ public class GoogleCloudStorageConnectionNodeModel extends NodeModel {
 
     private FileSystemPortObjectSpec createSpec() {
         return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId,
-                GoogleCloudStorageFileSystem.createFSLocationSpec());
+                CloudStorageFileSystem.createFSLocationSpec());
     }
 
     @Override

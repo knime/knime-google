@@ -46,20 +46,20 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.testing;
+package org.knime.ext.google.filehandling.cloudstorage.testing;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystemProvider;
+import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystemProvider;
-import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 import com.google.api.services.storage.StorageScopes;
 
@@ -68,11 +68,11 @@ import com.google.api.services.storage.StorageScopes;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageTestInitializerProvider extends DefaultFSTestInitializerProvider {
+public class CloudStorageTestInitializerProvider extends DefaultFSTestInitializerProvider {
 
     @SuppressWarnings("resource")
     @Override
-    public GoogleCloudStorageTestInitializer setup(final Map<String, String> configuration) throws IOException {
+    public CloudStorageTestInitializer setup(final Map<String, String> configuration) throws IOException {
 
         validateConfiguration(configuration);
 
@@ -85,15 +85,15 @@ public class GoogleCloudStorageTestInitializerProvider extends DefaultFSTestInit
         }
 
         final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"),
-                GoogleCloudStorageFileSystem.PATH_SEPARATOR);
+                CloudStorageFileSystem.PATH_SEPARATOR);
 
-        final GoogleCloudStorageConnectionSettings settings = new GoogleCloudStorageConnectionSettings();
+        final CloudStorageConnectorSettings settings = new CloudStorageConnectorSettings();
         settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
         settings.getWorkingDirectoryModel().setStringValue(workingDir);
 
-        final GoogleCloudStorageFSConnection fsConnection = new GoogleCloudStorageFSConnection(apiConnection, settings);
+        final CloudStorageFSConnection fsConnection = new CloudStorageFSConnection(apiConnection, settings);
 
-        return new GoogleCloudStorageTestInitializer(fsConnection);
+        return new CloudStorageTestInitializer(fsConnection);
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {
@@ -106,12 +106,12 @@ public class GoogleCloudStorageTestInitializerProvider extends DefaultFSTestInit
 
     @Override
     public String getFSType() {
-        return GoogleCloudStorageFileSystemProvider.FS_TYPE;
+        return CloudStorageFileSystemProvider.FS_TYPE;
     }
 
     @Override
     public FSLocationSpec createFSLocationSpec(final Map<String, String> configuration) {
         validateConfiguration(configuration);
-        return GoogleCloudStorageFileSystem.createFSLocationSpec();
+        return CloudStorageFileSystem.createFSLocationSpec();
     }
 }

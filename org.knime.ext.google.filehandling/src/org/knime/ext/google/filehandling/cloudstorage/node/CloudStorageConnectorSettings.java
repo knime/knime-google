@@ -46,7 +46,7 @@
  * History
  *   2020-04-22 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.nodes.connection;
+package org.knime.ext.google.filehandling.cloudstorage.node;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -56,11 +56,11 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * Settings for {@link GoogleCloudStorageConnectionNodeModel}.
+ * Settings for {@link CloudStorageConnectorNodeModel}.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageConnectionSettings {
+public class CloudStorageConnectorSettings {
     private static final String KEY_PROJECT_ID = "projectId";
     private static final String KEY_WORKING_DIRECTORY = "workingDirectory";
     private static final String KEY_NORMALIZE_PATHS = "normalizePaths";
@@ -78,7 +78,7 @@ public class GoogleCloudStorageConnectionSettings {
     /**
      * Creates new instance
      */
-    public GoogleCloudStorageConnectionSettings() {
+    public CloudStorageConnectorSettings() {
         m_projectId = new SettingsModelString(KEY_PROJECT_ID, "");
         m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, "");
         m_normalizePaths = new SettingsModelBoolean(KEY_NORMALIZE_PATHS, true);
@@ -115,7 +115,7 @@ public class GoogleCloudStorageConnectionSettings {
         m_connectionTimeout.validateSettings(settings);
         m_readTimeout.validateSettings(settings);
 
-        GoogleCloudStorageConnectionSettings temp = new GoogleCloudStorageConnectionSettings();
+        CloudStorageConnectorSettings temp = new CloudStorageConnectorSettings();
         temp.loadSettingsFrom(settings);
         temp.validate();
     }

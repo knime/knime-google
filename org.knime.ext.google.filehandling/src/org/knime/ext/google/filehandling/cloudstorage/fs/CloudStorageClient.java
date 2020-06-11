@@ -46,7 +46,7 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.util;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,9 +55,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
-import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.AbstractInputStreamContent;
@@ -80,9 +79,9 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageClient {
+public class CloudStorageClient {
     @SuppressWarnings("unused")
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleCloudStorageClient.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CloudStorageClient.class);
     private static final String APP_NAME = "KNIME-Google-Cloud-Storage-Connector";
 
     private final String m_projectId;
@@ -97,8 +96,8 @@ public class GoogleCloudStorageClient {
      * @param settings
      *            Connection settings.
      */
-    public GoogleCloudStorageClient(final GoogleApiConnection apiConnection,
-            final GoogleCloudStorageConnectionSettings settings) {
+    public CloudStorageClient(final GoogleApiConnection apiConnection,
+            final CloudStorageConnectorSettings settings) {
         this.m_projectId = settings.getProjectId();
         m_storage = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
                 withTimeouts(apiConnection.getCredential(), settings.getConnectionTimeout(), settings.getReadTimeout()))
@@ -160,7 +159,7 @@ public class GoogleCloudStorageClient {
      */
     public Objects listObjects(final String bucket, final String prefix, final String pageToken) throws IOException {
         Storage.Objects.List req = m_storage.objects().list(bucket)
-                .setDelimiter(GoogleCloudStorageFileSystem.PATH_SEPARATOR);
+                .setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR);
 
         if (prefix != null && !prefix.isEmpty()) {
             req.setPrefix(prefix);
@@ -216,7 +215,7 @@ public class GoogleCloudStorageClient {
      */
     public boolean exists(final String bucket, final String prefix) throws IOException {
         try {
-            Objects objects = m_storage.objects().list(bucket).setDelimiter(GoogleCloudStorageFileSystem.PATH_SEPARATOR)
+            Objects objects = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR)
                     .setPrefix(prefix).setMaxResults(1L).execute();
 
             return prefix == null || (objects.getItems() != null && !objects.getItems().isEmpty())
@@ -242,7 +241,7 @@ public class GoogleCloudStorageClient {
      */
     public boolean isNotEmpty(final String bucket, final String prefix) throws IOException {
         try {
-            Objects objects = m_storage.objects().list(bucket).setDelimiter(GoogleCloudStorageFileSystem.PATH_SEPARATOR)
+            Objects objects = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR)
                     .setPrefix(prefix).setMaxResults(2L).execute();
 
             if (objects.getPrefixes() != null && !objects.getPrefixes().isEmpty()) {

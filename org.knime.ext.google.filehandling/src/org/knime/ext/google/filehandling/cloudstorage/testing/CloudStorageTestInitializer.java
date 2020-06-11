@@ -46,17 +46,17 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.testing;
+package org.knime.ext.google.filehandling.cloudstorage.testing;
 
 import java.io.IOException;
 import java.util.List;
 
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageClient;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStoragePath;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializer;
 import org.knime.filehandling.core.util.IOESupplier;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFSConnection;
-import org.knime.google.filehandling.connections.GoogleCloudStorageFileSystem;
-import org.knime.google.filehandling.connections.GoogleCloudStoragePath;
-import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.storage.model.StorageObject;
@@ -66,10 +66,10 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageTestInitializer
-        extends DefaultFSTestInitializer<GoogleCloudStoragePath, GoogleCloudStorageFileSystem> {
+public class CloudStorageTestInitializer
+        extends DefaultFSTestInitializer<CloudStoragePath, CloudStorageFileSystem> {
 
-    private final GoogleCloudStorageClient m_client;
+    private final CloudStorageClient m_client;
 
     /**
      * Creates initializer.
@@ -77,20 +77,20 @@ public class GoogleCloudStorageTestInitializer
      * @param fsConnection
      *            fs connection.
      */
-    public GoogleCloudStorageTestInitializer(final GoogleCloudStorageFSConnection fsConnection) {
+    public CloudStorageTestInitializer(final CloudStorageFSConnection fsConnection) {
         super(fsConnection);
         m_client = getFileSystem().getClient();
     }
 
     @Override
-    public GoogleCloudStoragePath createFile(final String... pathComponents) throws IOException {
+    public CloudStoragePath createFile(final String... pathComponents) throws IOException {
         return createFileWithContent("", pathComponents);
     }
 
     @Override
-    public GoogleCloudStoragePath createFileWithContent(final String content, final String... pathComponents)
+    public CloudStoragePath createFileWithContent(final String content, final String... pathComponents)
             throws IOException {
-        final GoogleCloudStoragePath path = makePath(pathComponents);
+        final CloudStoragePath path = makePath(pathComponents);
 
         final String key = path.subpath(1, path.getNameCount()).toString();
         execAndRetry(() -> {
@@ -102,7 +102,7 @@ public class GoogleCloudStorageTestInitializer
 
     @Override
     protected void beforeTestCaseInternal() throws IOException {
-        final GoogleCloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
+        final CloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
 
         execAndRetry(() -> {
             m_client.insertObject(scratchDir.getBucketName(), scratchDir.getBlobName(), "");
@@ -113,7 +113,7 @@ public class GoogleCloudStorageTestInitializer
 
     @Override
     protected void afterTestCaseInternal() throws IOException {
-        final GoogleCloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
+        final CloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
 
         List<StorageObject> objects = m_client.listAllObjects(scratchDir.getBucketName(), scratchDir.getBlobName());
         if (objects != null) {

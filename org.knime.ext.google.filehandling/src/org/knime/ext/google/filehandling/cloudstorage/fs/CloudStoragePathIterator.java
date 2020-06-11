@@ -46,7 +46,7 @@
  * History
  *   2020-03-26 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
@@ -57,7 +57,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
-import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.Buckets;
@@ -69,25 +68,25 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleCloudStoragePath> {
+public abstract class CloudStoragePathIterator implements Iterator<CloudStoragePath> {
 
     /**
      * Path object
      */
-    protected final GoogleCloudStoragePath m_path;
+    protected final CloudStoragePath m_path;
     /**
      * File system
      */
-    protected final GoogleCloudStorageFileSystem m_fs;
+    protected final CloudStorageFileSystem m_fs;
     /**
      * Storage client
      */
-    protected final GoogleCloudStorageClient m_client;
+    protected final CloudStorageClient m_client;
 
     private final Filter<? super Path> m_filter;
 
     private boolean initialized;
-    private GoogleCloudStoragePath m_nextPath;
+    private CloudStoragePath m_nextPath;
     private String m_nextPageToken;
 
     /**
@@ -97,10 +96,10 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
      *            path to iterate.
      * @param filter
      *            {@link Filter} instance.
-     * @return {@link GoogleCloudStoragePathIterator} instance.
+     * @return {@link CloudStoragePathIterator} instance.
      * @throws IOException
      */
-    public static GoogleCloudStoragePathIterator create(final GoogleCloudStoragePath path,
+    public static CloudStoragePathIterator create(final CloudStoragePath path,
             final Filter<? super Path> filter) throws IOException {
         if (path.getNameCount() == 0) {
             return new BucketIterator(path, filter);
@@ -118,7 +117,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
      *            {@link Filter} instance.
      * @throws IOException
      */
-    protected GoogleCloudStoragePathIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter) {
+    protected CloudStoragePathIterator(final CloudStoragePath path, final Filter<? super Path> filter) {
         m_path = path;
         m_fs = path.getFileSystem();
         m_client = m_fs.getClient();
@@ -150,11 +149,11 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
      * {@inheritDoc}
      */
     @Override
-    public GoogleCloudStoragePath next() {
+    public CloudStoragePath next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        GoogleCloudStoragePath current = m_nextPath;
+        CloudStoragePath current = m_nextPath;
         try {
             m_nextPath = getNextFilteredPath();
         } catch (IOException ex) {
@@ -163,8 +162,8 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
         return current;
     }
 
-    private GoogleCloudStoragePath getNextFilteredPath() throws IOException {
-        GoogleCloudStoragePath next = getNextPath();
+    private CloudStoragePath getNextFilteredPath() throws IOException {
+        CloudStoragePath next = getNextPath();
         while (next != null) {
             if (m_filter.accept(next)) {
                 return next;
@@ -174,8 +173,8 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
         return null;
     }
 
-    private GoogleCloudStoragePath getNextPath() throws IOException {
-        GoogleCloudStoragePath path = getNextPathFromCurrentPage();
+    private CloudStoragePath getNextPath() throws IOException {
+        CloudStoragePath path = getNextPathFromCurrentPage();
 
         if (path == null && (m_nextPageToken != null || !initialized)) {
             m_nextPageToken = loadNextPage(m_nextPageToken);
@@ -201,13 +200,13 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
      * @return Next path entry from the currently loaded page. <code>null</code> if
      *         the end of the page is reached.
      */
-    protected abstract GoogleCloudStoragePath getNextPathFromCurrentPage();
+    protected abstract CloudStoragePath getNextPathFromCurrentPage();
 
-    private static class BucketIterator extends GoogleCloudStoragePathIterator {
+    private static class BucketIterator extends CloudStoragePathIterator {
 
         private Iterator<Bucket> m_bucketsIter;
 
-        private BucketIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter)
+        private BucketIterator(final CloudStoragePath path, final Filter<? super Path> filter)
                 throws IOException {
             super(path, filter);
             init();
@@ -231,15 +230,15 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
          * {@inheritDoc}
          */
         @Override
-        protected GoogleCloudStoragePath getNextPathFromCurrentPage() {
+        protected CloudStoragePath getNextPathFromCurrentPage() {
             if (m_bucketsIter != null && m_bucketsIter.hasNext()) {
                 return createPath(m_bucketsIter.next());
             }
             return null;
         }
 
-        private GoogleCloudStoragePath createPath(final Bucket bucket) {
-            GoogleCloudStoragePath path = m_fs.getPath(m_fs.getSeparator() + bucket.getName(), m_fs.getSeparator());
+        private CloudStoragePath createPath(final Bucket bucket) {
+            CloudStoragePath path = m_fs.getPath(m_fs.getSeparator() + bucket.getName(), m_fs.getSeparator());
 
             FileTime createdAt = FileTime.fromMillis(bucket.getTimeCreated().getValue());
             FileTime modifiedAt = FileTime.fromMillis(bucket.getUpdated().getValue());
@@ -252,13 +251,13 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
         }
     }
 
-    private static class BlobIterator extends GoogleCloudStoragePathIterator {
+    private static class BlobIterator extends CloudStoragePathIterator {
 
         private String m_prefix;
         private Iterator<String> m_prefixes;
         private Iterator<StorageObject> m_objects;
 
-        private BlobIterator(final GoogleCloudStoragePath path, final Filter<? super Path> filter) throws IOException {
+        private BlobIterator(final CloudStoragePath path, final Filter<? super Path> filter) throws IOException {
             super(path, filter);
             m_prefix = m_path.getBlobName();
             init();
@@ -283,7 +282,7 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
          * {@inheritDoc}
          */
         @Override
-        protected GoogleCloudStoragePath getNextPathFromCurrentPage() {
+        protected CloudStoragePath getNextPathFromCurrentPage() {
             if (m_prefixes != null && m_prefixes.hasNext()) {
                 return createPath(m_prefixes.next());
             }
@@ -310,8 +309,8 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
             return null;
         }
 
-        private GoogleCloudStoragePath createPath(final String prefix) {
-            GoogleCloudStoragePath path = new GoogleCloudStoragePath(m_fs, m_path.getBucketName(), prefix);
+        private CloudStoragePath createPath(final String prefix) {
+            CloudStoragePath path = new CloudStoragePath(m_fs, m_path.getBucketName(), prefix);
 
             FileTime time = FileTime.fromMillis(0);
             BaseFileAttributes attrs = new BaseFileAttributes(false, path, time, time, time, 0, false, false, null);
@@ -320,8 +319,8 @@ public abstract class GoogleCloudStoragePathIterator implements Iterator<GoogleC
             return path;
         }
 
-        private GoogleCloudStoragePath createPath(final StorageObject object) {
-            GoogleCloudStoragePath path = new GoogleCloudStoragePath(m_fs, m_path.getBucketName(), object.getName());
+        private CloudStoragePath createPath(final StorageObject object) {
+            CloudStoragePath path = new CloudStoragePath(m_fs, m_path.getBucketName(), object.getName());
 
             FileTime createdAt = FileTime.fromMillis(object.getTimeCreated().getValue());
             FileTime modifiedAt = FileTime.fromMillis(object.getUpdated().getValue());

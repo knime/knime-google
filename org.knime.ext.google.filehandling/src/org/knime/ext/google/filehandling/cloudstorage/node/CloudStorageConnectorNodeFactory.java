@@ -46,37 +46,58 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.nodes.connection;
+package org.knime.ext.google.filehandling.cloudstorage.node;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Google Cloud Storage Connection node dialog.
+ * Factory class for Google Cloud Storage Connection node.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageConnectionNodeDialog extends DefaultNodeSettingsPane {
-
-    private final GoogleCloudStorageConnectionSettings m_settings;
+public class CloudStorageConnectorNodeFactory extends NodeFactory<CloudStorageConnectorNodeModel> {
 
     /**
-     * Creates new instance.
+     * {@inheritDoc}
      */
-    protected GoogleCloudStorageConnectionNodeDialog() {
-        super();
-        m_settings = new GoogleCloudStorageConnectionSettings();
+    @Override
+    public CloudStorageConnectorNodeModel createNodeModel() {
+        return new CloudStorageConnectorNodeModel();
+    }
 
-        addDialogComponent(new DialogComponentString(m_settings.getProjectIdModel(), "Project ID"));
-        addDialogComponent(new DialogComponentString(m_settings.getWorkingDirectoryModel(), "Working directory"));
-        addDialogComponent(new DialogComponentBoolean(m_settings.getNormalizePathsModel(), "Normalize paths"));
-        createNewGroup("Timeouts");
-        addDialogComponent(
-                new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "Connection timeout in seconds", 1));
-        addDialogComponent(new DialogComponentNumber(m_settings.getReadTimeoutModel(), "Read timeout in seconds", 1));
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<CloudStorageConnectorNodeModel> createNodeView(final int viewIndex,
+            final CloudStorageConnectorNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new CloudStorageConnectorNodeDialog();
     }
 
 }

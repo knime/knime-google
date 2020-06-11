@@ -46,42 +46,41 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
 
+import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
-import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 /**
  * Google Cloud Storage implementation of the {@link FileSystem} interface.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStoragePath> {
+public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
 
     /**
      * Character to use as path separator
      */
     public static final String PATH_SEPARATOR = "/";
 
-    private final GoogleCloudStorageClient m_client;
+    private final CloudStorageClient m_client;
 
     private final boolean m_normalizePaths;
 
     /**
-     * Constructs {@link GoogleCloudStorageFileSystem} for a given URI.
+     * Constructs {@link CloudStorageFileSystem} for a given URI.
      *
      * @param provider
-     *            the {@link GoogleCloudStorageFileSystemProvider}
+     *            the {@link CloudStorageFileSystemProvider}
      * @param uri
      *            the URI for the file system
      * @param apiConnection
@@ -91,9 +90,9 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
      * @param settings
      *            Connection settings.
      */
-    public GoogleCloudStorageFileSystem(final GoogleCloudStorageFileSystemProvider provider, final URI uri,
+    public CloudStorageFileSystem(final CloudStorageFileSystemProvider provider, final URI uri,
             final GoogleApiConnection apiConnection, final long cacheTTL,
-            final GoogleCloudStorageConnectionSettings settings) {
+            final CloudStorageConnectorSettings settings) {
         super(provider, //
                 uri, //
                 cacheTTL, //
@@ -103,7 +102,7 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
                                 .getWorkingDirectory(), //
                 createFSLocationSpec());
 
-        m_client = new GoogleCloudStorageClient(apiConnection, settings);
+        m_client = new CloudStorageClient(apiConnection, settings);
         m_normalizePaths = settings.getNormalizePaths();
     }
 
@@ -111,13 +110,13 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
      * @return the {@link FSLocationSpec} for a Google Cloud Storage file system.
      */
     public static FSLocationSpec createFSLocationSpec() {
-        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, GoogleCloudStorageFileSystemProvider.FS_TYPE);
+        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, CloudStorageFileSystemProvider.FS_TYPE);
     }
 
     /**
-     * @return {@link GoogleCloudStorageClient} for this file system.
+     * @return {@link CloudStorageClient} for this file system.
      */
-    public GoogleCloudStorageClient getClient() {
+    public CloudStorageClient getClient() {
         return m_client;
     }
 
@@ -137,8 +136,8 @@ public class GoogleCloudStorageFileSystem extends BaseFileSystem<GoogleCloudStor
     }
 
     @Override
-    public GoogleCloudStoragePath getPath(final String first, final String... more) {
-        return new GoogleCloudStoragePath(this, first, more);
+    public CloudStoragePath getPath(final String first, final String... more) {
+        return new CloudStoragePath(this, first, more);
     }
 
     @Override

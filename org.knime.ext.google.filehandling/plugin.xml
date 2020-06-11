@@ -6,14 +6,14 @@
          point="org.knime.workbench.repository.nodes">
       <node
             category-path="/labs/file-handling-prototype"
-            factory-class="org.knime.ext.google.filehandling.nodes.connection.GoogleCloudStorageConnectionNodeFactory"
-            id="org.knime.ext.google.filehandling.nodes.connection.GoogleCloudStorageConnectionNodeFactory"/>
+            factory-class="org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorNodeFactory"
+            id="org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorNodeFactory"/>
    </extension>
    
    <extension
          point="org.knime.filehandling.FSTestInitializerProvider">
          <FSTestInitializerProvider
-               ProviderClass="org.knime.ext.google.filehandling.testing.GoogleCloudStorageTestInitializerProvider">
+               ProviderClass="org.knime.ext.google.filehandling.cloudstorage.testing.CloudStorageTestInitializerProvider">
          </FSTestInitializerProvider>
    </extension>
 </plugin>

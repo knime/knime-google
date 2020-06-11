@@ -46,7 +46,7 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,11 +73,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
-import org.knime.google.filehandling.util.GoogleCloudStorageClient;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
@@ -85,12 +84,12 @@ import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.StorageObject;
 
 /**
- * File system provider for {@link GoogleCloudStorageFileSystem}.
+ * File system provider for {@link CloudStorageFileSystem}.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageFileSystemProvider
-        extends BaseFileSystemProvider<GoogleCloudStoragePath, GoogleCloudStorageFileSystem> {
+public class CloudStorageFileSystemProvider
+        extends BaseFileSystemProvider<CloudStoragePath, CloudStorageFileSystem> {
 
     static final String KEY_API_CONNECTION = "apiConnection";
 
@@ -104,20 +103,20 @@ public class GoogleCloudStorageFileSystemProvider
     public static final String FS_TYPE = "google-cs";
 
     @Override
-    protected GoogleCloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
+    protected CloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
             throws IOException {
 
         final GoogleApiConnection apiConnection = (GoogleApiConnection) env.get(KEY_API_CONNECTION);
-        final GoogleCloudStorageConnectionSettings settings = (GoogleCloudStorageConnectionSettings) env
+        final CloudStorageConnectorSettings settings = (CloudStorageConnectorSettings) env
                 .get(KEY_GCS_CONNECTION_SETTINGS);
         final long cacheTTL = (long) env.get(KEY_CACHE_TTL_MILLIS);
 
-        return new GoogleCloudStorageFileSystem(this, uri, apiConnection, cacheTTL, settings);
+        return new CloudStorageFileSystem(this, uri, apiConnection, cacheTTL, settings);
     }
 
     @SuppressWarnings("resource")
     @Override
-    protected InputStream newInputStreamInternal(final GoogleCloudStoragePath path, final OpenOption... options)
+    protected InputStream newInputStreamInternal(final CloudStoragePath path, final OpenOption... options)
             throws IOException {
         try {
             return getFileSystemInternal().getClient().getObjectStream(path.getBucketName(), path.getBlobName());
@@ -130,26 +129,26 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    protected OutputStream newOutputStreamInternal(final GoogleCloudStoragePath path, final OpenOption... options)
+    protected OutputStream newOutputStreamInternal(final CloudStoragePath path, final OpenOption... options)
             throws IOException {
         final Set<OpenOption> opts = new HashSet<>(Arrays.asList(options));
         return Channels.newOutputStream(newByteChannel(path, opts));
     }
 
     @Override
-    protected Iterator<GoogleCloudStoragePath> createPathIterator(final GoogleCloudStoragePath dir,
+    protected Iterator<CloudStoragePath> createPathIterator(final CloudStoragePath dir,
             final Filter<? super Path> filter) throws IOException {
-        return GoogleCloudStoragePathIterator.create(dir.toDirectoryPath(), filter);
+        return CloudStoragePathIterator.create(dir.toDirectoryPath(), filter);
     }
 
     @Override
-    protected boolean exists(final GoogleCloudStoragePath path) throws IOException {
+    protected boolean exists(final CloudStoragePath path) throws IOException {
         if (path.getBucketName() == null) {
             // This is the fake root
             return true;
         }
 
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+        CloudStorageClient client = getFileSystemInternal().getClient();
         boolean exists = false;
 
         if (path.getBlobName() != null) {// check if exact object exists
@@ -167,7 +166,7 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    protected BaseFileAttributes fetchAttributesInternal(final GoogleCloudStoragePath path, final Class<?> type)
+    protected BaseFileAttributes fetchAttributesInternal(final CloudStoragePath path, final Class<?> type)
             throws IOException {
         FileTime createdAt = FileTime.fromMillis(0);
         FileTime modifiedAt = createdAt;
@@ -175,7 +174,7 @@ public class GoogleCloudStorageFileSystemProvider
         boolean objectExists = false;
 
         if (path.getBucketName() != null) {
-            GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+            CloudStorageClient client = getFileSystemInternal().getClient();
 
             if (path.getBlobName() == null) {
                 Bucket bucket = client.getBucket(path.getBucketName());
@@ -197,8 +196,8 @@ public class GoogleCloudStorageFileSystemProvider
     }
 
     @Override
-    protected void deleteInternal(final GoogleCloudStoragePath path) throws IOException {
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+    protected void deleteInternal(final CloudStoragePath path) throws IOException {
+        CloudStorageClient client = getFileSystemInternal().getClient();
         String blobName = path.getBlobName();
 
         if (isDirectory(path)) {
@@ -216,20 +215,20 @@ public class GoogleCloudStorageFileSystemProvider
 
         // it is possible that parent directory(-s) only existed in a form of a prefix
         // and got deleted as a result of deleting the object
-        if (!existsCached((GoogleCloudStoragePath) path.getParent())) {
+        if (!existsCached((CloudStoragePath) path.getParent())) {
             Files.createDirectories(path.getParent());
         }
     }
 
     @Override
-    public void checkAccessInternal(final GoogleCloudStoragePath path, final AccessMode... modes) throws IOException {
+    public void checkAccessInternal(final CloudStoragePath path, final AccessMode... modes) throws IOException {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public void copyInternal(final GoogleCloudStoragePath source, final GoogleCloudStoragePath target,
+    public void copyInternal(final CloudStoragePath source, final CloudStoragePath target,
             final CopyOption... options) throws IOException {
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+        CloudStorageClient client = getFileSystemInternal().getClient();
 
         if (!isDirectory(source)) {
             client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
@@ -246,19 +245,19 @@ public class GoogleCloudStorageFileSystemProvider
 
     }
 
-    private boolean isDirectory(final GoogleCloudStoragePath path) throws IOException {
+    private boolean isDirectory(final CloudStoragePath path) throws IOException {
         return readAttributes(path, BasicFileAttributes.class).isDirectory();
     }
 
     @SuppressWarnings("resource")
     @Override
-    protected void createDirectoryInternal(final GoogleCloudStoragePath path,
+    protected void createDirectoryInternal(final CloudStoragePath path,
             final FileAttribute<?>... arg1)
             throws IOException {
 
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+        CloudStorageClient client = getFileSystemInternal().getClient();
 
-        final GoogleCloudStoragePath dirPath = path.toDirectoryPath();
+        final CloudStoragePath dirPath = path.toDirectoryPath();
         if (path.getBlobName() != null) {
             client.insertObject(dirPath.getBucketName(), dirPath.getBlobName(), "");
         } else {
@@ -278,11 +277,11 @@ public class GoogleCloudStorageFileSystemProvider
 
     @SuppressWarnings("resource")
     @Override
-    protected void moveInternal(final GoogleCloudStoragePath source,
-            final GoogleCloudStoragePath target,
+    protected void moveInternal(final CloudStoragePath source,
+            final CloudStoragePath target,
             final CopyOption... options) throws IOException {
 
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+        CloudStorageClient client = getFileSystemInternal().getClient();
 
 
         if (isNonEmptyDirectory(target.toDirectoryPath())) {
@@ -301,7 +300,7 @@ public class GoogleCloudStorageFileSystemProvider
 
                     client.deleteObject(so.getBucket(), so.getName());
                     getFileSystemInternal().removeFromAttributeCache(
-                            new GoogleCloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
+                            new CloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
                 }
             }
         } else {
@@ -312,8 +311,8 @@ public class GoogleCloudStorageFileSystemProvider
 
     }
 
-    private boolean isNonEmptyDirectory(final GoogleCloudStoragePath directoryPath) throws IOException {
-        GoogleCloudStorageClient client = getFileSystemInternal().getClient();
+    private boolean isNonEmptyDirectory(final CloudStoragePath directoryPath) throws IOException {
+        CloudStorageClient client = getFileSystemInternal().getClient();
 
         return client.isNotEmpty(directoryPath.getBucketName(),
                 directoryPath.toDirectoryPath().getBlobName());
@@ -321,9 +320,9 @@ public class GoogleCloudStorageFileSystemProvider
 
     @Override
     protected SeekableByteChannel newByteChannelInternal(
-            final GoogleCloudStoragePath path,
+            final CloudStoragePath path,
             final Set<? extends OpenOption> options,
             final FileAttribute<?>... attrs) throws IOException {
-        return new GoogleCloudStorageSeekableByteChannel(path, options);
+        return new CloudStorageSeekableByteChannel(path, options);
     }
 }

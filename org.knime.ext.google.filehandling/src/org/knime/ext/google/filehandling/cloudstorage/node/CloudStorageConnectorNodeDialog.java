@@ -46,85 +46,37 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.node;
 
-import java.nio.file.Path;
-
-import org.knime.filehandling.core.connections.base.BlobStorePath;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
- * {@link Path} implementation for {@link GoogleCloudStorageFileSystem}.
+ * Google Cloud Storage Connection node dialog.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStoragePath extends BlobStorePath {
+public class CloudStorageConnectorNodeDialog extends DefaultNodeSettingsPane {
+
+    private final CloudStorageConnectorSettings m_settings;
 
     /**
-     * Creates path from the given path string.
-     *
-     * @param fileSystem
-     *            the file system.
-     * @param first
-     *            The first name component.
-     * @param more
-     *            More name components. the string representation of the path.
+     * Creates new instance.
      */
-    public GoogleCloudStoragePath(final GoogleCloudStorageFileSystem fileSystem, final String first,
-            final String[] more) {
-        super(fileSystem, first, more);
+    protected CloudStorageConnectorNodeDialog() {
+        super();
+        m_settings = new CloudStorageConnectorSettings();
+
+        addDialogComponent(new DialogComponentString(m_settings.getProjectIdModel(), "Project ID"));
+        addDialogComponent(new DialogComponentString(m_settings.getWorkingDirectoryModel(), "Working directory"));
+        addDialogComponent(new DialogComponentBoolean(m_settings.getNormalizePathsModel(), "Normalize paths"));
+        createNewGroup("Timeouts");
+        addDialogComponent(
+                new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "Connection timeout in seconds", 1));
+        addDialogComponent(new DialogComponentNumber(m_settings.getReadTimeoutModel(), "Read timeout in seconds", 1));
+
     }
 
-    /**
-     * Creates path from the given bucket name and the object key.
-     *
-     * @param fileSystem
-     *            the file system.
-     * @param bucket
-     *            the bucket name.
-     * @param blob
-     *            the object key.
-     */
-    public GoogleCloudStoragePath(final GoogleCloudStorageFileSystem fileSystem, final String bucket,
-            final String blob) {
-        super(fileSystem, bucket, blob);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GoogleCloudStorageFileSystem getFileSystem() {
-        return (GoogleCloudStorageFileSystem) super.getFileSystem();
-    }
-
-    @Override
-    protected boolean lastComponentUsesRelativeNotation() {
-        if (getFileSystem().normalizePaths()) {
-            return super.lastComponentUsesRelativeNotation();
-        }
-        return false;
-    }
-
-    @Override
-    public Path normalize() {
-        if (getFileSystem().normalizePaths()) {
-            return super.normalize();
-        } else {
-            return this;
-        }
-    }
-
-    @Override
-    public Path relativize(final Path other) {
-        if (!getFileSystem().normalizePaths()) {
-            throw new IllegalArgumentException("Cannot relativize paths if normalization is disabled.");
-        }
-
-        return super.relativize(other);
-    }
-
-    @Override
-    public GoogleCloudStoragePath toDirectoryPath() {
-        return (GoogleCloudStoragePath) super.toDirectoryPath();
-    }
 }

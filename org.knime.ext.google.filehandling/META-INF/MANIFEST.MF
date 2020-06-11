@@ -1,14 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Google filehandling connector nodes
+Bundle-Name: Google cloud file system connector nodes
 Bundle-SymbolicName: org.knime.ext.google.filehandling;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: 
-Require-Bundle: org.knime.workbench.repository,
- org.knime.base,
- org.knime.google.api;bundle-version="4.2.0",
- org.knime.filehandling.core;bundle-version="4.2.0",
- org.knime.base.filehandling;bundle-version="4.2.0",
+ KNIME AG, Zurich, Switzerland
+Require-Bundle: org.knime.base;bundle-version="[4.2.0,5.0.0)",
+ org.knime.workbench.repository;bundle-version="[4.2.0,5.0.0)",
+ org.knime.google.api;bundle-version="[4.2.0,5.0.0)",
+ org.knime.filehandling.core;bundle-version="[4.2.0,5.0.0)",
+ org.knime.base.filehandling;bundle-version="[4.2.0,5.0.0)",
  com.google.api-client.google-api-client;bundle-version="1.23.1",
  com.google.oauth-client;bundle-version="1.23.0",
  com.google.apis.google-api-services-storage;bundle-version="0.0.0",

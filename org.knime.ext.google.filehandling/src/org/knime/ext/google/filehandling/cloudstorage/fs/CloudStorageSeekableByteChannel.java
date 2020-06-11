@@ -44,60 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-03-24 (Alexander Bondaletov): created
+ *   2020-03-31 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.nodes.connection;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.util.Set;
+
+import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
 
 /**
- * Factory class for Google Cloud Storage Connection node.
+ * Google Cloud Storage implementation of {@link TempFileSeekableByteChannel}.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageConnectionNodeFactory extends NodeFactory<GoogleCloudStorageConnectionNodeModel> {
+public class CloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<CloudStoragePath> {
 
     /**
-     * {@inheritDoc}
+     * Creates new instance.
+     *
+     * @param file
+     *            The file for the channel.
+     * @param options
+     *            Open options.
+     * @throws IOException
      */
-    @Override
-    public GoogleCloudStorageConnectionNodeModel createNodeModel() {
-        return new GoogleCloudStorageConnectionNodeModel();
+    public CloudStorageSeekableByteChannel(final CloudStoragePath file,
+            final Set<? extends OpenOption> options) throws IOException {
+        super(file, options);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 0;
+    public void copyFromRemote(final CloudStoragePath remoteFile, final Path tempFile) throws IOException {
+        Files.copy(remoteFile, tempFile);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleCloudStorageConnectionNodeModel> createNodeView(final int viewIndex,
-            final GoogleCloudStorageConnectionNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new GoogleCloudStorageConnectionNodeDialog();
+    public void copyToRemote(final CloudStoragePath remoteFile, final Path tempFile) throws IOException {
+        remoteFile.getFileSystem().getClient().insertObject(remoteFile.getBucketName(), remoteFile.getBlobName(),
+                tempFile);
     }
 
 }

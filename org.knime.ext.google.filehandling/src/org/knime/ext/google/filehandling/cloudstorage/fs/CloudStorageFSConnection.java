@@ -46,7 +46,7 @@
  * History
  *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,26 +55,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.node.util.FileSystemBrowser;
+import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
 import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.filehandling.nodes.connection.GoogleCloudStorageConnectionSettings;
 
 /**
  * Google Cloud Storage implementation of the {@link FSConnection} interface.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageFSConnection implements FSConnection {
+public class CloudStorageFSConnection implements FSConnection {
 
     private final static long CACHE_TTL_MILLIS = 6000;
 
-    private final GoogleCloudStorageFileSystem m_filesystem;
+    private final CloudStorageFileSystem m_filesystem;
 
 
     /**
-     * Creates new {@link GoogleCloudStorageFSConnection} for a given api connection
+     * Creates new {@link CloudStorageFSConnection} for a given api connection
      * and project.
      *
      * @param apiConnection
@@ -83,23 +83,23 @@ public class GoogleCloudStorageFSConnection implements FSConnection {
      *            Connection settings.
      * @throws IOException
      */
-    public GoogleCloudStorageFSConnection(final GoogleApiConnection apiConnection,
-            final GoogleCloudStorageConnectionSettings settings)
+    public CloudStorageFSConnection(final GoogleApiConnection apiConnection,
+            final CloudStorageConnectorSettings settings)
             throws IOException {
 
-        final GoogleCloudStorageFileSystemProvider provider = new GoogleCloudStorageFileSystemProvider();
+        final CloudStorageFileSystemProvider provider = new CloudStorageFileSystemProvider();
 
         final URI uri;
         try {
-            uri = new URI(GoogleCloudStorageFileSystemProvider.FS_TYPE, settings.getProjectId(), null, null);
+            uri = new URI(CloudStorageFileSystemProvider.FS_TYPE, settings.getProjectId(), null, null);
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Illegal project id: " + settings.getProjectId(), ex);
         }
 
         final Map<String, Object> env = new HashMap<>();
-        env.put(GoogleCloudStorageFileSystemProvider.KEY_API_CONNECTION, apiConnection);
-        env.put(GoogleCloudStorageFileSystemProvider.KEY_GCS_CONNECTION_SETTINGS, settings);
-        env.put(GoogleCloudStorageFileSystemProvider.KEY_CACHE_TTL_MILLIS, CACHE_TTL_MILLIS);
+        env.put(CloudStorageFileSystemProvider.KEY_API_CONNECTION, apiConnection);
+        env.put(CloudStorageFileSystemProvider.KEY_GCS_CONNECTION_SETTINGS, settings);
+        env.put(CloudStorageFileSystemProvider.KEY_CACHE_TTL_MILLIS, CACHE_TTL_MILLIS);
         m_filesystem = provider.getOrCreateFileSystem(uri, env);
     }
 

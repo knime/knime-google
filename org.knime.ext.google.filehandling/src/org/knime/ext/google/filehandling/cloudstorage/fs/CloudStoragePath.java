@@ -44,54 +44,87 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-03-31 (Alexander Bondaletov): created
+ *   2020-03-24 (Alexander Bondaletov): created
  */
-package org.knime.google.filehandling.connections;
+package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.util.Set;
 
-import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
+import org.knime.filehandling.core.connections.base.BlobStorePath;
 
 /**
- * Google Cloud Storage implementation of {@link TempFileSeekableByteChannel}.
+ * {@link Path} implementation for {@link CloudStorageFileSystem}.
  *
  * @author Alexander Bondaletov
  */
-public class GoogleCloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<GoogleCloudStoragePath> {
+public class CloudStoragePath extends BlobStorePath {
 
     /**
-     * Creates new instance.
+     * Creates path from the given path string.
      *
-     * @param file
-     *            The file for the channel.
-     * @param options
-     *            Open options.
-     * @throws IOException
+     * @param fileSystem
+     *            the file system.
+     * @param first
+     *            The first name component.
+     * @param more
+     *            More name components. the string representation of the path.
      */
-    public GoogleCloudStorageSeekableByteChannel(final GoogleCloudStoragePath file,
-            final Set<? extends OpenOption> options) throws IOException {
-        super(file, options);
+    public CloudStoragePath(final CloudStorageFileSystem fileSystem, final String first,
+            final String[] more) {
+        super(fileSystem, first, more);
+    }
+
+    /**
+     * Creates path from the given bucket name and the object key.
+     *
+     * @param fileSystem
+     *            the file system.
+     * @param bucket
+     *            the bucket name.
+     * @param blob
+     *            the object key.
+     */
+    public CloudStoragePath(final CloudStorageFileSystem fileSystem, final String bucket,
+            final String blob) {
+        super(fileSystem, bucket, blob);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void copyFromRemote(final GoogleCloudStoragePath remoteFile, final Path tempFile) throws IOException {
-        Files.copy(remoteFile, tempFile);
+    public CloudStorageFileSystem getFileSystem() {
+        return (CloudStorageFileSystem) super.getFileSystem();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void copyToRemote(final GoogleCloudStoragePath remoteFile, final Path tempFile) throws IOException {
-        remoteFile.getFileSystem().getClient().insertObject(remoteFile.getBucketName(), remoteFile.getBlobName(),
-                tempFile);
+    protected boolean lastComponentUsesRelativeNotation() {
+        if (getFileSystem().normalizePaths()) {
+            return super.lastComponentUsesRelativeNotation();
+        }
+        return false;
     }
 
+    @Override
+    public Path normalize() {
+        if (getFileSystem().normalizePaths()) {
+            return super.normalize();
+        } else {
+            return this;
+        }
+    }
+
+    @Override
+    public Path relativize(final Path other) {
+        if (!getFileSystem().normalizePaths()) {
+            throw new IllegalArgumentException("Cannot relativize paths if normalization is disabled.");
+        }
+
+        return super.relativize(other);
+    }
+
+    @Override
+    public CloudStoragePath toDirectoryPath() {
+        return (CloudStoragePath) super.toDirectoryPath();
+    }
 }
