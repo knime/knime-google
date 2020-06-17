@@ -55,9 +55,9 @@ import java.util.Collections;
 
 import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
+import org.knime.filehandling.core.connections.FSCategory;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
-import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 import org.knime.google.api.data.GoogleApiConnection;
 
 /**
@@ -110,7 +110,7 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
      * @return the {@link FSLocationSpec} for a Google Cloud Storage file system.
      */
     public static FSLocationSpec createFSLocationSpec() {
-        return new DefaultFSLocationSpec(Choice.CONNECTED_FS, CloudStorageFileSystemProvider.FS_TYPE);
+        return new DefaultFSLocationSpec(FSCategory.CONNECTED, CloudStorageFileSystemProvider.FS_TYPE);
     }
 
     /**
