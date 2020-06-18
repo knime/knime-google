@@ -51,6 +51,7 @@ package org.knime.ext.google.filehandling.cloudstorage.fs;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -140,7 +141,11 @@ public class CloudStorageClient {
         if (pageToken != null) {
             req.setPageToken(pageToken);
         }
-        return req.execute();
+        try {
+            return req.execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -169,7 +174,11 @@ public class CloudStorageClient {
             req.setPageToken(pageToken);
         }
 
-        return req.execute();
+        try {
+            return req.execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -185,20 +194,24 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public List<StorageObject> listAllObjects(final String bucket, final String prefix) throws IOException {
-        Storage.Objects.List req = m_storage.objects().list(bucket);
-        if (prefix != null && !prefix.isEmpty()) {
-            req.setPrefix(prefix);
+        try {
+            Storage.Objects.List req = m_storage.objects().list(bucket);
+            if (prefix != null && !prefix.isEmpty()) {
+                req.setPrefix(prefix);
+            }
+
+            Objects resp = req.execute();
+            List<StorageObject> result = resp.getItems();
+
+            while (resp.getNextPageToken() != null) {
+                resp = req.setPageToken(resp.getNextPageToken()).execute();
+                result.addAll(resp.getItems());
+            }
+
+            return result;
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
         }
-
-        Objects resp = req.execute();
-        List<StorageObject> result = resp.getItems();
-
-        while (resp.getNextPageToken() != null) {
-            resp = req.setPageToken(resp.getNextPageToken()).execute();
-            result.addAll(resp.getItems());
-        }
-
-        return result;
     }
 
     /**
@@ -225,7 +238,7 @@ public class CloudStorageClient {
                 // bucket does not exists
                 return false;
             }
-            throw e;
+            throw wrap(e);
         }
     }
 
@@ -256,7 +269,7 @@ public class CloudStorageClient {
             if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND && prefix == null) {
                 return false;
             }
-            throw e;
+            throw wrap(e);
         }
         return false;
     }
@@ -268,7 +281,11 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public Bucket getBucket(final String bucket) throws IOException {
-        return m_storage.buckets().get(bucket).execute();
+        try {
+            return m_storage.buckets().get(bucket).execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -286,7 +303,7 @@ public class CloudStorageClient {
             if (ex.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
                 return null;
             }
-            throw ex;
+            throw wrap(ex);
         }
     }
 
@@ -301,7 +318,11 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public InputStream getObjectStream(final String bucket, final String object) throws IOException {
-        return m_storage.objects().get(bucket, object).setAlt("media").executeAsInputStream();
+        try {
+            return m_storage.objects().get(bucket, object).setAlt("media").executeAsInputStream();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -313,7 +334,11 @@ public class CloudStorageClient {
      */
     public void insertBucket(final String bucket) throws IOException {
         Bucket b = new Bucket().setName(bucket);
-        m_storage.buckets().insert(m_projectId, b).execute();
+        try {
+            m_storage.buckets().insert(m_projectId, b).execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -349,7 +374,11 @@ public class CloudStorageClient {
     private void insertObject(final String bucket, final String object, final AbstractInputStreamContent content)
             throws IOException {
         StorageObject obj = new StorageObject().setName(object);
-        m_storage.objects().insert(bucket, obj, content).execute();
+        try {
+            m_storage.objects().insert(bucket, obj, content).execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -360,7 +389,11 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public void deleteBucket(final String bucket) throws IOException {
-        m_storage.buckets().delete(bucket).execute();
+        try {
+            m_storage.buckets().delete(bucket).execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
+        }
     }
 
     /**
@@ -373,7 +406,11 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public void deleteObject(final String bucket, final String object) throws IOException {
-        m_storage.objects().delete(bucket, object).execute();
+        try {
+            m_storage.objects().delete(bucket, object).execute();
+        } catch (GoogleJsonResponseException ex) {
+            wrap(ex);
+        }
     }
 
     /**
@@ -392,10 +429,46 @@ public class CloudStorageClient {
     public void rewriteObject(final String srcBucket, final String srcObject, final String dstBucket,
             final String dstObject) throws IOException {
         Rewrite rewrite = m_storage.objects().rewrite(srcBucket, srcObject, dstBucket, dstObject, new StorageObject());
-        RewriteResponse response = rewrite.execute();
-        while (!Boolean.TRUE.equals(response.getDone())) {
-            response = rewrite.setRewriteToken(response.getRewriteToken()).execute();
+        try {
+            RewriteResponse response = rewrite.execute();
+            while (!Boolean.TRUE.equals(response.getDone())) {
+                response = rewrite.setRewriteToken(response.getRewriteToken()).execute();
+            }
+        } catch (GoogleJsonResponseException ex) {
+            throw wrap(ex);
         }
     }
 
+    private static GoogleJsonResponseException wrap(final GoogleJsonResponseException ex) throws IOException {
+        GoogleException wrapped = new GoogleException(ex);
+        if (wrapped.getStatusCode() == HttpStatusCodes.STATUS_CODE_FORBIDDEN) {
+            AccessDeniedException ade = new AccessDeniedException(wrapped.getMessage());
+            ade.initCause(wrapped);
+            throw ade;
+        }
+        return wrapped;
+    }
+
+    private static class GoogleException extends GoogleJsonResponseException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * @param ex
+         *            Source exception.
+         */
+        public GoogleException(final GoogleJsonResponseException ex) {
+            super(new Builder(ex.getStatusCode(), ex.getStatusMessage(), ex.getHeaders()), ex.getDetails());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getMessage() {
+            if (getDetails() != null) {
+                return getDetails().getMessage();
+            }
+            return super.getMessage();
+        }
+    }
 }
