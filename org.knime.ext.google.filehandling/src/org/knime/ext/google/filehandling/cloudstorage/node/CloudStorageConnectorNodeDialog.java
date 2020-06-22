@@ -60,14 +60,12 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
  */
 public class CloudStorageConnectorNodeDialog extends DefaultNodeSettingsPane {
 
-    private final CloudStorageConnectorSettings m_settings;
+    private final CloudStorageConnectorSettings m_settings = new CloudStorageConnectorSettings();
 
     /**
      * Creates new instance.
      */
     protected CloudStorageConnectorNodeDialog() {
-        super();
-        m_settings = new CloudStorageConnectorSettings();
 
         addDialogComponent(new DialogComponentString(m_settings.getProjectIdModel(), "Project ID"));
         addDialogComponent(new DialogComponentString(m_settings.getWorkingDirectoryModel(), "Working directory"));

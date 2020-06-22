@@ -90,10 +90,12 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
      * @param settings
      *            Connection settings.
      */
-    public CloudStorageFileSystem(final CloudStorageFileSystemProvider provider, final URI uri,
+    public CloudStorageFileSystem(
+            final URI uri,
             final GoogleApiConnection apiConnection, final long cacheTTL,
             final CloudStorageConnectorSettings settings) {
-        super(provider, //
+
+        super(new CloudStorageFileSystemProvider(), //
                 uri, //
                 cacheTTL, //
                 settings.getWorkingDirectory().isEmpty() //

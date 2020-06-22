@@ -51,8 +51,6 @@ package org.knime.ext.google.filehandling.cloudstorage.fs;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
@@ -87,8 +85,6 @@ public class CloudStorageFSConnection implements FSConnection {
             final CloudStorageConnectorSettings settings)
             throws IOException {
 
-        final CloudStorageFileSystemProvider provider = new CloudStorageFileSystemProvider();
-
         final URI uri;
         try {
             uri = new URI(CloudStorageFileSystemProvider.FS_TYPE, settings.getProjectId(), null, null);
@@ -96,11 +92,7 @@ public class CloudStorageFSConnection implements FSConnection {
             throw new IllegalArgumentException("Illegal project id: " + settings.getProjectId(), ex);
         }
 
-        final Map<String, Object> env = new HashMap<>();
-        env.put(CloudStorageFileSystemProvider.KEY_API_CONNECTION, apiConnection);
-        env.put(CloudStorageFileSystemProvider.KEY_GCS_CONNECTION_SETTINGS, settings);
-        env.put(CloudStorageFileSystemProvider.KEY_CACHE_TTL_MILLIS, CACHE_TTL_MILLIS);
-        m_filesystem = provider.getOrCreateFileSystem(uri, env);
+        m_filesystem = new CloudStorageFileSystem(uri, apiConnection, CACHE_TTL_MILLIS, settings);
     }
 
     @Override

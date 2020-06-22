@@ -51,7 +51,6 @@ package org.knime.ext.google.filehandling.cloudstorage.fs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessMode;
@@ -59,7 +58,6 @@ import java.nio.file.CopyOption;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -70,13 +68,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
-import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
@@ -91,28 +86,10 @@ import com.google.api.services.storage.model.StorageObject;
 public class CloudStorageFileSystemProvider
         extends BaseFileSystemProvider<CloudStoragePath, CloudStorageFileSystem> {
 
-    static final String KEY_API_CONNECTION = "apiConnection";
-
-    static final String KEY_CACHE_TTL_MILLIS = "cacheTTL";
-
-    static final String KEY_GCS_CONNECTION_SETTINGS = "gcsConnectionSettings";
-
     /**
      * Google Cloud Storage file system type.
      */
     public static final String FS_TYPE = "google-cs";
-
-    @Override
-    protected CloudStorageFileSystem createFileSystem(final URI uri, final Map<String, ?> env)
-            throws IOException {
-
-        final GoogleApiConnection apiConnection = (GoogleApiConnection) env.get(KEY_API_CONNECTION);
-        final CloudStorageConnectorSettings settings = (CloudStorageConnectorSettings) env
-                .get(KEY_GCS_CONNECTION_SETTINGS);
-        final long cacheTTL = (long) env.get(KEY_CACHE_TTL_MILLIS);
-
-        return new CloudStorageFileSystem(this, uri, apiConnection, cacheTTL, settings);
-    }
 
     @SuppressWarnings("resource")
     @Override
@@ -211,12 +188,6 @@ public class CloudStorageFileSystemProvider
             client.deleteObject(path.getBucketName(), blobName);
         } else {
             client.deleteBucket(path.getBucketName());
-        }
-
-        // it is possible that parent directory(-s) only existed in a form of a prefix
-        // and got deleted as a result of deleting the object
-        if (!existsCached((CloudStoragePath) path.getParent())) {
-            Files.createDirectories(path.getParent());
         }
     }
 
