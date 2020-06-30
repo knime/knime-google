@@ -48,33 +48,183 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.node;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.io.IOException;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.event.ChangeListener;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
+import org.knime.filehandling.core.connections.FSConnection;
+import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
+import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * Google Cloud Storage Connection node dialog.
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageConnectorNodeDialog extends DefaultNodeSettingsPane {
+public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
 
+    private final ChangeListener m_workdirListener;
     private final CloudStorageConnectorSettings m_settings = new CloudStorageConnectorSettings();
+    private final WorkingDirectoryChooser m_workingDirChooser = new WorkingDirectoryChooser("cloud-storage.workingDir",
+            this::createFSConnection);
+
+    private GoogleApiConnection m_connection;
+
 
     /**
      * Creates new instance.
      */
     protected CloudStorageConnectorNodeDialog() {
+        m_workdirListener = e -> m_settings.getWorkingDirectoryModel()
+                .setStringValue(m_workingDirChooser.getSelectedWorkingDirectory());
 
-        addDialogComponent(new DialogComponentString(m_settings.getProjectIdModel(), "Project ID"));
-        addDialogComponent(new DialogComponentString(m_settings.getWorkingDirectoryModel(), "Working directory"));
-        addDialogComponent(new DialogComponentBoolean(m_settings.getNormalizePathsModel(), "Normalize paths"));
-        createNewGroup("Timeouts");
-        addDialogComponent(
-                new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "Connection timeout in seconds", 1));
-        addDialogComponent(new DialogComponentNumber(m_settings.getReadTimeoutModel(), "Read timeout in seconds", 1));
-
+        addTab("Settings", createSettingsPanel());
+        addTab("Advanced", createTimeoutsPanel());
     }
 
+    private JComponent createSettingsPanel() {
+        DialogComponentString projectIdInput = new DialogComponentString(m_settings.getProjectIdModel(), "Project ID",
+                true, 50);
+        projectIdInput.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+        projectIdInput.getComponentPanel()
+                .setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createTitledBorder("Google Cloud project settings"),
+                        BorderFactory.createEmptyBorder(0, 5, 0, 0)));
+
+        Box box = new Box(BoxLayout.PAGE_AXIS);
+        box.add(projectIdInput.getComponentPanel());
+        box.add(createFilesystemSettingsPanel());
+        return box;
+    }
+
+    private JComponent createFilesystemSettingsPanel() {
+        DialogComponentBoolean normalizePath = new DialogComponentBoolean(m_settings.getNormalizePathsModel(),
+                "Normalize paths");
+        normalizePath.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(0, 10, 0, 0);
+        panel.add(m_workingDirChooser, c);
+
+        c.gridy += 1;
+        c.insets = new Insets(0, 0, 0, 0);
+        panel.add(normalizePath.getComponentPanel(), c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.gridy += 1;
+        panel.add(Box.createVerticalGlue(), c);
+
+        panel.setBorder(BorderFactory.createTitledBorder("File system settings"));
+        return panel;
+    }
+
+    private JComponent createTimeoutsPanel() {
+        DialogComponentNumber connectionTimeout = new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "",
+                1);
+        DialogComponentNumber readTimeout = new DialogComponentNumber(m_settings.getReadTimeoutModel(), "", 1);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        panel.add(new JLabel("Connection timeout in seconds:"), c);
+
+        c.gridy = 1;
+        panel.add(new JLabel("Read timeout in seconds:"), c);
+
+        c.weightx = 1;
+        c.gridx = 1;
+        c.gridy = 0;
+        panel.add(connectionTimeout.getComponentPanel(), c);
+
+        c.gridy = 1;
+        panel.add(readTimeout.getComponentPanel(), c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.gridy += 1;
+        panel.add(Box.createVerticalGlue(), c);
+
+        panel.setBorder(BorderFactory.createTitledBorder("Connection settings"));
+        return panel;
+    }
+
+    private FSConnection createFSConnection() throws IOException {
+        return new CloudStorageFSConnection(m_connection, m_settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        validateBeforeSaving();
+        m_settings.saveSettingsTo(settings);
+    }
+
+    private void validateBeforeSaving() throws InvalidSettingsException {
+        m_settings.validate();
+        m_workingDirChooser.addCurrentSelectionToHistory();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        try {
+            m_settings.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // ignore
+        }
+
+        m_connection = ((GoogleApiConnectionPortObjectSpec) specs[0]).getGoogleApiConnection();
+
+        settingsLoaded();
+    }
+
+    private void settingsLoaded() {
+        m_workingDirChooser.setSelectedWorkingDirectory(m_settings.getWorkingDirectoryModel().getStringValue());
+        m_workingDirChooser.addListener(m_workdirListener);
+    }
+
+    @Override
+    public void onClose() {
+        m_workingDirChooser.removeListener(m_workdirListener);
+        m_workingDirChooser.onClose();
+    }
 }

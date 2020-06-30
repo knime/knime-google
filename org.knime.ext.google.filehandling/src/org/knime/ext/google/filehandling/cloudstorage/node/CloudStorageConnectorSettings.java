@@ -54,6 +54,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 
 /**
  * Settings for {@link CloudStorageConnectorNodeModel}.
@@ -80,7 +81,7 @@ public class CloudStorageConnectorSettings {
      */
     public CloudStorageConnectorSettings() {
         m_projectId = new SettingsModelString(KEY_PROJECT_ID, "");
-        m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, "");
+        m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, CloudStorageFileSystem.PATH_SEPARATOR);
         m_normalizePaths = new SettingsModelBoolean(KEY_NORMALIZE_PATHS, true);
         m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT, DEFAULT_TIMEOUT, 0,
                 Integer.MAX_VALUE);
@@ -128,6 +129,11 @@ public class CloudStorageConnectorSettings {
     public void validate() throws InvalidSettingsException {
         if (m_projectId.getStringValue().isEmpty()) {
             throw new InvalidSettingsException("Project ID is not configured");
+        }
+
+        if (m_workingDirectory.getStringValue().isEmpty()
+                || !m_workingDirectory.getStringValue().startsWith(CloudStorageFileSystem.PATH_SEPARATOR)) {
+            throw new InvalidSettingsException("Working directory must be set to an absolute path.");
         }
     }
 
