@@ -115,7 +115,7 @@ public class CloudStorageFileSystemProvider
     @Override
     protected Iterator<CloudStoragePath> createPathIterator(final CloudStoragePath dir,
             final Filter<? super Path> filter) throws IOException {
-        return CloudStoragePathIterator.create(dir.toDirectoryPath(), filter);
+        return CloudStoragePathIteratorFactory.create(dir.toDirectoryPath(), filter);
     }
 
     @Override
