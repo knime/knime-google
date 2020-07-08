@@ -57,7 +57,6 @@ import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.FileStore;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -234,11 +233,6 @@ public class CloudStorageFileSystemProvider
         } else {
             client.insertBucket(dirPath.getBucketName());
         }
-    }
-
-    @Override
-    public FileStore getFileStore(final Path path) throws IOException {
-        return getFileSystemInternal().getFileStores().iterator().next();
     }
 
     @Override
