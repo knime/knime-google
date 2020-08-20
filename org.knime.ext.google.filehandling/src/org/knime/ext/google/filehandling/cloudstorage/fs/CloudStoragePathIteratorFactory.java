@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.knime.filehandling.core.connections.base.CloseablePathIterator;
 import org.knime.filehandling.core.connections.base.PagedPathIterator;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 
@@ -82,7 +83,7 @@ public abstract class CloudStoragePathIteratorFactory {
      * @return {@link CloudStoragePathIteratorFactory} instance.
      * @throws IOException
      */
-    public static Iterator<CloudStoragePath> create(
+    public static CloseablePathIterator<CloudStoragePath> create(
             final CloudStoragePath path,
             final Filter<? super Path> filter) throws IOException {
         if (path.getNameCount() == 0) {

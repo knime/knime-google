@@ -65,11 +65,11 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
+import org.knime.filehandling.core.connections.base.CloseablePathIterator;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -112,7 +112,8 @@ public class CloudStorageFileSystemProvider
     }
 
     @Override
-    protected Iterator<CloudStoragePath> createPathIterator(final CloudStoragePath dir,
+    protected CloseablePathIterator<CloudStoragePath> createPathIterator(
+            final CloudStoragePath dir,
             final Filter<? super Path> filter) throws IOException {
         return CloudStoragePathIteratorFactory.create(dir.toDirectoryPath(), filter);
     }
