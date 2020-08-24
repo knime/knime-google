@@ -117,4 +117,14 @@ public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
     public String getDescription() {
         return DESC;
     }
+
+    @Override
+    public boolean isEnabledForOAuth() {
+        /*
+         * We do not need the Analytics.Full scope for the Google Analytics node set.
+         * Also we are not verified by Google to use the Analytics.Full scope,
+         * so we should not prompt authentication requests with it.
+         */
+        return false;
+    }
 }
