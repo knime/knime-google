@@ -68,6 +68,7 @@ import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -92,6 +93,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.SwingWorkerWithContext;
+import org.knime.google.api.GooglePlugInActivator;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
@@ -105,6 +107,13 @@ import com.google.api.client.auth.oauth2.Credential;
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 final class GoogleAuthNodeDialogPane extends NodeDialogPane {
+
+    /** Feedback from an exchange with the "Google Cloud Trust & Safety Team":
+     * > Please update the Google sign-in button so that it complies with the Google sign-in branding guidelines.
+     * (which also means, we not only are allowed but also required to include the Google icon in our product.
+     */
+    private static final ImageIcon GOOGLE_SIGN_IN_ICON = GooglePlugInActivator
+        .getResource("/icons/btn_google_dark_normal_ios.png").map(ImageIcon::new).orElse(null);
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);
 
@@ -158,9 +167,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         gbc = getDefaultGBC();
         gbc.insets = new Insets(10, 5, 10, 5);
         // Authentication button and status message:
-        m_authenticateButton = new JButton("Authenticate");
-        m_authenticateButton.setSize(new Dimension(240, m_authenticateButton.getPreferredSize().height));
-        m_authenticateButton.setPreferredSize(new Dimension(240, m_authenticateButton.getPreferredSize().height));
+        m_authenticateButton = new JButton("Sign in with Google", GOOGLE_SIGN_IN_ICON);
         m_authenticateButton.addActionListener(e -> onAuthButtonPressed());
         m_panelWithAuthButtonOrProgressBar.add(m_authenticateButton);
         innerPanel.add(m_panelWithAuthButtonOrProgressBar, gbc);
