@@ -92,6 +92,16 @@ public class CloudStorageTestInitializer
             throws IOException {
         final CloudStoragePath path = makePath(pathComponents);
 
+        for (int i = 1; i < path.getNameCount() - 1; i++) {
+            final String dirKey = path.subpath(1, i + 1).toString();
+            if (!m_client.exists(path.getBucketName(), dirKey)) {
+                execAndRetry(() -> {
+                    m_client.insertObject(path.getBucketName(), dirKey, "");
+                    return null;
+                });
+            }
+        }
+
         final String key = path.subpath(1, path.getNameCount()).toString();
         execAndRetry(() -> {
             m_client.insertObject(path.getBucketName(), key, content);
