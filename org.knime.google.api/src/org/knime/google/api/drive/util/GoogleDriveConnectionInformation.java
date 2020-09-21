@@ -104,7 +104,7 @@ public class GoogleDriveConnectionInformation extends CloudConnectionInformation
         try {
             return new GoogleDriveConnectionInformation(model);
         } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e.getLocalizedMessage());
+            throw new InvalidSettingsException(e.getLocalizedMessage(), e);
         }
     }
 
