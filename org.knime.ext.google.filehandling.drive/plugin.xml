@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            category-path="/labs/file-handling-prototype"
+            factory-class="org.knime.ext.google.filehandling.drive.node.GoogleDriveConnectionNodeFactory"/>
+   </extension>
+   <extension
+         point="org.knime.filehandling.FSTestInitializerProvider">
+      <FSTestInitializerProvider
+            ProviderClass="org.knime.ext.google.filehandling.drive.testing.GoogleDriveTestInitializerProvider">
+      </FSTestInitializerProvider>
+   </extension>
+</plugin>
