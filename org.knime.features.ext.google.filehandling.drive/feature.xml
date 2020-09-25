@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.knime.features.ext.ssh.filehandling"
+      id="org.knime.features.ext.google.filehandling.drive"
       label="KNIME Google Drive Connector (Labs)"
       version="4.2.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
@@ -729,6 +729,13 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="org.knime.ext.google.filehandling.drive"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+         
+   <plugin
+         id="org.knime.google.api"
          download-size="0"
          install-size="0"
          version="0.0.0"
