@@ -66,7 +66,6 @@ import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
@@ -238,49 +237,6 @@ public class CloudStorageFileSystemProvider
     @Override
     public String getScheme() {
         return FS_TYPE;
-    }
-
-    @SuppressWarnings("resource")
-    @Override
-    protected void moveInternal(final CloudStoragePath source,
-            final CloudStoragePath target,
-            final CopyOption... options) throws IOException {
-
-        CloudStorageClient client = getFileSystemInternal().getClient();
-
-
-        if (isNonEmptyDirectory(target.toDirectoryPath())) {
-            throw new DirectoryNotEmptyException(target.toString());
-        }
-
-        if (isDirectory(source)) {
-            String srcPath = source.toDirectoryPath().getBlobName();
-            List<StorageObject> list = client.listAllObjects(source.getBucketName(),
-                    srcPath);
-            if (list != null) {
-                for (StorageObject so : list) {
-                    String targetName = so.getName().replaceFirst(srcPath,
-                            target.toDirectoryPath().getBlobName());
-                    client.rewriteObject(so.getBucket(), so.getName(), target.getBucketName(), targetName);
-
-                    client.deleteObject(so.getBucket(), so.getName());
-                    getFileSystemInternal().removeFromAttributeCache(
-                            new CloudStoragePath(source.getFileSystem(), so.getBucket(), so.getName()));
-                }
-            }
-        } else {
-            client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
-                    target.getBlobName());
-            delete(source);
-        }
-
-    }
-
-    private boolean isNonEmptyDirectory(final CloudStoragePath directoryPath) throws IOException {
-        CloudStorageClient client = getFileSystemInternal().getClient();
-
-        return client.isNotEmpty(directoryPath.getBucketName(),
-                directoryPath.toDirectoryPath().getBlobName());
     }
 
     @Override

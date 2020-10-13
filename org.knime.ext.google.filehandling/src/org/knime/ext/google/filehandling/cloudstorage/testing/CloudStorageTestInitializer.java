@@ -49,12 +49,19 @@
 package org.knime.ext.google.filehandling.cloudstorage.testing;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageClient;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStoragePath;
+import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializer;
 import org.knime.filehandling.core.util.IOESupplier;
 
@@ -70,6 +77,8 @@ public class CloudStorageTestInitializer
         extends DefaultFSTestInitializer<CloudStoragePath, CloudStorageFileSystem> {
 
     private final CloudStorageClient m_client;
+
+    private final ExecutorService m_threadPool = Executors.newCachedThreadPool();
 
     /**
      * Creates initializer.
@@ -90,24 +99,57 @@ public class CloudStorageTestInitializer
     @Override
     public CloudStoragePath createFileWithContent(final String content, final String... pathComponents)
             throws IOException {
+
+        final List<Future<Void>> futures = new LinkedList<>();
+
         final CloudStoragePath path = makePath(pathComponents);
 
-        final String key = path.subpath(1, path.getNameCount()).toString();
-        execAndRetry(() -> {
-            m_client.insertObject(path.getBucketName(), key, content);
+        String key = "";
+        for (int i = 1; i < path.getNameCount() - 1; i++) {
+            key += path.getName(i).toString();
+
+            if (getTestCaseScratchDir().toDirectoryPath().toString().startsWith(key)) {
+                // we don't need to recreate the scratch dir structure every time, this is done
+                // in
+                // beforeTestCaseInternal().
+                continue;
+            }
+
+            final String objectKey = key;
+            futures.add(execAndRetry(() -> {
+                m_client.insertObject(path.getBucketName(), objectKey, "");
+                return null;
+            }));
+        }
+
+        futures.add(execAndRetry(() -> {
+            m_client.insertObject(path.getBucketName(), path.subpath(1, path.getNameCount()).toString(), content);
             return null;
-        });
+        }));
+
+        awaitFutures(futures);
+
         return path;
+    }
+
+    private static void awaitFutures(final List<Future<Void>> futures) {
+        try {
+            for (Future<Void> future : futures) {
+                future.get();
+            }
+        } catch (ExecutionException | InterruptedException e) {
+            ExceptionUtil.wrapAsIOException(e);
+        }
     }
 
     @Override
     protected void beforeTestCaseInternal() throws IOException {
         final CloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
 
-        execAndRetry(() -> {
+        awaitFutures(Collections.singletonList(execAndRetry(() -> {
             m_client.insertObject(scratchDir.getBucketName(), scratchDir.getBlobName(), "");
             return null;
-        });
+        })));
 
     }
 
@@ -115,33 +157,41 @@ public class CloudStorageTestInitializer
     protected void afterTestCaseInternal() throws IOException {
         final CloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
 
+        final List<Future<Void>> futures = new LinkedList<>();
+
         List<StorageObject> objects = m_client.listAllObjects(scratchDir.getBucketName(), scratchDir.getBlobName());
         if (objects != null) {
             for (StorageObject o : objects) {
-                execAndRetry(() -> {
+                futures.add(execAndRetry(() -> {
                     m_client.deleteObject(scratchDir.getBucketName(), o.getName());
                     return null;
-                });
+                }));
             }
         }
 
+        awaitFutures(futures);
         getFileSystem().clearAttributesCache();
     }
 
-    private static void execAndRetry(final IOESupplier<Void> request) throws IOException {
-        try {
-            request.get();
-        } catch (GoogleJsonResponseException ex) {
-            if (ex.getStatusCode() == 429) {// Rate limit exceeded
+    private Future<Void> execAndRetry(final IOESupplier<Void> request) throws IOException {
+        return m_threadPool.submit(() -> {
+            for (int i = 0; i < 3; i++) {
                 try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex1) {
-                    Thread.currentThread().interrupt();
+                    request.get();
+                    return null;
+                } catch (GoogleJsonResponseException ex) {
+                    if (ex.getStatusCode() == 429) {// Rate limit exceeded
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException ex1) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } else {
+                        throw ex;
+                    }
                 }
-                request.get();
-            } else {
-                throw ex;
             }
-        }
+            throw new IOException("Rate limit exceeded multiple times");
+        });
     }
 }
