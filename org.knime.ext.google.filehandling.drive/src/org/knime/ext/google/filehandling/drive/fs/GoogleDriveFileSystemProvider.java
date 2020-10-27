@@ -120,7 +120,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected SeekableByteChannel newByteChannelInternal(final GoogleDrivePath path,
             final Set<? extends OpenOption> options, final FileAttribute<?>... attrs) throws IOException {
-        return new GoodleDriveFileSeekableByteChannel(path, options);
+        return new GoogleDriveFileSeekableByteChannel(path, options);
     }
 
     /**

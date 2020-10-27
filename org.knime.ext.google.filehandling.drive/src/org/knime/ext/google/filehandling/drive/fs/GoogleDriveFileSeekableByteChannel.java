@@ -70,7 +70,7 @@ import com.google.api.client.util.IOUtils;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoodleDriveFileSeekableByteChannel extends TempFileSeekableByteChannel<GoogleDrivePath> {
+public class GoogleDriveFileSeekableByteChannel extends TempFileSeekableByteChannel<GoogleDrivePath> {
 
     /**
      * @param file
@@ -79,7 +79,7 @@ public class GoodleDriveFileSeekableByteChannel extends TempFileSeekableByteChan
      *            open file options.
      * @throws IOException
      */
-    public GoodleDriveFileSeekableByteChannel(final GoogleDrivePath file, final Set<? extends OpenOption> options) throws IOException {
+    public GoogleDriveFileSeekableByteChannel(final GoogleDrivePath file, final Set<? extends OpenOption> options) throws IOException {
         super(file, options);
     }
 
