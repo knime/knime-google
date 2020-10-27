@@ -50,9 +50,9 @@ package org.knime.ext.google.filehandling.drive.testing;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
+import java.util.UUID;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.ext.google.filehandling.drive.fs.FileMetadata;
@@ -78,7 +78,6 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleDriveTestInitializer.class);
 
     private boolean m_isWorkingDirCreated = false;
-    private Drive m_sharedDriveCreated;
 
     private GoogleDriveHelper m_helper;
     private final GoogleDriveFileSystem m_fileSystem;
@@ -141,10 +140,6 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
         FileMetadata testRootMeta;
 
         if (!m_isWorkingDirCreated) {
-            // before of all possible the test should be done in
-            // created shared drive
-            possibleCreateSharedDrive(testRoot);
-
             // create
             FileMetadata parentOfRoot = readMetadata(testRoot.getParent());
             if (parentOfRoot.getType() == FileType.FOLDER) {
@@ -152,7 +147,8 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
                         parentOfRoot.getId(), testRoot.getFileName().toString()));
             } else if (parentOfRoot.getType() == FileType.MY_DRIVE || parentOfRoot.getType() == FileType.SHARED_DRIVE) {
                 testRootMeta = new FileMetadata(
-                        m_helper.createFolder(parentOfRoot.getDriveId(), null, testRoot.getFileName().toString()));
+                        m_helper.createFolder(parentOfRoot.getDriveId(), null,
+                                testRoot.getFileName().toString()));
             } else {
                 throw new IOException("Unexpected root folder " + testRoot.getParent());
             }
@@ -166,23 +162,24 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
                 scratchDir.getFileName().toString());
     }
 
-    private void possibleCreateSharedDrive(final GoogleDrivePath path) throws IOException {
-        GoogleDrivePath drive = path;
-        while (!drive.isDrive()) {
-            drive = drive.getParent();
-        }
-
-        // check is drive already exists
-        if (!Files.exists(drive)) {
-            m_sharedDriveCreated = m_helper.createSharedDrive(drive.getFileName().toString());
-        }
-    }
-
     @Override
     protected void afterTestCaseInternal() throws IOException {
         final GoogleDrivePath scratchDir = getTestCaseScratchDir();
         deletePath(scratchDir);
         m_fileSystem.clearAttributesCache();
+    }
+
+    /**
+     * @param name
+     *            drive name.
+     * @return drive with given name.
+     * @throws IOException
+     */
+    public Drive createSharedDrive(final String name) throws IOException {
+        Drive drive = new Drive();
+        drive.setName(name);
+        drive.setHidden(false);
+        return m_helper.getDriveService().drives().create(UUID.randomUUID().toString(), drive).execute();
     }
 
     private void deletePath(final GoogleDrivePath path) throws IOException {
@@ -193,26 +190,13 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
         }
     }
 
-    private void deleteSharedDrive(final GoogleDrivePath path) {
-        try {
-            FileMetadata meta = readMetadata(path);
-            m_helper.deleteDrive(meta.getDriveId());
-        } catch (IOException ex) {
-            LOGGER.error("Failed to delete shared drive of: " + path, ex);
-        }
-    }
-
     @Override
     public void afterClass() throws IOException {
         final GoogleDrivePath scratchDir = getTestCaseScratchDir();
 
         if (m_isWorkingDirCreated) {
             try {
-                if (m_sharedDriveCreated != null) {
-                    deleteSharedDrive(scratchDir);
-                } else {
-                    deletePath(scratchDir.getParent());
-                }
+                deletePath(scratchDir.getParent());
             } finally {
                 m_isWorkingDirCreated = false;
             }

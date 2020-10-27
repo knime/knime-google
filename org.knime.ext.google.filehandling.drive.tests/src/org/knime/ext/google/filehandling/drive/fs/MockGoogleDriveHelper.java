@@ -115,30 +115,6 @@ public class MockGoogleDriveHelper extends GoogleDriveHelper {
         deleteDeeply(ids);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void deleteDrive(final String id) throws IOException {
-        // delete drive
-        Iterator<Drive> iter = m_drives.iterator();
-        while (iter.hasNext()) {
-            if (id.equals(iter.next().getId())) {
-                iter.remove();
-            }
-        }
-
-        // delete children
-        Set<String> ids = new HashSet<>();
-        for (File file : m_files) {
-            if (id.equals(file.getDriveId())) {
-                ids.add(file.getId());
-            }
-        }
-
-        deleteDeeply(ids);
-    }
-
     private void deleteDeeply(final Set<String> ids) {
         if (ids.isEmpty()) {
             return;
@@ -166,41 +142,50 @@ public class MockGoogleDriveHelper extends GoogleDriveHelper {
      * {@inheritDoc}
      */
     @Override
-    public Drive getDrive(final String name) throws IOException {
+    public List<Drive> getDrives(final String name, final String driveId) throws IOException {
+        List<Drive> drives = new LinkedList<>();
+
         for (Drive drive : m_drives) {
-            if (drive.getName().equals(name)) {
-                return drive;
+            if (drive.getName().equals(name) || (driveId != null && driveId.equals(drive.getId()))) {
+                drives.add(drive);
             }
         }
-        throw new NoSuchFileException(name);
+
+        if (drives.isEmpty()) {
+            throw new NoSuchFileException(name);
+        }
+
+        return drives;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public File getFile(final String driveId, final String parentFolderId, final String name) throws IOException {
+    public List<File> getFilesByNameOrId(final String driveId, final String parentFolderId, final String name,
+            final String fileId) throws IOException {
+        List<File> files = new LinkedList<>();
         for (File file : m_files) {
-            if (Objects.equal(file.getDriveId(), driveId) && containsParent(file, driveId)) {
-                return file;
+            if (Objects.equal(file.getDriveId(), driveId) && containsParent(file, parentFolderId)
+                    && (file.getName().equals(name) || file.getId().equals(fileId))) {
+                files.add(file);
             }
         }
-        throw new NoSuchFileException(name);
+
+        if (files.isEmpty()) {
+            throw new NoSuchFileException(name);
+        }
+
+        return files;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public File getFileOfDrive(final String driveId, final String name) throws IOException {
-        for (File file : m_files) {
-            if (Objects.equal(file.getDriveId(), driveId)
-                    && Objects.equal(file.getName(), name)
-                    && (file.getParents().isEmpty() || containsParent(file, driveId))) {
-                return file;
-            }
-        }
-        throw new NoSuchFileException(name);
+    public List<File> getFilesOfDriveByNameOrId(final String driveId, final String name, final String additionalName)
+            throws IOException {
+        return getFilesByNameOrId(driveId, driveId, name, additionalName);
     }
 
     /**
@@ -254,7 +239,6 @@ public class MockGoogleDriveHelper extends GoogleDriveHelper {
      *            shared drive name.
      * @return shared drive instance.
      */
-    @Override
     public Drive createSharedDrive(final String name) {
         m_lastId++;
         return createDrive("drv:" + m_lastId, name);
@@ -286,6 +270,8 @@ public class MockGoogleDriveHelper extends GoogleDriveHelper {
         }
         if (parentId != null) {
             file.getParents().add(parentId);
+        } else if (driveId != null) { // NOSONAR correct. The drive ID can be null if default drive
+            file.getParents().add(driveId);
         }
         file.setId(nextId());
 
@@ -322,6 +308,9 @@ public class MockGoogleDriveHelper extends GoogleDriveHelper {
     private static boolean containsEquals(final List<String> elements, final String element) {
         if (elements == null) {
             return false;
+        }
+        if (elements.isEmpty() && element == null) {
+            return true;
         }
         for (String e : elements) {
             if (Objects.equal(e, element)) {

@@ -1,6 +1,6 @@
 autoEnabled=true
 eclipse.preferences.version=1
-idePrefixKey=
+idePrefixKey=src/org/knime/ext/google/filehandling/drive/node
 projectKey=org.knime\:knime-google
 serverId=sonar.knime.com
-sqPrefixKey=org.knime.ext.google.filehandling.drive
+sqPrefixKey=org.knime.google.api/src/org/knime/google/api/drive/node/connector

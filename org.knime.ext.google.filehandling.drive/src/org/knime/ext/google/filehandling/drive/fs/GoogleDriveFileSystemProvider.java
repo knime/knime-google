@@ -62,10 +62,12 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -87,6 +89,10 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      * Default user drive name.
      */
     public static final String MY_DRIVE = "My Drive";
+    /**
+     * Start of synthetic suffix for duplicate names.
+     */
+    private static final String SYNTHETIC_SUFFIX_START = " (";
 
     private final GoogleDriveHelper m_helper;
 
@@ -120,19 +126,103 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("resource")
     @Override
     protected void moveInternal(final GoogleDrivePath source, final GoogleDrivePath target, final CopyOption... options)
             throws IOException {
-        throw new IOException("TODO");
+        // validation
+        if (source.isRoot()) {
+            throw new AccessDeniedException("Root folder can't be moved");
+        }
+        if (source.isDrive()) {
+            throw new AccessDeniedException("Drive can't be moved");
+        }
+
+        GoogleDrivePath targetParent = target.getParent();
+        if (targetParent.isRoot()) {
+            throw new AccessDeniedException("Can't move into root folder just into drives");
+        }
+
+        FileMetadata existingTargetMeta = null;
+        if (exists(target)) {
+            existingTargetMeta = fetchAttributesInternal(target).getMetadata();
+            if (existingTargetMeta.getType() == FileType.FOLDER && !isEmptyFolder(existingTargetMeta)) {
+                throw new DirectoryNotEmptyException(target.toString());
+            }
+        }
+
+        // moving
+        FileMetadata sourceMeta = fetchAttributesInternal(source).getMetadata();
+        FileMetadata targetParentMeta = fetchAttributesInternal(targetParent).getMetadata();
+
+        File file = m_helper.move(sourceMeta.getId(), targetParentMeta.getId(), target.getFileName().toString());
+
+        // if not any exceptions thrown should clear the cache deeply
+        getFileSystemInternal().removeFromAttributeCacheDeep(source);
+
+        // cache new attributes for moved file
+        cacheAttributes(target, new GoogleDriveFileAttributes(target, new FileMetadata(file)));
+
+        // Google drive allows for many files with same name be the child of same
+        // parent.
+        // Therefore moving of file not conflicts with already existing target file, but
+        // target file should be deleted after moving finished.
+        if (existingTargetMeta != null) {
+            m_helper.deleteFile(existingTargetMeta.getId());
+            getFileSystemInternal().removeFromAttributeCacheDeep(target);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("resource")
     @Override
     protected void copyInternal(final GoogleDrivePath source, final GoogleDrivePath target, final CopyOption... options)
             throws IOException {
-        throw new IOException("TODO");
+        // validation
+        if (source.isRoot()) {
+            throw new AccessDeniedException("Root folder can't be copied");
+        }
+        if (source.isDrive()) {
+            throw new AccessDeniedException("Drive can't be copied");
+        }
+
+        GoogleDrivePath targetParent = target.getParent();
+        if (targetParent.isRoot()) {
+            throw new AccessDeniedException("Can't copy into root folder just into drives");
+        }
+
+        FileMetadata targetMeta = null;
+        if (exists(target)) {
+            targetMeta = fetchAttributesInternal(target).getMetadata();
+            if (targetMeta.getType() == FileType.FOLDER && !isEmptyFolder(targetMeta)) {
+                throw new DirectoryNotEmptyException(target.toString());
+            }
+        }
+
+        // copy
+        FileMetadata sourceMeta = fetchAttributesInternal(source).getMetadata();
+        FileMetadata targetParentMeta = fetchAttributesInternal(targetParent).getMetadata();
+
+        if (targetMeta != null) { // file already exists
+            if (targetMeta.getType() == FileType.FILE) {
+                m_helper.copy(sourceMeta.getId(), targetParentMeta.getId(), target.getFileName().toString());
+
+                // Google drive allows to many files with same name be the child of same
+                // parent.
+                // Therefore copy of file not conflicts with already existing target file, but
+                // target file should be deleted after copy finished.
+                m_helper.deleteFile(targetMeta.getId());
+                getFileSystemInternal().removeFromAttributeCacheDeep(target);
+            } else {
+                // copy to container (folder or drive)
+                m_helper.copy(sourceMeta.getId(), targetMeta.getId(), source.getFileName().toString());
+            }
+        } else {
+            // target is interpreted as an end target
+            m_helper.copy(sourceMeta.getId(), targetParentMeta.getId(), target.getFileName().toString());
+        }
     }
 
     /**
@@ -180,7 +270,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     protected void createDirectoryInternal(final GoogleDrivePath dir, final FileAttribute<?>... attrs)
             throws IOException {
         FileMetadata meta = fetchAttributesInternal(dir.getParent()).getMetadata();
-        m_helper.createFolder(meta.getDriveId(), meta.getId(), dir.getFileName().toString());
+        File folder = m_helper.createFolder(meta.getDriveId(), meta.getId(), dir.getFileName().toString());
+        cacheAttributes(dir, new GoogleDriveFileAttributes(dir, new FileMetadata(folder)));
     }
 
     /**
@@ -294,15 +385,15 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             final GoogleDrivePath child = current.resolve(name);
 
             if (current.isRoot()) {
-                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(m_helper.getDrive(name)));
+                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(getDrive(name)));
             } else {
                 FileMetadata meta = attributes.getMetadata();
                 if (current.isDrive()) {
                     attributes = new GoogleDriveFileAttributes(child,
-                            new FileMetadata(m_helper.getFileOfDrive(meta.getId(), name)));
+                            new FileMetadata(getFileOfDrive(meta.getId(), name)));
                 } else {
                     attributes = new GoogleDriveFileAttributes(child,
-                            new FileMetadata(m_helper.getFile(meta.getDriveId(), meta.getId(), name)));
+                            new FileMetadata(getFile(meta.getDriveId(), meta.getId(), name)));
                 }
             }
 
@@ -387,6 +478,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             files = m_helper.listFolder(meta.getDriveId(), meta.getId());
         }
 
+        correctFileNameDuplicates(files);
         return createPathsAndCacheAttributes(dir, filesToMetadata(files));
     }
 
@@ -397,7 +489,10 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      * @throws IOException
      */
     private List<GoogleDrivePath> listRootFolder(final GoogleDrivePath dir) throws IOException {
-        final List<FileMetadata> metas = drivesToMetadata(m_helper.listSharedDrives());
+        final List<Drive> sharedDrives = m_helper.listSharedDrives();
+        correctDriveNameDuplicates(sharedDrives);
+
+        final List<FileMetadata> metas = drivesToMetadata(sharedDrives);
         // shared drives is retrieved without pagination therefore can be
         // cached immediately.
         List<GoogleDrivePath> files = createPathsAndCacheAttributes(dir, metas);
@@ -452,5 +547,137 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      */
     private static GoogleDriveFileAttributes createRootAttributes(final GoogleDrivePath path) {
         return new GoogleDriveFileAttributes(path, new FileMetadata(null, FileType.ROOT));
+    }
+
+    // support of files with equal names in context of one parent
+    /**
+     * @param name
+     *            drive name.
+     * @return drive with given name or null if 'My Drive'
+     * @throws IOException
+     */
+    private Drive getDrive(final String name) throws IOException {
+        if (MY_DRIVE.equals(name)) {
+            return null;
+        }
+
+        String fileId = getIdFromSuffixOrNull(name);
+        return getBestDrive(m_helper.getDrives(name, fileId), name);
+    }
+
+    /**
+     * @param driveId
+     *            drive ID.
+     * @param parentId
+     *            parent ID.
+     * @param name
+     *            file name.
+     * @return
+     * @throws IOException
+     */
+    private File getFile(final String driveId, final String parentId, final String name) throws IOException {
+        String fileId = getIdFromSuffixOrNull(name);
+        return getBestFile(m_helper.getFilesByNameOrId(driveId, parentId, name, fileId), name);
+    }
+
+    /**
+     * @param driveId
+     *            drive ID.
+     * @param name
+     *            file name.
+     * @return
+     * @throws IOException
+     */
+    private File getFileOfDrive(final String driveId, final String name) throws IOException {
+        String fileId = getIdFromSuffixOrNull(name);
+        return getBestFile(m_helper.getFilesOfDriveByNameOrId(driveId, name, fileId), name);
+    }
+
+    private static File getBestFile(final List<File> files, final String name) throws IOException {
+        File file = getBestItem(files, name, NameIdAccessor.FILE);
+        if (file == null) {
+            throw new IOException("Unable to select file with name '" + name + "' from list of files");
+        }
+        return file;
+    }
+
+    private static Drive getBestDrive(final List<Drive> drives, final String name) throws IOException {
+        Drive drive = getBestItem(drives, name, NameIdAccessor.DRIVE);
+        if (drive == null) {
+            throw new IOException("Unable to select drive with name '" + name + "' from list of drives");
+        }
+        return drive;
+    }
+
+    private static <T> T getBestItem(final List<T> items, final String name, final NameIdAccessor<T> accessor) {
+        // first of all attempt to select by equals name
+        for (T item : items) {
+            if (accessor.getName(item).equals(name)) {
+                return item;
+            }
+        }
+
+        // second attempt to get ID and name from synthetic name
+        String id = getIdFromSuffixOrNull(name);
+        if (id != null) {
+            String realName = name.substring(0, name.lastIndexOf(SYNTHETIC_SUFFIX_START));
+
+            for (T item : items) {
+                if (accessor.getId(item).equals(id) && accessor.getName(item).equals(realName)) {
+                    return item;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static void correctDriveNameDuplicates(final List<Drive> sharedDrives) {
+        correctNameDuplicates(sharedDrives, NameIdAccessor.DRIVE);
+    }
+
+    private static void correctFileNameDuplicates(final List<File> files) {
+        correctNameDuplicates(files, NameIdAccessor.FILE);
+    }
+
+    private static <T> void correctNameDuplicates(final List<T> objects, final NameIdAccessor<T> accessor) {
+        // create map where key is name and value is
+        // the number of items with given name.
+        Map<String, Integer> numItemsWithName = new HashMap<>();
+        for (T obj : objects) {
+            final String name = accessor.getName(obj);
+            Integer numItems = numItemsWithName.computeIfAbsent(name, key -> 0);
+            numItemsWithName.put(name, numItems + 1);
+        }
+
+        for (T obj : objects) {
+            String name = accessor.getName(obj);
+
+            // correct names with adding suffix
+            if (numItemsWithName.get(name) > 1) {
+                name += SYNTHETIC_SUFFIX_START + accessor.getId(obj) + ")";
+                accessor.setCorrectedName(obj, name);
+            }
+        }
+    }
+
+    /**
+     * @param name
+     *            file name.
+     * @return name without synthetic suffix or null if has not synthetic suffix.
+     */
+    private static String getIdFromSuffixOrNull(final String name) {
+        if (!name.endsWith(")")) {
+            // has not synthetic suffix
+            return null;
+        }
+
+        int suffixStart = name.lastIndexOf(SYNTHETIC_SUFFIX_START);
+        if (suffixStart < 0) {
+            // has not synthetic suffix
+            return null;
+        }
+
+        return name.substring(suffixStart + SYNTHETIC_SUFFIX_START.length(), name.length() - 1);
     }
 }
