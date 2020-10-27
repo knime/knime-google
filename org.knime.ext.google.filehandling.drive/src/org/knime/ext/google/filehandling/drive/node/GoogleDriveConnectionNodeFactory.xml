@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<knimeNode icon="./sshconnection16x16.png"
+<knimeNode icon="./googledriveconnector-icon.png"
 		type="Source"
 		xmlns="http://knime.org/node/v4.1"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
-    <name>GoogleDrive Connector (Labs)</name>
+    <name>Google Drive Connector (Labs)</name>
     
     <shortDescription>
-        Connects to GoogleDrive file system by Google API in order to read/write files in downstream nodes.
+        Connects to Google Drive file system by Google API in order to read/write files in downstream nodes.
     </shortDescription>
     
     <fullDescription>
          <intro>
-            <p>This node connects to remote GoogleDrive file system. The resulting output port allows downstream nodes to access
+            <p>This node connects to remote Google Drive file system. The resulting output port allows downstream nodes to access
             the <i>files</i> of the remote file system, e.g. to read or write,
             or to perform other file system operations (browse/list files, copy, move, ...).
             </p>
             
-            <p><b>Path syntax:</b> Paths for GoogleDrive are specified with a UNIX-like syntax, /myfolder/myfile. An absolute
-            for GoogleDrive consists of:
+            <p><b>Path syntax:</b> Paths for Google Drive are specified with a UNIX-like syntax, /myfolder/myfile. An absolute
+            for Google Drive consists of:
                 <ol>
                     <li>A leading slash ("/").</li>
                     <li>Followed by the path to the file ("myfolder/myfile" in the above example).</li>
@@ -31,8 +31,8 @@
     	<inPort name="Google Api Connection" index="0">
     		Configured Google API Connection.
     	</inPort>
-   		<outPort index="0" name="GoogleDrive File System Connection">
-   			GoogleDrive File System Connection.
+   		<outPort index="0" name="Google Drive File System Connection">
+   			Google Drive File System Connection.
    		</outPort>
     </ports>    
 </knimeNode>

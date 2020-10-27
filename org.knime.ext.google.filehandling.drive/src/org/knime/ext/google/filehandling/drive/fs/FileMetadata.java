@@ -61,7 +61,7 @@ import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.File;
 
 /**
- * Contains metadata of google file or drive
+ * Contains metadata of Google Drive file or drive
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
@@ -99,9 +99,7 @@ public class FileMetadata {
     private final FileTime m_lastModifiedTime;
     private final FileTime m_lastAccessTime;
     private final long m_size;
-    private final UserPrincipal m_owner;
-    private final GroupPrincipal m_group;
-    private final Set<PosixFilePermission> m_permissions;
+    private final Set<PosixFilePermission> m_permissions = new HashSet<>();
     private String m_name;
 
     /**
@@ -120,14 +118,11 @@ public class FileMetadata {
         m_lastModifiedTime = null;
         m_lastAccessTime = null;
         m_size = 0l;
-        m_owner = null;
-        m_group = null;
-        m_permissions = new HashSet<>();
     }
 
     /**
      * @param file
-     *            GoogleDrive file.
+     *            Google Drive file.
      */
     public FileMetadata(final File file) {
         m_id = file.getId();
@@ -141,9 +136,6 @@ public class FileMetadata {
         m_createdTime = getTime(file.getCreatedTime());
 
         m_size = file.getSize() == null ? 0 : file.getSize();
-        m_owner = getOwner(file);
-        m_group = getGroup(file);
-        m_permissions = getPermissions(file);
     }
 
     /**
@@ -161,9 +153,6 @@ public class FileMetadata {
         m_createdTime = drive == null ? null : getTime(drive.getCreatedTime());
 
         m_size = 0;
-        m_owner = getOwner(drive);
-        m_group = getGroup(drive);
-        m_permissions = getPermissions(drive);
     }
 
     /**
@@ -177,64 +166,6 @@ public class FileMetadata {
         }
 
         return FileTime.fromMillis(dateTime.getValue() + TimeUnit.MINUTES.toMillis(dateTime.getTimeZoneShift()));
-    }
-
-    /**
-     * @param file
-     *            Google file.
-     * @return Posix file permissions.
-     */
-    private static Set<PosixFilePermission> getPermissions(final File file) {
-        return new HashSet<>();
-    }
-
-    /**
-     * @param drive
-     *            Google shared drive.
-     * @return Posix file permissions.
-     */
-    private static Set<PosixFilePermission> getPermissions(final Drive drive) {
-        return new HashSet<>();
-    }
-
-    /**
-     * @param file
-     *            Google file.
-     * @return group principal.
-     */
-    private static GroupPrincipal getGroup(final File file) {
-        // TODO implement
-        return null;
-    }
-
-    /**
-     * @param drive
-     *            Google shared drive.
-     * @return group principal.
-     */
-    private static GroupPrincipal getGroup(final Drive drive) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * @param file
-     *            Google file
-     * @return owner principal.
-     */
-    private static UserPrincipal getOwner(final File file) {
-        // TODO implement
-        return null;
-    }
-
-    /**
-     * @param drive
-     *            Google shared drive.
-     * @return user principal.
-     */
-    private static UserPrincipal getOwner(final Drive drive) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     /**
@@ -290,14 +221,14 @@ public class FileMetadata {
      * @return file owner.
      */
     public UserPrincipal getOwner() {
-        return m_owner;
+        return null;
     }
 
     /**
      * @return file group.
      */
     public GroupPrincipal getGroup() {
-        return m_group;
+        return null;
     }
 
     /**

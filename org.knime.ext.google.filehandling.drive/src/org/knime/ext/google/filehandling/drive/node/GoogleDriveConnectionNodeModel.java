@@ -50,6 +50,9 @@ package org.knime.ext.google.filehandling.drive.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -63,6 +66,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystemProvider;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDrivePath;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
@@ -95,9 +100,20 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         GoogleApiConnection connection = ((GoogleApiConnectionPortObject) inObjects[0])
                 .getGoogleApiConnection();
         // to do check the grant to Google Drive Service.
-        m_fsConnection = new GoogleDriveFSConnection(connection, "App");
+        m_fsConnection = new GoogleDriveFSConnection(connection, "/");
+        testConnection();
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
         return new PortObject[] { new FileSystemPortObject(createSpec()) };
+    }
+
+    private void testConnection() throws IOException {
+        @SuppressWarnings("resource")
+        GoogleDriveFileSystem fs = m_fsConnection.getFileSystem();
+        GoogleDrivePath root = fs.getPath("/" + GoogleDriveFileSystemProvider.MY_DRIVE);
+        try (Stream<Path> files = Files.list(root)) {
+            // Do nothing. The file listing is not lazy implemented
+            // in provider therefore should throw exception if connection is bad
+        }
     }
 
     @Override
@@ -121,7 +137,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        setWarningMessage("Sharepoint connection no longer available. Please re-execute the node.");
+        setWarningMessage("Google Drive connection no longer available. Please re-execute the node.");
 
     }
 
@@ -140,6 +156,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        // Have not any settings. Nothing to save
     }
 
     /**
@@ -147,6 +164,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // Have not any settings. Nothing to validate
     }
 
     /**
@@ -154,6 +172,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // Have not any settings. Nothing to load
     }
 
     @Override

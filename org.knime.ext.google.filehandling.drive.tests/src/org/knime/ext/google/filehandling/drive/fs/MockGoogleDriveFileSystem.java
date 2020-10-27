@@ -44,59 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-09-01 (Vyacheslav Soldatov): created
+ *   2020-09-22 (Vyacheslav Soldatov): created
  */
-package org.knime.ext.google.filehandling.drive.node;
+package org.knime.ext.google.filehandling.drive.fs;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.net.URISyntaxException;
 
 /**
- * Factory class for Google Drive Connection Node.
+ * Implementation of {@link GoogleDriveFileSystem} with mock
+ * {@link GoogleDriveHelper}
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionNodeFactory extends NodeFactory<GoogleDriveConnectionNodeModel> {
+public class MockGoogleDriveFileSystem extends GoogleDriveFileSystem {
 
     /**
-     * {@inheritDoc}
+     * Default constructor.
+     *
+     * @throws URISyntaxException
      */
-    @Override
-    public GoogleDriveConnectionNodeModel createNodeModel() {
-        return new GoogleDriveConnectionNodeModel();
+    public MockGoogleDriveFileSystem() throws URISyntaxException {
+        super(createProvider(), "/");
+    }
+
+    private static GoogleDriveFileSystemProvider createProvider() {
+        return new GoogleDriveFileSystemProvider(new MockGoogleDriveHelper()) {
+        };
     }
 
     /**
-     * {@inheritDoc}
+     * @return mock Google Drive helper.
      */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<GoogleDriveConnectionNodeModel> createNodeView(final int viewIndex,
-            final GoogleDriveConnectionNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+    public MockGoogleDriveHelper getHelper() {
+        return (MockGoogleDriveHelper) provider().getHelper();
     }
 }
+

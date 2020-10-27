@@ -52,7 +52,7 @@ import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 
 /**
- * GoogleDrive implementation of the {@link BaseFileAttributes}.
+ * Google Drive implementation of the {@link BaseFileAttributes}.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
@@ -69,7 +69,7 @@ public class GoogleDriveFileAttributes extends BaseFileAttributes {
         super(file.getType() == FileType.FILE, path, file.getLastAccessTime(), file.getLastAccessTime(),
                 file.getCreatedTime(), file.getSize(),
                 false,
-                file.getType() != FileType.FILE && file.getType() == FileType.FOLDER, file.getOwner(), file.getGroup(),
+                false, file.getOwner(), file.getGroup(),
                 file.getPermissions());
         m_file = file;
     }

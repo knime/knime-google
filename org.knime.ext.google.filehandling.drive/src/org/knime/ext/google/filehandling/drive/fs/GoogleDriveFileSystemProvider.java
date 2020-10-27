@@ -55,12 +55,12 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -68,6 +68,9 @@ import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.api.services.drive.model.Drive;
+import com.google.api.services.drive.model.File;
 
 /**
  * File system provider for {@link GoogleDriveFileSystem}.
@@ -86,9 +89,18 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      * @param connection
      *            Google API connection.
      */
-    public GoogleDriveFileSystemProvider(
-            final GoogleApiConnection connection) {
-        m_helper = new GoogleDriveHelper(connection);
+    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection) {
+        this(new GoogleDriveHelper(connection));
+    }
+
+    /**
+     * This constructor is for unit tests.
+     *
+     * @param helper
+     *            Google Drive Helper.
+     */
+    protected GoogleDriveFileSystemProvider(final GoogleDriveHelper helper) {
+        m_helper = helper;
     }
 
     /**
@@ -97,7 +109,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected SeekableByteChannel newByteChannelInternal(final GoogleDrivePath path,
             final Set<? extends OpenOption> options, final FileAttribute<?>... attrs) throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -106,7 +118,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected void moveInternal(final GoogleDrivePath source, final GoogleDrivePath target, final CopyOption... options)
             throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -115,7 +127,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected void copyInternal(final GoogleDrivePath source, final GoogleDrivePath target, final CopyOption... options)
             throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -124,7 +136,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected InputStream newInputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -133,7 +145,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected OutputStream newOutputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -142,7 +154,14 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected Iterator<GoogleDrivePath> createPathIterator(final GoogleDrivePath dir, final Filter<? super Path> filter)
             throws IOException {
-        throw new RuntimeException("TODO");
+        List<GoogleDrivePath> files;
+        if (dir.isRoot()) {
+            files = listRootFolder(dir);
+        } else {
+            files = listDriveOrFolder(dir);
+        }
+
+        return new GoogleDrivePathIterator(dir, files, filter);
     }
 
     /**
@@ -151,7 +170,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected void createDirectoryInternal(final GoogleDrivePath dir, final FileAttribute<?>... attrs)
             throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -162,7 +181,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
         try {
             checkAccessInternal(path);
             return true;
-        } catch (IOException ex) {
+        } catch (IOException ex) { // NOSONAR I/O exception is correct when remote file is not exist
             return false;
         }
     }
@@ -183,56 +202,23 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
         // find nearest cached parent attributes.
         // The path segments without attributes supply into list
-        GoogleDriveFileAttributes attributes = null;
-        LinkedList<String> pathToExpand = new LinkedList<>();
-        GoogleDrivePath current = path;
-
-        while (attributes == null) {
-            Optional<BaseFileAttributes> optional = getCachedAttributes(current);
-            if (optional.isPresent()) {
-                attributes = (GoogleDriveFileAttributes) optional.get();
-            } else {
-                pathToExpand.add(0, current.getFileName().toString());
-            }
-
-            current = current.getParent();
-            if (current == null) {
-                break;
-            }
-            if (current.isRoot()) {
-                attributes = createRootAttributes(current);
-            }
-        }
-        if (attributes == null) {
-            throw new NoSuchFileException(path.toString());
-        }
+        GoogleDriveFileAttributes attributes = getNearestAvailableCachedAttributes(path);
 
         // drill down from parent to child
-        current = attributes.fileKey();
-        Iterator<String> iter = pathToExpand.iterator();
-        while (iter.hasNext()) {
-            final String name = iter.next();
-            final GoogleDrivePath child = current.resolve(name);
+        GoogleDrivePath current = attributes.fileKey();
+        List<String> pathToExpand = getRemainingPathSegments(current, path);
 
-            if (current.isRoot()) {
-                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(m_helper.getDrive(name)));
-            } else if (current.isDrive()) {
-                attributes = new GoogleDriveFileAttributes(child,
-                        new FileMetadata(m_helper.getFileOfDrive(attributes.getMetadata().getId(), name)));
-            } else {
-                attributes = new GoogleDriveFileAttributes(child,
-                        new FileMetadata(m_helper.getFile(attributes.getMetadata().getId(), name)));
-            }
-
-            current = child;
-        }
-
-        return attributes;
+        return getChildAttributesRecursively(attributes, pathToExpand);
     }
 
-    @SuppressWarnings("resource")
+    @SuppressWarnings("resource") // file system implementation is closeable by another way
     private Optional<BaseFileAttributes> getCachedAttributes(final GoogleDrivePath path) {
         return getFileSystemInternal().getCachedAttributes(path);
+    }
+
+    @SuppressWarnings("resource") // file system implementation is closeable by another way
+    private void cacheAttributes(final GoogleDrivePath path, final GoogleDriveFileAttributes attr) {
+        getFileSystemInternal().addToAttributeCache(path, attr);
     }
 
     /**
@@ -240,7 +226,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      */
     @Override
     protected void checkAccessInternal(final GoogleDrivePath path, final AccessMode... modes) throws IOException {
-        fetchAttributesInternal(path, GoogleDriveFileAttributes.class);
+        fetchAttributesInternal(path);
     }
 
     /**
@@ -248,7 +234,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      */
     @Override
     protected void deleteInternal(final GoogleDrivePath path) throws IOException {
-        throw new RuntimeException("TODO");
+        throw new IOException("TODO");
     }
 
     /**
@@ -259,17 +245,178 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
         return GoogleDriveFileSystem.FS_TYPE;
     }
 
-    /**
-     * Do close owned resources.
-     */
-    public void prepareClose() {
+    GoogleDriveFileAttributes fetchAttributesInternal(final GoogleDrivePath path) throws IOException {
+        return fetchAttributesInternal(path, GoogleDriveFileAttributes.class);
     }
 
     /**
-     * @return the helper
+     * Google drive has not possibility to just request attributes by path.
+     * Therefore need to request attributes from any known root to required child
+     * sequentially.
+     *
+     * @param rootAttributes
+     *            root attributes.
+     * @param pathToExpand
+     *            path to expand
+     * @return child attributes.
+     * @throws IOException
+     */
+    private GoogleDriveFileAttributes getChildAttributesRecursively(final GoogleDriveFileAttributes rootAttributes,
+            final List<String> pathToExpand) throws IOException {
+        GoogleDriveFileAttributes attributes = rootAttributes;
+        GoogleDrivePath current = attributes.fileKey();
+
+        Iterator<String> iter = pathToExpand.iterator();
+        while (iter.hasNext()) {
+            final String name = iter.next();
+            final GoogleDrivePath child = current.resolve(name);
+
+            if (current.isRoot()) {
+                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(m_helper.getDrive(name)));
+            } else {
+                FileMetadata meta = attributes.getMetadata();
+                if (current.isDrive()) {
+                    attributes = new GoogleDriveFileAttributes(child,
+                            new FileMetadata(m_helper.getFileOfDrive(meta.getId(), name)));
+                } else {
+                    attributes = new GoogleDriveFileAttributes(child,
+                            new FileMetadata(m_helper.getFile(meta.getDriveId(), meta.getId(), name)));
+                }
+            }
+
+            current = child;
+            cacheAttributes(current, attributes);
+        }
+
+        return attributes;
+    }
+
+    /**
+     * @param pathAncestor
+     *            parent path.
+     * @param path
+     *            child path.
+     * @return difference between parent path and child path as a path segments.
+     */
+    private static List<String> getRemainingPathSegments(final GoogleDrivePath pathAncestor, final GoogleDrivePath path) {
+        List<String> remaining = new LinkedList<>();
+        GoogleDrivePath current = path;
+
+        while (!current.equals(pathAncestor)) {
+            remaining.add(0, current.getFileName().toString());
+            current = current.getParent();
+        }
+
+        return remaining;
+    }
+
+    /**
+     * @param path
+     *            current path.
+     * @return nearest found cached attributes from given element to top
+     *         sequentially.
+     */
+    private GoogleDriveFileAttributes getNearestAvailableCachedAttributes(final GoogleDrivePath path) {
+        // find nearest cached parent attributes.
+        // The path segments without attributes supply into list
+        GoogleDriveFileAttributes attributes = null;
+        GoogleDrivePath current = path;
+
+        while (attributes == null) {
+            Optional<BaseFileAttributes> optional = getCachedAttributes(current);
+            if (optional.isPresent()) {
+                attributes = (GoogleDriveFileAttributes) optional.get();
+            } else {
+                current = current.getParent();
+                if (current.isRoot()) {
+                    attributes = createRootAttributes(current);
+                }
+            }
+        }
+
+        return attributes;
+    }
+
+    /**
+     * @return the Google Drive helper
      */
     public GoogleDriveHelper getHelper() {
         return m_helper;
+    }
+
+    /**
+     * @param dir
+     *            drive or folder.
+     * @return files with folder content for next use it in path iterator.
+     * @throws IOException
+     */
+    private List<GoogleDrivePath> listDriveOrFolder(final GoogleDrivePath dir) throws IOException {
+        GoogleDriveFileAttributes attr = fetchAttributesInternal(dir);
+
+        FileMetadata meta = attr.getMetadata();
+        List<File> files;
+        if (dir.isDrive()) {
+            files = m_helper.listDrive(meta.getId());
+        } else {
+            files = m_helper.listFolder(meta.getDriveId(), meta.getId());
+        }
+
+        return createPathsAndCacheAttributes(dir, filesToMetadata(files));
+    }
+
+    /**
+     * @param dir
+     *            drive or folder.
+     * @return files with root file content for next use it in path iterator.
+     * @throws IOException
+     */
+    private List<GoogleDrivePath> listRootFolder(final GoogleDrivePath dir) throws IOException {
+        final List<FileMetadata> metas = drivesToMetadata(m_helper.listSharedDrives());
+        // shared drives is retrieved without pagination therefore can be
+        // cached immediately.
+        List<GoogleDrivePath> files = createPathsAndCacheAttributes(dir, metas);
+        // add 'My Drive'
+        files.add(0, dir.resolve(MY_DRIVE));
+        return files;
+    }
+
+    private List<GoogleDrivePath> createPathsAndCacheAttributes(final GoogleDrivePath parent, final List<FileMetadata> childMetas) {
+        List<GoogleDrivePath> files = new LinkedList<>();
+        for (FileMetadata meta : childMetas) {
+            // create path
+            GoogleDrivePath path = parent.resolve(meta.getName());
+            files.add(path);
+
+            // cache attributes
+            cacheAttributes(path, new GoogleDriveFileAttributes(path, meta));
+        }
+        return files;
+    }
+
+    /**
+     * @param drives
+     *            Google Drive drives.
+     * @return unified file metadata from drives.
+     */
+    private static List<FileMetadata> drivesToMetadata(final List<Drive> drives) {
+        List<FileMetadata> meta = new LinkedList<>();
+        for (Drive drive : drives) {
+            meta.add(new FileMetadata(drive));
+        }
+        return meta;
+    }
+
+    /**
+     * @param drives
+     *            Google Drive drives.
+     * @return unified file metadata from files.
+     */
+    static List<FileMetadata> filesToMetadata(final List<File> files) {
+        List<FileMetadata> meta = new LinkedList<>();
+        for (File file : files) {
+            meta.add(new FileMetadata(file));
+        }
+        return meta;
     }
 
     /**

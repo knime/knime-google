@@ -44,59 +44,35 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-09-01 (Vyacheslav Soldatov): created
+ *   2020-09-15 (Vyacheslav Soldatov): created
  */
-package org.knime.ext.google.filehandling.drive.node;
+package org.knime.ext.google.filehandling.drive.fs;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.io.IOException;
+import java.nio.file.DirectoryStream.Filter;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.knime.filehandling.core.connections.base.BasePathIterator;
 
 /**
- * Factory class for Google Drive Connection Node.
+ * Google Drive implementation for Path iterator.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionNodeFactory extends NodeFactory<GoogleDriveConnectionNodeModel> {
-
+public final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
     /**
-     * {@inheritDoc}
+     * @param files
+     *            file list.
+     * @param filter
+     *            path filter.
+     * @param path
+     *            path to list.
+     * @throws IOException
      */
-    @Override
-    public GoogleDriveConnectionNodeModel createNodeModel() {
-        return new GoogleDriveConnectionNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<GoogleDriveConnectionNodeModel> createNodeView(final int viewIndex,
-            final GoogleDriveConnectionNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+    public GoogleDrivePathIterator(final GoogleDrivePath path, final List<GoogleDrivePath> files,
+            final Filter<? super Path> filter) throws IOException {
+        super(path, filter != null ? filter : p -> true);
+        setFirstPage(files.iterator());
     }
 }

@@ -48,15 +48,16 @@
  */
 package org.knime.ext.google.filehandling.drive.fs;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import org.knime.google.api.data.GoogleApiConnection;
 
-import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.DriveList;
@@ -64,13 +65,29 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 /**
- * Helper for work with native Google Drive library.
+ * Helper for work with native Google Drive API library.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class GoogleDriveHelper {
-    static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
+    /**
+     * List of fields which should be retrieved from service while receiving list
+     * files.
+     */
+    private static final String FILE_FIELDS = "id, name, mimeType, driveId, modifiedTime, createdTime, size";
+    /**
+     * Google API query part for describe the list of file properties which should
+     * be sent by server on the list files request.
+     */
+    private static final String FILES_FIELDS_QUERY_PART = "files(" + FILE_FIELDS + ")";
+    /**
+     * Google API application name.
+     */
     private static final String APPLICATION_NAME = "KNIME Google Drive File System";
+    /**
+     * Mime type of folder.
+     */
+    public static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
 
     /**
      * Authorization scope for read/create/write/delete Google Drive files
@@ -86,8 +103,15 @@ public class GoogleDriveHelper {
     public GoogleDriveHelper(final GoogleApiConnection connection) {
         m_driveService = new com.google.api.services.drive.Drive.Builder(GoogleApiConnection.getHttpTransport(),
                 GoogleApiConnection.getJsonFactory(), connection.getCredential())
-                        .setApplicationName(APPLICATION_NAME).
-                        build();
+                        .setApplicationName(APPLICATION_NAME)
+                        .build();
+    }
+
+    /**
+     * For unit tests only
+     */
+    protected GoogleDriveHelper() {
+        m_driveService = null;
     }
 
     /**
@@ -99,54 +123,28 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public File getFileOfDrive(final String driveId, final String name) throws IOException {
-        return getFileOfDriveImpl(driveId, name);
-    }
-
-    /**
-     * @param name
-     *            file name.
-     * @return found file.
-     * @throws IOException
-     */
-    public File getFileOfMyDrive(final String name) throws IOException {
-        return getFileOfDriveImpl(null, name);
+        return getFile(driveId, driveId == null ? "root" : driveId, name);
     }
 
     /**
      * @param driveId
-     * @param name
-     * @return
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    private File getFileOfDriveImpl(final String driveId, final String name) throws IOException, FileNotFoundException {
-        Files.List query = m_driveService.files().list().setQ("name='" + escapeSearchValue(name) + "'")
-                .setPageToken(null).setSpaces("drive");
-        if (driveId != null) {
-            query.setDriveId(driveId);
-        }
-
-        FileList result = query.execute();
-        List<File> files = result.getFiles();
-        if (!files.isEmpty()) {
-            return files.get(0);
-        }
-
-        throw new NoSuchFileException("Child file " + name + " of drive " + driveId + " not found");
-    }
-
-    /**
-     * @param parentFolderId
+     *            drive ID.
+     * @param parentId
      *            parent folder ID.
      * @param name
      *            child name.
      * @return file with given name and parent.
      * @throws IOException
      */
-    public File getFile(final String parentFolderId, final String name) throws IOException {
+    public File getFile(final String driveId, final String parentId, final String name) throws IOException {
+        StringBuilder searchCriterias = new StringBuilder("trashed = false and name='").append(escapeSearchValue(name))
+                .append("' and '").append(parentId).append("' in parents ");
+
         Files.List query = m_driveService.files().list()
-                .setQ("name='" + escapeSearchValue(name) + "' and '" + parentFolderId + "' in parents")
-                .setPageToken(null).setSpaces("drive");
+                .setQ(searchCriterias.toString())
+                .setPageToken(null).setFields(FILES_FIELDS_QUERY_PART)
+                .setSpaces("drive");
+        query.setDriveId(driveId);
 
         FileList result = query.execute();
         List<File> files = result.getFiles();
@@ -154,7 +152,7 @@ public class GoogleDriveHelper {
             return files.get(0);
         }
 
-        throw new NoSuchFileException("Child file " + name + " of file " + parentFolderId + " not found");
+        throw new NoSuchFileException("Child file " + name + " of " + parentId + " not found");
     }
 
     /**
@@ -168,8 +166,9 @@ public class GoogleDriveHelper {
             return null;
         }
 
-        DriveList result = m_driveService.drives().list().setQ("name='" + escapeSearchValue(name) + "'")
-                .setPageToken(null).setFields("nextPageToken, drives(id, name)").execute();
+        DriveList result = m_driveService.drives().list()
+                .setQ("name='" + escapeSearchValue(name) + "'")
+                .setPageToken(null).setFields("nextPageToken, drives(id, name, createdTime)").execute();
 
         List<Drive> drives = result.getDrives();
         if (!drives.isEmpty()) {
@@ -193,72 +192,41 @@ public class GoogleDriveHelper {
      *            file ID to delete.
      * @throws IOException
      */
-    public void delete(final String id) throws IOException {
-        m_driveService.files().delete(id);
+    public void deleteFile(final String id) throws IOException {
+        m_driveService.files().delete(id).execute();
     }
 
     /**
-     * @param driveId
-     *            shared drive ID.
-     * @param name
-     *            file name.
-     * @param content
-     *            file content.
-     * @return Google file.
+     * @param id
+     *            drive ID.
      * @throws IOException
      */
-    public File createTopLevelFileInDrive(final String driveId, final String name, final ByteArrayContent content)
-            throws IOException {
-        File file = new File();
-        file.setName(name);
-        if (driveId != null) {
-            file.setDriveId(driveId);
-        }
-
-        return m_driveService.files().create(file, content).execute();
+    public void deleteDrive(final String id) throws IOException {
+        m_driveService.drives().delete(id).execute();
     }
 
     /**
      * @param driveId
      *            shared drive ID.
-     * @param folderId
+     * @param parentId
      *            folder ID.
      * @param name
      *            file name.
      * @param content
      *            file content.
-     * @return file with given content.
+     * @return created file.
      * @throws IOException
      */
-    public File createFile(final String driveId, final String folderId, final String name,
-            final ByteArrayContent content) throws IOException {
+    public File createFile(final String driveId, final String parentId, final String name,
+            final AbstractInputStreamContent content) throws IOException {
         File file = new File();
         file.setName(name);
         file.setDriveId(driveId);
-        file.setParents(Collections.singletonList(folderId));
-
-        return m_driveService.files().create(file, content).execute();
-    }
-
-    /**
-     * @param driveId
-     *            drive ID.
-     * @param name
-     *            folder name.
-     * @return Google folder.
-     * @throws IOException
-     */
-    public File createTopLevelFolderInDrive(final String driveId, final String name) throws IOException {
-        File file = new File();
-        file.setName(name);
-        file.setMimeType(MIME_TYPE_FOLDER);
-
-        if (driveId != null) {
-            file.setDriveId(driveId);
-            file.setParents(Collections.singletonList(driveId));
+        if (parentId != null) {
+            file.setParents(Collections.singletonList(parentId));
         }
 
-        return m_driveService.files().create(file).execute();
+        return m_driveService.files().create(file, content).setFields(FILE_FIELDS).execute();
     }
 
     /**
@@ -276,8 +244,94 @@ public class GoogleDriveHelper {
         file.setName(name);
         file.setMimeType(MIME_TYPE_FOLDER);
         file.setDriveId(driveId);
-        file.setParents(Collections.singletonList(parentId));
+        if (parentId != null) {
+            file.setParents(Collections.singletonList(parentId));
+        }
 
-        return m_driveService.files().create(file).execute();
+        return m_driveService.files().create(file).setFields(FILE_FIELDS).execute();
+    }
+
+    /**
+     * @param name
+     *            drive name.
+     * @return drive with given name.
+     * @throws IOException
+     */
+    public Drive createSharedDrive(final String name) throws IOException {
+        Drive drive = new Drive();
+        drive.setName(name);
+        drive.setHidden(false);
+        return m_driveService.drives().create(UUID.randomUUID().toString(), drive).execute();
+    }
+
+    /**
+     * @return list of shared drives.
+     * @throws IOException
+     */
+    public List<Drive> listSharedDrives() throws IOException {
+        String pageToken = null;
+        com.google.api.services.drive.Drive.Drives.List query = m_driveService.drives().list()
+                .setFields("nextPageToken, drives(id, name, createdTime)");
+
+        List<Drive> drives = new LinkedList<>();
+        do {
+            DriveList result = query.setPageToken(pageToken).execute();
+            drives.addAll(result.getDrives());
+
+            pageToken = result.getNextPageToken();
+        } while (pageToken != null);
+
+        return drives;
+    }
+
+    /**
+     * @param driveId
+     *            drive ID or null in case of 'My Drive'
+     * @return files files.
+     * @throws IOException
+     */
+    public List<File> listDrive(final String driveId) throws IOException {
+        return listParent(driveId, driveId == null ? "root" : driveId);
+    }
+    /**
+     * @param driveId
+     *            drive ID or null in case of 'My Drive'
+     * @param parentId
+     *            parent ID.
+     * @return files files.
+     * @throws IOException
+     */
+    public List<File> listFolder(final String driveId, final String parentId) throws IOException {
+        return listParent(driveId, parentId);
+    }
+
+    /**
+     * @param driveId
+     *            drive ID or null in case of 'My Drive'
+     * @param parentId
+     *            parent ID.
+     * @return files files.
+     * @throws IOException
+     */
+    private List<File> listParent(final String driveId, final String parentId) throws IOException {
+        final Files.List query = m_driveService.files().list().setDriveId(driveId)
+                .setQ("trashed = false and '" + parentId + "' in parents")
+                .setFields(FILES_FIELDS_QUERY_PART)
+                .setSpaces("drive");
+
+        final List<File> files = new LinkedList<>();
+        String nextPageToken = null;
+        do {
+            query.setPageToken(nextPageToken);
+
+            FileList result = query.execute();
+            nextPageToken = result.getNextPageToken();
+
+            for (File file : result.getFiles()) {
+                files.add(file);
+            }
+        } while (nextPageToken != null);
+
+        return files;
     }
 }

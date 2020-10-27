@@ -50,6 +50,7 @@ package org.knime.ext.google.filehandling.drive.testing;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
 
@@ -65,6 +66,7 @@ import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializer;
 
 import com.google.api.client.http.ByteArrayContent;
+import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.File;
 
 /**
@@ -76,6 +78,8 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleDriveTestInitializer.class);
 
     private boolean m_isWorkingDirCreated = false;
+    private Drive m_sharedDriveCreated;
+
     private GoogleDriveHelper m_helper;
     private final GoogleDriveFileSystem m_fileSystem;
 
@@ -99,11 +103,11 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
         // get nearest available attributes and path to mkdirs
         GoogleDrivePath current = parent;
         LinkedList<String> dirsToMk = new LinkedList<>();
-        FileMetadata attr = null;
-        while (attr == null) {
+        FileMetadata parentAttr = null;
+        while (parentAttr == null) {
             try {
-                attr = readMetadata(current);
-            } catch (IOException ex) {
+                parentAttr = readMetadata(current);
+            } catch (IOException ex) { // NOSONAR it is expected exception if folder not exists
                 dirsToMk.add(0, current.getFileName().toString());
             }
             current = current.getParent();
@@ -111,13 +115,13 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
 
         // mkdirs if need
         for (String name : dirsToMk) {
-            File folder = m_helper.createFolder(attr.getDriveId(), attr.getId(), name);
-            attr = new FileMetadata(folder);
+            File folder = m_helper.createFolder(parentAttr.getDriveId(), parentAttr.getId(), name);
+            parentAttr = new FileMetadata(folder);
         }
 
         // create regular file with content
         String name = pathComponents[pathComponents.length - 1];
-        m_helper.createFile(attr.getDriveId(), attr.getId(), name,
+        m_helper.createFile(parentAttr.getDriveId(), parentAttr.getId(), name,
                 new ByteArrayContent(null, content.getBytes(StandardCharsets.UTF_8)));
 
         return path;
@@ -130,19 +134,25 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
 
     @Override
     protected void beforeTestCaseInternal() throws IOException {
+        m_fileSystem.clearAttributesCache();
         final GoogleDrivePath scratchDir = getTestCaseScratchDir();
 
         GoogleDrivePath testRoot = scratchDir.getParent();
         FileMetadata testRootMeta;
 
         if (!m_isWorkingDirCreated) {
+            // before of all possible the test should be done in
+            // created shared drive
+            possibleCreateSharedDrive(testRoot);
+
+            // create
             FileMetadata parentOfRoot = readMetadata(testRoot.getParent());
             if (parentOfRoot.getType() == FileType.FOLDER) {
                 testRootMeta = new FileMetadata(m_helper.createFolder(parentOfRoot.getDriveId(),
                         parentOfRoot.getId(), testRoot.getFileName().toString()));
             } else if (parentOfRoot.getType() == FileType.MY_DRIVE || parentOfRoot.getType() == FileType.SHARED_DRIVE) {
-                testRootMeta = new FileMetadata(m_helper
-                        .createTopLevelFolderInDrive(parentOfRoot.getDriveId(), testRoot.getFileName().toString()));
+                testRootMeta = new FileMetadata(
+                        m_helper.createFolder(parentOfRoot.getDriveId(), null, testRoot.getFileName().toString()));
             } else {
                 throw new IOException("Unexpected root folder " + testRoot.getParent());
             }
@@ -156,6 +166,18 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
                 scratchDir.getFileName().toString());
     }
 
+    private void possibleCreateSharedDrive(final GoogleDrivePath path) throws IOException {
+        GoogleDrivePath drive = path;
+        while (!drive.isDrive()) {
+            drive = drive.getParent();
+        }
+
+        // check is drive already exists
+        if (!Files.exists(drive)) {
+            m_sharedDriveCreated = m_helper.createSharedDrive(drive.getFileName().toString());
+        }
+    }
+
     @Override
     protected void afterTestCaseInternal() throws IOException {
         final GoogleDrivePath scratchDir = getTestCaseScratchDir();
@@ -163,15 +185,20 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
         m_fileSystem.clearAttributesCache();
     }
 
-    /**
-     * @param path
-     * @throws IOException
-     */
     private void deletePath(final GoogleDrivePath path) throws IOException {
         try {
-            m_helper.delete(readMetadata(path).getId());
+            m_helper.deleteFile(readMetadata(path).getId());
         } catch (IOException ex) {
             LOGGER.error("Failed to delete file: " + path, ex);
+        }
+    }
+
+    private void deleteSharedDrive(final GoogleDrivePath path) {
+        try {
+            FileMetadata meta = readMetadata(path);
+            m_helper.deleteDrive(meta.getDriveId());
+        } catch (IOException ex) {
+            LOGGER.error("Failed to delete shared drive of: " + path, ex);
         }
     }
 
@@ -181,7 +208,11 @@ public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleD
 
         if (m_isWorkingDirCreated) {
             try {
-                deletePath(scratchDir.getParent());
+                if (m_sharedDriveCreated != null) {
+                    deleteSharedDrive(scratchDir);
+                } else {
+                    deletePath(scratchDir.getParent());
+                }
             } finally {
                 m_isWorkingDirCreated = false;
             }

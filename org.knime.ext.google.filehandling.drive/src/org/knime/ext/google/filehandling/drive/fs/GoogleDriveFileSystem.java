@@ -66,10 +66,10 @@ import org.knime.google.api.data.GoogleApiConnection;
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
-    private static final long CACHE_TTL = 6000;
+    private static final long CACHE_TTL = 15000;
 
     /**
-     * GoogleDrive URI scheme.
+     * Google Drive URI scheme.
      */
     public static final String FS_TYPE = "google-drive";
 
@@ -79,11 +79,19 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
     public static final String PATH_SEPARATOR = "/";
 
     GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir) {
-        super(new GoogleDriveFileSystemProvider(connection), //
-                createUri(), //
-                CACHE_TTL, //
-                workingDir, //
-                createFSLocationSpec());
+        this(new GoogleDriveFileSystemProvider(connection), workingDir);
+    }
+
+    /**
+     * This constructor is used for testing.
+     *
+     * @param provider
+     *            file system provider.
+     * @param workingDir
+     *            working directory.
+     */
+    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir) {
+        super(provider, createUri(), CACHE_TTL, workingDir, createFSLocationSpec());
     }
 
     @Override
@@ -94,14 +102,13 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
     private static URI createUri() {
         try {
             return new URI(FS_TYPE, "googledrive", null, null);
-        } catch (URISyntaxException ex) {
-            // ignore, won't happen
+        } catch (URISyntaxException ex) { // NOSONAR ignore, won't happen
             return null;
         }
     }
 
     /**
-     * @return the {@link FSLocationSpec} for a Sharepoint file system.
+     * @return the {@link FSLocationSpec} for a Google Drive file system.
      */
     public static DefaultFSLocationSpec createFSLocationSpec() {
         return new DefaultFSLocationSpec(FSCategory.CONNECTED, GoogleDriveFileSystem.FS_TYPE);
@@ -112,7 +119,7 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      */
     @Override
     protected void prepareClose() {
-        provider().prepareClose();
+        // Nothing need
     }
 
     /**
@@ -128,7 +135,7 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      */
     @Override
     public String getHostString() {
-        throw new RuntimeException("TODO");
+        return null;
     }
 
     /**
