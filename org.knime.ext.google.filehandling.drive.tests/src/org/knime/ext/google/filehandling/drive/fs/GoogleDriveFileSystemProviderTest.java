@@ -55,13 +55,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.eclipse.core.runtime.AssertionFailedException;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.api.services.drive.model.File;
+
 /**
+ * lightweight tests without real connection to Google Drive.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
@@ -231,10 +238,76 @@ public class GoogleDriveFileSystemProviderTest {
     }
 
     /**
+     * Tests file names corrected when list directory.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testListDuplicateFiles() throws IOException {
+        final String parentId = m_helper.createFolder(null, null, "parent").getId();
+
+        File folder1 = m_helper.createFolder(null, parentId, "d");
+        File folder2 = m_helper.createFolder(null, parentId, "d");
+
+        List<GoogleDrivePath> files = listFolder(createPath("/My Drive/parent"));
+        assertEquals("/My Drive/parent/d (" + folder1.getId() + ")", files.get(0).toString()); // NOSONAR
+        assertEquals("/My Drive/parent/d (" + folder2.getId() + ")", files.get(1).toString());
+    }
+
+    /**
+     * Tests case when one from files in folder already has a name which should be
+     * generated as synthetic name.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testRealFileExistsWithSumulatedName() throws IOException {
+        final String parentId = m_helper.createFolder(null, null, "parent").getId();
+
+        File folder1 = m_helper.createFolder(null, parentId, "d");
+        File folder2 = m_helper.createFolder(null, parentId, "d");
+        m_helper.createFolder(null, parentId, "d (1)");
+
+        List<GoogleDrivePath> files = listFolder(createPath("/My Drive/parent"));
+        assertEquals("/My Drive/parent/d (" + folder1.getId() + ")", files.get(0).toString());
+        assertEquals("/My Drive/parent/d (" + folder2.getId() + ")", files.get(1).toString());
+        assertEquals("/My Drive/parent/d (1)", files.get(2).toString());
+    }
+
+    /**
+     * Tests synthetic path allows to correct access file.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testAccessToFileBySynteticName() throws IOException {
+        final String parentId = m_helper.createFolder(null, null, "parent").getId();
+
+        File f1 = m_helper.createFolder(null, parentId, "d");
+        File f2 = m_helper.createFolder(null, parentId, "d");
+
+        assertEquals(f1.getId(),
+                m_provider.fetchAttributesInternal(createPath("/My Drive/parent/d (" + f1.getId() + ")")).getMetadata()
+                        .getId());
+        assertEquals(f2.getId(),
+                m_provider.fetchAttributesInternal(createPath("/My Drive/parent/d (" + f2.getId() + ")")).getMetadata()
+                        .getId());
+    }
+
+    /**
      * Tests return correct schema.
      */
+    @Test
     public void testGetScheme() {
         assertEquals(GoogleDriveFileSystem.FS_TYPE, m_provider.getScheme());
+    }
+
+    private List<GoogleDrivePath> listFolder(final GoogleDrivePath path) throws IOException {
+        final List<GoogleDrivePath> files = new LinkedList<>();
+        try (DirectoryStream<Path> stream = m_provider.newDirectoryStream(path, null)) {
+            stream.forEach(p -> files.add((GoogleDrivePath) p));
+        }
+        return files;
     }
 
     private GoogleDrivePath createPath(final String pathString) {

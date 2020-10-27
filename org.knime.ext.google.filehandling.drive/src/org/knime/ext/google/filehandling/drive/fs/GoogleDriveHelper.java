@@ -54,12 +54,13 @@ import java.nio.file.NoSuchFileException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.services.drive.Drive.Files;
+import com.google.api.services.drive.Drive.Files.Create;
+import com.google.api.services.drive.Drive.Files.Update;
 import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.DriveList;
 import com.google.api.services.drive.model.File;
@@ -88,7 +89,7 @@ public class GoogleDriveHelper {
     /**
      * Mime type of folder.
      */
-    protected static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
+    public static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
 
     /**
      * Authorization scope for read/create/write/delete Google Drive files
@@ -120,11 +121,14 @@ public class GoogleDriveHelper {
      *            ID of shared drive.
      * @param name
      *            file name.
+     * @param additionalName
+     *            additional file name to search.
      * @return found file.
      * @throws IOException
      */
-    public File getFileOfDrive(final String driveId, final String name) throws IOException {
-        return getFile(driveId, driveId == null ? "root" : driveId, name);
+    public List<File> getFilesOfDriveByNameOrId(final String driveId, final String name, final String additionalName)
+            throws IOException {
+        return getFilesByNameOrId(driveId, driveId == null ? "root" : driveId, name, additionalName);
     }
 
     /**
@@ -134,49 +138,66 @@ public class GoogleDriveHelper {
      *            parent folder ID.
      * @param name
      *            child name.
+     * @param fileId
+     *            additional file name.
      * @return file with given name and parent.
      * @throws IOException
      */
-    public File getFile(final String driveId, final String parentId, final String name) throws IOException {
-        StringBuilder searchCriterias = new StringBuilder("trashed = false and name='").append(escapeSearchValue(name))
-                .append("' and '").append(parentId).append("' in parents ");
+    public List<File> getFilesByNameOrId(final String driveId, final String parentId, final String name,
+            final String fileId)
+            throws IOException {
+        StringBuilder searchCriterias = new StringBuilder("trashed = false and ")
+                .append(createNameAndIdQueryPart(name, fileId)).append(" and '")
+                .append(parentId)
+                .append("' in parents ");
 
         Files.List query = m_driveService.files().list()
                 .setQ(searchCriterias.toString())
-                .setPageToken(null).setFields(FILES_FIELDS_QUERY_PART)
+                .setPageToken(null).setFields("nextPageToken, " + FILES_FIELDS_QUERY_PART)
                 .setSpaces("drive");
-        query.setDriveId(driveId);
+
+        if (driveId != null) {
+            addDriveIdToQuery(query, driveId);
+        }
 
         FileList result = query.execute();
         List<File> files = result.getFiles();
-        if (!files.isEmpty()) {
-            return files.get(0);
+        if (files.isEmpty()) {
+            throw new NoSuchFileException("Child file " + name + " of " + parentId + " not found");
         }
 
-        throw new NoSuchFileException("Child file " + name + " of " + parentId + " not found");
+        return files;
     }
 
     /**
      * @param name
      *            drive name.
+     * @param driveId
+     *            additional driver name.
      * @return drive with given name or null if not found.
      * @throws IOException
      */
-    public Drive getDrive(final String name) throws IOException {
+    public List<Drive> getDrives(final String name, final String driveId) throws IOException {
         if (GoogleDriveFileSystemProvider.MY_DRIVE.equals(name)) {
-            return null;
+            return new LinkedList<>();
         }
 
-        DriveList result = m_driveService.drives().list()
-                .setQ("name='" + escapeSearchValue(name) + "'")
-                .setPageToken(null).setFields("nextPageToken, drives(id, name, createdTime)").execute();
-
-        List<Drive> drives = result.getDrives();
-        if (!drives.isEmpty()) {
-            return drives.get(0);
+        // From Google Docs: Search for specific drives in an organization (need to
+        // useDomainAdminAccess)
+        // For allow not admins to use it: all drives is listed then is selected one
+        // with given name
+        List<Drive> drives = new LinkedList<>();
+        for (Drive drive : listSharedDrives()) {
+            if (drive.getName().equals(name) || (driveId != null && driveId.equals(drive.getId()))) {
+                drives.add(drive);
+            }
         }
 
-        throw new NoSuchFileException("Driver " + name + " not found");
+        if (drives.isEmpty()) {
+            throw new NoSuchFileException("Driver " + name + " not found");
+        }
+
+        return drives;
     }
 
     /**
@@ -194,16 +215,7 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public void deleteFile(final String id) throws IOException {
-        m_driveService.files().delete(id).execute();
-    }
-
-    /**
-     * @param id
-     *            drive ID.
-     * @throws IOException
-     */
-    public void deleteDrive(final String id) throws IOException {
-        m_driveService.drives().delete(id).execute();
+        m_driveService.files().delete(id).setSupportsAllDrives(true).execute();
     }
 
     /**
@@ -220,25 +232,7 @@ public class GoogleDriveHelper {
      */
     public File createFile(final String driveId, final String parentId, final String name,
             final AbstractInputStreamContent content) throws IOException {
-        File file = new File();
-        file.setName(name);
-        file.setDriveId(driveId);
-        if (parentId != null) {
-            file.setParents(Collections.singletonList(parentId));
-        }
-
-        return m_driveService.files().create(file, content).setFields(FILE_FIELDS).execute();
-    }
-
-    /**
-     * @param fileId
-     *            file ID.
-     * @param in
-     *            new file content.
-     * @throws IOException
-     */
-    public void rewriteFile(final String fileId, final AbstractInputStreamContent in) throws IOException {
-        m_driveService.files().update(fileId, null, in).execute();
+        return createFileOrFolder(driveId, parentId, name, content);
     }
 
     /**
@@ -252,28 +246,62 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public File createFolder(final String driveId, final String parentId, final String name) throws IOException {
-        File file = new File();
-        file.setName(name);
-        file.setMimeType(MIME_TYPE_FOLDER);
-        file.setDriveId(driveId);
-        if (parentId != null) {
-            file.setParents(Collections.singletonList(parentId));
-        }
-
-        return m_driveService.files().create(file).setFields(FILE_FIELDS).execute();
+        return createFileOrFolder(driveId, parentId, name, null);
     }
 
     /**
+     * @param driveId
+     *            shared drive ID.
+     * @param parentId
+     *            folder ID.
      * @param name
-     *            drive name.
-     * @return drive with given name.
+     *            file name.
+     * @param content
+     *            file content or null if folder created.
+     * @return created file.
      * @throws IOException
      */
-    public Drive createSharedDrive(final String name) throws IOException {
-        Drive drive = new Drive();
-        drive.setName(name);
-        drive.setHidden(false);
-        return m_driveService.drives().create(UUID.randomUUID().toString(), drive).execute();
+    private File createFileOrFolder(final String driveId, final String parentId, final String name,
+            final AbstractInputStreamContent content) throws IOException {
+        File file = new File();
+        file.setName(name);
+        file.setDriveId(driveId);
+
+        boolean isDriveFile = driveId != null;
+        if (parentId != null) {
+            file.setParents(Collections.singletonList(parentId));
+        } else if (isDriveFile) { // NOSONAR it is correct
+            // if drive ID is null not need to specify a parent
+            file.setParents(Collections.singletonList(driveId));
+        }
+
+        Create query;
+        if (content != null) {
+            // create file
+            query = m_driveService.files().create(file, content);
+        } else {
+            // create folder
+            file.setMimeType(MIME_TYPE_FOLDER);
+            query = m_driveService.files().create(file);
+        }
+
+        query.setFields(FILE_FIELDS);
+        if (isDriveFile) {
+            query.setSupportsAllDrives(true);
+        }
+
+        return query.execute();
+    }
+
+    /**
+     * @param fileId
+     *            file ID.
+     * @param in
+     *            new file content.
+     * @throws IOException
+     */
+    public void rewriteFile(final String fileId, final AbstractInputStreamContent in) throws IOException {
+        m_driveService.files().update(fileId, null, in).setSupportsAllDrives(true).execute();
     }
 
     /**
@@ -327,10 +355,13 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     private List<File> listParent(final String driveId, final String parentId) throws IOException {
-        final Files.List query = m_driveService.files().list().setDriveId(driveId)
+        final Files.List query = m_driveService.files().list()
                 .setQ("trashed = false and '" + parentId + "' in parents")
-                .setFields(FILES_FIELDS_QUERY_PART)
+                .setFields("nextPageToken, " + FILES_FIELDS_QUERY_PART)
                 .setSpaces("drive");
+        if (driveId != null) {
+            addDriveIdToQuery(query, driveId);
+        }
 
         final List<File> files = new LinkedList<>();
         String nextPageToken = null;
@@ -349,12 +380,91 @@ public class GoogleDriveHelper {
     }
 
     /**
+     * @param query
+     * @param driveId
+     */
+    private static void addDriveIdToQuery(final Files.List query, final String driveId) {
+        query.setDriveId(driveId);
+        query.setIncludeItemsFromAllDrives(true);
+        query.setCorpora("drive");
+        query.setSupportsAllDrives(true);
+    }
+
+    /**
      * @param id
      *            file ID.
      * @return file input stream.
      * @throws IOException
      */
     public InputStream readFile(final String id) throws IOException {
-        return m_driveService.files().get(id).executeMediaAsInputStream();
+        return m_driveService.files().get(id).setSupportsAllDrives(true).executeMediaAsInputStream();
+    }
+
+    /**
+     * @param sourceId
+     *            source file ID.
+     * @param newParentId
+     *            ID of new parent of moving file.
+     * @param newName
+     *            new file name. Can be equals by previous.
+     * @return moved file.
+     * @throws IOException
+     */
+    public File move(final String sourceId, final String newParentId, final String newName) throws IOException {
+        final File oldFile = m_driveService.files().get(sourceId).setFields("id, name, mimeType, parents")
+                .setSupportsAllDrives(true).execute();
+
+        final File file = new File();
+        file.setName(newName);
+        file.setMimeType(oldFile.getMimeType());
+
+        final Update req = m_driveService.files().update(sourceId, file);
+        if (newParentId != null) { // may be null in case of default drive.
+            req.setAddParents(newParentId);
+        }
+        if (oldFile.getParents() != null) { // remove all old parents
+            req.setRemoveParents(String.join(",", oldFile.getParents()));
+        }
+
+        return req.setFields(FILE_FIELDS).setSupportsAllDrives(true).execute();
+    }
+    /**
+     * @param sourceId
+     *            source file ID.
+     * @param newParentId
+     *            ID of new parent of moving file.
+     * @param targetName
+     *            name of target file.
+     * @throws IOException
+     */
+    public void copy(final String sourceId, final String newParentId, final String targetName) throws IOException {
+        final File file = new File();
+        file.setName(targetName);
+
+        if (newParentId != null) {
+            List<String> parents = new LinkedList<>();
+            parents.add(newParentId);
+            file.setParents(parents);
+        }
+
+        m_driveService.files().copy(sourceId, file).setFields("mimeType").setSupportsAllDrives(true).execute();
+    }
+
+    private static String createNameAndIdQueryPart(final String name, final String additionalName) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("name='").append(escapeSearchValue(name)).append("'");
+        if (additionalName != null) {
+            sb.insert(0, "(");
+            sb.append(" or id='").append(escapeSearchValue(additionalName)).append("'");
+            sb.append(")");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @return drive service
+     */
+    public com.google.api.services.drive.Drive getDriveService() {
+        return m_driveService;
     }
 }
