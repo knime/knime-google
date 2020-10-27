@@ -189,16 +189,7 @@ public abstract class CloudStoragePathIteratorFactory {
 
         @SuppressWarnings("resource")
         private CloudStoragePath createPathFromPrefix(final String prefix) {
-
-            final CloudStorageFileSystem fs = m_path.getFileSystem();
-            final CloudStoragePath path = new CloudStoragePath(fs, m_path.getBucketName(), prefix);
-
-            final FileTime time = FileTime.fromMillis(0);
-            final BaseFileAttributes attrs = new BaseFileAttributes(false, path, time, time, time, 0, false, false,
-                    null);
-            fs.addToAttributeCache(path, attrs);
-
-            return path;
+            return new CloudStoragePath(m_path.getFileSystem(), m_path.getBucketName(), prefix);
         }
 
         @SuppressWarnings("resource")
