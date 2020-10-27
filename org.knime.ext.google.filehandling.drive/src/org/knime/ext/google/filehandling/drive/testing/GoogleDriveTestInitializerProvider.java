@@ -49,6 +49,7 @@
 package org.knime.ext.google.filehandling.drive.testing;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
@@ -84,7 +85,12 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
                 "workingDirPrefix"),
                 "/");
 
-        final GoogleDriveFSConnection fsConnection = new GoogleDriveFSConnection(apiConnection, workingDir);
+        GoogleDriveFSConnection fsConnection;
+        try {
+            fsConnection = new GoogleDriveFSConnection(apiConnection, workingDir);
+        } catch (URISyntaxException ex) {
+            throw new IOException("Failed to create connection", ex);
+        }
 
         return new GoogleDriveTestInitializer(fsConnection);
     }

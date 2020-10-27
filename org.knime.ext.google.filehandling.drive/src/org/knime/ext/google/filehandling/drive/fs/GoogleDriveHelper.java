@@ -49,6 +49,7 @@
 package org.knime.ext.google.filehandling.drive.fs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -87,7 +88,7 @@ public class GoogleDriveHelper {
     /**
      * Mime type of folder.
      */
-    public static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
+    protected static final String MIME_TYPE_FOLDER = "application/vnd.google-apps.folder";
 
     /**
      * Authorization scope for read/create/write/delete Google Drive files
@@ -230,6 +231,17 @@ public class GoogleDriveHelper {
     }
 
     /**
+     * @param fileId
+     *            file ID.
+     * @param in
+     *            new file content.
+     * @throws IOException
+     */
+    public void rewriteFile(final String fileId, final AbstractInputStreamContent in) throws IOException {
+        m_driveService.files().update(fileId, null, in).execute();
+    }
+
+    /**
      * @param driveId
      *            drive ID.
      * @param parentId
@@ -293,6 +305,7 @@ public class GoogleDriveHelper {
     public List<File> listDrive(final String driveId) throws IOException {
         return listParent(driveId, driveId == null ? "root" : driveId);
     }
+
     /**
      * @param driveId
      *            drive ID or null in case of 'My Drive'
@@ -333,5 +346,15 @@ public class GoogleDriveHelper {
         } while (nextPageToken != null);
 
         return files;
+    }
+
+    /**
+     * @param id
+     *            file ID.
+     * @return file input stream.
+     * @throws IOException
+     */
+    public InputStream readFile(final String id) throws IOException {
+        return m_driveService.files().get(id).executeMediaAsInputStream();
     }
 }

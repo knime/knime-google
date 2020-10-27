@@ -79,4 +79,3 @@ public class MockGoogleDriveFileSystem extends GoogleDriveFileSystem {
         return (MockGoogleDriveHelper) provider().getHelper();
     }
 }
-

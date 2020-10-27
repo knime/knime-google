@@ -51,13 +51,18 @@ package org.knime.ext.google.filehandling.drive.fs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,7 +114,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected SeekableByteChannel newByteChannelInternal(final GoogleDrivePath path,
             final Set<? extends OpenOption> options, final FileAttribute<?>... attrs) throws IOException {
-        throw new IOException("TODO");
+        return new GoodleDriveFileSeekableByteChannel(path, options);
     }
 
     /**
@@ -133,19 +138,23 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("resource")
     @Override
     protected InputStream newInputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
-        throw new IOException("TODO");
+        final Set<OpenOption> opts = new HashSet<>(Arrays.asList(options));
+        return Channels.newInputStream(newByteChannel(path, opts));
     }
 
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("resource")
     @Override
     protected OutputStream newOutputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
-        throw new IOException("TODO");
+        final Set<OpenOption> opts = new HashSet<>(Arrays.asList(options));
+        return Channels.newOutputStream(newByteChannel(path, opts));
     }
 
     /**
@@ -170,7 +179,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected void createDirectoryInternal(final GoogleDrivePath dir, final FileAttribute<?>... attrs)
             throws IOException {
-        throw new IOException("TODO");
+        FileMetadata meta = fetchAttributesInternal(dir.getParent()).getMetadata();
+        m_helper.createFolder(meta.getDriveId(), meta.getId(), dir.getFileName().toString());
     }
 
     /**
@@ -234,7 +244,19 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      */
     @Override
     protected void deleteInternal(final GoogleDrivePath path) throws IOException {
-        throw new IOException("TODO");
+        if (path.isRoot()) {
+            throw new AccessDeniedException("Can't delete root");
+        }
+        if (path.isDrive()) {
+            throw new AccessDeniedException("Can't delete drive");
+        }
+
+        FileMetadata meta = fetchAttributesInternal(path).getMetadata();
+        if (meta.getType() == FileType.FOLDER && !isEmptyFolder(meta)) {
+            throw new DirectoryNotEmptyException(path.toString());
+        }
+
+        m_helper.deleteFile(meta.getId());
     }
 
     /**
@@ -342,6 +364,10 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      */
     public GoogleDriveHelper getHelper() {
         return m_helper;
+    }
+
+    private boolean isEmptyFolder(final FileMetadata meta) throws IOException {
+        return m_helper.listFolder(meta.getDriveId(), meta.getId()).isEmpty();
     }
 
     /**

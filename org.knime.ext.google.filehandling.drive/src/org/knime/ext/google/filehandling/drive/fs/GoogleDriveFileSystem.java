@@ -78,8 +78,9 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      */
     public static final String PATH_SEPARATOR = "/";
 
-    GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir) {
-        this(new GoogleDriveFileSystemProvider(connection), workingDir);
+    GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir)
+            throws URISyntaxException {
+        this(createProvider(connection), workingDir);
     }
 
     /**
@@ -89,9 +90,15 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      *            file system provider.
      * @param workingDir
      *            working directory.
+     * @throws URISyntaxException
      */
-    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir) {
+    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir)
+            throws URISyntaxException {
         super(provider, createUri(), CACHE_TTL, workingDir, createFSLocationSpec());
+    }
+
+    private static GoogleDriveFileSystemProvider createProvider(final GoogleApiConnection connection) {
+        return new GoogleDriveFileSystemProvider(connection);
     }
 
     @Override
@@ -99,12 +106,8 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
         return (GoogleDriveFileSystemProvider) super.provider();
     }
 
-    private static URI createUri() {
-        try {
-            return new URI(FS_TYPE, "googledrive", null, null);
-        } catch (URISyntaxException ex) { // NOSONAR ignore, won't happen
-            return null;
-        }
+    private static URI createUri() throws URISyntaxException {
+        return new URI(FS_TYPE, "googledrive", null, null);
     }
 
     /**

@@ -100,7 +100,8 @@ public class FileMetadata {
     private final FileTime m_lastAccessTime;
     private final long m_size;
     private final Set<PosixFilePermission> m_permissions = new HashSet<>();
-    private String m_name;
+    private final String m_name;
+    private final String m_mimeType;
 
     /**
      * @param id
@@ -111,6 +112,8 @@ public class FileMetadata {
     public FileMetadata(final String id, final FileType type) {
         super();
 
+        m_name = null;
+        m_mimeType = null;
         m_id = id;
         m_type = type;
         m_driveId = null;
@@ -127,6 +130,7 @@ public class FileMetadata {
     public FileMetadata(final File file) {
         m_id = file.getId();
         m_name = file.getName();
+        m_mimeType = file.getMimeType();
         m_type = GoogleDriveHelper.MIME_TYPE_FOLDER.equals(file.getMimeType()) ? FileType.FOLDER : FileType.FILE;
         m_driveId = file.getDriveId();
 
@@ -144,6 +148,7 @@ public class FileMetadata {
      */
     public FileMetadata(final Drive drive) {
         m_id = drive == null ? null : drive.getId();
+        m_mimeType = null;
         m_name = drive == null ? GoogleDriveFileSystemProvider.MY_DRIVE : drive.getName();
         m_type = drive == null ? FileType.MY_DRIVE : FileType.SHARED_DRIVE;
         m_driveId = m_id;
@@ -243,5 +248,12 @@ public class FileMetadata {
      */
     public String getName() {
         return m_name;
+    }
+
+    /**
+     * @return mime type of file.
+     */
+    public String getMimeType() {
+        return m_mimeType;
     }
 }
