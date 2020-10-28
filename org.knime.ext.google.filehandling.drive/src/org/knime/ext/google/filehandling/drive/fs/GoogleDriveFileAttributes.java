@@ -66,11 +66,15 @@ public class GoogleDriveFileAttributes extends BaseFileAttributes {
      *            Google file info.
      */
     public GoogleDriveFileAttributes(final GoogleDrivePath path, final FileMetadata file) {
-        super(file.getType() == FileType.FILE, path, file.getLastAccessTime(), file.getLastAccessTime(),
-                file.getCreatedTime(), file.getSize(),
-                false,
-                false, file.getOwner(), file.getGroup(),
-                file.getPermissions());
+        super(file.getType() == FileType.FILE, //
+                path, //
+                file.getLastModifiedTime(), //
+                file.getLastAccessTime(), //
+                file.getCreatedTime(), //
+                file.getSize(), //
+                false, //
+                false, //
+                null);
         m_file = file;
     }
 

@@ -48,8 +48,6 @@
  */
 package org.knime.ext.google.filehandling.drive.fs;
 
-import java.net.URISyntaxException;
-
 import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
@@ -69,26 +67,18 @@ public class GoogleDriveFSConnection implements FSConnection {
      *            Google API connection.
      * @param workingDir
      *            working directory.
-     * @throws URISyntaxException
      */
     public GoogleDriveFSConnection(
-            final GoogleApiConnection connection, final String workingDir)
-            throws URISyntaxException {
+            final GoogleApiConnection connection, final String workingDir) {
         m_fileSystem = new GoogleDriveFileSystem(connection, workingDir);
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GoogleDriveFileSystem getFileSystem() {
         return m_fileSystem;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FileSystemBrowser getFileSystemBrowser() {
         return new NioFileSystemBrowser(this);

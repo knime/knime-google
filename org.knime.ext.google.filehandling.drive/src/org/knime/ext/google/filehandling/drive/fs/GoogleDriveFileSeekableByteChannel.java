@@ -50,7 +50,6 @@ package org.knime.ext.google.filehandling.drive.fs;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -58,12 +57,10 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.Set;
 
-import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
 import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
 
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.FileContent;
-import com.google.api.client.util.IOUtils;
 
 /**
  * Google Drive implementation of {@link SeekableByteChannel}
@@ -83,52 +80,33 @@ public class GoogleDriveFileSeekableByteChannel extends TempFileSeekableByteChan
         super(file, options);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void copyFromRemote(final GoogleDrivePath path, final Path tempFile) throws IOException {
         @SuppressWarnings("resource")
         GoogleDriveFileSystemProvider provider = path.getFileSystem().provider();
 
-        FileMetadata meta = provider.fetchAttributesInternal(path).getMetadata();
-        if (meta.getType() != FileType.FILE) {
-            throw new IOException("Not a file: " + path);
-        }
+        final FileMetadata meta = provider.readAttributes(path).getMetadata();
 
         // copy content from Google Drive to tmp file
-        try (InputStream in = provider.getHelper().readFile(meta.getId());
-                OutputStream out = Files.newOutputStream(tempFile);) {
-            IOUtils.copy(in, out);
+        try (InputStream in = provider.getHelper().readFile(meta.getId())) {
+            Files.copy(in, tempFile);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void copyToRemote(final GoogleDrivePath path, final Path tempFile) throws IOException {
         @SuppressWarnings("resource")
         final GoogleDriveFileSystemProvider provider = path.getFileSystem().provider();
 
-        GoogleDriveFileAttributes attr = null;
-        try {
-            attr = provider.fetchAttributesInternal(path);
-        } catch (NoSuchFileException ex) { // NOSONAR
-            // correct if target if not exists.
-        }
-
-        final String name = path.getFileName().toString();
-
         final AbstractInputStreamContent content = new FileContent(null, tempFile.toFile());
-        if (attr != null) {
+        try {
+            final GoogleDriveFileAttributes attr = provider.readAttributes(path);
             // rewrite existing file. Not need to worry about APPEND option
-            // TempFileSeekableByteChannel implementation already done it
-            // with temp file
             provider.getHelper().rewriteFile(attr.getMetadata().getId(), content);
-        } else {
+        } catch (NoSuchFileException ex) { // NOSONAR
             // create new file
-            final FileMetadata parentMeta = provider.fetchAttributesInternal(path.getParent()).getMetadata();
+            final String name = path.getFileName().toString();
+            final FileMetadata parentMeta = provider.readAttributes(path.getParent()).getMetadata();
             provider.getHelper().createFile(parentMeta.getDriveId(), parentMeta.getId(), name, content);
         }
     }

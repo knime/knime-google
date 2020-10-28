@@ -49,7 +49,6 @@
 package org.knime.ext.google.filehandling.drive.fs;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -66,7 +65,7 @@ import org.knime.google.api.data.GoogleApiConnection;
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
-    private static final long CACHE_TTL = 15000;
+    private static final long CACHE_TTL = 6000;
 
     /**
      * Google Drive URI scheme.
@@ -78,8 +77,7 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      */
     public static final String PATH_SEPARATOR = "/";
 
-    GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir)
-            throws URISyntaxException {
+    GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir) {
         this(createProvider(connection), workingDir);
     }
 
@@ -90,10 +88,8 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      *            file system provider.
      * @param workingDir
      *            working directory.
-     * @throws URISyntaxException
      */
-    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir)
-            throws URISyntaxException {
+    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir) {
         super(provider, createUri(), CACHE_TTL, workingDir, createFSLocationSpec());
     }
 
@@ -106,8 +102,8 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
         return (GoogleDriveFileSystemProvider) super.provider();
     }
 
-    private static URI createUri() throws URISyntaxException {
-        return new URI(FS_TYPE, "googledrive", null, null);
+    private static URI createUri() {
+        return URI.create(String.format("%s://googledrive", FS_TYPE));
     }
 
     /**
@@ -117,49 +113,21 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
         return new DefaultFSLocationSpec(FSCategory.CONNECTED, GoogleDriveFileSystem.FS_TYPE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void prepareClose() {
         // Nothing need
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSchemeString() {
-        return provider().getScheme();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getHostString() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GoogleDrivePath getPath(final String first, final String... more) {
         return new GoogleDrivePath(this, first, more);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getSeparator() {
         return PATH_SEPARATOR;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Iterable<Path> getRootDirectories() {
         return Collections.singletonList(getPath(PATH_SEPARATOR));

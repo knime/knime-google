@@ -49,7 +49,6 @@
 package org.knime.ext.google.filehandling.drive.testing;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
@@ -58,6 +57,7 @@ import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveHelper;
 import org.knime.filehandling.core.connections.FSLocationSpec;
+import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -78,27 +78,20 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
             apiConnection = new GoogleApiConnection(configuration.get("email"), configuration.get("keyFilePath"),
                     GoogleDriveHelper.DRIVE_AUTH_SCOPE);
         } catch (GeneralSecurityException e) {
-            throw new IOException(e);
+            throw ExceptionUtil.wrapAsIOException(e);
         }
 
         final String workingDir = generateRandomizedWorkingDir(configuration.get(
                 "workingDirPrefix"),
                 "/");
 
-        GoogleDriveFSConnection fsConnection;
-        try {
-            fsConnection = new GoogleDriveFSConnection(apiConnection, workingDir);
-        } catch (URISyntaxException ex) {
-            throw new IOException("Failed to create connection", ex);
-        }
-
-        return new GoogleDriveTestInitializer(fsConnection);
+        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(apiConnection, workingDir));
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {
+        CheckUtils.checkArgumentNotNull(configuration.get("workingDirPrefix"), "workingDirPrefix must be specified.");
         CheckUtils.checkArgumentNotNull(configuration.get("email"), "email must be specified.");
         CheckUtils.checkArgumentNotNull(configuration.get("keyFilePath"), "keyFilePath must be specified.");
-        CheckUtils.checkArgumentNotNull(configuration.get("workingDirPrefix"), "workingDirPrefix must be specified.");
     }
 
     @Override

@@ -49,11 +49,6 @@
 package org.knime.ext.google.filehandling.drive.fs;
 
 import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.GroupPrincipal;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.UserPrincipal;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.google.api.client.util.DateTime;
@@ -99,7 +94,6 @@ public class FileMetadata {
     private final FileTime m_lastModifiedTime;
     private final FileTime m_lastAccessTime;
     private final long m_size;
-    private final Set<PosixFilePermission> m_permissions = new HashSet<>();
     private final String m_name;
     private final String m_mimeType;
 
@@ -220,27 +214,6 @@ public class FileMetadata {
      */
     public long getSize() {
         return m_size;
-    }
-
-    /**
-     * @return file owner.
-     */
-    public UserPrincipal getOwner() {
-        return null;
-    }
-
-    /**
-     * @return file group.
-     */
-    public GroupPrincipal getGroup() {
-        return null;
-    }
-
-    /**
-     * @return positx permissions for the file.
-     */
-    public Set<PosixFilePermission> getPermissions() {
-        return m_permissions;
     }
 
     /**
