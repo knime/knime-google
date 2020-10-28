@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.stream.Stream;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -64,6 +65,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveConnectionConfiguration;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystemProvider;
@@ -86,29 +88,52 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
 
     private String m_fsId;
 
-    private GoogleDriveFSConnection m_fsConnection;
+    private final GoogleDriveConnectionSettingsModel m_settings;
 
     /**
      * Creates new instance.
      */
     protected GoogleDriveConnectionNodeModel() {
         super(new PortType[] { GoogleApiConnectionPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
+
+        m_settings = new GoogleDriveConnectionSettingsModel();
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        GoogleApiConnection connection = ((GoogleApiConnectionPortObject) inObjects[0])
+        GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0])
                 .getGoogleApiConnection();
-        // to do check the grant to Google Drive Service.
-        m_fsConnection = new GoogleDriveFSConnection(connection, "/");
-        testConnection();
-        FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
+        checkGrants(apiConnection);
+
+        GoogleDriveFSConnection connection = new GoogleDriveFSConnection(apiConnection,
+                createConfiguration(m_settings));
+        testConnection(connection);
+        FSConnectionRegistry.getInstance().register(m_fsId, connection);
+
         return new PortObject[] { new FileSystemPortObject(createSpec()) };
     }
 
-    private void testConnection() throws IOException {
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        GoogleApiConnection connection = getGoogleApiConnection(inSpecs);
+        if (connection == null) {
+            throw new InvalidSettingsException("Not authenticated");
+        }
+        checkGrants(connection);
+
+        m_fsId = FSConnectionRegistry.getInstance().getKey();
+        return new PortObjectSpec[] { createSpec() };
+    }
+
+    /**
+     * @param connection
+     *            connection to test.
+     * @throws IOException
+     */
+    public static void testConnection(final GoogleDriveFSConnection connection) throws IOException {
         @SuppressWarnings("resource")
-        GoogleDriveFileSystem fs = m_fsConnection.getFileSystem();
+        GoogleDriveFileSystem fs = connection.getFileSystem();
         GoogleDrivePath root = fs.getPath("/" + GoogleDriveFileSystemProvider.MY_DRIVE);
         try (Stream<Path> files = Files.list(root)) {
             // Do nothing. The file listing is not lazy implemented
@@ -116,20 +141,54 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         }
     }
 
-    @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        GoogleApiConnection connection = ((GoogleApiConnectionPortObjectSpec) inSpecs[0]).getGoogleApiConnection();
-        if (connection == null) {
-            throw new InvalidSettingsException("Not authenticated");
-        }
-        m_fsId = FSConnectionRegistry.getInstance().getKey();
-        return new PortObjectSpec[] { createSpec() };
+    /**
+     * @param connection
+     *            Google API connection.
+     */
+    private void checkGrants(final GoogleApiConnection connection) { // NOSONAR
+        // to do check the grant to Google Drive Service.
+        // for now the connection have not access methods to m_grants field.
+        // will implemented when access method implemented
+    }
+
+    /**
+     * @param inSpecs
+     *            port input specification.
+     * @return Google API connection.
+     */
+    private static GoogleApiConnection getGoogleApiConnection(final PortObjectSpec[] inSpecs) {
+        return ((GoogleApiConnectionPortObjectSpec) inSpecs[0]).getGoogleApiConnection();
     }
 
     private FileSystemPortObjectSpec createSpec() {
         return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId, GoogleDriveFileSystem.createFSLocationSpec());
     }
 
+    /**
+     * @param settings
+     *            node settings.
+     * @return Google Drive connection configuration.
+     */
+    public static GoogleDriveConnectionConfiguration createConfiguration(
+            final GoogleDriveConnectionSettingsModel settings) {
+        GoogleDriveConnectionConfiguration config = new GoogleDriveConnectionConfiguration();
+        config.setConnectionTimeOut(Duration.ofSeconds(settings.getConnectionTimeout()));
+        config.setReadTimeOut(Duration.ofSeconds(settings.getReadTimeout()));
+        config.setWorkingDirectory(settings.getWorkingDirectory());
+        return config;
+    }
+
+    /**
+     * @param settings
+     *            connection settings.
+     * @param inputSpec
+     *            port object input specification.
+     * @return file system connection.
+     */
+    public static GoogleDriveFSConnection createConnection(final GoogleDriveConnectionSettingsModel settings,
+            final PortObjectSpec[] inputSpec) {
+        return new GoogleDriveFSConnection(getGoogleApiConnection(inputSpec), createConfiguration(settings));
+    }
 
     /**
      * {@inheritDoc}
@@ -155,24 +214,24 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // Have not any settings. Nothing to save
+    protected void saveSettingsTo(final NodeSettingsWO output) {
+        m_settings.save(output);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // Have not any settings. Nothing to validate
+    protected void validateSettings(final NodeSettingsRO input) throws InvalidSettingsException {
+        m_settings.validate(input);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // Have not any settings. Nothing to load
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO input) throws InvalidSettingsException {
+        m_settings.load(input);
     }
 
     @Override

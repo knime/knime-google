@@ -58,6 +58,7 @@ import java.util.List;
 import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.client.http.AbstractInputStreamContent;
+import com.google.api.client.http.HttpRequest;
 import com.google.api.services.drive.Drive.Files;
 import com.google.api.services.drive.Drive.Files.Create;
 import com.google.api.services.drive.Drive.Files.Update;
@@ -101,12 +102,29 @@ public class GoogleDriveHelper {
     /**
      * @param connection
      *            Google Drive connection.
+     * @param config
+     *            connection configuration.
      */
-    public GoogleDriveHelper(final GoogleApiConnection connection) {
+    public GoogleDriveHelper(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
         m_driveService = new com.google.api.services.drive.Drive.Builder(GoogleApiConnection.getHttpTransport(),
-                GoogleApiConnection.getJsonFactory(), connection.getCredential())
+                GoogleApiConnection.getJsonFactory(), req -> initializeRequest(req, connection, config))
                         .setApplicationName(APPLICATION_NAME)
                         .build();
+    }
+
+    private static void initializeRequest(final HttpRequest req, final GoogleApiConnection connection,
+            final GoogleDriveConnectionConfiguration config) throws IOException {
+        connection.getCredential().initialize(req);
+
+        final int connectionTimeOut = (int) config.getConnectionTimeOut().toMillis();
+        if (connectionTimeOut > 0) {
+            req.setConnectTimeout(connectionTimeOut);
+        }
+
+        final int readTimeOut = (int) config.getReadTimeOut().toMillis();
+        if (readTimeOut > 0) {
+            req.setReadTimeout(readTimeOut);
+        }
     }
 
     /**

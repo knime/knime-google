@@ -53,6 +53,7 @@ import java.security.GeneralSecurityException;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveConnectionConfiguration;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveHelper;
@@ -85,7 +86,10 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
                 "workingDirPrefix"),
                 "/");
 
-        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(apiConnection, workingDir));
+        GoogleDriveConnectionConfiguration config = new GoogleDriveConnectionConfiguration();
+        config.setWorkingDirectory(workingDir);
+
+        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(apiConnection, config));
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {

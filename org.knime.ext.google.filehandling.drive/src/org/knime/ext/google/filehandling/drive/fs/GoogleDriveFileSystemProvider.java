@@ -57,10 +57,13 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream.Filter;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -98,9 +101,11 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     /**
      * @param connection
      *            Google API connection.
+     * @param config
+     *            connection configuration.
      */
-    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection) {
-        this(new GoogleDriveHelper(connection));
+    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
+        this(new GoogleDriveHelper(connection, config));
     }
 
     /**
@@ -280,6 +285,25 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
     GoogleDriveFileAttributes readAttributes(final GoogleDrivePath path) throws IOException {
         return readAttributes(path, GoogleDriveFileAttributes.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A extends BasicFileAttributes> A readAttributes(final Path path, final Class<A> type,
+            final LinkOption... options) throws IOException {
+        // base implementation supports only BasicFileAttributes and PosixFileAttributes
+        // but not their subclasses, therefore need to wrap the call of this method
+        BasicFileAttributes result;
+        if (BasicFileAttributes.class.isAssignableFrom(type)) {
+            result = super.readAttributes(path, BasicFileAttributes.class, options);
+        } else {
+            result = super.readAttributes(path, PosixFileAttributes.class, options);
+        }
+
+        return (A) result;
     }
 
     /**

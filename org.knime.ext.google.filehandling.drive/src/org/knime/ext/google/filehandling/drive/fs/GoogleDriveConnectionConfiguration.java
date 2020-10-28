@@ -44,59 +44,88 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-09-01 (Vyacheslav Soldatov): created
+ *   2020-10-28 (Vyacheslav Soldatov): created
  */
-package org.knime.ext.google.filehandling.drive.node;
+package org.knime.ext.google.filehandling.drive.fs;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.time.Duration;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.ext.google.filehandling.drive.node.GoogleDriveConnectionSettingsModel;
 
 /**
- * Factory class for Google Drive Connection Node.
+ * Google Drive connection configuration implementation.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionNodeFactory extends NodeFactory<GoogleDriveConnectionNodeModel> {
+public class GoogleDriveConnectionConfiguration {
+    /**
+     * Working directory (defaults to /My Drive)
+     */
+    private String m_workingDirectory = GoogleDriveFileSystemProvider.MY_DRIVE;
+    /**
+     * Connection timeout (seconds), default is 30
+     */
+    private Duration m_connectionTimeOut = Duration
+            .ofSeconds(GoogleDriveConnectionSettingsModel.DEFAULT_CONNECTION_TIMEOUT_SECONDS);
+    /**
+     * Read timeout (seconds), default is 30
+     */
+    private Duration m_readTimeOut = Duration.ofSeconds(GoogleDriveConnectionSettingsModel.DEFAULT_READ_TIMEOUT_SECONDS);
 
     /**
-     * {@inheritDoc}
+     * @return working directory.
      */
-    @Override
-    public GoogleDriveConnectionNodeModel createNodeModel() {
-        return new GoogleDriveConnectionNodeModel();
+    public String getWorkingDirectory() {
+        return m_workingDirectory;
     }
 
     /**
-     * {@inheritDoc}
+     * @param workingDirectory
+     *            working directory.
      */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
+    public void setWorkingDirectory(final String workingDirectory) {
+        this.m_workingDirectory = workingDirectory;
     }
 
     /**
-     * {@inheritDoc}
+     * @return connection time out.
      */
-    @Override
-    public NodeView<GoogleDriveConnectionNodeModel> createNodeView(final int viewIndex,
-            final GoogleDriveConnectionNodeModel nodeModel) {
-        return null;
+    public Duration getConnectionTimeOut() {
+        return m_connectionTimeOut;
     }
 
     /**
-     * {@inheritDoc}
+     * @param connectionTimeOut
+     *            connection time out.
      */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    public void setConnectionTimeOut(final Duration connectionTimeOut) {
+        this.m_connectionTimeOut = connectionTimeOut;
     }
 
     /**
-     * {@inheritDoc}
+     * @return connection read time out.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleDriveConnectionNodeDialog();
+    public Duration getReadTimeOut() {
+        return m_readTimeOut;
+    }
+
+    /**
+     * @param readTimeOut
+     *            connection read time out.
+     */
+    public void setReadTimeOut(final Duration readTimeOut) {
+        this.m_readTimeOut = readTimeOut;
+    }
+
+    /**
+     * validates connection configuration.
+     *
+     * @throws InvalidSettingsException
+     */
+    public void validate() throws InvalidSettingsException {
+        if (m_workingDirectory == null || m_workingDirectory.isEmpty()) {
+            throw new InvalidSettingsException("Working dicrectory should not be empty");
+        }
     }
 }

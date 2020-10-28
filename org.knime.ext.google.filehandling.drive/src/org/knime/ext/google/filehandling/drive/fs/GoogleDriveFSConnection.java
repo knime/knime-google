@@ -65,12 +65,12 @@ public class GoogleDriveFSConnection implements FSConnection {
     /**
      * @param connection
      *            Google API connection.
-     * @param workingDir
-     *            working directory.
+     * @param config
+     *            connection configuration.
      */
     public GoogleDriveFSConnection(
-            final GoogleApiConnection connection, final String workingDir) {
-        m_fileSystem = new GoogleDriveFileSystem(connection, workingDir);
+            final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
+        m_fileSystem = new GoogleDriveFileSystem(connection, config);
     }
 
 

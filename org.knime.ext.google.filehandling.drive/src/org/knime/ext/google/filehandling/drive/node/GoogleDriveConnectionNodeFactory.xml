@@ -25,6 +25,23 @@
                 </ol>
             </p>
         </intro>
+
+        <tab name="Settings">
+		    <option name="Working directory">
+		        Specify the <i>working directory</i> of the resulting file system connection, using the <b>Path syntax</b> explained above. The working
+		        directory must be specified as an absolute path. A working directory allows downstream nodes to access files/folders using <i>relative</i>
+		        paths, i.e. paths that do not have a leading slash. The default working directory is the root "/".
+		    </option>
+	    </tab>
+	    
+        <tab name="Advanced">
+		    <option name="Connection timeout">
+		        Timeout in seconds to establish a connection or 0 for an infinite timeout. 
+		    </option>
+		    <option name="Read timeout">
+		        Timeout in seconds to read data from connection or 0 for an infinite timeout. 
+		    </option>
+		</tab>
     </fullDescription>
 
     <ports>

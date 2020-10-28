@@ -77,8 +77,8 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
      */
     public static final String PATH_SEPARATOR = "/";
 
-    GoogleDriveFileSystem(final GoogleApiConnection connection, final String workingDir) {
-        this(createProvider(connection), workingDir);
+    GoogleDriveFileSystem(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
+        this(createProvider(connection, config), config.getWorkingDirectory());
     }
 
     /**
@@ -93,8 +93,9 @@ public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
         super(provider, createUri(), CACHE_TTL, workingDir, createFSLocationSpec());
     }
 
-    private static GoogleDriveFileSystemProvider createProvider(final GoogleApiConnection connection) {
-        return new GoogleDriveFileSystemProvider(connection);
+    private static GoogleDriveFileSystemProvider createProvider(final GoogleApiConnection connection,
+            final GoogleDriveConnectionConfiguration config) {
+        return new GoogleDriveFileSystemProvider(connection, config);
     }
 
     @Override
