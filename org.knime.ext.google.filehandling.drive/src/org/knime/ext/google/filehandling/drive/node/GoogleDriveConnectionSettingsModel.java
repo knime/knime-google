@@ -88,9 +88,9 @@ public class GoogleDriveConnectionSettingsModel {
      */
     public GoogleDriveConnectionSettingsModel() {
         m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT,
-                DEFAULT_CONNECTION_TIMEOUT_SECONDS, 1, Integer.MAX_VALUE);
+                DEFAULT_CONNECTION_TIMEOUT_SECONDS, 0, Integer.MAX_VALUE);
 
-        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, DEFAULT_READ_TIMEOUT_SECONDS, 1,
+        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, DEFAULT_READ_TIMEOUT_SECONDS, 0,
                 Integer.MAX_VALUE);
 
         m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, GoogleDriveFileSystem.PATH_SEPARATOR);

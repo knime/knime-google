@@ -86,9 +86,11 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
 
     private static final String FILE_SYSTEM_NAME = "Google Drive";
 
+    private final GoogleDriveConnectionSettingsModel m_settings;
+
     private String m_fsId;
 
-    private final GoogleDriveConnectionSettingsModel m_settings;
+    private GoogleDriveFSConnection m_fsConnection;
 
     /**
      * Creates new instance.
@@ -99,17 +101,15 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         m_settings = new GoogleDriveConnectionSettingsModel();
     }
 
-    @SuppressWarnings("resource")
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0])
                 .getGoogleApiConnection();
-        checkGrants(apiConnection);
 
-        GoogleDriveFSConnection connection = new GoogleDriveFSConnection(apiConnection,
+        m_fsConnection = new GoogleDriveFSConnection(apiConnection,
                 createConfiguration(m_settings));
-        testConnection(connection);
-        FSConnectionRegistry.getInstance().register(m_fsId, connection);
+        testConnection(m_fsConnection);
+        FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         return new PortObject[] { new FileSystemPortObject(createSpec()) };
     }
@@ -120,7 +120,6 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         if (connection == null) {
             throw new InvalidSettingsException("Not authenticated");
         }
-        checkGrants(connection);
 
         m_fsId = FSConnectionRegistry.getInstance().getKey();
         return new PortObjectSpec[] { createSpec() };
@@ -139,16 +138,6 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
             // Do nothing. The file listing is not lazy implemented
             // in provider therefore should throw exception if connection is bad
         }
-    }
-
-    /**
-     * @param connection
-     *            Google API connection.
-     */
-    private void checkGrants(final GoogleApiConnection connection) { // NOSONAR
-        // to do check the grant to Google Drive Service.
-        // for now the connection have not access methods to m_grants field.
-        // will implemented when access method implemented
     }
 
     /**
@@ -190,9 +179,6 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         return new GoogleDriveFSConnection(getGoogleApiConnection(inputSpec), createConfiguration(settings));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
@@ -200,9 +186,6 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
@@ -210,25 +193,16 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO output) {
         m_settings.save(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void validateSettings(final NodeSettingsRO input) throws InvalidSettingsException {
         m_settings.validate(input);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO input) throws InvalidSettingsException {
         m_settings.load(input);
@@ -240,11 +214,12 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
         reset();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void reset() {
+        if (m_fsConnection != null) {
+            m_fsConnection.closeInBackground();
+            m_fsConnection = null;
+        }
         m_fsId = null;
     }
 }

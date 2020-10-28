@@ -116,15 +116,8 @@ public class GoogleDriveHelper {
             final GoogleDriveConnectionConfiguration config) throws IOException {
         connection.getCredential().initialize(req);
 
-        final int connectionTimeOut = (int) config.getConnectionTimeOut().toMillis();
-        if (connectionTimeOut > 0) {
-            req.setConnectTimeout(connectionTimeOut);
-        }
-
-        final int readTimeOut = (int) config.getReadTimeOut().toMillis();
-        if (readTimeOut > 0) {
-            req.setReadTimeout(readTimeOut);
-        }
+        req.setConnectTimeout((int) config.getConnectionTimeOut().toMillis());
+        req.setReadTimeout((int) config.getReadTimeOut().toMillis());
     }
 
     /**

@@ -146,10 +146,11 @@ public class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
         final JPanel panel = new JPanel(new GridBagLayout());
 
         addGbcRow(panel, 0,
-                "Connection timeout (seconds)  :", new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "", 1));
+                "Connection timeout (seconds): ",
+                new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "", 1));
 
         addGbcRow(panel, 1,
-                "Read timeout (seconds)  :", new DialogComponentNumber(m_settings.getReadTimeoutModel(), "", 1));
+                "Read timeout (seconds): ", new DialogComponentNumber(m_settings.getReadTimeoutModel(), "", 1));
 
         addVerticalFiller(panel, 8, 3);
 
