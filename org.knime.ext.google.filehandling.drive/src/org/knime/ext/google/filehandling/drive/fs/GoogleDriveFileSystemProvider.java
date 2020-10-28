@@ -73,6 +73,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
+import org.knime.filehandling.core.connections.FSFiles;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -124,6 +125,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
         return new GoogleDriveFileSeekableByteChannel(path, options);
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected void moveInternal(final GoogleDrivePath source, final GoogleDrivePath target, final CopyOption... options)
             throws IOException {
@@ -133,37 +135,73 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             throw new AccessDeniedException(target.toString());
         }
 
+        if (source.isRoot() || source.isDrive()) {
+            throw new AccessDeniedException(source.toString());
+        }
+
+        final GoogleDriveFileAttributes sourceAttrs = readAttributes(source);
+        final GoogleDriveFileAttributes targetParentAttrs = readAttributes(target.getParent());
         GoogleDriveFileAttributes targetAttrs = null;
         try {
             targetAttrs = readAttributes(target);
         } catch (NoSuchFileException e) { // NOSONAR ignore, just needed for later
         }
 
-        // move
-        GoogleDriveFileAttributes sourceAttrs = readAttributes(source);
-        GoogleDriveFileAttributes targetParentAttrs = readAttributes(target.getParent());
+        File movedFile = null;
 
-        if (sourceAttrs.isRegularFile()) {
-            if (target.isDrive()) {
-                // cannot replace a drive with a file
-                throw new AccessDeniedException(target.toString());
-            }
+        if (targetAttrs == null) {
+            movedFile = moveToNewFile(target, sourceAttrs, targetParentAttrs);
+        } else if (targetAttrs.isRegularFile() || (targetAttrs.isDirectory() && !target.isDrive())) {
+            movedFile = moveToFileOrDir(target, sourceAttrs, targetParentAttrs, targetAttrs);
+        } else if (target.isDrive()) {
+            moveToDrive(source, target, sourceAttrs);
+        } else {
+            throw new IOException(String.format("Cannot replace %s with a file", target.toString()));
+        }
 
-            // Google drive allows multiple files with same name be the child of same
-            // parent. Therefore moving the file does not with already existing target
-            // file, but target file should be deleted after copy finished.
-            final File movedFile = m_helper.move(sourceAttrs.getMetadata().getId(), //
-                    targetParentAttrs.getMetadata().getId(), //
-                    target.getFileName().toString());
+        if (movedFile != null) {
             cacheAttributes(target, new GoogleDriveFileAttributes(target, new FileMetadata(movedFile)));
-        } else if (sourceAttrs.isDirectory() && targetAttrs == null) {
-            // we only create a directory
-            createDirectory(target);
         }
 
-        if (targetAttrs != null && !target.isDrive()) {
-            m_helper.deleteFile(targetAttrs.getMetadata().getId());
+        getFileSystemInternal().removeFromAttributeCacheDeep(source);
+    }
+
+    private void moveToDrive(final GoogleDrivePath source, final GoogleDrivePath target,
+            final GoogleDriveFileAttributes sourceAttrs) throws IOException {
+        if (sourceAttrs.isRegularFile()) {
+            throw new IOException(String.format("Cannot replace drive %s with a file", target.toString()));
+        } else if (FSFiles.isNonEmptyDirectory(source)) {
+            throw new IOException(
+                    String.format("Cannot replace drive %s with non-empty directory", target.toString()));
+        } else {
+            // source is an empty directory and the target drive exists already (and is
+            // empty)
+            m_helper.deleteFile(sourceAttrs.getMetadata().getId());
         }
+    }
+
+    private File moveToFileOrDir(final GoogleDrivePath target, final GoogleDriveFileAttributes sourceAttrs,
+            final GoogleDriveFileAttributes targetParentAttrs, final GoogleDriveFileAttributes targetAttrs)
+            throws IOException {
+        File movedFile;
+        movedFile = m_helper.move(sourceAttrs.getMetadata().getId(), //
+                targetParentAttrs.getMetadata().getId(), //
+                target.getFileName().toString());
+        m_helper.deleteFile(targetAttrs.getMetadata().getId());
+        return movedFile;
+    }
+
+    private File moveToNewFile(final GoogleDrivePath target, final GoogleDriveFileAttributes sourceAttrs,
+            final GoogleDriveFileAttributes targetParentAttrs) throws IOException {
+        File movedFile;
+        if (target.isDrive()) {
+            throw new IOException("Cannot create drive " + target.toString());
+        }
+        // target does not exist
+        movedFile = m_helper.move(sourceAttrs.getMetadata().getId(), //
+                targetParentAttrs.getMetadata().getId(), //
+                target.getFileName().toString());
+        return movedFile;
     }
 
     @SuppressWarnings("resource")
@@ -186,14 +224,14 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
         GoogleDriveFileAttributes sourceAttrs = readAttributes(source);
         GoogleDriveFileAttributes targetParentAttrs = readAttributes(target.getParent());
 
-        if (sourceAttrs.isRegularFile()) {
+        if (!sourceAttrs.isDirectory()) {
             // Google drive allows multiple files with same name be the child of same
             // parent. Therefore copy of file not conflicts with already existing target
             // file, but target file should be deleted after copy finished.
             m_helper.copy(sourceAttrs.getMetadata().getId(), //
                     targetParentAttrs.getMetadata().getId(), //
                     target.getFileName().toString());
-        } else if (sourceAttrs.isDirectory() && targetAttrs == null) {
+        } else if (targetAttrs == null) {
             createDirectory(target);
         }
 
@@ -207,7 +245,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     protected InputStream newInputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
 
-        final GoogleDriveFileAttributes attrs = readAttributes(path, GoogleDriveFileAttributes.class);
+        final GoogleDriveFileAttributes attrs = readAttributes(path);
         return getHelper().readFile(attrs.getMetadata().getId());
     }
 
@@ -284,7 +322,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     }
 
     GoogleDriveFileAttributes readAttributes(final GoogleDrivePath path) throws IOException {
-        return readAttributes(path, GoogleDriveFileAttributes.class);
+        return (GoogleDriveFileAttributes) readAttributes(path, BasicFileAttributes.class);
     }
 
     /**
