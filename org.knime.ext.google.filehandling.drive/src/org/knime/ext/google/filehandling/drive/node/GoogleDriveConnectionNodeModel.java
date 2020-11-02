@@ -65,6 +65,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveConnectionConfiguration;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
@@ -105,6 +106,9 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0])
                 .getGoogleApiConnection();
+
+        CheckUtils.checkArgumentNotNull(apiConnection.getCredential(),
+                "No valid Google credentials found. Please re-execute preceding authentication node.");
 
         m_fsConnection = new GoogleDriveFSConnection(apiConnection,
                 createConfiguration(m_settings));

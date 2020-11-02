@@ -56,21 +56,24 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.LinkOption;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFileAttributes;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
 import org.knime.filehandling.core.connections.FSFiles;
@@ -87,6 +90,9 @@ import com.google.api.services.drive.model.File;
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<GoogleDrivePath, GoogleDriveFileSystem> {
+
+    private static final Pattern GOOGLE_DOC_MIME_TYPE = Pattern.compile("application/vnd\\.google-apps\\..+");
+
     /**
      * Default user drive name.
      */
@@ -99,14 +105,45 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
     private final GoogleDriveHelper m_helper;
 
+    private final Map<Path, GoogleDriveFileAttributes> m_drives = new HashMap<>();
+
     /**
      * @param connection
      *            Google API connection.
      * @param config
      *            connection configuration.
      */
-    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
+    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection,
+            final GoogleDriveConnectionConfiguration config) {
         this(new GoogleDriveHelper(connection, config));
+    }
+
+    private synchronized GoogleDriveFileAttributes getDriveAttrs(final GoogleDrivePath drivePath) throws IOException {
+        if (m_drives.isEmpty()) {
+            fillDriveMap(drivePath);
+        }
+
+        if (m_drives.containsKey(drivePath)) {
+            return m_drives.get(drivePath);
+        } else {
+            throw new NoSuchFileException(drivePath.toString());
+        }
+    }
+
+    private void fillDriveMap(final GoogleDrivePath drivePath) throws IOException {
+        try (DirectoryStream<Path> drives = Files.newDirectoryStream(drivePath.getParent())) {
+            for (Path drive : drives) {
+                final GoogleDrivePath gdrive = (GoogleDrivePath) drive;
+
+                Optional<BaseFileAttributes> attrs = getCachedAttributes(gdrive);
+                if (attrs.isPresent()) {
+                    m_drives.put(gdrive, (GoogleDriveFileAttributes) attrs.get());
+                } else {
+                    m_drives.put(gdrive, new GoogleDriveFileAttributes(gdrive,
+                            new FileMetadata(getDrive(drive.getFileName().toString()))));
+                }
+            }
+        }
     }
 
     /**
@@ -246,6 +283,11 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             throws IOException {
 
         final GoogleDriveFileAttributes attrs = readAttributes(path);
+
+        if (GOOGLE_DOC_MIME_TYPE.matcher(attrs.getMetadata().getMimeType()).matches()) {
+            throw new IOException("Cannot read Google workspace document. Please use the Google API Connector nodes.");
+        }
+
         return getHelper().readFile(attrs.getMetadata().getId());
     }
 
@@ -284,6 +326,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
         if (path.isRoot()) {
             return createRootAttributes(path);
+        } else if (path.isDrive()) {
+            return getDriveAttrs(path);
         } else {
             // find nearest cached parent attributes.
             // The path segments without attributes supply into list
@@ -323,25 +367,6 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
     GoogleDriveFileAttributes readAttributes(final GoogleDrivePath path) throws IOException {
         return (GoogleDriveFileAttributes) readAttributes(path, BasicFileAttributes.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <A extends BasicFileAttributes> A readAttributes(final Path path, final Class<A> type,
-            final LinkOption... options) throws IOException {
-        // base implementation supports only BasicFileAttributes and PosixFileAttributes
-        // but not their subclasses, therefore need to wrap the call of this method
-        BasicFileAttributes result;
-        if (BasicFileAttributes.class.isAssignableFrom(type)) {
-            result = super.readAttributes(path, BasicFileAttributes.class, options);
-        } else {
-            result = super.readAttributes(path, PosixFileAttributes.class, options);
-        }
-
-        return (A) result;
     }
 
     /**
