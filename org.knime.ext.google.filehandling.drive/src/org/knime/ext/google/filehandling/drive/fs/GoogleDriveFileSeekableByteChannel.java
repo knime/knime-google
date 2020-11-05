@@ -107,7 +107,8 @@ public class GoogleDriveFileSeekableByteChannel extends TempFileSeekableByteChan
             // create new file
             final String name = path.getFileName().toString();
             final FileMetadata parentMeta = provider.readAttributes(path.getParent()).getMetadata();
-            provider.getHelper().createFile(parentMeta.getDriveId(), parentMeta.getId(), name, content);
+            provider.getHelper().createFile(parentMeta.getDriveId(), parentMeta.getId(),
+                    GoogleDriveFileSystemProvider.decodeForwardSlashes(name), content);
         }
     }
 }

@@ -474,16 +474,17 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
     // support of files with equal names in context of one parent
     /**
-     * @param name
+     * @param originName
      *            drive name.
      * @return drive with given name or null if 'My Drive'
      * @throws IOException
      */
-    private Drive getDrive(final String name) throws IOException {
-        if (MY_DRIVE.equals(name)) {
+    private Drive getDrive(final String originName) throws IOException {
+        if (MY_DRIVE.equals(originName)) {
             return null;
         }
 
+        String name = decodeForwardSlashes(originName);
         String fileId = getIdFromSuffixOrNull(name);
         return getBestDrive(m_helper.getDrives(name, fileId), name);
     }
@@ -493,12 +494,13 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      *            drive ID.
      * @param parentId
      *            parent ID.
-     * @param name
+     * @param originName
      *            file name.
      * @return
      * @throws IOException
      */
-    private File getFile(final String driveId, final String parentId, final String name) throws IOException {
+    private File getFile(final String driveId, final String parentId, final String originName) throws IOException {
+        String name = decodeForwardSlashes(originName);
         String fileId = getIdFromSuffixOrNull(name);
         return getBestFile(m_helper.getFilesByNameOrId(driveId, parentId, name, fileId), name);
     }
@@ -506,12 +508,13 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     /**
      * @param driveId
      *            drive ID.
-     * @param name
+     * @param originName
      *            file name.
      * @return
      * @throws IOException
      */
-    private File getFileOfDrive(final String driveId, final String name) throws IOException {
+    private File getFileOfDrive(final String driveId, final String originName) throws IOException {
+        String name = decodeForwardSlashes(originName);
         String fileId = getIdFromSuffixOrNull(name);
         return getBestFile(m_helper.getFilesOfDriveByNameOrId(driveId, name, fileId), name);
     }
@@ -578,5 +581,23 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected void checkAccessInternal(final GoogleDrivePath path, final AccessMode... modes) throws IOException {
         // do nothing
+    }
+
+    /**
+     * @param originName
+     *            origin name.
+     * @return decoded name.
+     */
+    static String decodeForwardSlashes(final String originName) {
+        return originName.replace("$_$", "/");
+    }
+
+    /**
+     * @param originName
+     *            origin name.
+     * @return decoded name.
+     */
+    static String encodeForwardSlashes(final String originName) {
+        return originName.replace("/", "$_$");
     }
 }

@@ -113,7 +113,7 @@ public final class GoogleDrivePathIterator extends BasePathIterator<GoogleDriveP
             files = dir.getFileSystem().provider().getHelper().listFolder(meta.getDriveId(), meta.getId());
         }
 
-        correctFileNameDuplicates(files);
+        correctFileNames(files);
         return createPathsAndCacheAttributes(dir, filesToMetadata(files));
     }
 
@@ -139,14 +139,14 @@ public final class GoogleDrivePathIterator extends BasePathIterator<GoogleDriveP
     }
 
     private static void correctDriveNameDuplicates(final List<Drive> sharedDrives) {
-        correctNameDuplicates(sharedDrives, NameIdAccessor.DRIVE);
+        correctNames(sharedDrives, NameIdAccessor.DRIVE);
     }
 
-    private static void correctFileNameDuplicates(final List<File> files) {
-        correctNameDuplicates(files, NameIdAccessor.FILE);
+    private static void correctFileNames(final List<File> files) {
+        correctNames(files, NameIdAccessor.FILE);
     }
 
-    private static <T> void correctNameDuplicates(final List<T> objects, final NameIdAccessor<T> accessor) {
+    private static <T> void correctNames(final List<T> objects, final NameIdAccessor<T> accessor) {
         // create map where key is name and value is
         // the number of items with given name.
         final Map<String, Integer> numItemsWithName = new HashMap<>();
@@ -162,6 +162,15 @@ public final class GoogleDrivePathIterator extends BasePathIterator<GoogleDriveP
             // correct names with adding suffix
             if (numItemsWithName.get(name) > 1) {
                 name += GoogleDriveFileSystemProvider.SYNTHETIC_SUFFIX_START + accessor.getId(obj) + ")";
+                accessor.setCorrectedName(obj, name);
+            }
+        }
+
+        // correct forward slashes
+        for (T obj : objects) {
+            final String originName = accessor.getName(obj);
+            final String name = GoogleDriveFileSystemProvider.encodeForwardSlashes(originName);
+            if (!originName.equals(name)) {
                 accessor.setCorrectedName(obj, name);
             }
         }
