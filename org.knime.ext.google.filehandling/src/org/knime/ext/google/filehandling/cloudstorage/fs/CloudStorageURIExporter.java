@@ -42,80 +42,60 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   2020-03-24 (Alexander Bondaletov): created
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.Map;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSPath;
 import org.knime.filehandling.core.connections.uriexport.URIExporter;
 import org.knime.filehandling.core.connections.uriexport.URIExporterID;
-import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
-import org.knime.google.api.data.GoogleApiConnection;
 
 /**
- * Google Cloud Storage implementation of the {@link FSConnection} interface.
+ * {@link URIExporter} implementation using "gs" as scheme.
  *
- * @author Alexander Bondaletov
+ * @author Sascha Wolke, KNIME GmbH
  */
-public class CloudStorageFSConnection implements FSConnection {
+public final class CloudStorageURIExporter implements URIExporter {
 
-    private final static long CACHE_TTL_MILLIS = 6000;
-
-    private final CloudStorageFileSystem m_filesystem;
-
+    private static final String SCHEME = "gs";
 
     /**
-     * Creates new {@link CloudStorageFSConnection} for a given api connection
-     * and project.
-     *
-     * @param apiConnection
-     *            google api connection
-     * @param settings
-     *            Connection settings.
-     * @throws IOException
+     * Unique identifier of this exporter.
      */
-    public CloudStorageFSConnection(final GoogleApiConnection apiConnection,
-            final CloudStorageConnectorSettings settings)
-            throws IOException {
+    public static final URIExporterID ID = new URIExporterID(SCHEME);
 
-        final URI uri;
-        try {
-            uri = new URI(CloudStorageFileSystemProvider.FS_TYPE, settings.getProjectId(), null, null);
-        } catch (URISyntaxException ex) {
-            throw new IllegalArgumentException("Illegal project id: " + settings.getProjectId(), ex);
-        }
+    private static final CloudStorageURIExporter INSTANCE = new CloudStorageURIExporter();
 
-        m_filesystem = new CloudStorageFileSystem(uri, apiConnection, CACHE_TTL_MILLIS, settings);
+    private CloudStorageURIExporter() {
+    }
+
+    /**
+     * @return singleton instance of this exporter
+     */
+    public static CloudStorageURIExporter getInstance() {
+        return INSTANCE;
     }
 
     @Override
-    public FSFileSystem<?> getFileSystem() {
-        return m_filesystem;
+    public URIExporterID getID() {
+        return ID;
     }
 
     @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new NioFileSystemBrowser(this);
+    public String getLabel() {
+        return SCHEME + " URIs";
     }
 
     @Override
-    public URIExporter getDefaultURIExporter() {
-        return CloudStorageURIExporter.getInstance();
+    public String getDescription() {
+        return "Exports URIs with scheme '" + SCHEME + "'.";
     }
 
     @Override
-    public Map<URIExporterID, URIExporter> getURIExporters() {
-        return Collections.singletonMap(CloudStorageURIExporter.ID, CloudStorageURIExporter.getInstance());
+    public URI toUri(final FSPath path) throws URISyntaxException {
+        final CloudStoragePath csPath = (CloudStoragePath) path.toAbsolutePath();
+        return new URI(SCHEME, csPath.getBucketName(), '/' + csPath.getBlobName(), null);
     }
 }
