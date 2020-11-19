@@ -79,8 +79,6 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
     /**
      * Constructs {@link CloudStorageFileSystem} for a given URI.
      *
-     * @param provider
-     *            the {@link CloudStorageFileSystemProvider}
      * @param uri
      *            the URI for the file system
      * @param apiConnection
@@ -125,16 +123,6 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
     @Override
     protected void prepareClose() {
         // nothing to close
-    }
-
-    @Override
-    public String getSchemeString() {
-        return provider().getScheme();
-    }
-
-    @Override
-    public String getHostString() {
-        return null;
     }
 
     @Override

@@ -360,11 +360,6 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
         m_helper.deleteFile(meta.getId());
     }
 
-    @Override
-    public String getScheme() {
-        return GoogleDriveFileSystem.FS_TYPE;
-    }
-
     GoogleDriveFileAttributes readAttributes(final GoogleDrivePath path) throws IOException {
         return (GoogleDriveFileAttributes) readAttributes(path, BasicFileAttributes.class);
     }

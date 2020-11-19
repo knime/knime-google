@@ -235,11 +235,6 @@ public class CloudStorageFileSystemProvider
     }
 
     @Override
-    public String getScheme() {
-        return FS_TYPE;
-    }
-
-    @Override
     protected SeekableByteChannel newByteChannelInternal(
             final CloudStoragePath path,
             final Set<? extends OpenOption> options,
