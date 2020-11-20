@@ -128,7 +128,7 @@ public class CloudStorageConnectorNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        setWarningMessage("Google Cloud Storage connection no longer available. Please re-execute the node.");
+        setWarningMessage("Connection no longer available. Please re-execute the node.");
 
     }
 

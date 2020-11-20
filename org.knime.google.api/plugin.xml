@@ -43,7 +43,7 @@
       </node>
       <node
             category-path="/labs/googleapilabs"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
       </node>
    </extension>

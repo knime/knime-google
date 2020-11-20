@@ -104,7 +104,7 @@ public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
     }
 
     private JComponent createSettingsPanel() {
-        DialogComponentString projectIdInput = new DialogComponentString(m_settings.getProjectIdModel(), "Project ID",
+        DialogComponentString projectIdInput = new DialogComponentString(m_settings.getProjectIdModel(), "Project ID:",
                 true, 50);
         projectIdInput.getComponentPanel().setLayout(new FlowLayout(FlowLayout.LEFT));
         projectIdInput.getComponentPanel()

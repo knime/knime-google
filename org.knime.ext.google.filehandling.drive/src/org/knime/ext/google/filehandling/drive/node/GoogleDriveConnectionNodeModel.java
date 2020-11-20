@@ -186,7 +186,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        setWarningMessage("Google Drive connection no longer available. Please re-execute the node.");
+        setWarningMessage("Connection no longer available. Please re-execute the node.");
 
     }
 

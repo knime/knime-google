@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.ext.google.filehandling</name>
+	<name>org.knime.ext.google.filehandling.cloudstorage</name>
 	<comment></comment>
 	<projects>
 	</projects>

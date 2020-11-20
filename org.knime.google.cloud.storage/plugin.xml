@@ -3,12 +3,12 @@
    <extension point="org.knime.workbench.repository.nodes">
       <node
             category-path="/io/filehandling/remote/connections"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.google.cloud.storage.node.connector.GoogleCSConnectionNodeFactory">
       </node>
       <node
             category-path="/io/filehandling/remote"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.google.cloud.storage.node.filepicker.GoogleCSFilePickerNodeFactory">
       </node>
    </extension>
