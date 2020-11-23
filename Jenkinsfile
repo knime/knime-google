@@ -19,7 +19,7 @@ try {
     workflowTests.runTests(
         dependencies: [
             repositories: ['knime-google', 'knime-filehandling', 'knime-streaming', 'knime-cloud', 'knime-database',
-                'knime-kerberos', 'knime-textprocessing'
+                'knime-kerberos', 'knime-textprocessing', 'knime-dl4j'
             ]
         ]
     )
