@@ -45,6 +45,7 @@
  *
  * History
  *   2020-09-12 (Vyacheslav Soldatov): created
+ *   2020-11-23 (Vyacheslav Soldatov): added exponential retry on 'exceeded request rate limit'
  */
 package org.knime.ext.google.filehandling.drive.fs;
 
@@ -121,13 +122,6 @@ public class GoogleDriveHelper {
     }
 
     /**
-     * For unit tests only
-     */
-    protected GoogleDriveHelper() {
-        m_driveService = null;
-    }
-
-    /**
      * @param driveId
      *            ID of shared drive.
      * @param name
@@ -137,7 +131,8 @@ public class GoogleDriveHelper {
      * @return found file.
      * @throws IOException
      */
-    public List<File> getFilesOfDriveByNameOrId(final String driveId, final String name, final String additionalName)
+    public List<File> getFilesOfDriveByNameOrId(final String driveId, final String name,
+            final String additionalName)
             throws IOException {
         return getFilesByNameOrId(driveId, driveId == null ? "root" : driveId, name, additionalName);
     }
@@ -157,6 +152,11 @@ public class GoogleDriveHelper {
     public List<File> getFilesByNameOrId(final String driveId, final String parentId, final String name,
             final String fileId)
             throws IOException {
+        return doWithRetry(() -> getFilesByNameOrIdImpl(driveId, parentId, name, fileId));
+    }
+
+    private List<File> getFilesByNameOrIdImpl(final String driveId, final String parentId, final String name,
+            final String fileId) throws IOException {
         StringBuilder searchCriterias = new StringBuilder("trashed = false and ")
                 .append(createNameAndIdQueryPart(name, fileId)).append(" and '")
                 .append(parentId)
@@ -189,6 +189,10 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public List<Drive> getDrives(final String name, final String driveId) throws IOException {
+        return doWithRetry(() -> getDrivesImpl(name, driveId));
+    }
+
+    private List<Drive> getDrivesImpl(final String name, final String driveId) throws IOException {
         if (GoogleDriveFileSystemProvider.MY_DRIVE.equals(name)) {
             return new LinkedList<>();
         }
@@ -226,6 +230,13 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public void deleteFile(final String id) throws IOException {
+        doWithRetry(() -> {
+            deleteFileImpl(id);
+            return null;
+        });
+    }
+
+    private void deleteFileImpl(final String id) throws IOException {
         m_driveService.files().delete(id).setSupportsAllDrives(true).execute();
     }
 
@@ -274,6 +285,11 @@ public class GoogleDriveHelper {
      */
     private File createFileOrFolder(final String driveId, final String parentId, final String name,
             final AbstractInputStreamContent content) throws IOException {
+        return doWithRetry(() -> createFileOrFolderImpl(driveId, parentId, name, content));
+    }
+
+    private File createFileOrFolderImpl(final String driveId, final String parentId, final String name,
+            final AbstractInputStreamContent content) throws IOException {
         File file = new File();
         file.setName(name);
         file.setDriveId(driveId);
@@ -312,6 +328,13 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public void rewriteFile(final String fileId, final AbstractInputStreamContent in) throws IOException {
+        doWithRetry(() -> {
+            rewriteFileImpl(fileId, in);
+            return null;
+        });
+    }
+
+    private void rewriteFileImpl(final String fileId, final AbstractInputStreamContent in) throws IOException {
         m_driveService.files().update(fileId, null, in).setSupportsAllDrives(true).execute();
     }
 
@@ -320,6 +343,10 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public List<Drive> listSharedDrives() throws IOException {
+        return doWithRetry(this::listSharedDrivesImpl);
+    }
+
+    private List<Drive> listSharedDrivesImpl() throws IOException {
         String pageToken = null;
         com.google.api.services.drive.Drive.Drives.List query = m_driveService.drives().list()
                 .setFields("nextPageToken, drives(id, name, createdTime)");
@@ -366,6 +393,10 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     private List<File> listParent(final String driveId, final String parentId) throws IOException {
+        return doWithRetry(() -> listParentImpl(driveId, parentId));
+    }
+
+    private List<File> listParentImpl(final String driveId, final String parentId) throws IOException {
         final Files.List query = m_driveService.files().list()
                 .setQ("trashed = false and '" + parentId + "' in parents")
                 .setFields("nextPageToken, " + FILES_FIELDS_QUERY_PART)
@@ -408,6 +439,10 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public InputStream readFile(final String id) throws IOException {
+        return doWithRetry(() -> readFileImpl(id));
+    }
+
+    private InputStream readFileImpl(final String id) throws IOException {
         return m_driveService.files().get(id).setSupportsAllDrives(true).executeMediaAsInputStream();
     }
 
@@ -422,6 +457,10 @@ public class GoogleDriveHelper {
      * @throws IOException
      */
     public File move(final String sourceId, final String newParentId, final String newName) throws IOException {
+        return doWithRetry(() -> moveImpl(sourceId, newParentId, newName));
+    }
+
+    private File moveImpl(final String sourceId, final String newParentId, final String newName) throws IOException {
         final File oldFile = m_driveService.files().get(sourceId).setFields("id, name, mimeType, parents")
                 .setSupportsAllDrives(true).execute();
 
@@ -448,7 +487,15 @@ public class GoogleDriveHelper {
      *            name of target file.
      * @throws IOException
      */
-    public void copy(final String sourceId, final String newParentId, final String targetName) throws IOException {
+    public void copy(final String sourceId, final String newParentId, final String targetName)
+            throws IOException {
+        doWithRetry(() -> {
+            copyImpl(sourceId, newParentId, targetName);
+            return null;
+        });
+    }
+
+    private void copyImpl(final String sourceId, final String newParentId, final String targetName) throws IOException {
         final File file = new File();
         file.setName(targetName);
 
@@ -477,5 +524,9 @@ public class GoogleDriveHelper {
      */
     public com.google.api.services.drive.Drive getDriveService() {
         return m_driveService;
+    }
+
+    private static <R> R doWithRetry(final IoRetryable<R> retryable) throws IOException {
+        return RetryHelper.doWithRetryable(retryable);
     }
 }
