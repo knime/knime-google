@@ -177,7 +177,7 @@ public class GoogleApiConnectorDialog extends NodeDialogPane {
         config.loadInDialog(settings);
         m_serviceAccountEmail.setText(config.getServiceAccountEmail());
         m_keyFileLocation.setSelectedFile(config.getKeyFileLocation());
-        m_scopes.setText(StringUtils.join(config.getScopes()));
+        m_scopes.setText(StringUtils.join(config.getScopes(), '\n'));
     }
 
 }
