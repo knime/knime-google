@@ -57,40 +57,35 @@ import org.knime.filehandling.core.connections.uriexport.URIExporterID;
  *
  * @author Sascha Wolke, KNIME GmbH
  */
-public final class CloudStorageURIExporter implements URIExporter {
+final class GsURIExporter implements URIExporter {
 
     private static final String SCHEME = "gs";
 
     /**
      * Unique identifier of this exporter.
      */
-    public static final URIExporterID ID = new URIExporterID(SCHEME);
+    public static final URIExporterID ID = new URIExporterID("google-cloudstorage-gs");
 
-    private static final CloudStorageURIExporter INSTANCE = new CloudStorageURIExporter();
+    private static final GsURIExporter INSTANCE = new GsURIExporter();
 
-    private CloudStorageURIExporter() {
+    private GsURIExporter() {
     }
 
     /**
      * @return singleton instance of this exporter
      */
-    public static CloudStorageURIExporter getInstance() {
+    public static GsURIExporter getInstance() {
         return INSTANCE;
     }
 
     @Override
-    public URIExporterID getID() {
-        return ID;
-    }
-
-    @Override
     public String getLabel() {
-        return SCHEME + " URIs";
+        return "gs:// URLs";
     }
 
     @Override
     public String getDescription() {
-        return "Exports URIs with scheme '" + SCHEME + "'.";
+        return "Exports gs:// URLs";
     }
 
     @Override

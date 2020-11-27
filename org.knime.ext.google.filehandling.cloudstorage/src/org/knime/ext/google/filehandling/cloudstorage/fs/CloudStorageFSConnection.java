@@ -51,7 +51,6 @@ package org.knime.ext.google.filehandling.cloudstorage.fs;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.knime.core.node.util.FileSystemBrowser;
@@ -60,6 +59,8 @@ import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.connections.uriexport.URIExporter;
 import org.knime.filehandling.core.connections.uriexport.URIExporterID;
+import org.knime.filehandling.core.connections.uriexport.URIExporterIDs;
+import org.knime.filehandling.core.connections.uriexport.URIExporterMapBuilder;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -70,10 +71,14 @@ import org.knime.google.api.data.GoogleApiConnection;
  */
 public class CloudStorageFSConnection implements FSConnection {
 
-    private final static long CACHE_TTL_MILLIS = 6000;
+    private static final Map<URIExporterID, URIExporter> URI_EXPORTERS = new URIExporterMapBuilder() //
+            .add(URIExporterIDs.DEFAULT, GsURIExporter.getInstance()) //
+            .add(URIExporterIDs.DEFAULT_HADOOP, GsURIExporter.getInstance()) //
+            .build();
+
+    private static final long CACHE_TTL_MILLIS = 6000;
 
     private final CloudStorageFileSystem m_filesystem;
-
 
     /**
      * Creates new {@link CloudStorageFSConnection} for a given api connection
@@ -110,12 +115,7 @@ public class CloudStorageFSConnection implements FSConnection {
     }
 
     @Override
-    public URIExporter getDefaultURIExporter() {
-        return CloudStorageURIExporter.getInstance();
-    }
-
-    @Override
     public Map<URIExporterID, URIExporter> getURIExporters() {
-        return Collections.singletonMap(CloudStorageURIExporter.ID, CloudStorageURIExporter.getInstance());
+        return URI_EXPORTERS;
     }
 }
