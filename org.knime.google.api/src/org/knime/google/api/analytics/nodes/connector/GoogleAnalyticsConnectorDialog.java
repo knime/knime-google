@@ -54,10 +54,13 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -103,6 +106,8 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
     private JLabel m_warning;
 
     private JPanel m_selectionsPanel;
+
+    private final ConnectionTimeoutPanel m_connectionTimeoutPanel = new ConnectionTimeoutPanel();
 
     /**
      * Constructor creating the dialogs content.
@@ -216,6 +221,15 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         gbc.gridy++;
         panel.add(m_profileId, gbc);
         addTab("Settings", panel);
+        addTab("Advanced Settings", createAdvancedTab());
+    }
+
+    private JPanel createAdvancedTab() {
+        final JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.add(m_connectionTimeoutPanel);
+        container.add(Box.createHorizontalGlue());
+        return container;
     }
 
     private void invalidateSelection() {
@@ -246,6 +260,8 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
         config.setProfileId(m_profileId.getText());
+        config.setConnectTimeout(m_connectionTimeoutPanel.getSelectedConnectionTimeout());
+        config.setReadTimeout(m_connectionTimeoutPanel.getSelectedReadTimeout());
         config.save(settings);
     }
 
@@ -261,11 +277,19 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         if (connectionSpec.getGoogleApiConnection() == null) {
             throw new NotConfigurableException("Missing Google API Connection");
         }
+        GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
+        config.loadInDialog(settings);
+        Duration connectTimeout = config.getConnectTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT);
+        Duration readTimeout = config.getReadTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT);
+        m_connectionTimeoutPanel.setSelectedConnectionTimeout(connectTimeout);
+        m_connectionTimeoutPanel.setSelectedReadTimeout(readTimeout);
         try {
             if (m_map.isEmpty()) {
                 m_map =
-                        GoogleAnalyticsConnection.getAccountsWebpropertiesProfilesMap(connectionSpec
-                                .getGoogleApiConnection());
+                        GoogleAnalyticsConnection.getAccountsWebpropertiesProfilesMap(
+                                connectionSpec.getGoogleApiConnection(),
+                                connectTimeout, readTimeout
+                        );
                 m_warning.setVisible(false);
                 m_selectionsPanel.setVisible(true);
             }
@@ -277,8 +301,6 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         for (String account : m_map.keySet()) {
             m_accountsModel.addElement(account);
         }
-        GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
-        config.loadInDialog(settings);
         for (String account : m_map.keySet()) {
             for (String webproperty : m_map.get(account).keySet()) {
                 for (String profile : m_map.get(account).get(webproperty).keySet()) {

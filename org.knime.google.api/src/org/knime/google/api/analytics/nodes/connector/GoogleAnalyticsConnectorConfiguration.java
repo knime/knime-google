@@ -47,6 +47,9 @@
  */
 package org.knime.google.api.analytics.nodes.connector;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -61,6 +64,20 @@ import org.knime.google.api.data.GoogleApiConnection;
 public class GoogleAnalyticsConnectorConfiguration {
 
     private static final String CFG_PROFILE_ID = "profile_id";
+
+    /**
+     * Default setting for the API connect timeout.
+     */
+    public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(30);
+
+    /**
+     * Default setting for the API read timeout.
+     */
+    public static final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(30);
+
+    private Optional<Duration> m_connectTimeout = Optional.empty();
+
+    private Optional<Duration> m_readTimeout = Optional.empty();
 
     private String m_profileId = "";
 
@@ -83,6 +100,8 @@ public class GoogleAnalyticsConnectorConfiguration {
      */
     public void save(final NodeSettingsWO settings) {
         settings.addString(CFG_PROFILE_ID, m_profileId);
+        m_connectTimeout.ifPresent(duration -> settings.addInt("connectTimeout", (int)duration.getSeconds()));
+        m_readTimeout.ifPresent(duration -> settings.addInt("readTimeout", (int)duration.getSeconds()));
     }
 
     /**
@@ -91,6 +110,8 @@ public class GoogleAnalyticsConnectorConfiguration {
      */
     public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_profileId = settings.getString(CFG_PROFILE_ID);
+        m_connectTimeout = getDurationFromSettings(settings, "connectTimeout");
+        m_readTimeout = getDurationFromSettings(settings, "readTimeout");
     }
 
     /**
@@ -98,9 +119,20 @@ public class GoogleAnalyticsConnectorConfiguration {
      */
     public void loadInDialog(final NodeSettingsRO settings) {
         m_profileId = settings.getString(CFG_PROFILE_ID, "");
+        m_connectTimeout = getDurationFromSettings(settings, "connectTimeout");
+        m_readTimeout = getDurationFromSettings(settings, "readTimeout");
+    }
+
+    private static Optional<Duration> getDurationFromSettings(final NodeSettingsRO settings, final String key) {
+        try {
+            return Optional.of(Duration.ofSeconds(Math.max(settings.getInt(key), 0)));
+        } catch (InvalidSettingsException e) { // NOSONAR
+            return Optional.empty();
+        }
     }
 
     /**
+     * Create a new {@link GoogleAnalyticsConnection} that uses the timeouts specified in this configuration.
      * @param googleApiConnection The GoogleApiConnection to use
      * @return GoogleAnalyticsConnection based on this configuration
      * @throws InvalidSettingsException If the current configuration is not valid
@@ -110,7 +142,25 @@ public class GoogleAnalyticsConnectorConfiguration {
         if (m_profileId.isEmpty()) {
             throw new InvalidSettingsException("No profile ID selected");
         }
-        return new GoogleAnalyticsConnection(googleApiConnection, "KNIME-Google-Analytics-Connector", m_profileId);
+        Duration connectTimeout = m_connectTimeout.orElse(DEFAULT_CONNECT_TIMEOUT);
+        Duration readTimeout = m_readTimeout.orElse(DEFAULT_READ_TIMEOUT);
+        return new GoogleAnalyticsConnection(googleApiConnection, "KNIME-Google-Analytics-Connector", m_profileId,
+            connectTimeout, readTimeout);
     }
 
+    public Optional<Duration> getConnectTimeout() {
+        return m_connectTimeout;
+    }
+
+    public Optional<Duration> getReadTimeout() {
+        return m_readTimeout;
+    }
+
+    void setConnectTimeout(final Duration duration) {
+        m_connectTimeout = Optional.of(duration);
+    }
+
+    void setReadTimeout(final Duration duration) {
+        m_readTimeout = Optional.of(duration);
+    }
 }

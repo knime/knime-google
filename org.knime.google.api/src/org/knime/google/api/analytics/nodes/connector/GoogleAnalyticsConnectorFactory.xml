@@ -11,10 +11,20 @@
 			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
 			</p>
 		</intro>
-		<option name="Account">The account.</option>
-		<option name="Webproperty">The webproperty.</option>
-		<option name="Profile">The profile.</option>
-		<option name="Profile ID">The profile ID that will be used for this connection.</option>
+		<tab name="General Settings">
+			<option name="Account">The account.</option>
+			<option name="Webproperty">The webproperty.</option>
+			<option name="Profile">The profile.</option>
+			<option name="Profile ID">The profile ID that will be used for this connection.</option>
+		</tab>
+        <tab name="Advanced Settings">
+			<option name="Connection timeout">
+				Timeout in seconds to establish a connection or 0 for an infinite timeout.
+			</option>
+			<option name="Read Timeout">
+				Timeout in seconds to read data from connection or 0 for an infinite timeout.
+			</option>
+		</tab>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Google API Connection">The Google API connection that will be used.</inPort>
