@@ -441,6 +441,7 @@ public class CloudStorageClient {
 
     private static GoogleJsonResponseException wrap(final GoogleJsonResponseException ex) throws IOException {
         GoogleException wrapped = new GoogleException(ex);
+        wrapped.initCause(ex);
         if (wrapped.getStatusCode() == HttpStatusCodes.STATUS_CODE_FORBIDDEN) {
             AccessDeniedException ade = new AccessDeniedException(wrapped.getMessage());
             ade.initCause(wrapped);
