@@ -46,52 +46,41 @@
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
-import org.knime.filehandling.core.connections.FSPath;
-import org.knime.filehandling.core.connections.uriexport.NoSettingsURIExporter;
-import org.knime.filehandling.core.connections.uriexport.URIExporter;
+import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
 import org.knime.filehandling.core.connections.uriexport.URIExporterID;
+import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporterMetaInfo;
+import org.knime.filehandling.core.connections.uriexport.noconfig.NoConfigURIExporterFactory;
 
 /**
- * {@link URIExporter} implementation using "gs" as scheme.
+ * {@link URIExporterFactory} implementation using "gs" as scheme.
  *
+ * @author Ayaz Ali Qureshi, KNIME GmbH, Berlin, Germany
  * @author Sascha Wolke, KNIME GmbH
  */
-final class GsURIExporter extends NoSettingsURIExporter {
+final class GsURIExporterFactory extends NoConfigURIExporterFactory {
+
+    static final URIExporterID EXPORTER_ID = new URIExporterID("google-cloudstorage-gs");
 
     private static final String SCHEME = "gs";
 
-    /**
-     * Unique identifier of this exporter.
-     */
-    public static final URIExporterID ID = new URIExporterID("google-cloudstorage-gs");
+    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("gs:// URLs",
+            "Generates gs:// URLs");
 
-    private static final GsURIExporter INSTANCE = new GsURIExporter();
-
-    private GsURIExporter() {
-    }
+    private static final GsURIExporterFactory INSTANCE = new GsURIExporterFactory();
 
     /**
-     * @return singleton instance of this exporter
+     * @return singleton instance of this exporter factory
      */
-    public static GsURIExporter getInstance() {
+    public static GsURIExporterFactory getInstance() {
         return INSTANCE;
     }
 
-    @Override
-    public String getLabel() {
-        return "gs:// URLs";
+    private GsURIExporterFactory() {
+        super(META_INFO, p -> {
+            final CloudStoragePath csPath = (CloudStoragePath) p.toAbsolutePath();
+            return new URI(SCHEME, csPath.getBucketName(), '/' + csPath.getBlobName(), null);
+        });
     }
 
-    @Override
-    public String getDescription() {
-        return "Exports gs:// URLs";
-    }
-
-    @Override
-    public URI toUri(final FSPath path) throws URISyntaxException {
-        final CloudStoragePath csPath = (CloudStoragePath) path.toAbsolutePath();
-        return new URI(SCHEME, csPath.getBucketName(), '/' + csPath.getBlobName(), null);
-    }
 }
