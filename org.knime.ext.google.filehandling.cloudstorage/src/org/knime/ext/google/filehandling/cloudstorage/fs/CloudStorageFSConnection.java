@@ -57,10 +57,10 @@ import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
-import org.knime.filehandling.core.connections.uriexport.URIExporter;
+import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
+import org.knime.filehandling.core.connections.uriexport.URIExporterFactoryMapBuilder;
 import org.knime.filehandling.core.connections.uriexport.URIExporterID;
 import org.knime.filehandling.core.connections.uriexport.URIExporterIDs;
-import org.knime.filehandling.core.connections.uriexport.URIExporterMapBuilder;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -71,9 +71,10 @@ import org.knime.google.api.data.GoogleApiConnection;
  */
 public class CloudStorageFSConnection implements FSConnection {
 
-    private static final Map<URIExporterID, URIExporter> URI_EXPORTERS = new URIExporterMapBuilder() //
-            .add(URIExporterIDs.DEFAULT, GsURIExporter.getInstance()) //
-            .add(URIExporterIDs.DEFAULT_HADOOP, GsURIExporter.getInstance()) //
+    private static final Map<URIExporterID, URIExporterFactory> URI_EXPORTER_FACTORIES = new URIExporterFactoryMapBuilder() //
+            .add(URIExporterIDs.DEFAULT, GsURIExporterFactory.getInstance()) //
+            .add(URIExporterIDs.DEFAULT_HADOOP, GsURIExporterFactory.getInstance()) //
+            .add(GsURIExporterFactory.EXPORTER_ID, GsURIExporterFactory.getInstance()) //
             .build();
 
     private static final long CACHE_TTL_MILLIS = 6000;
@@ -115,7 +116,8 @@ public class CloudStorageFSConnection implements FSConnection {
     }
 
     @Override
-    public Map<URIExporterID, URIExporter> getURIExporters() {
-        return URI_EXPORTERS;
+    public Map<URIExporterID, URIExporterFactory> getURIExporterFactories() {
+        return URI_EXPORTER_FACTORIES;
     }
+
 }
