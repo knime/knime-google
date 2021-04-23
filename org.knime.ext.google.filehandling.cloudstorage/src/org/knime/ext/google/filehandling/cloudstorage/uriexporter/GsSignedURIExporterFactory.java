@@ -45,6 +45,8 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.uriexporter;
 
+import java.time.Duration;
+
 import org.knime.cloud.core.filehandling.signedurl.SignedUrlConfig;
 import org.knime.cloud.core.filehandling.signedurl.SignedUrlPanel;
 import org.knime.filehandling.core.connections.uriexport.URIExporter;
@@ -89,7 +91,7 @@ public final class GsSignedURIExporterFactory extends BaseURIExporterFactory {
 
     @Override
     public final SignedUrlConfig initConfig() {
-        return new SignedUrlConfig();
+        return new SignedUrlConfig(Duration.ofDays(7));
     }
 
     @Override

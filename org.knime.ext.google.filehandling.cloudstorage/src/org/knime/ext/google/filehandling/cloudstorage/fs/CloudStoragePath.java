@@ -160,7 +160,7 @@ public class CloudStoragePath extends BlobStorePath {
             return new URL(signedUrl);
         } catch (Exception ex) {
             LOGGER.error(ex);
-            throw new URISyntaxException("Unable to generated Signed URI for path", ex.getCause().toString());
+            throw new URISyntaxException("Unable to generated Signed URI for path", ex.getMessage());
         }
     }
 }
