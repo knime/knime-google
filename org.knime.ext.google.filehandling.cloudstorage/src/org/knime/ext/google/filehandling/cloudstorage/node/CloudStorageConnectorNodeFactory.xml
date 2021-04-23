@@ -30,7 +30,7 @@
             
             <p><b>URI formats:</b> When you apply the <i>Path to URI</i> node to paths coming from this connector, you can create URIs with the following formats:
                 <ol>
-                    <li><b>Presigned https:// URLs</b> which contain credentials, that allow to access files for a certain amount of time
+                    <li><b>Signed https:// URLs</b> which contain credentials, that allow to access files for a certain amount of time
                     (see <a href="https://cloud.google.com/storage/docs/access-control/signed-urls">Signed URLs</a>).</li>
                     <li><b>gs:// URLs</b> which can be used to access Google Storage with tools like Google's <tt>gsutil</tt> or in Hadoop environments.</li>
                 </ol>
