@@ -66,8 +66,8 @@ public final class GsSignedURIExporterFactory extends BaseURIExporterFactory {
      */
     public static final URIExporterID EXPORTER_ID = new URIExporterID("google-cloudstorage-gs-signed");
 
-    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("Presigned https:// URL",
-            "Generates https:// URLs that allow to download files for a certain amount of time.");
+    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("Signed https:// URL",
+            "Generates https:// URLs that contain credentials, which allow to access files for a certain amount of time.");
 
     private static final GsSignedURIExporterFactory INSTANCE = new GsSignedURIExporterFactory(META_INFO);
 
