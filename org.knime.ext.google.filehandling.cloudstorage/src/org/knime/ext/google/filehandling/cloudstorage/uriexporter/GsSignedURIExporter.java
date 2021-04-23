@@ -43,44 +43,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.ext.google.filehandling.cloudstorage.fs;
+package org.knime.ext.google.filehandling.cloudstorage.uriexporter;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
-import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
-import org.knime.filehandling.core.connections.uriexport.URIExporterID;
-import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporterMetaInfo;
-import org.knime.filehandling.core.connections.uriexport.noconfig.NoConfigURIExporterFactory;
+import org.knime.cloud.core.filehandling.signedurl.SignedUrlConfig;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStoragePath;
+import org.knime.filehandling.core.connections.FSPath;
+import org.knime.filehandling.core.connections.uriexport.URIExporter;
+import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporter;
 
 /**
- * {@link URIExporterFactory} implementation using "gs" as scheme.
+ * {@link URIExporter} implementation using generating signed https:// urls to
+ * access data on Google Storage.
  *
  * @author Ayaz Ali Qureshi, KNIME GmbH, Berlin, Germany
- * @author Sascha Wolke, KNIME GmbH
  */
-final class GsURIExporterFactory extends NoConfigURIExporterFactory {
-
-    static final URIExporterID EXPORTER_ID = new URIExporterID("google-cloudstorage-gs");
-
-    private static final String SCHEME = "gs";
-
-    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("gs:// URLs",
-            "Generates gs:// URLs");
-
-    private static final GsURIExporterFactory INSTANCE = new GsURIExporterFactory();
+final class GsSignedURIExporter extends BaseURIExporter<SignedUrlConfig> {
 
     /**
-     * @return singleton instance of this exporter factory
+     * @param config
+     *            SignedUrlConfig object
      */
-    public static GsURIExporterFactory getInstance() {
-        return INSTANCE;
+    protected GsSignedURIExporter(final SignedUrlConfig config) {
+        super(config);
     }
 
-    private GsURIExporterFactory() {
-        super(META_INFO, p -> {
-            final CloudStoragePath csPath = (CloudStoragePath) p.toAbsolutePath();
-            return new URI(SCHEME, csPath.getBucketName(), '/' + csPath.getBlobName(), null);
-        });
+    @Override
+    public URI toUri(final FSPath path) throws URISyntaxException {
+        final CloudStoragePath csPath = (CloudStoragePath) path.toAbsolutePath();
+        return csPath.getPreSignedUrl(getConfig().getValidityDuration()).toURI();
     }
-
 }
