@@ -46,7 +46,7 @@
  * History
  *   Nov 19, 2019 (Sascha Wolke, KNIME GmbH): created
  */
-package org.knime.google.cloud.storage.filehandler;
+package org.knime.google.cloud.storage.signedurl;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -73,12 +73,14 @@ import com.google.api.client.util.SecurityUtils;
  * @see <a href="https://cloud.google.com/storage/docs/access-control/signing-urls-manually">Google docs</a>
  * @author Sascha Wolke, KNIME GmbH
  */
-public class GoogleCSUrlSignature {
+public final class GoogleCSUrlSignature {
 
     private static final long SEVEN_DAYS_SECONDS = 7*24*60*60;
     private static final char COMPONENT_SEPARATOR = '\n';
     private static final String GOOG4_RSA_SHA256 = "GOOG4-RSA-SHA256";
     private static final String SCOPE = "/auto/storage/goog4_request";
+
+    private GoogleCSUrlSignature() {}
 
     /**
      * Generate a signed public URL with expiration time.
@@ -90,7 +92,7 @@ public class GoogleCSUrlSignature {
      * @return signed URL
      * @throws Exception
      */
-    protected static String getSigningURL(final GoogleCredential creds, final long expirationSeconds, final String bucketName,
+    public static String getSigningURL(final GoogleCredential creds, final long expirationSeconds, final String bucketName,
         final String objectName) throws Exception {
 
         if (creds == null || StringUtils.isBlank(creds.getServiceAccountId()) || creds.getServiceAccountPrivateKey() == null) {

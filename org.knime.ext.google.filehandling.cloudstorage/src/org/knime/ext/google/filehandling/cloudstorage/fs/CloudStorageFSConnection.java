@@ -55,6 +55,8 @@ import java.util.Map;
 
 import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
+import org.knime.ext.google.filehandling.cloudstorage.uriexporter.GsSignedURIExporterFactory;
+import org.knime.ext.google.filehandling.cloudstorage.uriexporter.GsURIExporterFactory;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
 import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
@@ -75,6 +77,7 @@ public class CloudStorageFSConnection implements FSConnection {
             .add(URIExporterIDs.DEFAULT, GsURIExporterFactory.getInstance()) //
             .add(URIExporterIDs.DEFAULT_HADOOP, GsURIExporterFactory.getInstance()) //
             .add(GsURIExporterFactory.EXPORTER_ID, GsURIExporterFactory.getInstance()) //
+            .add(GsSignedURIExporterFactory.EXPORTER_ID, GsSignedURIExporterFactory.getInstance()) //
             .build();
 
     private static final long CACHE_TTL_MILLIS = 6000;

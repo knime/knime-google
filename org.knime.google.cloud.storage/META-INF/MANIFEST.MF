@@ -25,3 +25,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir
 Automatic-Module-Name: org.knime.google.cloud.storage
+Export-Package: org.knime.google.cloud.storage.signedurl

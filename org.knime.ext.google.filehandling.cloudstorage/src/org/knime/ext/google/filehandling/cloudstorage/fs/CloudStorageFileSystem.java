@@ -76,6 +76,8 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
 
     private final boolean m_normalizePaths;
 
+    private final GoogleApiConnection m_apiConnection;
+
     /**
      * Constructs {@link CloudStorageFileSystem} for a given URI.
      *
@@ -102,6 +104,7 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
                                 .getWorkingDirectory(), //
                 createFSLocationSpec());
 
+        m_apiConnection = apiConnection;
         m_client = new CloudStorageClient(apiConnection, settings);
         m_normalizePaths = settings.getNormalizePaths();
     }
@@ -145,5 +148,14 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
      */
     public boolean normalizePaths() {
         return m_normalizePaths;
+    }
+
+    /**
+     * Returns an instance of the google api connection
+     *
+     * @return GoogleApiConnection
+     */
+    public GoogleApiConnection getApiConnection() {
+        return m_apiConnection;
     }
 }

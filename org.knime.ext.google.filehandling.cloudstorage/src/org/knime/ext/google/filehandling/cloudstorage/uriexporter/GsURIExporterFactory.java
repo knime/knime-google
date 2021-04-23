@@ -43,77 +43,48 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.google.cloud.storage.filehandler;
+package org.knime.ext.google.filehandling.cloudstorage.uriexporter;
 
-import org.knime.base.filehandling.remote.files.Connection;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
-import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
+import java.net.URI;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.services.storage.Storage;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStoragePath;
+import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
+import org.knime.filehandling.core.connections.uriexport.URIExporterID;
+import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporterMetaInfo;
+import org.knime.filehandling.core.connections.uriexport.noconfig.NoConfigURIExporterFactory;
 
 /**
- * Google Cloud Storage connection.
+ * {@link URIExporterFactory} implementation using "gs" as scheme.
  *
+ * @author Ayaz Ali Qureshi, KNIME GmbH, Berlin, Germany
  * @author Sascha Wolke, KNIME GmbH
  */
-public class GoogleCSConnection extends Connection {
-
-    /** The application name, for which the credentials are stored */
-    public static final String APP_NAME = "KNIME-Google-Cloud-Storage-Connector";
-
-	private final GoogleCloudStorageConnectionInformation m_connectionInformation;
-
-	private Storage m_client;
-
-	/**
-	 * Default constructor.
-	 *
-	 * @param connectionInformation
-	 */
-	public GoogleCSConnection(final GoogleCloudStorageConnectionInformation connectionInformation) {
-		m_connectionInformation = connectionInformation;
-	}
-
-	@Override
-	public void open() throws Exception {
-		if (!isOpen()) {
-		    m_client = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                    m_connectionInformation.getGoogleApiConnection().getCredential()).setApplicationName(APP_NAME).build();
-		}
-	}
-
-	@Override
-	public boolean isOpen() {
-		return m_client != null;
-	}
-
-	/**
-	 * @return the {@link Storage} client for this connection
-	 */
-	public Storage getClient() {
-		return m_client;
-	}
-
-	@Override
-	public void close() throws Exception {
-	    m_client = null;
-	}
+public final class GsURIExporterFactory extends NoConfigURIExporterFactory {
 
     /**
-     * Generate a signed public URL with expiration time.
-     *
-     * @param expirationSeconds URL expiration time in seconds from now
-     * @param bucketName bucket name
-     * @param objectName object name
-     * @return signed URL
-     * @throws Exception
+     * ID of this exporter.
      */
-    protected String getSigningURL(final long expirationSeconds, final String bucketName, final String objectName) throws Exception {
-        final GoogleCredential creds =
-            (GoogleCredential)m_connectionInformation.getGoogleApiConnection().getCredential();
+    public static final URIExporterID EXPORTER_ID = new URIExporterID("google-cloudstorage-gs");
 
-        return GoogleCSUrlSignature.getSigningURL(creds, expirationSeconds, bucketName, objectName);
+    private static final String SCHEME = "gs";
+
+    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("gs:// URLs",
+            "Generates gs:// URLs");
+
+    private static final GsURIExporterFactory INSTANCE = new GsURIExporterFactory();
+
+    /**
+     * @return singleton instance of this exporter factory
+     */
+    public static GsURIExporterFactory getInstance() {
+        return INSTANCE;
     }
+
+    private GsURIExporterFactory() {
+        super(META_INFO, p -> {
+            final CloudStoragePath csPath = (CloudStoragePath) p.toAbsolutePath();
+            return new URI(SCHEME, csPath.getBucketName(), '/' + csPath.getBlobName(), null);
+        });
+    }
+
 }

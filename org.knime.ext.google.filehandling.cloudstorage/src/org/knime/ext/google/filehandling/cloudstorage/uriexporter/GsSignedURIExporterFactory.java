@@ -43,77 +43,58 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.google.cloud.storage.filehandler;
+package org.knime.ext.google.filehandling.cloudstorage.uriexporter;
 
-import org.knime.base.filehandling.remote.files.Connection;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
-import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
-
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.services.storage.Storage;
+import org.knime.cloud.core.filehandling.signedurl.SignedUrlConfig;
+import org.knime.cloud.core.filehandling.signedurl.SignedUrlPanel;
+import org.knime.filehandling.core.connections.uriexport.URIExporter;
+import org.knime.filehandling.core.connections.uriexport.URIExporterConfig;
+import org.knime.filehandling.core.connections.uriexport.URIExporterFactory;
+import org.knime.filehandling.core.connections.uriexport.URIExporterID;
+import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporterFactory;
+import org.knime.filehandling.core.connections.uriexport.base.BaseURIExporterMetaInfo;
 
 /**
- * Google Cloud Storage connection.
+ * {@link URIExporterFactory} implementation using "gs" as scheme.
  *
+ * @author Ayaz Ali Qureshi, KNIME GmbH, Berlin, Germany
  * @author Sascha Wolke, KNIME GmbH
  */
-public class GoogleCSConnection extends Connection {
+public final class GsSignedURIExporterFactory extends BaseURIExporterFactory {
+    /**
+     * Unique identifier of this exporter.
+     */
+    public static final URIExporterID EXPORTER_ID = new URIExporterID("google-cloudstorage-gs-signed");
 
-    /** The application name, for which the credentials are stored */
-    public static final String APP_NAME = "KNIME-Google-Cloud-Storage-Connector";
+    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("Presigned https:// URL",
+            "Generates https:// URLs that allow to download files for a certain amount of time.");
 
-	private final GoogleCloudStorageConnectionInformation m_connectionInformation;
+    private static final GsSignedURIExporterFactory INSTANCE = new GsSignedURIExporterFactory(META_INFO);
 
-	private Storage m_client;
-
-	/**
-	 * Default constructor.
-	 *
-	 * @param connectionInformation
-	 */
-	public GoogleCSConnection(final GoogleCloudStorageConnectionInformation connectionInformation) {
-		m_connectionInformation = connectionInformation;
-	}
-
-	@Override
-	public void open() throws Exception {
-		if (!isOpen()) {
-		    m_client = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                    m_connectionInformation.getGoogleApiConnection().getCredential()).setApplicationName(APP_NAME).build();
-		}
-	}
-
-	@Override
-	public boolean isOpen() {
-		return m_client != null;
-	}
-
-	/**
-	 * @return the {@link Storage} client for this connection
-	 */
-	public Storage getClient() {
-		return m_client;
-	}
-
-	@Override
-	public void close() throws Exception {
-	    m_client = null;
-	}
+    private GsSignedURIExporterFactory(final BaseURIExporterMetaInfo metaInfo) {
+        super(metaInfo);
+    }
 
     /**
-     * Generate a signed public URL with expiration time.
-     *
-     * @param expirationSeconds URL expiration time in seconds from now
-     * @param bucketName bucket name
-     * @param objectName object name
-     * @return signed URL
-     * @throws Exception
+     * @return singleton instance of this exporter
      */
-    protected String getSigningURL(final long expirationSeconds, final String bucketName, final String objectName) throws Exception {
-        final GoogleCredential creds =
-            (GoogleCredential)m_connectionInformation.getGoogleApiConnection().getCredential();
-
-        return GoogleCSUrlSignature.getSigningURL(creds, expirationSeconds, bucketName, objectName);
+    public static GsSignedURIExporterFactory getInstance() {
+        return INSTANCE;
     }
+
+    @Override
+    public final SignedUrlPanel createPanel(final URIExporterConfig config) {
+        return new SignedUrlPanel((SignedUrlConfig) config);
+    }
+
+    @Override
+    public final SignedUrlConfig initConfig() {
+        return new SignedUrlConfig();
+    }
+
+    @Override
+    public final URIExporter createExporter(final URIExporterConfig settings) {
+        return new GsSignedURIExporter((SignedUrlConfig) settings);
+    }
+
 }

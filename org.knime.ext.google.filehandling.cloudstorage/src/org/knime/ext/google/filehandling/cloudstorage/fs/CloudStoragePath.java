@@ -48,9 +48,17 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
+import java.time.Duration;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.filehandling.core.connections.base.BlobStorePath;
+import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 
 /**
  * {@link Path} implementation for {@link CloudStorageFileSystem}.
@@ -58,6 +66,8 @@ import org.knime.filehandling.core.connections.base.BlobStorePath;
  * @author Alexander Bondaletov
  */
 public class CloudStoragePath extends BlobStorePath {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CloudStoragePath.class);
 
     /**
      * Creates path from the given path string.
@@ -126,5 +136,31 @@ public class CloudStoragePath extends BlobStorePath {
     @Override
     public CloudStoragePath toDirectoryPath() {
         return (CloudStoragePath) super.toDirectoryPath();
+    }
+
+
+    /**
+     * Generate a pre-signed url for a S3 file using the incoming duration parameter
+     *
+     * @param expirationDuration
+     *            A Duration object which is used to set the expiration of URL
+     *
+     * @return A Presigned URL
+     *
+     * @throws URISyntaxException
+     *             Throws exception which encompasses multiple inner exceptions
+     */
+    public URL getPreSignedUrl(final Duration expirationDuration) throws URISyntaxException {
+        final GoogleApiConnection googleApiConnection = ((CloudStorageFileSystem) m_fileSystem).getApiConnection();
+
+        String signedUrl;
+        try {
+            signedUrl = GoogleCSUrlSignature.getSigningURL((GoogleCredential) googleApiConnection.getCredential(),
+                    expirationDuration.getSeconds(), getBucketName(), getBlobName());
+            return new URL(signedUrl);
+        } catch (Exception ex) {
+            LOGGER.error(ex);
+            throw new URISyntaxException("Unable to generated Signed URI for path", ex.getCause().toString());
+        }
     }
 }
