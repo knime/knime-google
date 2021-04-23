@@ -68,8 +68,8 @@ public final class GsURIExporterFactory extends NoConfigURIExporterFactory {
 
     private static final String SCHEME = "gs";
 
-    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("gs:// URLs",
-            "Generates gs:// URLs");
+    private static final BaseURIExporterMetaInfo META_INFO = new BaseURIExporterMetaInfo("gs:// URL",
+            "Generates gs://&lt;bucket&gt;/&lt;object&gt; URLs.");
 
     private static final GsURIExporterFactory INSTANCE = new GsURIExporterFactory();
 
