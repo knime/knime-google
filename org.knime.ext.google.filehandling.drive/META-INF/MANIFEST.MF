@@ -7,10 +7,10 @@ Bundle-Vendor:
 Require-Bundle: org.knime.core;bundle-version="[4.3.0,5.0.0]",
  org.knime.filehandling.core;bundle-version="[4.3.0,5.0.0)",
  org.knime.workbench.core;bundle-version="4.3.0",
- com.google.apis.google-api-services-drive;bundle-version="[0.0.0.v3-rev162-1_23_0,1.0.0)",
- com.google.http-client.google-http-client;bundle-version="1.23.0",
- com.google.api-client.google-api-client;bundle-version="1.23.1",
- com.google.oauth-client;bundle-version="1.23.0",
+ com.google.apis.google-api-services-drive;bundle-version="[1.23.0,2.0.0)",
+ com.google.http-client.google-http-client;bundle-version="[1.23.0,2.0.0)",
+ com.google.api-client.google-api-client;bundle-version="[1.23.1,2.0.0)",
+ com.google.oauth-client;bundle-version="[1.23.0,2.0.0)",
  org.knime.google.api;bundle-version="[4.3.0,5.0.0)"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
