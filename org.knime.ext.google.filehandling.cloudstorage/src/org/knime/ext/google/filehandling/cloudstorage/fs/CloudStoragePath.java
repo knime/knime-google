@@ -48,8 +48,8 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -145,22 +145,22 @@ public class CloudStoragePath extends BlobStorePath {
      * @param expirationDuration
      *            A Duration object which is used to set the expiration of URL
      *
-     * @return A Presigned URL
+     * @return A pre-signed URL in shape of a URI instance.
      *
      * @throws URISyntaxException
      *             Throws exception which encompasses multiple inner exceptions
      */
-    public URL getPreSignedUrl(final Duration expirationDuration) throws URISyntaxException {
+    public URI getPreSignedUrl(final Duration expirationDuration) throws URISyntaxException {
         final GoogleApiConnection googleApiConnection = ((CloudStorageFileSystem) m_fileSystem).getApiConnection();
 
-        String signedUrl;
+        final String signedUrl = GoogleCSUrlSignature.getSigningURL((GoogleCredential) googleApiConnection.getCredential(),
+                expirationDuration.getSeconds(), getBucketName(), getBlobName());
         try {
-            signedUrl = GoogleCSUrlSignature.getSigningURL((GoogleCredential) googleApiConnection.getCredential(),
-                    expirationDuration.getSeconds(), getBucketName(), getBlobName());
-            return new URL(signedUrl);
         } catch (Exception ex) {
             LOGGER.error(ex);
             throw new URISyntaxException("Unable to generated Signed URI for path", ex.getMessage());
         }
+
+        return URI.create(signedUrl);
     }
 }

@@ -9,11 +9,4 @@
             factory-class="org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorNodeFactory"
             id="org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorNodeFactory"/>
    </extension>
-   
-   <extension
-         point="org.knime.filehandling.FSTestInitializerProvider">
-         <FSTestInitializerProvider
-               ProviderClass="org.knime.ext.google.filehandling.cloudstorage.testing.CloudStorageTestInitializerProvider">
-         </FSTestInitializerProvider>
-   </extension>
 </plugin>

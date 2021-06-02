@@ -49,6 +49,7 @@
 package org.knime.google.cloud.storage.signedurl;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -62,7 +63,6 @@ import java.util.TimeZone;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.knime.core.node.InvalidSettingsException;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.util.SecurityUtils;
@@ -74,6 +74,8 @@ import com.google.api.client.util.SecurityUtils;
  * @author Sascha Wolke, KNIME GmbH
  */
 public final class GoogleCSUrlSignature {
+
+    private static final String DELIMITER = "/";
 
     private static final long SEVEN_DAYS_SECONDS = 7*24*60*60;
     private static final char COMPONENT_SEPARATOR = '\n';
@@ -92,15 +94,15 @@ public final class GoogleCSUrlSignature {
      * @return signed URL
      * @throws Exception
      */
-    public static String getSigningURL(final GoogleCredential creds, final long expirationSeconds, final String bucketName,
-        final String objectName) throws Exception {
+    public static URI getSigningURL(final GoogleCredential creds, final long expirationSeconds, final String bucketName,
+        final String objectName) {
 
         if (creds == null || StringUtils.isBlank(creds.getServiceAccountId()) || creds.getServiceAccountPrivateKey() == null) {
-            throw new InvalidSettingsException("API credentials with service account and priuvate key required.");
+            throw new IllegalArgumentException("API credentials with service account and priuvate key required.");
         }
 
         if (expirationSeconds > SEVEN_DAYS_SECONDS) {
-            throw new InvalidSettingsException("Expiration Time can't be longer than 604800 seconds (7 days).");
+            throw new IllegalArgumentException("Expiration Time can't be longer than 604800 seconds (7 days).");
         }
 
         final Date now = new Date();
@@ -113,20 +115,32 @@ public final class GoogleCSUrlSignature {
 
         final String serviceEmail = creds.getServiceAccountId();
         final String credentialScope = URLEncoder.encode(serviceEmail + "/" + yearMonthDay + SCOPE, "UTF-8");
-        final PrivateKey privateKey = creds.getServiceAccountPrivateKey();
         final String canonicalUri = "/" + bucketName + "/" + objectName;
         final String canonicalQuery = constructV4CanonicalQueryString(credentialScope, exactDate, expirationSeconds);
         final String canonicalReqHash = constructV4CanonicalRequestHash(canonicalUri, canonicalQuery);
         final String unsigned = constructV4UnsignedPayload(exactDate, yearMonthDay, canonicalReqHash);
+
+
+        final PrivateKey privateKey = creds.getServiceAccountPrivateKey();
         final String urlSignature = signString(privateKey, unsigned);
 
-        return new StringBuilder()
-            .append("https://storage.googleapis.com")
-            .append(canonicalUri)
-            .append("?")
-            .append(canonicalQuery)
-            .append("&x-goog-signature=").append(urlSignature)
-            .toString();
+
+        final String uriPath = DELIMITER + bucketName + DELIMITER + objectName;
+        final String uriQuery = createQuery();
+
+        return new URI("https",
+            "storage.googleapis.com", //
+            uriPath, //
+            null,
+            null);
+
+//        return new StringBuilder()
+//            .append("https://storage.googleapis.com")
+//            .append(canonicalUri)
+//            .append("?")
+//            .append(canonicalQuery)
+//            .append("&x-goog-signature=").append(urlSignature)
+//            .toString();
     }
 
     private static String constructV4UnsignedPayload(final String exactDate, final String yearMonthDay,
