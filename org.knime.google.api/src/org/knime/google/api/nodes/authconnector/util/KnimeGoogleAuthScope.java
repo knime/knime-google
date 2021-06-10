@@ -104,4 +104,10 @@ public interface KnimeGoogleAuthScope {
         return true;
     }
 
+    /**
+     * @return Whether this scope requires providing custom OAuth Client ID
+     */
+    public default boolean isCustomClientIdRequired() {
+        return false;
+    }
 }

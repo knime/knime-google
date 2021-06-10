@@ -106,6 +106,8 @@ final class GoogleAuthNodeModel extends NodeModel {
         if (!m_settings.isAuthenticated()) {
             throw new InvalidSettingsException("Please authenticate using the node dialog.");
         }
+
+        m_settings.validate();
         return createSpec(false).map(c -> new PortObjectSpec[]{c}).orElse(null);
     }
 
@@ -148,7 +150,7 @@ final class GoogleAuthNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.loadValidatedSettingsFrom(settings);
+        m_settings.loadSettingsFrom(settings);
     }
 
     /**

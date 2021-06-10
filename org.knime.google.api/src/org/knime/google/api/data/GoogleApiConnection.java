@@ -355,14 +355,16 @@ public final class GoogleApiConnection {
 
     private static final String CFG_KNIME_SCOPES = "knimeScopes";
 
+    private static final String CFG_CLIENT_ID_FILE = "clientIdFile";
+
     /**
      * Gets the KNIME OAuth client application information.
      *
      * @return an {@link OAuthClient} object.
      * @throws IOException if an I/O error occurs.
      */
-    public static OAuthClient getOAuthClient() throws IOException {
-        return GoogleAuthentication.getOAuthClient();
+    public static OAuthClient getDefaultOAuthClient() throws IOException {
+        return GoogleAuthentication.getDefaultOAuthClient();
     }
 
     private final Credential m_credential;
@@ -382,6 +384,10 @@ public final class GoogleApiConnection {
     private final List<KnimeGoogleAuthScope> m_knimeGoogleScopes;
 
     private final Optional<OAuthCredentials> m_oAuthCredentials;
+
+    private final String m_clientIdFile;
+
+    private OAuthClient m_oAuthClient;
 
     /**
      * Creates a new {@link GoogleApiConnection}.
@@ -408,6 +414,7 @@ public final class GoogleApiConnection {
         m_credentialLocation = null;
         m_storedCredential = null;
         m_knimeGoogleScopes = null;
+        m_clientIdFile = null;
     }
 
     /**
@@ -416,10 +423,12 @@ public final class GoogleApiConnection {
      * @param locationType The credential location type
      * @param credentialLocation
      * @param knimeGoogleScopes The scopes for the credentials.
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
      * @throws IOException If the credentials cannot be read from the credentiallocationType
      */
     public GoogleApiConnection(final GoogleAuthLocationType locationType, final String credentialLocation,
-        final List<KnimeGoogleAuthScope> knimeGoogleScopes) throws IOException {
+        final List<KnimeGoogleAuthScope> knimeGoogleScopes, final String clientIdFile) throws IOException {
         m_scopes =
             KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeGoogleScopes).toArray(new String[knimeGoogleScopes.size()]);
         m_credentialLocationType = locationType;
@@ -427,8 +436,9 @@ public final class GoogleApiConnection {
         m_storedCredential = m_credentialLocationType == GoogleAuthLocationType.NODE
             ? GoogleAuthentication.getByteStringFromFile(credentialLocation) : null;
         m_knimeGoogleScopes = knimeGoogleScopes;
+        m_clientIdFile = clientIdFile;
         m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
-            m_knimeGoogleScopes);
+            m_knimeGoogleScopes, m_clientIdFile);
         m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
             .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
         m_keyFileLocation = null;
@@ -441,13 +451,15 @@ public final class GoogleApiConnection {
      * @param locationType The credential location type
      * @param serviceAccountEmail The service account email if appropriate
      * @param keyFileLocation The key file location if appropriate
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
      * @param scopes The scopes used for the credentials
      * @throws GeneralSecurityException If there was a problem with the key file
      * @throws IOException If the key file or the credential location is not accessible
      */
     private GoogleApiConnection(final GoogleAuthLocationType locationType, final String credentialLocation,
         final String storedCredential, final String serviceAccountEmail, final String keyFileLocation,
-        final List<KnimeGoogleAuthScope> knimeAuthScopes, final String... scopes)
+        final List<KnimeGoogleAuthScope> knimeAuthScopes, final String clientIdFile, final String... scopes)
         throws GeneralSecurityException, IOException {
         m_serviceAccountEmail = serviceAccountEmail;
         m_keyFileLocation = keyFileLocation;
@@ -455,6 +467,7 @@ public final class GoogleApiConnection {
         m_credentialLocationType = locationType;
         m_storedCredential = storedCredential;
         m_knimeGoogleScopes = knimeAuthScopes;
+        m_clientIdFile = clientIdFile;
         if (locationType == null) {
             final GoogleCredential credential =
                 new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
@@ -473,7 +486,7 @@ public final class GoogleApiConnection {
                 m_credentialLocation = credentialLocation;
             }
             m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
-                m_knimeGoogleScopes);
+                m_knimeGoogleScopes, m_clientIdFile);
             m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
                 .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
         }
@@ -496,7 +509,7 @@ public final class GoogleApiConnection {
             model.getString(CFG_SERVICE_ACCOUNT_EMAIL), model.getString(CFG_KEY_FILE_LOCATION),
             model.containsKey(CFG_KNIME_SCOPES) ? KnimeGoogleAuthScopeRegistry.getInstance()
                 .getScopesFromString(Arrays.asList(model.getStringArray(CFG_KNIME_SCOPES))) : null,
-            model.getStringArray(CFG_SCOPES));
+            model.getString(CFG_CLIENT_ID_FILE, null), model.getStringArray(CFG_SCOPES));
     }
 
     /**
@@ -531,6 +544,21 @@ public final class GoogleApiConnection {
     }
 
     /**
+     * @return the {@link OAuthClient} corresponding to the current credentials.
+     * @throws IOException
+     */
+    public OAuthClient getOauthClient() throws IOException {
+        if (m_oAuthClient == null) {
+            if (m_clientIdFile == null) {
+                m_oAuthClient = getDefaultOAuthClient();
+            } else {
+                m_oAuthClient = GoogleAuthentication.createOAuthClient(m_clientIdFile);
+            }
+        }
+        return m_oAuthClient;
+    }
+
+    /**
      * @param model The model to save the current configuration in
      */
     public void save(final ModelContentWO model) {
@@ -542,6 +570,7 @@ public final class GoogleApiConnection {
         }
         model.addString(CFG_CREDENTIAL_LOCATION, m_credentialLocation);
         model.addString(CFG_STORED_CREDENTIAL, m_storedCredential);
+        model.addString(CFG_CLIENT_ID_FILE, m_clientIdFile);
         if (m_knimeGoogleScopes != null) {
             model.addStringArray(CFG_KNIME_SCOPES,
                 KnimeGoogleAuthScopeRegistry.getKnimeGoogleScopeIds(m_knimeGoogleScopes));
@@ -568,6 +597,7 @@ public final class GoogleApiConnection {
         eb.append(m_credentialLocation, con.m_credentialLocation);
         eb.append(m_storedCredential, con.m_storedCredential);
         eb.append(m_knimeGoogleScopes, con.m_knimeGoogleScopes);
+        eb.append(m_clientIdFile, con.m_clientIdFile);
         return eb.isEquals();
     }
 
@@ -584,6 +614,7 @@ public final class GoogleApiConnection {
         hcb.append(m_credentialLocation);
         hcb.append(m_storedCredential);
         hcb.append(m_knimeGoogleScopes);
+        hcb.append(m_clientIdFile);
         return hcb.hashCode();
     }
 
@@ -614,6 +645,13 @@ public final class GoogleApiConnection {
         for (String scope : m_scopes) {
             sb.append(scope + "\n");
         }
+
+        if (m_clientIdFile != null) {
+            sb.append("Client ID file: ");
+            sb.append(m_clientIdFile);
+            sb.append("\n");
+        }
+
         return sb.toString();
     }
 

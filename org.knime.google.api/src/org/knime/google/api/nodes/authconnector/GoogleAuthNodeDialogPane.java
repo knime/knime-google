@@ -66,6 +66,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -90,6 +91,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.SwingWorkerWithContext;
@@ -121,6 +123,8 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
 
     private static final Insets PANEL_INSET = new Insets(10, LEFT_INSET, 10, LEFT_INSET);
 
+    private static final String ADVANCED_TAB_TITLE = "Advanced";
+
     private JList<CheckboxListItem> m_scopeList;
 
     private JCheckBox m_selectAllScopes;
@@ -147,15 +151,23 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
 
     private Boolean m_scopeChanged = false;
 
-    private DialogComponentFileChooser m_credentialFileLocation =
+    private final DialogComponentFileChooser m_credentialFileLocation =
         new DialogComponentFileChooser(m_settings.getCredentialFileLocationModel(),
             GoogleAuthNodeDialogPane.class.getCanonicalName(), JFileChooser.OPEN_DIALOG, true, "");
+
+    private final DialogComponentBoolean m_useCustomClientId =
+        new DialogComponentBoolean(m_settings.getUseCustomClientIdModel(), "Use custom OAuth Client ID");
+
+    private final DialogComponentFileChooser m_customClientIdFile =
+        new DialogComponentFileChooser(m_settings.getCustomClientIdFileModel(), "google-oauth-clientid", ".json");
+
 
     /**
      * Constructor creating the dialogs content.
      */
     GoogleAuthNodeDialogPane() {
         addTab("Authentication", getAuthPanel());
+        addTab(ADVANCED_TAB_TITLE, createAdvancedTab());
     }
 
     private JPanel getAuthPanel() {
@@ -207,8 +219,9 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                         clearCredentials();
                         m_scopeChanged = false;
                     }
+                    m_settings.validate();
                     Credential credential = GoogleAuthentication.getCredential(m_settings.getCredentialLocationType(),
-                        m_settings.getCredentialLocation(), m_settings.getRelevantKnimeAuthScopes());
+                        m_settings.getCredentialLocation(), m_settings.getRelevantKnimeAuthScopes(), m_settings.getClientIdFile());
                     m_settings.setAccessTokenHash(credential.getAccessToken().hashCode());
                     return credential;
                 }
@@ -453,6 +466,27 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         return panel;
     }
 
+    private JComponent createAdvancedTab() {
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = getDefaultGBC();
+        c.weighty = 0;
+        c.fill = GridBagConstraints.NONE;
+
+        panel.add(m_useCustomClientId.getComponentPanel(), c);
+
+        c.gridy++;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(m_customClientIdFile.getComponentPanel(), c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.gridy++;
+        panel.add(Box.createVerticalGlue(), c);
+
+        return panel;
+    }
+
     private static JPanel getBasePanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         return panel;
@@ -553,6 +587,8 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                 item.setSelected(true);
             }
         }
+
+        m_customClientIdFile.setEnabled(m_settings.getUseCustomClientIdModel().getBooleanValue());
     }
 
     private void setAuthenticationStatus() {
@@ -578,7 +614,11 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        m_settings.loadSettingsFrom(settings, specs);
+        try {
+            m_settings.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) { // NOSONAR okay
+        }
+
         // Authentication status is unknown when opening the dialog.
         m_authenticationState.setText("Unknown");
         updateDialog();

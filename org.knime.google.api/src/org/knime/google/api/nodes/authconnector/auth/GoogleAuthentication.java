@@ -49,6 +49,7 @@
 package org.knime.google.api.nodes.authconnector.auth;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -103,18 +104,31 @@ public class GoogleAuthentication {
      * @return an {@link OAuthClient} object.
      * @throws IOException if an I/O error occurs.
      */
-    public static OAuthClient getOAuthClient() throws IOException {
+    public static OAuthClient getDefaultOAuthClient() throws IOException {
         OAuthClient client = m_oAuthClient;
         if (client == null) {
             synchronized (GoogleAuthentication.class) {
                 client = m_oAuthClient;
                 if (client == null) {
-                    client = new OAuthClient(loadClientSecrets().getDetails());
+                    client = new OAuthClient(loadDefaultClientSecrets().getDetails());
                     m_oAuthClient = client;
                 }
             }
         }
         return client;
+    }
+
+    /**
+     * Creates {@link OAuthClient} instance from the given Client ID file.
+     *
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
+     * @return The {@link OAuthClient} instance.
+     * @throws IOException
+     */
+    public static OAuthClient createOAuthClient(final String clientIdFile) throws IOException {
+        return new OAuthClient(loadClientSecrets(clientIdFile).getDetails());
+
     }
 
     /**
@@ -124,13 +138,15 @@ public class GoogleAuthentication {
      * @param type The {@link GoogleAuthLocationType} used to store the credentials
      * @param credentialPath The path to the credentials
      * @param scopes The scopes which should be asked for authorization
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
      * @return The authenticated credentials
      * @throws IOException
      */
     public static Credential getCredential(final GoogleAuthLocationType type, final String credentialPath,
-        final List<KnimeGoogleAuthScope> scopes) throws IOException {
+        final List<KnimeGoogleAuthScope> scopes, final String clientIdFile) throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes);
+        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
         Credential credential = flow.loadCredential(DEFAULT_KNIME_USER);
         if (credential == null) {
             credential =
@@ -145,13 +161,15 @@ public class GoogleAuthentication {
      * @param type The {@link GoogleAuthLocationType}
      * @param credentialPath The credentials path
      * @param scopes The scopes that should be used with the credentials
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
      * @return authorized credentials if they are available
      * @throws IOException
      */
     public static Credential getNoAuthCredential(final GoogleAuthLocationType type, final String credentialPath,
-        final List<KnimeGoogleAuthScope> scopes) throws IOException {
+        final List<KnimeGoogleAuthScope> scopes, final String clientIdFile) throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes);
+        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
         Credential credential = flow.loadCredential(DEFAULT_KNIME_USER);
         return credential;
     }
@@ -192,13 +210,15 @@ public class GoogleAuthentication {
      *
      * @param credentialDataStoreFactory The {@link DataStoreFactory} that should be used
      * @param scopes The scopes for which the flow should request authorization
+     * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
+     *            secret is used.
      * @return Returns the {@link GoogleAnalyticsConnectorFactory} for the given {@link DataStoreFactory} and scopes
      * @throws IOException If there is a problem accessing the {@link DataStoreFactory}
      */
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(
-        final DataStoreFactory credentialDataStoreFactory, final List<KnimeGoogleAuthScope> knimeScopes)
+        final DataStoreFactory credentialDataStoreFactory, final List<KnimeGoogleAuthScope> knimeScopes, final String clientIdFile)
         throws IOException {
-        final GoogleClientSecrets clientSecrets = loadClientSecrets();
+        final GoogleClientSecrets clientSecrets = loadClientSecrets(clientIdFile);
         KnimeGoogleAuthScopeRegistry.getInstance();
         final List<String> scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeScopes);
         return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, scopes)
@@ -256,7 +276,17 @@ public class GoogleAuthentication {
             .encodeToString(Files.readAllBytes(new File(tempfolder, StoredCredential.DEFAULT_DATA_STORE_ID).toPath()));
     }
 
-    private static GoogleClientSecrets loadClientSecrets() throws IOException {
+    private static GoogleClientSecrets loadClientSecrets(final String clientIdFile) throws IOException {
+        if (clientIdFile == null) {
+            return loadDefaultClientSecrets();
+        }
+
+        try (FileReader r = new FileReader(new File(clientIdFile))) {
+            return GoogleClientSecrets.load(JSON_FACTORY, r);
+        }
+    }
+
+    private static GoogleClientSecrets loadDefaultClientSecrets() throws IOException {
         try (final InputStream in = GoogleAuthentication.class.getResourceAsStream(CLIENT_SECRET)) {
             return GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
         }
