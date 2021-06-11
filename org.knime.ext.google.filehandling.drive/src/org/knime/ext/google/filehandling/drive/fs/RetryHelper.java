@@ -60,7 +60,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public final class RetryHelper {
+final class RetryHelper {
 
     private static final int DEFAULT_MAX_RETRY_COUNT = 8;
 

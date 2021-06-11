@@ -111,9 +111,9 @@ public class FileMetadata {
         m_id = id;
         m_type = type;
         m_driveId = null;
-        m_createdTime = null;
-        m_lastModifiedTime = null;
-        m_lastAccessTime = null;
+        m_createdTime = FileTime.fromMillis(0);
+        m_lastModifiedTime = FileTime.fromMillis(0);
+        m_lastAccessTime = FileTime.fromMillis(0);
         m_size = 0l;
     }
 

@@ -48,34 +48,29 @@
  */
 package org.knime.ext.google.filehandling.drive.node;
 
+import java.time.Duration;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.google.api.data.GoogleApiConnection;
 
 /**
- * Settings for {@link GoogleDriveConnectionNodeModel}.
+ * Settings for the Google Drive Connector.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionSettingsModel {
+class GoogleDriveConnectionSettingsModel {
 
     private static final String KEY_WORKING_DIRECTORY = "workingDirectory";
 
     private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
 
     private static final String KEY_READ_TIMEOUT = "readTimeout";
-
-    /**
-     * Default value for connection timeout in seconds.
-     */
-    public static final int DEFAULT_CONNECTION_TIMEOUT_SECONDS = 30;
-    /**
-     * Default value for read timeout in seconds.
-     */
-    public static final int DEFAULT_READ_TIMEOUT_SECONDS = 30;
 
     private final SettingsModelString m_workingDirectory;
 
@@ -88,9 +83,9 @@ public class GoogleDriveConnectionSettingsModel {
      */
     public GoogleDriveConnectionSettingsModel() {
         m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT,
-                DEFAULT_CONNECTION_TIMEOUT_SECONDS, 0, Integer.MAX_VALUE);
+                GoogleDriveFSConnectionConfig.DEFAULT_CONNECTION_TIMEOUT_SECONDS, 0, Integer.MAX_VALUE);
 
-        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, DEFAULT_READ_TIMEOUT_SECONDS, 0,
+        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, GoogleDriveFSConnectionConfig.DEFAULT_READ_TIMEOUT_SECONDS, 0,
                 Integer.MAX_VALUE);
 
         m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, GoogleDriveFileSystem.PATH_SEPARATOR);
@@ -183,6 +178,20 @@ public class GoogleDriveConnectionSettingsModel {
      * @throws InvalidSettingsException
      */
     public void validate() throws InvalidSettingsException {
-        GoogleDriveConnectionNodeModel.createConfiguration(this).validate();
+        if (m_workingDirectory.getStringValue() == null || m_workingDirectory.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Working dicrectory should not be empty");
+        }
+    }
+
+    /**
+     *
+     * @param con
+     * @return The FSConnectionConfig for Google Drive
+     */
+    public GoogleDriveFSConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
+        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(getWorkingDirectory(), con);
+        config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
+        config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
+        return config;
     }
 }

@@ -76,10 +76,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.knime.ext.google.filehandling.drive.fs.FileMetadata.FileType;
-import org.knime.filehandling.core.connections.FSFiles;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
-import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.File;
@@ -108,14 +106,11 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     private final Map<Path, GoogleDriveFileAttributes> m_drives = new HashMap<>();
 
     /**
-     * @param connection
-     *            Google API connection.
      * @param config
      *            connection configuration.
      */
-    public GoogleDriveFileSystemProvider(final GoogleApiConnection connection,
-            final GoogleDriveConnectionConfiguration config) {
-        this(new GoogleDriveHelper(connection, config));
+    public GoogleDriveFileSystemProvider(final GoogleDriveFSConnectionConfig config) {
+        this(new GoogleDriveHelper(config));
     }
 
     private synchronized GoogleDriveFileAttributes getDriveAttrs(final GoogleDrivePath drivePath) throws IOException {
@@ -207,9 +202,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             final GoogleDriveFileAttributes sourceAttrs) throws IOException {
         if (sourceAttrs.isRegularFile()) {
             throw new IOException(String.format("Cannot replace drive %s with a file", target.toString()));
-        } else if (FSFiles.isNonEmptyDirectory(source)) {
-            throw new IOException(
-                    String.format("Cannot replace drive %s with non-empty directory", target.toString()));
+        } else if (isNonEmptyDirectory(source)) {
+            throw new IOException(String.format("Cannot replace drive %s with non-empty directory", target.toString()));
         } else {
             // source is an empty directory and the target drive exists already (and is
             // empty)
@@ -412,7 +406,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      *            child path.
      * @return difference between parent path and child path as a path segments.
      */
-    private static List<String> getRemainingPathSegments(final GoogleDrivePath pathAncestor, final GoogleDrivePath path) {
+    private static List<String> getRemainingPathSegments(final GoogleDrivePath pathAncestor,
+            final GoogleDrivePath path) {
         List<String> remaining = new LinkedList<>();
         GoogleDrivePath current = path;
 

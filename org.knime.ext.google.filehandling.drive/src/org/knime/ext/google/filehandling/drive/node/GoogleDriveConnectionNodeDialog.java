@@ -80,7 +80,7 @@ import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
+final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
     private static final String WORKING_DIR_HISTORY_ID = "googleDrive.workingDir";
 
     private final GoogleDriveConnectionSettingsModel m_settings;

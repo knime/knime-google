@@ -53,11 +53,12 @@ import java.security.GeneralSecurityException;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveConnectionConfiguration;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvider;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveHelper;
 import org.knime.filehandling.core.connections.FSLocationSpec;
+import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -76,20 +77,18 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
 
         final GoogleApiConnection apiConnection;
         try {
-            apiConnection = new GoogleApiConnection(configuration.get("email"), configuration.get("keyFilePath"),
+            apiConnection = new GoogleApiConnection(configuration.get("email"), //
+                    configuration.get("keyFilePath"), //
                     GoogleDriveHelper.DRIVE_AUTH_SCOPE);
         } catch (GeneralSecurityException e) {
             throw ExceptionUtil.wrapAsIOException(e);
         }
 
-        final String workingDir = generateRandomizedWorkingDir(configuration.get(
-                "workingDirPrefix"),
-                "/");
+        final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"), "/");
 
-        GoogleDriveConnectionConfiguration config = new GoogleDriveConnectionConfiguration();
-        config.setWorkingDirectory(workingDir);
+        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(workingDir, apiConnection);
 
-        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(apiConnection, config));
+        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(config));
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {
@@ -99,13 +98,13 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
     }
 
     @Override
-    public String getFSType() {
-        return GoogleDriveFileSystem.FS_TYPE;
+    public FSType getFSType() {
+        return GoogleDriveFSDescriptorProvider.FS_TYPE;
     }
 
     @Override
     public FSLocationSpec createFSLocationSpec(final Map<String, String> configuration) {
         validateConfiguration(configuration);
-        return GoogleDriveFileSystem.createFSLocationSpec();
+        return GoogleDriveFSDescriptorProvider.FS_LOCATION_SPEC;
     }
 }

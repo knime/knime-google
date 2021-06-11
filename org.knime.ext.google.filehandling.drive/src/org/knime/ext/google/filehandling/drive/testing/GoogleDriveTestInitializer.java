@@ -74,7 +74,7 @@ import com.google.api.services.drive.model.File;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleDrivePath, GoogleDriveFileSystem> {
+class GoogleDriveTestInitializer extends DefaultFSTestInitializer<GoogleDrivePath, GoogleDriveFileSystem> {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleDriveTestInitializer.class);
 
     private boolean m_isWorkingDirCreated = false;

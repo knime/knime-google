@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.stream.Stream;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -66,12 +65,11 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveConnectionConfiguration;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvider;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystemProvider;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDrivePath;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
+import org.knime.filehandling.core.connections.FSPath;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -83,7 +81,7 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionNodeModel extends NodeModel {
+final class GoogleDriveConnectionNodeModel extends NodeModel {
 
     private static final String FILE_SYSTEM_NAME = "Google Drive";
 
@@ -104,14 +102,12 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
 
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0])
-                .getGoogleApiConnection();
+        GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0]).getGoogleApiConnection();
 
         CheckUtils.checkArgumentNotNull(apiConnection.getCredential(),
                 "No valid Google credentials found. Please re-execute preceding authentication node.");
 
-        m_fsConnection = new GoogleDriveFSConnection(apiConnection,
-                createConfiguration(m_settings));
+        m_fsConnection = new GoogleDriveFSConnection(m_settings.toFSConnectionConfig(apiConnection));
         testConnection(m_fsConnection);
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
@@ -136,8 +132,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     public static void testConnection(final GoogleDriveFSConnection connection) throws IOException {
         @SuppressWarnings("resource")
-        GoogleDriveFileSystem fs = connection.getFileSystem();
-        GoogleDrivePath root = fs.getPath("/" + GoogleDriveFileSystemProvider.MY_DRIVE);
+        FSPath root = connection.getFileSystem().getPath("/" + GoogleDriveFileSystemProvider.MY_DRIVE);
         try (Stream<Path> files = Files.list(root)) {
             // Do nothing. The file listing is not lazy implemented
             // in provider therefore should throw exception if connection is bad
@@ -154,21 +149,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
     }
 
     private FileSystemPortObjectSpec createSpec() {
-        return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId, GoogleDriveFileSystem.createFSLocationSpec());
-    }
-
-    /**
-     * @param settings
-     *            node settings.
-     * @return Google Drive connection configuration.
-     */
-    public static GoogleDriveConnectionConfiguration createConfiguration(
-            final GoogleDriveConnectionSettingsModel settings) {
-        GoogleDriveConnectionConfiguration config = new GoogleDriveConnectionConfiguration();
-        config.setConnectionTimeOut(Duration.ofSeconds(settings.getConnectionTimeout()));
-        config.setReadTimeOut(Duration.ofSeconds(settings.getReadTimeout()));
-        config.setWorkingDirectory(settings.getWorkingDirectory());
-        return config;
+        return new FileSystemPortObjectSpec(FILE_SYSTEM_NAME, m_fsId, GoogleDriveFSDescriptorProvider.FS_LOCATION_SPEC);
     }
 
     /**
@@ -180,7 +161,7 @@ public class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     public static GoogleDriveFSConnection createConnection(final GoogleDriveConnectionSettingsModel settings,
             final PortObjectSpec[] inputSpec) {
-        return new GoogleDriveFSConnection(getGoogleApiConnection(inputSpec), createConfiguration(settings));
+        return new GoogleDriveFSConnection(settings.toFSConnectionConfig(getGoogleApiConnection(inputSpec)));
     }
 
     @Override

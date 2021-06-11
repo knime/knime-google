@@ -44,71 +44,50 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-09-18 (Vyacheslav Soldatov): created
+ *   2021-06-02 (modithahewasinghage): created
  */
 package org.knime.ext.google.filehandling.drive.fs;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
-import java.util.Set;
-
-import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
-
-import com.google.api.client.http.AbstractInputStreamContent;
-import com.google.api.client.http.FileContent;
+import org.knime.ext.google.filehandling.drive.testing.GoogleDriveTestInitializerProvider;
+import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
+import org.knime.filehandling.core.connections.FSCategory;
+import org.knime.filehandling.core.connections.FSLocationSpec;
+import org.knime.filehandling.core.connections.meta.FSDescriptorProvider;
+import org.knime.filehandling.core.connections.meta.FSType;
+import org.knime.filehandling.core.connections.meta.FSTypeRegistry;
+import org.knime.filehandling.core.connections.meta.base.BaseFSDescriptor;
+import org.knime.filehandling.core.connections.meta.base.BaseFSDescriptorProvider;
+import org.knime.filehandling.core.connections.uriexport.URIExporterIDs;
+import org.knime.filehandling.core.connections.uriexport.base.PathURIExporterFactory;
 
 /**
- * Google Drive implementation of {@link SeekableByteChannel}
+ * {@link FSDescriptorProvider} implementation for the Google Drive file system.
  *
- * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
+ * @author modithahewasinghage
  */
-class GoogleDriveFileSeekableByteChannel extends TempFileSeekableByteChannel<GoogleDrivePath> {
+public class GoogleDriveFSDescriptorProvider extends BaseFSDescriptorProvider {
 
     /**
-     * @param file
-     *            file to streaming.
-     * @param options
-     *            open file options.
-     * @throws IOException
+     * Google Drive {@link FSType}.
      */
-    public GoogleDriveFileSeekableByteChannel(final GoogleDrivePath file, final Set<? extends OpenOption> options) throws IOException {
-        super(file, options);
-    }
+    public static final FSType FS_TYPE = FSTypeRegistry.getOrCreateFSType("google-drive", "Google Drive");
 
-    @Override
-    public void copyFromRemote(final GoogleDrivePath path, final Path tempFile) throws IOException {
-        @SuppressWarnings("resource")
-        GoogleDriveFileSystemProvider provider = path.getFileSystem().provider();
+    /**
+     * Google Drive {@link FSLocationSpec}.
+     */
+    public static final FSLocationSpec FS_LOCATION_SPEC = new DefaultFSLocationSpec(FSCategory.CONNECTED,
+            FS_TYPE.getTypeId());
 
-        final FileMetadata meta = provider.readAttributes(path).getMetadata();
-
-        // copy content from Google Drive to tmp file
-        try (InputStream in = provider.getHelper().readFile(meta.getId())) {
-            Files.copy(in, tempFile);
-        }
-    }
-
-    @Override
-    public void copyToRemote(final GoogleDrivePath path, final Path tempFile) throws IOException {
-        @SuppressWarnings("resource")
-        final GoogleDriveFileSystemProvider provider = path.getFileSystem().provider();
-
-        final AbstractInputStreamContent content = new FileContent(null, tempFile.toFile());
-        try {
-            final GoogleDriveFileAttributes attr = provider.readAttributes(path);
-            // rewrite existing file. Not need to worry about APPEND option
-            provider.getHelper().rewriteFile(attr.getMetadata().getId(), content);
-        } catch (NoSuchFileException ex) { // NOSONAR
-            // create new file
-            final String name = path.getFileName().toString();
-            final FileMetadata parentMeta = provider.readAttributes(path.getParent()).getMetadata();
-            provider.getHelper().createFile(parentMeta.getDriveId(), parentMeta.getId(),
-                    GoogleDriveFileSystemProvider.decodeForwardSlashes(name), content);
-        }
+    /**
+     * Constructor.
+     */
+    public GoogleDriveFSDescriptorProvider() {
+        super(GoogleDriveFSDescriptorProvider.FS_TYPE, //
+                new BaseFSDescriptor.Builder() //
+                        .withSeparator(GoogleDriveFileSystem.PATH_SEPARATOR) //
+                        .withConnectionFactory(GoogleDriveFSConnection::new) //
+                        .withURIExporterFactory(URIExporterIDs.DEFAULT, PathURIExporterFactory.getInstance()) //
+                        .withTestInitializerProvider(new GoogleDriveTestInitializerProvider()) //
+                        .build());
     }
 }

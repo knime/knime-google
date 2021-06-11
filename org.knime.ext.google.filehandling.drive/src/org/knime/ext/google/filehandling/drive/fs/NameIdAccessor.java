@@ -58,7 +58,7 @@ import com.google.api.services.drive.model.File;
  * @param <T>
  *            type.
  */
-public abstract class NameIdAccessor<T> {
+abstract class NameIdAccessor<T> {
     static final NameIdAccessor<Drive> DRIVE = new NameIdAccessor<Drive>() {
 
         @Override

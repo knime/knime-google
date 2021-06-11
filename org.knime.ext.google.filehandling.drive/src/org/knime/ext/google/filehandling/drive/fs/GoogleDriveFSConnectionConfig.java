@@ -50,42 +50,47 @@ package org.knime.ext.google.filehandling.drive.fs;
 
 import java.time.Duration;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.ext.google.filehandling.drive.node.GoogleDriveConnectionSettingsModel;
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig;
+import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Google Drive connection configuration implementation.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public class GoogleDriveConnectionConfiguration {
+public class GoogleDriveFSConnectionConfig extends BaseFSConnectionConfig {
+
     /**
-     * Working directory (defaults to /My Drive)
+     * Default value for read timeout in seconds.
      */
-    private String m_workingDirectory = GoogleDriveFileSystemProvider.MY_DRIVE;
+    public static final int DEFAULT_READ_TIMEOUT_SECONDS = 30;
+    /**
+     * Default value for connection timeout in seconds.
+     */
+    public static final int DEFAULT_CONNECTION_TIMEOUT_SECONDS = 30;
+
     /**
      * Connection timeout (seconds), default is 30
      */
     private Duration m_connectionTimeOut = Duration
-            .ofSeconds(GoogleDriveConnectionSettingsModel.DEFAULT_CONNECTION_TIMEOUT_SECONDS);
+            .ofSeconds(DEFAULT_CONNECTION_TIMEOUT_SECONDS);
     /**
      * Read timeout (seconds), default is 30
      */
-    private Duration m_readTimeOut = Duration.ofSeconds(GoogleDriveConnectionSettingsModel.DEFAULT_READ_TIMEOUT_SECONDS);
+    private Duration m_readTimeOut = Duration
+            .ofSeconds(DEFAULT_READ_TIMEOUT_SECONDS);
+
+    private final GoogleApiConnection m_apiConnection;
+
 
     /**
-     * @return working directory.
-     */
-    public String getWorkingDirectory() {
-        return m_workingDirectory;
-    }
-
-    /**
+     *
      * @param workingDirectory
-     *            working directory.
+     * @param apiConnection
      */
-    public void setWorkingDirectory(final String workingDirectory) {
-        this.m_workingDirectory = workingDirectory;
+    public GoogleDriveFSConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
+        super(workingDirectory, true);
+        m_apiConnection = apiConnection;
     }
 
     /**
@@ -119,13 +124,10 @@ public class GoogleDriveConnectionConfiguration {
     }
 
     /**
-     * validates connection configuration.
-     *
-     * @throws InvalidSettingsException
+     * @return the apiConnection
      */
-    public void validate() throws InvalidSettingsException {
-        if (m_workingDirectory == null || m_workingDirectory.isEmpty()) {
-            throw new InvalidSettingsException("Working dicrectory should not be empty");
-        }
+    public GoogleApiConnection getApiConnection() {
+        return m_apiConnection;
     }
+
 }

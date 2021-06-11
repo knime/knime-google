@@ -51,28 +51,23 @@ package org.knime.ext.google.filehandling.drive.fs;
 import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
-import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Google Drive file system connection.
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
- *
  */
 public class GoogleDriveFSConnection implements FSConnection {
+
     private final GoogleDriveFileSystem m_fileSystem;
 
     /**
-     * @param connection
-     *            Google API connection.
      * @param config
      *            connection configuration.
      */
-    public GoogleDriveFSConnection(
-            final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
-        m_fileSystem = new GoogleDriveFileSystem(connection, config);
+    public GoogleDriveFSConnection(final GoogleDriveFSConnectionConfig config) {
+        m_fileSystem = new GoogleDriveFileSystem(config);
     }
-
 
     @Override
     public GoogleDriveFileSystem getFileSystem() {

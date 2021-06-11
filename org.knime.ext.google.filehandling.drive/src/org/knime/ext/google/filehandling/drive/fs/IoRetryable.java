@@ -58,7 +58,7 @@ import java.io.IOException;
  *            return value type
  */
 @FunctionalInterface
-public interface IoRetryable<R> {
+interface IoRetryable<R> {
     /**
      * @return execution result.
      * @throws IOException

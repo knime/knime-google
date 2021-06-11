@@ -7,10 +7,11 @@
             category-path="/io/connectors"
             factory-class="org.knime.ext.google.filehandling.drive.node.GoogleDriveConnectionNodeFactory"/>
    </extension>
+   
    <extension
-         point="org.knime.filehandling.FSTestInitializerProvider">
-      <FSTestInitializerProvider
-            ProviderClass="org.knime.ext.google.filehandling.drive.testing.GoogleDriveTestInitializerProvider">
-      </FSTestInitializerProvider>
+         point="org.knime.filehandling.core.FSDescriptorProvider">
+      <FSDescriptorProvider
+            class="org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvider">
+      </FSDescriptorProvider>
    </extension>
 </plugin>

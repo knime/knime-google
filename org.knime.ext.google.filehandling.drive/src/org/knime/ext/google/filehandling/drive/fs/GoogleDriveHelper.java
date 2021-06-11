@@ -101,21 +101,18 @@ public class GoogleDriveHelper {
     private final com.google.api.services.drive.Drive m_driveService;
 
     /**
-     * @param connection
-     *            Google Drive connection.
      * @param config
      *            connection configuration.
      */
-    public GoogleDriveHelper(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
+    public GoogleDriveHelper(final GoogleDriveFSConnectionConfig config) {
         m_driveService = new com.google.api.services.drive.Drive.Builder(GoogleApiConnection.getHttpTransport(),
-                GoogleApiConnection.getJsonFactory(), req -> initializeRequest(req, connection, config))
-                        .setApplicationName(APPLICATION_NAME)
-                        .build();
+                GoogleApiConnection.getJsonFactory(), req -> initializeRequest(req, config))
+                        .setApplicationName(APPLICATION_NAME).build();
     }
 
-    private static void initializeRequest(final HttpRequest req, final GoogleApiConnection connection,
-            final GoogleDriveConnectionConfiguration config) throws IOException {
-        connection.getCredential().initialize(req);
+    private static void initializeRequest(final HttpRequest req, final GoogleDriveFSConnectionConfig config)
+            throws IOException {
+        config.getApiConnection().getCredential().initialize(req);
 
         req.setConnectTimeout((int) config.getConnectionTimeOut().toMillis());
         req.setReadTimeout((int) config.getReadTimeOut().toMillis());

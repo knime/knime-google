@@ -48,16 +48,11 @@
  */
 package org.knime.ext.google.filehandling.drive.fs;
 
-import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
 
-import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
-import org.knime.filehandling.core.connections.FSCategory;
-import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
-import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Google Drive implementation of the {@link FileSystem}.
@@ -65,53 +60,24 @@ import org.knime.google.api.data.GoogleApiConnection;
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class GoogleDriveFileSystem extends BaseFileSystem<GoogleDrivePath> {
-    private static final long CACHE_TTL = 6000;
 
-    /**
-     * Google Drive URI scheme.
-     */
-    public static final String FS_TYPE = "google-drive";
+    private static final long CACHE_TTL = 6000;
 
     /**
      * Character to use as path separator
      */
     public static final String PATH_SEPARATOR = "/";
 
-    GoogleDriveFileSystem(final GoogleApiConnection connection, final GoogleDriveConnectionConfiguration config) {
-        this(createProvider(connection, config), config.getWorkingDirectory());
-    }
-
-    /**
-     * This constructor is used for testing.
-     *
-     * @param provider
-     *            file system provider.
-     * @param workingDir
-     *            working directory.
-     */
-    protected GoogleDriveFileSystem(final GoogleDriveFileSystemProvider provider, final String workingDir) {
-        super(provider, createUri(), CACHE_TTL, workingDir, createFSLocationSpec());
-    }
-
-    private static GoogleDriveFileSystemProvider createProvider(final GoogleApiConnection connection,
-            final GoogleDriveConnectionConfiguration config) {
-        return new GoogleDriveFileSystemProvider(connection, config);
+    GoogleDriveFileSystem(final GoogleDriveFSConnectionConfig config) {
+        super(new GoogleDriveFileSystemProvider(config), //
+                CACHE_TTL, //
+                config.getWorkingDirectory(), //
+                GoogleDriveFSDescriptorProvider.FS_LOCATION_SPEC);
     }
 
     @Override
     public GoogleDriveFileSystemProvider provider() {
         return (GoogleDriveFileSystemProvider) super.provider();
-    }
-
-    private static URI createUri() {
-        return URI.create(String.format("%s://googledrive", FS_TYPE));
-    }
-
-    /**
-     * @return the {@link FSLocationSpec} for a Google Drive file system.
-     */
-    public static DefaultFSLocationSpec createFSLocationSpec() {
-        return new DefaultFSLocationSpec(FSCategory.CONNECTED, GoogleDriveFileSystem.FS_TYPE);
     }
 
     @Override

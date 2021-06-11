@@ -67,7 +67,7 @@ import com.google.api.services.drive.model.File;
  *
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
-public final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
+final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
     /**
      * @param filter
      *            path filter.
