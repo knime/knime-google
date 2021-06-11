@@ -52,7 +52,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -82,7 +81,7 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
+class CloudStorageConnectorNodeDialog extends NodeDialogPane {
 
     private final ChangeListener m_workdirListener;
     private final CloudStorageConnectorSettings m_settings = new CloudStorageConnectorSettings();
@@ -90,7 +89,6 @@ public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
             this::createFSConnection);
 
     private GoogleApiConnection m_connection;
-
 
     /**
      * Creates new instance.
@@ -182,8 +180,8 @@ public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         return panel;
     }
 
-    private FSConnection createFSConnection() throws IOException {
-        return new CloudStorageFSConnection(m_connection, m_settings);
+    private FSConnection createFSConnection() {
+        return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(m_connection));
     }
 
     /**
@@ -208,7 +206,7 @@ public class CloudStorageConnectorNodeDialog extends NodeDialogPane {
             throws NotConfigurableException {
         try {
             m_settings.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ex) {
+        } catch (InvalidSettingsException ex) { // NOSONAR intentionally ignoring
             // ignore
         }
 

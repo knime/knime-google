@@ -81,13 +81,8 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageFileSystemProvider
-        extends BaseFileSystemProvider<CloudStoragePath, CloudStorageFileSystem> {
+class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStoragePath, CloudStorageFileSystem> {
 
-    /**
-     * Google Cloud Storage file system type.
-     */
-    public static final String FS_TYPE = "google-cs";
 
     @SuppressWarnings("resource")
     @Override
@@ -103,6 +98,7 @@ public class CloudStorageFileSystemProvider
         }
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected OutputStream newOutputStreamInternal(final CloudStoragePath path, final OpenOption... options)
             throws IOException {
@@ -123,6 +119,7 @@ public class CloudStorageFileSystemProvider
             return true;
         }
 
+        @SuppressWarnings("resource")
         CloudStorageClient client = getFileSystemInternal().getClient();
         boolean exists = false;
 
@@ -149,6 +146,7 @@ public class CloudStorageFileSystemProvider
         boolean objectExists = false;
 
         if (path.getBucketName() != null) {
+            @SuppressWarnings("resource")
             CloudStorageClient client = getFileSystemInternal().getClient();
 
             if (path.getBlobName() == null) {
@@ -172,6 +170,7 @@ public class CloudStorageFileSystemProvider
 
     @Override
     protected void deleteInternal(final CloudStoragePath path) throws IOException {
+        @SuppressWarnings("resource")
         CloudStorageClient client = getFileSystemInternal().getClient();
         String blobName = path.getBlobName();
 
@@ -191,12 +190,13 @@ public class CloudStorageFileSystemProvider
 
     @Override
     public void checkAccessInternal(final CloudStoragePath path, final AccessMode... modes) throws IOException {
-        // TODO Auto-generated method stub
+        // nothing to do here
     }
 
     @Override
-    public void copyInternal(final CloudStoragePath source, final CloudStoragePath target,
-            final CopyOption... options) throws IOException {
+    public void copyInternal(final CloudStoragePath source, final CloudStoragePath target, final CopyOption... options)
+            throws IOException {
+        @SuppressWarnings("resource")
         CloudStorageClient client = getFileSystemInternal().getClient();
 
         if (!isDirectory(source)) {
@@ -204,8 +204,7 @@ public class CloudStorageFileSystemProvider
                     target.getBlobName());
         } else {
 
-            if (client.isNotEmpty(target.getBucketName(),
-                    target.toDirectoryPath().getBlobName())) {
+            if (client.isNotEmpty(target.getBucketName(), target.toDirectoryPath().getBlobName())) {
                 throw new DirectoryNotEmptyException(
                         String.format("Target directory %s exists and is not empty", target.toString()));
             }
@@ -220,8 +219,7 @@ public class CloudStorageFileSystemProvider
 
     @SuppressWarnings("resource")
     @Override
-    protected void createDirectoryInternal(final CloudStoragePath path,
-            final FileAttribute<?>... arg1)
+    protected void createDirectoryInternal(final CloudStoragePath path, final FileAttribute<?>... arg1)
             throws IOException {
 
         CloudStorageClient client = getFileSystemInternal().getClient();
@@ -235,10 +233,8 @@ public class CloudStorageFileSystemProvider
     }
 
     @Override
-    protected SeekableByteChannel newByteChannelInternal(
-            final CloudStoragePath path,
-            final Set<? extends OpenOption> options,
-            final FileAttribute<?>... attrs) throws IOException {
+    protected SeekableByteChannel newByteChannelInternal(final CloudStoragePath path,
+            final Set<? extends OpenOption> options, final FileAttribute<?>... attrs) throws IOException {
         return new CloudStorageSeekableByteChannel(path, options);
     }
 }

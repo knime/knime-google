@@ -50,14 +50,16 @@ package org.knime.ext.google.filehandling.cloudstorage.testing;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageConnectionConfig;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSDescriptorProvider;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
-import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystemProvider;
-import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.filehandling.core.connections.FSLocationSpec;
+import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -87,11 +89,12 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
         final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"),
                 CloudStorageFileSystem.PATH_SEPARATOR);
 
-        final CloudStorageConnectorSettings settings = new CloudStorageConnectorSettings();
-        settings.getProjectIdModel().setStringValue(configuration.get("projectId"));
-        settings.getWorkingDirectoryModel().setStringValue(workingDir);
+        final CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(workingDir, apiConnection);
+        config.setProjectId(configuration.get("projectId"));
+        config.setConnectionTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
+        config.setReadTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
 
-        final CloudStorageFSConnection fsConnection = new CloudStorageFSConnection(apiConnection, settings);
+        final CloudStorageFSConnection fsConnection = new CloudStorageFSConnection(config);
 
         return new CloudStorageTestInitializer(fsConnection);
     }
@@ -103,15 +106,14 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
         CheckUtils.checkArgumentNotNull(configuration.get("workingDirPrefix"), "workingDirPrefix must be specified.");
     }
 
-
     @Override
-    public String getFSType() {
-        return CloudStorageFileSystemProvider.FS_TYPE;
+    public FSType getFSType() {
+        return CloudStorageFSDescriptorProvider.FS_TYPE;
     }
 
     @Override
     public FSLocationSpec createFSLocationSpec(final Map<String, String> configuration) {
         validateConfiguration(configuration);
-        return CloudStorageFileSystem.createFSLocationSpec();
+        return CloudStorageFSDescriptorProvider.FS_LOCATION_SPEC;
     }
 }

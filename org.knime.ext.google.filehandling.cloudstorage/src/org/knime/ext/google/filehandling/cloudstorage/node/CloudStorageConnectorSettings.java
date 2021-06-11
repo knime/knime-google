@@ -48,16 +48,20 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.node;
 
+import java.time.Duration;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageConnectionConfig;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
+import org.knime.google.api.data.GoogleApiConnection;
 
 /**
- * Settings for {@link CloudStorageConnectorNodeModel}.
+ * Node settings for for Google Cloud Storage Connector node.
  *
  * @author Alexander Bondaletov
  */
@@ -67,8 +71,6 @@ public class CloudStorageConnectorSettings {
     private static final String KEY_NORMALIZE_PATHS = "normalizePaths";
     private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
     private static final String KEY_READ_TIMEOUT = "readTimeout";
-
-    private static final int DEFAULT_TIMEOUT = 20;
 
     private SettingsModelString m_projectId;
     private SettingsModelString m_workingDirectory;
@@ -83,9 +85,9 @@ public class CloudStorageConnectorSettings {
         m_projectId = new SettingsModelString(KEY_PROJECT_ID, "");
         m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, CloudStorageFileSystem.PATH_SEPARATOR);
         m_normalizePaths = new SettingsModelBoolean(KEY_NORMALIZE_PATHS, true);
-        m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT, DEFAULT_TIMEOUT, 0,
+        m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT, CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS, 0,
                 Integer.MAX_VALUE);
-        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, DEFAULT_TIMEOUT, 0, Integer.MAX_VALUE);
+        m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS, 0, Integer.MAX_VALUE);
     }
 
     /**
@@ -220,5 +222,19 @@ public class CloudStorageConnectorSettings {
      */
     public int getReadTimeout() {
         return m_readTimeout.getIntValue();
+    }
+
+    /**
+     *
+     * @param con
+     * @return The FSConnectionConfig for Cloud Storage
+     */
+    public CloudStorageConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
+        CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(getWorkingDirectory(), con);
+        config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
+        config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
+        config.setNormalizePaths(getNormalizePaths());
+        config.setProjectId(getProjectId());
+        return config;
     }
 }

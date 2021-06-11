@@ -69,7 +69,10 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public abstract class CloudStoragePathIteratorFactory {
+final class CloudStoragePathIteratorFactory {
+
+    private CloudStoragePathIteratorFactory() {
+    }
 
 
     /**
@@ -79,7 +82,7 @@ public abstract class CloudStoragePathIteratorFactory {
      *            path to iterate.
      * @param filter
      *            {@link Filter} instance.
-     * @return {@link CloudStoragePathIteratorFactory} instance.
+     * @return an iterator over paths
      * @throws IOException
      */
     public static Iterator<CloudStoragePath> create(
@@ -92,7 +95,7 @@ public abstract class CloudStoragePathIteratorFactory {
         }
     }
 
-    private static class BucketIterator extends PagedPathIterator<CloudStoragePath> {
+    private static final class BucketIterator extends PagedPathIterator<CloudStoragePath> {
 
         private String m_nextPageToken = null;
 
@@ -144,7 +147,7 @@ public abstract class CloudStoragePathIteratorFactory {
         }
     }
 
-    private static class BlobIterator extends PagedPathIterator<CloudStoragePath> {
+    private static final class BlobIterator extends PagedPathIterator<CloudStoragePath> {
 
         private String m_nextPageToken;
 
@@ -171,15 +174,14 @@ public abstract class CloudStoragePathIteratorFactory {
             if (objects.getPrefixes() != null) {
                 objects.getPrefixes().stream() //
                         .map(this::createPathFromPrefix) //
-                        .forEach(paths::add);
+                        .forEach(paths::add); // NOSONAR we want a mutable list
             }
 
             if (objects.getItems() != null) {
                 objects.getItems().stream() //
-                        .filter((obj) -> !java.util.Objects.equals(prefix, obj
-                                .getName()))
+                        .filter(obj -> !java.util.Objects.equals(prefix, obj.getName())) //
                         .map(this::createPath) //
-                        .forEach(paths::add);
+                        .forEach(paths::add); // NOSONAR we want a mutable list
             }
 
             m_nextPageToken = objects.getNextPageToken();

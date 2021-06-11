@@ -73,7 +73,7 @@ import com.google.api.services.storage.model.StorageObject;
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageTestInitializer
+class CloudStorageTestInitializer
         extends DefaultFSTestInitializer<CloudStoragePath, CloudStorageFileSystem> {
 
     private final CloudStorageClient m_client;
@@ -104,20 +104,19 @@ public class CloudStorageTestInitializer
 
         final CloudStoragePath path = makePath(pathComponents);
 
-        String key = "";
+        final StringBuilder key = new StringBuilder();
         for (int i = 1; i < path.getNameCount() - 1; i++) {
-            key += path.getName(i).toString();
+            key.append(path.getName(i).toString());
 
-            if (getTestCaseScratchDir().toDirectoryPath().toString().startsWith(key)) {
+            if (getTestCaseScratchDir().toDirectoryPath().toString().startsWith(key.toString())) {
                 // we don't need to recreate the scratch dir structure every time, this is done
                 // in
                 // beforeTestCaseInternal().
                 continue;
             }
 
-            final String objectKey = key;
             futures.add(execAndRetry(() -> {
-                m_client.insertObject(path.getBucketName(), objectKey, "");
+                m_client.insertObject(path.getBucketName(), key.toString(), "");
                 return null;
             }));
         }
@@ -132,13 +131,15 @@ public class CloudStorageTestInitializer
         return path;
     }
 
-    private static void awaitFutures(final List<Future<Void>> futures) {
+    private static void awaitFutures(final List<Future<Void>> futures) throws IOException {
         try {
             for (Future<Void> future : futures) {
                 future.get();
             }
-        } catch (ExecutionException | InterruptedException e) {
-            ExceptionUtil.wrapAsIOException(e);
+        } catch (ExecutionException e) { // NOSONAR only the exception cause is interesting
+            throw ExceptionUtil.wrapAsIOException(e.getCause());
+        } catch (InterruptedException e) { // NOSONAR
+            throw ExceptionUtil.wrapAsIOException(e);
         }
     }
 
@@ -173,25 +174,27 @@ public class CloudStorageTestInitializer
         getFileSystem().clearAttributesCache();
     }
 
-    private Future<Void> execAndRetry(final IOESupplier<Void> request) throws IOException {
-        return m_threadPool.submit(() -> {
-            for (int i = 0; i < 3; i++) {
-                try {
-                    request.get();
-                    return null;
-                } catch (GoogleJsonResponseException ex) {
-                    if (ex.getStatusCode() == 429) {// Rate limit exceeded
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException ex1) {
-                            Thread.currentThread().interrupt();
-                        }
-                    } else {
-                        throw ex;
+    private Future<Void> execAndRetry(final IOESupplier<Void> request) {
+        return m_threadPool.submit(() -> doRequestWithRetries(request));
+    }
+
+    private static Void doRequestWithRetries(final IOESupplier<Void> request) throws IOException {
+        for (int i = 0; i < 3; i++) {
+            try {
+                request.get();
+                return null;
+            } catch (GoogleJsonResponseException ex) {
+                if (ex.getStatusCode() == 429) {// Rate limit exceeded
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ex1) {
+                        Thread.currentThread().interrupt();
                     }
+                } else {
+                    throw ex;
                 }
             }
-            throw new IOException("Rate limit exceeded multiple times");
-        });
+        }
+        throw new IOException("Rate limit exceeded multiple times");
     }
 }

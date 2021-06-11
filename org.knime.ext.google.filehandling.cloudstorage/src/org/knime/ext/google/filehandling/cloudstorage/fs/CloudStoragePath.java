@@ -99,14 +99,12 @@ public class CloudStoragePath extends BlobStorePath {
         super(fileSystem, bucket, blob);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public CloudStorageFileSystem getFileSystem() {
         return (CloudStorageFileSystem) super.getFileSystem();
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected boolean lastComponentUsesRelativeNotation() {
         if (getFileSystem().normalizePaths()) {
@@ -124,6 +122,7 @@ public class CloudStoragePath extends BlobStorePath {
         }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public Path relativize(final Path other) {
         if (!getFileSystem().normalizePaths()) {

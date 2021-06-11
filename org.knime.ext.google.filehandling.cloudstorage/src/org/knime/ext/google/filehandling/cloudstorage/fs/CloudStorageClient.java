@@ -56,7 +56,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
 import org.knime.google.api.data.GoogleApiConnection;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -89,20 +88,22 @@ public class CloudStorageClient {
     private final Storage m_storage;
 
     /**
-     * Constructs new instance for a given api connection and project id (derived
-     * from host property or the URI)
+     * Constructs new instance for a given configuration (derived from host property
+     * or the URI)
      *
-     * @param apiConnection
-     *            google api connection.
-     * @param settings
-     *            Connection settings.
+     * @param config
+     *            Connection configuration
      */
-    public CloudStorageClient(final GoogleApiConnection apiConnection,
-            final CloudStorageConnectorSettings settings) {
-        this.m_projectId = settings.getProjectId();
-        m_storage = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                withTimeouts(apiConnection.getCredential(), settings.getConnectionTimeout(), settings.getReadTimeout()))
-                        .setApplicationName(APP_NAME).build();
+    public CloudStorageClient(final CloudStorageConnectionConfig config) {
+        this.m_projectId = config.getProjectId();
+        m_storage = new Storage.Builder(GoogleApiConnection.getHttpTransport(), //
+                GoogleApiConnection.getJsonFactory(), //
+                withTimeouts( //
+                        config.getApiConnection().getCredential(), //
+                        Math.toIntExact(config.getConnectionTimeOut().toSeconds()), //
+                        Math.toIntExact(config.getReadTimeOut().toSeconds()))) //
+                                .setApplicationName(APP_NAME) //
+                                .build();
     }
 
     /**
@@ -163,8 +164,7 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public Objects listObjects(final String bucket, final String prefix, final String pageToken) throws IOException {
-        Storage.Objects.List req = m_storage.objects().list(bucket)
-                .setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR);
+        Storage.Objects.List req = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR);
 
         if (prefix != null && !prefix.isEmpty()) {
             req.setPrefix(prefix);

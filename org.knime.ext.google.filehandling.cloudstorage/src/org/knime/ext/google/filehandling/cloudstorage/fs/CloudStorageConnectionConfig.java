@@ -44,46 +44,109 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-03-24 (Alexander Bondaletov): created
+ *   2020-10-28 (Vyacheslav Soldatov): created
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
-import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
+import java.time.Duration;
+
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig;
+import org.knime.google.api.data.GoogleApiConnection;
 
 /**
- * Google Cloud Storage implementation of the {@link FSConnection} interface.
+ * Google Cloud Storage connection configuration implementation.
  *
- * @author Alexander Bondaletov
+ * @author Moditha Hewasinghage
  */
-public class CloudStorageFSConnection implements FSConnection {
-
-    private static final long CACHE_TTL_MILLIS = 6000;
-
-    private final CloudStorageFileSystem m_filesystem;
+public class CloudStorageConnectionConfig extends BaseFSConnectionConfig {
 
     /**
-     * Creates new {@link CloudStorageFSConnection} for a given api connection and
-     * project.
-     *
-     * @param config
-     *            Connection configuration.
+     * Default timeout for connecting and connecting (in seconds).
      */
-    @SuppressWarnings("unused")
-    public CloudStorageFSConnection(final CloudStorageConnectionConfig config) {
-        m_filesystem = new CloudStorageFileSystem(config, CACHE_TTL_MILLIS);
+    public static final int DEFAULT_TIMEOUT_SECONDS = 20;
+
+    private String m_projectId;
+    private boolean m_normalizePaths;
+    private Duration m_connectionTimeOut;
+    private Duration m_readTimeOut;
+
+    private final GoogleApiConnection m_apiConnection;
+
+    /**
+     *
+     * @param workingDirectory
+     * @param apiConnection
+     */
+    public CloudStorageConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
+        super(workingDirectory, true);
+        m_apiConnection = apiConnection;
     }
 
-    @Override
-    public FSFileSystem<?> getFileSystem() {
-        return m_filesystem;
+    /**
+     * @return connection time out.
+     */
+    public Duration getConnectionTimeOut() {
+        return m_connectionTimeOut;
     }
 
-    @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new NioFileSystemBrowser(this);
+    /**
+     * @param connectionTimeOut
+     *            connection time out.
+     */
+    public void setConnectionTimeOut(final Duration connectionTimeOut) {
+        this.m_connectionTimeOut = connectionTimeOut;
+    }
+
+    /**
+     * @return connection read time out.
+     */
+    public Duration getReadTimeOut() {
+        return m_readTimeOut;
+    }
+
+    /**
+     * @param readTimeOut
+     *            connection read time out.
+     */
+    public void setReadTimeOut(final Duration readTimeOut) {
+        this.m_readTimeOut = readTimeOut;
+    }
+
+    /**
+     * @return the projectId
+     */
+    public String getProjectId() {
+        return m_projectId;
+    }
+
+    /**
+     * @param projectId
+     *            the projectId to set
+     */
+    public void setProjectId(final String projectId) {
+        m_projectId = projectId;
+    }
+
+    /**
+     * @return the normalizePaths
+     */
+    public boolean isNormalizePaths() {
+        return m_normalizePaths;
+    }
+
+    /**
+     * @param normalizePaths
+     *            the normalizePaths to set
+     */
+    public void setNormalizePaths(final boolean normalizePaths) {
+        m_normalizePaths = normalizePaths;
+    }
+
+    /**
+     * @return the apiConnection
+     */
+    public GoogleApiConnection getApiConnection() {
+        return m_apiConnection;
     }
 
 }

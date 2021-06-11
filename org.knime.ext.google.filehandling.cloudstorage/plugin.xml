@@ -11,9 +11,9 @@
    </extension>
    
    <extension
-         point="org.knime.filehandling.FSTestInitializerProvider">
-         <FSTestInitializerProvider
-               ProviderClass="org.knime.ext.google.filehandling.cloudstorage.testing.CloudStorageTestInitializerProvider">
-         </FSTestInitializerProvider>
+         point="org.knime.filehandling.core.FSDescriptorProvider">
+      <FSDescriptorProvider
+            class="org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSDescriptorProvider">
+      </FSDescriptorProvider>
    </extension>
 </plugin>

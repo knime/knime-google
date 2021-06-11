@@ -44,46 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2020-03-24 (Alexander Bondaletov): created
+ *   2021-06-02 (modithahewasinghage): created
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
-import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
+import org.knime.ext.google.filehandling.cloudstorage.testing.CloudStorageTestInitializerProvider;
+import org.knime.ext.google.filehandling.cloudstorage.uriexporter.GsSignedURIExporterFactory;
+import org.knime.ext.google.filehandling.cloudstorage.uriexporter.GsURIExporterFactory;
+import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
+import org.knime.filehandling.core.connections.FSCategory;
+import org.knime.filehandling.core.connections.FSLocationSpec;
+import org.knime.filehandling.core.connections.meta.FSDescriptorProvider;
+import org.knime.filehandling.core.connections.meta.FSType;
+import org.knime.filehandling.core.connections.meta.FSTypeRegistry;
+import org.knime.filehandling.core.connections.meta.base.BaseFSDescriptor;
+import org.knime.filehandling.core.connections.meta.base.BaseFSDescriptorProvider;
+import org.knime.filehandling.core.connections.uriexport.URIExporterIDs;
 
 /**
- * Google Cloud Storage implementation of the {@link FSConnection} interface.
+ * {@link FSDescriptorProvider} implementation for the Google Cloud Storage
+ * system.
  *
- * @author Alexander Bondaletov
+ * @author modithahewasinghage
  */
-public class CloudStorageFSConnection implements FSConnection {
-
-    private static final long CACHE_TTL_MILLIS = 6000;
-
-    private final CloudStorageFileSystem m_filesystem;
+public class CloudStorageFSDescriptorProvider extends BaseFSDescriptorProvider {
 
     /**
-     * Creates new {@link CloudStorageFSConnection} for a given api connection and
-     * project.
-     *
-     * @param config
-     *            Connection configuration.
+     * Google Cloud Storage {@link FSType}.
      */
-    @SuppressWarnings("unused")
-    public CloudStorageFSConnection(final CloudStorageConnectionConfig config) {
-        m_filesystem = new CloudStorageFileSystem(config, CACHE_TTL_MILLIS);
-    }
+    public static final FSType FS_TYPE = FSTypeRegistry.getOrCreateFSType("google-cs", "Google Cloud Storage");
 
-    @Override
-    public FSFileSystem<?> getFileSystem() {
-        return m_filesystem;
-    }
+    /**
+     * The {@link FSLocationSpec} for a Google Cloud Storage file system.
+     */
+    public static final FSLocationSpec FS_LOCATION_SPEC = new DefaultFSLocationSpec(FSCategory.CONNECTED,
+            FS_TYPE.getTypeId());
 
-    @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new NioFileSystemBrowser(this);
+    /**
+     * Constructor.
+     */
+    public CloudStorageFSDescriptorProvider() {
+        super(CloudStorageFSDescriptorProvider.FS_TYPE, //
+                new BaseFSDescriptor.Builder() //
+                        .withConnectionFactory(CloudStorageFSConnection::new) //
+                        .withURIExporterFactory(URIExporterIDs.DEFAULT, GsURIExporterFactory.getInstance()) //
+                        .withURIExporterFactory(URIExporterIDs.DEFAULT_HADOOP, GsURIExporterFactory.getInstance()) //
+                        .withURIExporterFactory(GsURIExporterFactory.EXPORTER_ID, GsURIExporterFactory.getInstance()) //
+                        .withURIExporterFactory(GsSignedURIExporterFactory.EXPORTER_ID,
+                                GsSignedURIExporterFactory.getInstance()) //
+                        .withTestInitializerProvider(new CloudStorageTestInitializerProvider()) //
+                        .build());
     }
-
 }

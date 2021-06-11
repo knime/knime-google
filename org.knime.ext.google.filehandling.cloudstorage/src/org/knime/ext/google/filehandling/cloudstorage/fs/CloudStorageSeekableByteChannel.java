@@ -61,7 +61,7 @@ import org.knime.filehandling.core.connections.base.TempFileSeekableByteChannel;
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<CloudStoragePath> {
+class CloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<CloudStoragePath> {
 
     /**
      * Creates new instance.
@@ -77,17 +77,12 @@ public class CloudStorageSeekableByteChannel extends TempFileSeekableByteChannel
         super(file, options);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void copyFromRemote(final CloudStoragePath remoteFile, final Path tempFile) throws IOException {
         Files.copy(remoteFile, tempFile);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public void copyToRemote(final CloudStoragePath remoteFile, final Path tempFile) throws IOException {
         remoteFile.getFileSystem().getClient().insertObject(remoteFile.getBucketName(), remoteFile.getBlobName(),

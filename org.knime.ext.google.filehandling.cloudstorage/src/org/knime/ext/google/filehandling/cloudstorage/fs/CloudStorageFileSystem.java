@@ -48,15 +48,10 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Collections;
 
-import org.knime.ext.google.filehandling.cloudstorage.node.CloudStorageConnectorSettings;
-import org.knime.filehandling.core.connections.DefaultFSLocationSpec;
-import org.knime.filehandling.core.connections.FSCategory;
-import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -81,39 +76,23 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
     /**
      * Constructs {@link CloudStorageFileSystem} for a given URI.
      *
-     * @param uri
-     *            the URI for the file system
-     * @param apiConnection
-     *            Google API connection.
+     * @param config
+     *            Connection configuration
      * @param cacheTTL
      *            The time to live for cached elements in milliseconds.
-     * @param settings
-     *            Connection settings.
      */
-    public CloudStorageFileSystem(
-            final URI uri,
-            final GoogleApiConnection apiConnection, final long cacheTTL,
-            final CloudStorageConnectorSettings settings) {
+    public CloudStorageFileSystem(final CloudStorageConnectionConfig config, final long cacheTTL) {
 
         super(new CloudStorageFileSystemProvider(), //
-                uri, //
                 cacheTTL, //
-                settings.getWorkingDirectory().isEmpty() //
+                config.getWorkingDirectory().isEmpty() //
                         ? PATH_SEPARATOR //
-                        : settings
-                                .getWorkingDirectory(), //
-                createFSLocationSpec());
+                        : config.getWorkingDirectory(), //
+                CloudStorageFSDescriptorProvider.FS_LOCATION_SPEC);
 
-        m_apiConnection = apiConnection;
-        m_client = new CloudStorageClient(apiConnection, settings);
-        m_normalizePaths = settings.getNormalizePaths();
-    }
-
-    /**
-     * @return the {@link FSLocationSpec} for a Google Cloud Storage file system.
-     */
-    public static FSLocationSpec createFSLocationSpec() {
-        return new DefaultFSLocationSpec(FSCategory.CONNECTED, CloudStorageFileSystemProvider.FS_TYPE);
+        m_apiConnection = config.getApiConnection();
+        m_client = new CloudStorageClient(config);
+        m_normalizePaths = config.isNormalizePaths();
     }
 
     /**
