@@ -72,7 +72,7 @@ final class GsSignedURIExporter extends BaseURIExporter<SignedUrlConfig> {
 
     @Override
     public URI toUri(final FSPath path) throws URISyntaxException {
-        final CloudStoragePath csPath = (CloudStoragePath) path.toAbsolutePath();
+        final CloudStoragePath csPath = (CloudStoragePath) path.toAbsolutePath().normalize();
         return csPath.getPreSignedUrl(getConfig().getValidityDuration()).toURI();
     }
 }
