@@ -52,7 +52,6 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -147,9 +146,9 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
 
     private final GoogleAuthNodeSettings m_settings = new GoogleAuthNodeSettings();
 
-    private Boolean m_isAuthenticated = false;
+    private boolean m_isAuthenticated = false;
 
-    private Boolean m_scopeChanged = false;
+    private boolean m_scopeChanged = false;
 
     private final DialogComponentFileChooser m_credentialFileLocation =
         new DialogComponentFileChooser(m_settings.getCredentialFileLocationModel(),
@@ -171,10 +170,10 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     }
 
     private JPanel getAuthPanel() {
-        JPanel panel = getBasePanel();
+        JPanel panel = createBasePanel();
         GridBagConstraints gbc = getDefaultGBC();
         gbc.insets = new Insets(20, 20, 20, 20);
-        JPanel innerPanel = getBasePanel();
+        JPanel innerPanel = createBasePanel();
         panel.add(innerPanel, gbc);
         gbc = getDefaultGBC();
         gbc.insets = new Insets(10, 5, 10, 5);
@@ -237,7 +236,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                         get();
                         m_settings.setByteString();
                         m_isAuthenticated = true;
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException e) { // NOSONAR
                         m_authenticationState.setText("Unknown");
                     } catch (IOException | URISyntaxException | ExecutionException e) {
                         m_authenticationState.setText("Not Authenticated");
@@ -338,14 +337,11 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         selectionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Location "));
         credentialPanel.add(selectionPanel, gbc);
 
-        ActionListener actionListener = new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                updateCredentialLocationPanel();
-                updateModel();
-            }
+        ActionListener actionListener = e -> {
+            updateCredentialLocationPanel();
+            updateModel();
         };
+
         final GridBagConstraints innerGBC = getDefaultGBC();
         m_memoryLocationButton = createLocationButton(GoogleAuthLocationType.MEMORY, m_buttonGroup, actionListener);
         selectionPanel.add(m_memoryLocationButton, innerGBC);
@@ -387,7 +383,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     }
 
     private JPanel getFileSystemLocationPanel() {
-        JPanel panel = getBasePanel();
+        JPanel panel = createBasePanel();
         GridBagConstraints gbc = getDefaultGBC();
         gbc.insets = new Insets(10, LEFT_INSET, 10, 10);
         panel.add(m_credentialFileLocation.getComponentPanel(), gbc);
@@ -396,7 +392,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
 
     private void clearCredentials() {
         try {
-            if (m_settings.getCredentialLocationType().equals(GoogleAuthLocationType.NODE)) {
+            if (m_settings.getCredentialLocationType() == GoogleAuthLocationType.NODE) {
                 m_settings.removeInNodeCredentials();
             } else {
                 GoogleAuthentication.removeCredential(m_settings.getCredentialLocationType(),
@@ -405,8 +401,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
             m_isAuthenticated = false;
             m_settings.setAccessTokenHash("".hashCode());
             setAuthenticationStatus();
-        } catch (IOException | InvalidSettingsException e) {
-            // Ignore: During credential clearing, this can mean that maybe the file got deleted manually.
+        } catch (IOException | InvalidSettingsException e) { // NOSONAR Ignore: During credential clearing, this can mean that maybe the file got deleted manually.
         }
     }
 
@@ -415,7 +410,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     }
 
     private JPanel getScopePanel() {
-        JPanel panel = getBasePanel();
+        JPanel panel = createBasePanel();
         GridBagConstraints gbc = getDefaultGBC();
         gbc.insets = PANEL_INSET;
         List<KnimeGoogleAuthScope> knimeGoogleAuthScopes =
@@ -453,14 +448,10 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         gbc.gridy++;
         gbc.weighty++;
         m_selectAllScopes = new JCheckBox("All scopes");
-        m_selectAllScopes.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_scopeChanged = true;
-                updateModel();
-                updateDialog();
-            }
+        m_selectAllScopes.addActionListener(e -> {
+            m_scopeChanged = true;
+            updateModel();
+            updateDialog();
         });
         panel.add(m_selectAllScopes, gbc);
         return panel;
@@ -487,9 +478,8 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         return panel;
     }
 
-    private static JPanel getBasePanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        return panel;
+    private static JPanel createBasePanel() {
+        return new JPanel(new GridBagLayout());
     }
 
     private static GridBagConstraints getDefaultGBC() {
@@ -504,7 +494,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         return gbc;
     }
 
-    private class CheckboxListCellRenderer extends JCheckBox implements ListCellRenderer<CheckboxListItem> {
+    private static class CheckboxListCellRenderer extends JCheckBox implements ListCellRenderer<CheckboxListItem> {
         private static final long serialVersionUID = 1L;
 
         @SuppressWarnings("rawtypes")
@@ -528,7 +518,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
         }
     }
 
-    private class CheckboxListItem {
+    private static class CheckboxListItem {
         private boolean m_isSelected = false;
 
         private KnimeGoogleAuthScope m_scope;
