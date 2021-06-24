@@ -143,10 +143,11 @@ public class GoogleAuthentication {
      * @return The authenticated credentials
      * @throws IOException
      */
-    public static Credential getCredential(final GoogleAuthLocationType type, final String credentialPath,
+    public synchronized static Credential getCredential(final GoogleAuthLocationType type, final String credentialPath,
         final List<KnimeGoogleAuthScope> scopes, final String clientIdFile) throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
+        final GoogleAuthorizationCodeFlow flow =
+            getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
         Credential credential = flow.loadCredential(DEFAULT_KNIME_USER);
         if (credential == null) {
             credential =
@@ -166,10 +167,12 @@ public class GoogleAuthentication {
      * @return authorized credentials if they are available
      * @throws IOException
      */
-    public static Credential getNoAuthCredential(final GoogleAuthLocationType type, final String credentialPath,
-        final List<KnimeGoogleAuthScope> scopes, final String clientIdFile) throws IOException {
+    public static synchronized Credential getNoAuthCredential(final GoogleAuthLocationType type,
+        final String credentialPath, final List<KnimeGoogleAuthScope> scopes, final String clientIdFile)
+        throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
+        final GoogleAuthorizationCodeFlow flow =
+            getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
         Credential credential = flow.loadCredential(DEFAULT_KNIME_USER);
         return credential;
     }
@@ -216,8 +219,8 @@ public class GoogleAuthentication {
      * @throws IOException If there is a problem accessing the {@link DataStoreFactory}
      */
     private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(
-        final DataStoreFactory credentialDataStoreFactory, final List<KnimeGoogleAuthScope> knimeScopes, final String clientIdFile)
-        throws IOException {
+        final DataStoreFactory credentialDataStoreFactory, final List<KnimeGoogleAuthScope> knimeScopes,
+        final String clientIdFile) throws IOException {
         final GoogleClientSecrets clientSecrets = loadClientSecrets(clientIdFile);
         KnimeGoogleAuthScopeRegistry.getInstance();
         final List<String> scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeScopes);
@@ -232,7 +235,7 @@ public class GoogleAuthentication {
      * @param credentialPath The path to the credentials that should be removed
      * @throws IOException If the credential location cannot be accessed
      */
-    public static void removeCredential(final GoogleAuthLocationType type, final String credentialPath)
+    public static synchronized void removeCredential(final GoogleAuthLocationType type, final String credentialPath)
         throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
         credentialDataStoreFactory.getDataStore(StoredCredential.DEFAULT_DATA_STORE_ID).delete(DEFAULT_KNIME_USER);
