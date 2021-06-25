@@ -283,8 +283,10 @@ final class GoogleAuthNodeSettings {
             }
 
         } else {
-            Optional<KnimeGoogleAuthScope> scope =
-                m_knimeGoogleAuthScopes.stream().filter(KnimeGoogleAuthScope::isCustomClientIdRequired).findFirst();
+            final Optional<KnimeGoogleAuthScope> scope = getRelevantKnimeAuthScopes().stream() //
+                    .filter(KnimeGoogleAuthScope::isCustomClientIdRequired) //
+                    .findFirst();
+
             if (scope.isPresent()) {
                 throw new InvalidSettingsException("Custom Client ID is required by the scope: " + scope.get().getAuthScopeName());
             }
