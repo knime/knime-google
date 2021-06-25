@@ -91,6 +91,7 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
 
         final CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(workingDir, apiConnection);
         config.setProjectId(configuration.get("projectId"));
+        config.setNormalizePaths(true);
         config.setConnectionTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
         config.setReadTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
 
