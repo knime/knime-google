@@ -13,14 +13,6 @@
     
     <fullDescription>
         <intro>
-			<p>
-				<i>This legacy file handling node has been replaced by the
-				</i><a href="https://kni.me/n/hKVZUpk4QIM_Qg-x"><i>Google Cloud Storage Connector</i></a><i>
-				and will become deprecated in the foreseeable future. For further information about the 
-				new file handling framework see the
-				</i><a href="https://docs.knime.com/latest/analytics_platform_file_handling_guide/index.html"><i>File Handling Guide.
-				</i></a><br/>
-			</p>
         	<p>
         		This node configures the connection information that will be used to connect to the Google Cloud Storage. Using this 
         		connection, the other KNIME remote file handling nodes can be used to create directory, list, delete, 
@@ -32,6 +24,14 @@
         		object name, e.g. <i>gs://123456/my-bucket/data/iris.data</i> defines the object 
         		<i>data/iris.data</i> in the bucket <i>my-bucket</i>. 
         	</p>
+			<p>
+				<i>This is a legacy node that has been replaced by the
+				</i><a href="https://kni.me/n/hKVZUpk4QIM_Qg-x"><i>Google Cloud Storage Connector</i></a><i>
+				and will become deprecated in the foreseeable future. For further information about the 
+				new file handling framework see the
+				</i><a href="https://docs.knime.com/latest/analytics_platform_file_handling_guide/index.html"><i>File Handling Guide.
+				</i></a><br/>
+			</p>
         </intro>
         
         <option name="Project identifier">
