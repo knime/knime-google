@@ -61,6 +61,9 @@ import com.google.api.services.drive.model.File;
  * @author Vyacheslav Soldatov <vyacheslav@redfield.se>
  */
 public class FileMetadata {
+
+    private static final FileTime DEFAULT_FILE_TIME = FileTime.fromMillis(0);
+
     /**
      * File type.
      */
@@ -111,9 +114,9 @@ public class FileMetadata {
         m_id = id;
         m_type = type;
         m_driveId = null;
-        m_createdTime = FileTime.fromMillis(0);
-        m_lastModifiedTime = FileTime.fromMillis(0);
-        m_lastAccessTime = FileTime.fromMillis(0);
+        m_createdTime = DEFAULT_FILE_TIME;
+        m_lastModifiedTime = DEFAULT_FILE_TIME;
+        m_lastAccessTime = DEFAULT_FILE_TIME;
         m_size = 0l;
     }
 
@@ -128,10 +131,8 @@ public class FileMetadata {
         m_type = GoogleDriveHelper.MIME_TYPE_FOLDER.equals(file.getMimeType()) ? FileType.FOLDER : FileType.FILE;
         m_driveId = file.getDriveId();
 
-        FileTime lastModifiedTime = getTime(file.getModifiedTime());
-        m_lastModifiedTime = lastModifiedTime;
-        m_lastAccessTime = lastModifiedTime;
-        m_createdTime = getTime(file.getCreatedTime());
+        m_createdTime = getTime(file.getCreatedTime(), DEFAULT_FILE_TIME);
+        m_lastAccessTime = m_lastModifiedTime = getTime(file.getModifiedTime(), m_createdTime);
 
         m_size = file.getSize() == null ? 0 : file.getSize();
     }
@@ -141,27 +142,37 @@ public class FileMetadata {
      *            shared drive or null for `My Drive`
      */
     public FileMetadata(final Drive drive) {
-        m_id = drive == null ? null : drive.getId();
+        if (drive == null) {
+            // drive is the "My Drive"
+            m_id = null;
+            m_name = GoogleDriveFileSystemProvider.MY_DRIVE;
+            m_type = FileType.MY_DRIVE;
+            m_createdTime = DEFAULT_FILE_TIME;
+        } else {
+            // drive is a shared drive
+            m_id = drive.getId();
+            m_name = drive.getName();
+            m_type = FileType.SHARED_DRIVE;
+            m_createdTime = getTime(drive.getCreatedTime(), DEFAULT_FILE_TIME);
+        }
+
         m_mimeType = null;
-        m_name = drive == null ? GoogleDriveFileSystemProvider.MY_DRIVE : drive.getName();
-        m_type = drive == null ? FileType.MY_DRIVE : FileType.SHARED_DRIVE;
         m_driveId = m_id;
-
-        m_lastModifiedTime = null;
-        m_lastAccessTime = null;
-        m_createdTime = drive == null ? null : getTime(drive.getCreatedTime());
-
+        m_lastModifiedTime = m_lastAccessTime = m_createdTime;
         m_size = 0;
     }
 
     /**
      * @param dateTime
-     *            date time to convert.
+     *            date time to convert. May be null.
+     * @param fallbackIfNull
+     *            {@link FileTime} to use, if given dateTime is null.
+     * @param defaultFileTime
      * @return tile time.
      */
-    private static FileTime getTime(final DateTime dateTime) {
+    private static FileTime getTime(final DateTime dateTime, final FileTime fallbackIfNull) {
         if (dateTime == null) {
-            return null;
+            return fallbackIfNull;
         }
 
         return FileTime.fromMillis(dateTime.getValue() + TimeUnit.MINUTES.toMillis(dateTime.getTimeZoneShift()));
