@@ -48,17 +48,16 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import org.knime.core.node.util.FileSystemBrowser;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.FSFileSystem;
-import org.knime.filehandling.core.filechooser.NioFileSystemBrowser;
+import org.knime.filehandling.core.connections.base.BaseFSConnection;
 
 /**
  * Google Cloud Storage implementation of the {@link FSConnection} interface.
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageFSConnection implements FSConnection {
+public class CloudStorageFSConnection extends BaseFSConnection {
 
     private static final long CACHE_TTL_MILLIS = 6000;
 
@@ -80,10 +79,4 @@ public class CloudStorageFSConnection implements FSConnection {
     public FSFileSystem<?> getFileSystem() {
         return m_filesystem;
     }
-
-    @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new NioFileSystemBrowser(this);
-    }
-
 }
