@@ -89,7 +89,7 @@ import com.google.api.services.drive.model.File;
  */
 public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<GoogleDrivePath, GoogleDriveFileSystem> {
 
-    private static final Pattern GOOGLE_DOC_MIME_TYPE = Pattern.compile("application/vnd\\.google-apps\\..+");
+    private static final Pattern GOOGLE_APPS_MIME_TYPE = Pattern.compile("application/vnd\\.google-apps\\..+");
 
     /**
      * Default user drive name.
@@ -154,6 +154,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected SeekableByteChannel newByteChannelInternal(final GoogleDrivePath path,
             final Set<? extends OpenOption> options, final FileAttribute<?>... attrs) throws IOException {
+        checkMimeType(path);
         return new GoogleDriveFileSeekableByteChannel(path, options);
     }
 
@@ -275,13 +276,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     @Override
     protected InputStream newInputStreamInternal(final GoogleDrivePath path, final OpenOption... options)
             throws IOException {
-
+        checkMimeType(path);
         final GoogleDriveFileAttributes attrs = readAttributes(path);
-
-        if (GOOGLE_DOC_MIME_TYPE.matcher(attrs.getMetadata().getMimeType()).matches()) {
-            throw new IOException("Cannot read Google workspace document. Please use the Google API Connector nodes.");
-        }
-
         return getHelper().readFile(attrs.getMetadata().getId());
     }
 
@@ -356,6 +352,24 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
 
     GoogleDriveFileAttributes readAttributes(final GoogleDrivePath path) throws IOException {
         return (GoogleDriveFileAttributes) readAttributes(path, BasicFileAttributes.class);
+    }
+
+    private void checkMimeType(final GoogleDrivePath path) throws IOException {
+        final GoogleDrivePath absNormalizedPath = (GoogleDrivePath) path.toAbsolutePath().normalize();
+
+        if (existsCached(absNormalizedPath)) {
+            final var attrs = readAttributes(absNormalizedPath);
+            final var metaData = attrs.getMetadata();
+
+            if (GOOGLE_APPS_MIME_TYPE.matcher(metaData.getMimeType()).matches()) {
+                if (metaData.getMimeType().endsWith("spreadsheet")) {
+                    throw new IOException("Google Sheets are not supported. "
+                            + "Please use the Google Sheets Reader (https://kni.me/n/poHAFve1qUYVbcyD) node instead.");
+                } else {
+                    throw new IOException("Google Docs/Google Slides are not supported.");
+                }
+            }
+        }
     }
 
     /**
