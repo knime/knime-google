@@ -73,6 +73,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
+import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryRelativizationPanel;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
@@ -98,7 +99,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
                 .setStringValue(m_workingDirChooser.getSelectedWorkingDirectory());
 
         addTab("Settings", createSettingsPanel());
-        addTab("Advanced", createTimeoutsPanel());
+        addTab("Advanced", createAdvancedPanel());
     }
 
     private JComponent createSettingsPanel() {
@@ -144,6 +145,28 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         return panel;
     }
 
+    private JComponent createAdvancedPanel() {
+        var panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(createTimeoutsPanel(), c);
+
+        c.gridy += 1;
+        panel.add(new WorkingDirectoryRelativizationPanel(m_settings.getBrowserPathRelativeModel()), c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.gridy += 1;
+        panel.add(Box.createVerticalGlue(), c);
+
+        return panel;
+    }
+
     private JComponent createTimeoutsPanel() {
         DialogComponentNumber connectionTimeout = new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "",
                 1);
@@ -156,6 +179,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         c.weighty = 0;
         c.gridx = 0;
         c.gridy = 0;
+        c.insets = new Insets(0, 5, 0, 0);
         panel.add(new JLabel("Connection timeout in seconds:"), c);
 
         c.gridy = 1;
@@ -169,19 +193,12 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         c.gridy = 1;
         panel.add(readTimeout.getComponentPanel(), c);
 
-        c.fill = GridBagConstraints.BOTH;
-        c.weighty = 1;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.gridy += 1;
-        panel.add(Box.createVerticalGlue(), c);
-
         panel.setBorder(BorderFactory.createTitledBorder("Connection settings"));
         return panel;
     }
 
     private FSConnection createFSConnection() {
-        return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(m_connection));
+        return new CloudStorageFSConnection(m_settings.toFSConnectionConfigForWorkdirChooser(m_connection));
     }
 
     /**

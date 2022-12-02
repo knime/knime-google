@@ -86,10 +86,13 @@ public class GoogleDriveFSConnectionConfig extends BaseFSConnectionConfig {
     /**
      *
      * @param workingDirectory
+     * @param relativizationBehavior
+     *            The browser relativization behavior.
      * @param apiConnection
      */
-    public GoogleDriveFSConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
-        super(workingDirectory, true);
+    public GoogleDriveFSConnectionConfig(final String workingDirectory,
+            final BrowserRelativizationBehavior relativizationBehavior, final GoogleApiConnection apiConnection) {
+        super(workingDirectory, true, relativizationBehavior);
         m_apiConnection = apiConnection;
     }
 

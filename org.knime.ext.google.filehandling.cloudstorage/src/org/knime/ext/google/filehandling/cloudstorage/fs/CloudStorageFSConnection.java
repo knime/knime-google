@@ -72,6 +72,7 @@ public class CloudStorageFSConnection extends BaseFSConnection {
      */
     @SuppressWarnings("unused")
     public CloudStorageFSConnection(final CloudStorageConnectionConfig config) {
+        super(config);
         m_filesystem = new CloudStorageFileSystem(config, CACHE_TTL_MILLIS);
     }
 

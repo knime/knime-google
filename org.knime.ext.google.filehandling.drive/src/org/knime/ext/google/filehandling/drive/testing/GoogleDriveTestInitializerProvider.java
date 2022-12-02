@@ -59,6 +59,7 @@ import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvide
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveHelper;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig.BrowserRelativizationBehavior;
 import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -86,7 +87,8 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
 
         final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"), "/");
 
-        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(workingDir, apiConnection);
+        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(workingDir,
+                BrowserRelativizationBehavior.ABSOLUTE, apiConnection);
 
         return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(config));
     }

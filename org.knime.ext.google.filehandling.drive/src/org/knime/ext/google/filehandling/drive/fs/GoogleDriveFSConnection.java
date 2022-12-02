@@ -64,6 +64,7 @@ public class GoogleDriveFSConnection extends BaseFSConnection {
      *            connection configuration.
      */
     public GoogleDriveFSConnection(final GoogleDriveFSConnectionConfig config) {
+        super(config);
         m_fileSystem = new GoogleDriveFileSystem(config);
     }
 

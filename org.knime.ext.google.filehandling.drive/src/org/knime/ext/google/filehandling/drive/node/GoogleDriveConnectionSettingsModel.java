@@ -53,10 +53,12 @@ import java.time.Duration;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig.BrowserRelativizationBehavior;
 import org.knime.google.api.data.GoogleApiConnection;
 
 /**
@@ -72,11 +74,15 @@ class GoogleDriveConnectionSettingsModel {
 
     private static final String KEY_READ_TIMEOUT = "readTimeout";
 
+    private static final String KEY_BROWSER_PATH_RELATIVE = "browserPathRelativize";
+
     private final SettingsModelString m_workingDirectory;
 
     private final SettingsModelIntegerBounded m_connectionTimeout;
 
     private final SettingsModelIntegerBounded m_readTimeout;
+
+    private final SettingsModelBoolean m_browserPathRelative;
 
     /**
      * Default constructor.
@@ -89,6 +95,7 @@ class GoogleDriveConnectionSettingsModel {
                 Integer.MAX_VALUE);
 
         m_workingDirectory = new SettingsModelString(KEY_WORKING_DIRECTORY, GoogleDriveFileSystem.PATH_SEPARATOR);
+        m_browserPathRelative = new SettingsModelBoolean(KEY_BROWSER_PATH_RELATIVE, false);
     }
 
     /**
@@ -134,6 +141,24 @@ class GoogleDriveConnectionSettingsModel {
     }
 
     /**
+     * @return the browserPathRelative model
+     */
+    public SettingsModelBoolean getBrowserPathRelativeModel() {
+        return m_browserPathRelative;
+    }
+
+    /**
+     * @return the browser relativization behavior
+     */
+    public BrowserRelativizationBehavior getBrowserRelativizationBehavior() {
+        if (m_browserPathRelative.getBooleanValue()) {
+            return BrowserRelativizationBehavior.RELATIVE;
+        } else {
+            return BrowserRelativizationBehavior.ABSOLUTE;
+        }
+    }
+
+    /**
      * Loads settings from the given {@link NodeSettingsRO}.
      *
      * @param settings
@@ -144,6 +169,12 @@ class GoogleDriveConnectionSettingsModel {
         m_workingDirectory.loadSettingsFrom(settings);
         m_connectionTimeout.loadSettingsFrom(settings);
         m_readTimeout.loadSettingsFrom(settings);
+
+        if (settings.containsKey(KEY_BROWSER_PATH_RELATIVE)) {
+            m_browserPathRelative.loadSettingsFrom(settings);
+        } else {
+            m_browserPathRelative.setBooleanValue(false);
+        }
     }
 
     /**
@@ -156,6 +187,7 @@ class GoogleDriveConnectionSettingsModel {
         m_workingDirectory.saveSettingsTo(settings);
         m_connectionTimeout.saveSettingsTo(settings);
         m_readTimeout.saveSettingsTo(settings);
+        m_browserPathRelative.saveSettingsTo(settings);
     }
 
     /**
@@ -168,6 +200,9 @@ class GoogleDriveConnectionSettingsModel {
         m_workingDirectory.validateSettings(settings);
         m_connectionTimeout.validateSettings(settings);
         m_readTimeout.validateSettings(settings);
+        if (settings.containsKey(KEY_BROWSER_PATH_RELATIVE)) {
+            m_browserPathRelative.validateSettings(settings);
+        }
 
         validate();
     }
@@ -189,7 +224,17 @@ class GoogleDriveConnectionSettingsModel {
      * @return The FSConnectionConfig for Google Drive
      */
     public GoogleDriveFSConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
-        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(getWorkingDirectory(), con);
+        return toFSConnectionConfig(con, getBrowserRelativizationBehavior());
+    }
+
+    public GoogleDriveFSConnectionConfig toFSConnectionConfigForWorkdirChooser(final GoogleApiConnection con) {
+        return toFSConnectionConfig(con, BrowserRelativizationBehavior.ABSOLUTE);
+    }
+
+    private GoogleDriveFSConnectionConfig toFSConnectionConfig(final GoogleApiConnection con,
+            final BrowserRelativizationBehavior relativizationBehavior) {
+        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(getWorkingDirectory(),
+                relativizationBehavior, con);
         config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
         config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
         return config;

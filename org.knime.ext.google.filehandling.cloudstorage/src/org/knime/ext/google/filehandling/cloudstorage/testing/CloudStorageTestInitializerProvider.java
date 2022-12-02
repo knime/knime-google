@@ -60,6 +60,7 @@ import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSDescripto
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig.BrowserRelativizationBehavior;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
 
@@ -89,7 +90,8 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
         final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"),
                 CloudStorageFileSystem.PATH_SEPARATOR);
 
-        final CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(workingDir, apiConnection);
+        final CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(workingDir,
+                BrowserRelativizationBehavior.ABSOLUTE, apiConnection);
         config.setProjectId(configuration.get("projectId"));
         config.setNormalizePaths(true);
         config.setConnectionTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));

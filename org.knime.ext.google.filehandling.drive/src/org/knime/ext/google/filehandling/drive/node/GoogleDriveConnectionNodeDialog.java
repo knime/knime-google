@@ -54,6 +54,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -74,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
+import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryRelativizationPanel;
 
 /**
  * Google Drive Connection node dialog.
@@ -132,8 +134,8 @@ final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
     private FSConnection createFSConnection() throws IOException {
         try {
             m_settings.validate();
-            GoogleDriveFSConnection connection = GoogleDriveConnectionNodeModel.createConnection(m_settings,
-                    m_portObjectSpecs);
+            GoogleDriveFSConnection connection = GoogleDriveConnectionNodeModel
+                    .createConnectionForWorkdirChooser(m_settings, m_portObjectSpecs);
             GoogleDriveConnectionNodeModel.testConnection(connection);
             return connection;
         } catch (InvalidSettingsException e) {
@@ -144,16 +146,31 @@ final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
 
     private JComponent createAdvancedPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        panel.add(createTimeoutsPanel(), gbc);
 
-        addGbcRow(panel, 0,
-                "Connection timeout (seconds): ",
+        gbc.gridy += 1;
+        panel.add(new WorkingDirectoryRelativizationPanel(m_settings.getBrowserPathRelativeModel()), gbc);
+
+        addVerticalFiller(panel, 2, 1);
+
+        return panel;
+    }
+
+    private JComponent createTimeoutsPanel() {
+        var panel = new JPanel(new GridBagLayout());
+
+        addGbcRow(panel, 0, "Connection timeout (seconds): ",
                 new DialogComponentNumber(m_settings.getConnectionTimeoutModel(), "", 1));
 
-        addGbcRow(panel, 1,
-                "Read timeout (seconds): ", new DialogComponentNumber(m_settings.getReadTimeoutModel(), "", 1));
+        addGbcRow(panel, 1, "Read timeout (seconds): ",
+                new DialogComponentNumber(m_settings.getReadTimeoutModel(), "", 1));
 
-        addVerticalFiller(panel, 8, 3);
-
+        panel.setBorder(BorderFactory.createTitledBorder("Connection settings"));
         return panel;
     }
 

@@ -75,10 +75,13 @@ public class CloudStorageConnectionConfig extends BaseFSConnectionConfig {
     /**
      *
      * @param workingDirectory
+     * @param relativizationBehavior
+     *            The browser relativization behavior.
      * @param apiConnection
      */
-    public CloudStorageConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
-        super(workingDirectory, true);
+    public CloudStorageConnectionConfig(final String workingDirectory,
+            final BrowserRelativizationBehavior relativizationBehavior, final GoogleApiConnection apiConnection) {
+        super(workingDirectory, true, relativizationBehavior);
         m_apiConnection = apiConnection;
     }
 

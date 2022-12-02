@@ -58,6 +58,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageConnectionConfig;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
+import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig.BrowserRelativizationBehavior;
 import org.knime.google.api.data.GoogleApiConnection;
 
 /**
@@ -71,12 +72,14 @@ public class CloudStorageConnectorSettings {
     private static final String KEY_NORMALIZE_PATHS = "normalizePaths";
     private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
     private static final String KEY_READ_TIMEOUT = "readTimeout";
+    private static final String KEY_BROWSER_PATH_RELATIVE = "browserPathRelativize";
 
     private SettingsModelString m_projectId;
     private SettingsModelString m_workingDirectory;
     private SettingsModelBoolean m_normalizePaths;
     private SettingsModelIntegerBounded m_connectionTimeout;
     private SettingsModelIntegerBounded m_readTimeout;
+    private final SettingsModelBoolean m_browserPathRelative;
 
     /**
      * Creates new instance
@@ -88,6 +91,7 @@ public class CloudStorageConnectorSettings {
         m_connectionTimeout = new SettingsModelIntegerBounded(KEY_CONNECTION_TIMEOUT, CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS, 0,
                 Integer.MAX_VALUE);
         m_readTimeout = new SettingsModelIntegerBounded(KEY_READ_TIMEOUT, CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS, 0, Integer.MAX_VALUE);
+        m_browserPathRelative = new SettingsModelBoolean(KEY_BROWSER_PATH_RELATIVE, false);
     }
 
     /**
@@ -102,6 +106,7 @@ public class CloudStorageConnectorSettings {
         m_normalizePaths.saveSettingsTo(settings);
         m_connectionTimeout.saveSettingsTo(settings);
         m_readTimeout.saveSettingsTo(settings);
+        m_browserPathRelative.saveSettingsTo(settings);
     }
 
     /**
@@ -117,6 +122,10 @@ public class CloudStorageConnectorSettings {
         m_normalizePaths.validateSettings(settings);
         m_connectionTimeout.validateSettings(settings);
         m_readTimeout.validateSettings(settings);
+
+        if (settings.containsKey(KEY_BROWSER_PATH_RELATIVE)) {
+            m_browserPathRelative.validateSettings(settings);
+        }
 
         CloudStorageConnectorSettings temp = new CloudStorageConnectorSettings();
         temp.loadSettingsFrom(settings);
@@ -152,6 +161,12 @@ public class CloudStorageConnectorSettings {
         m_normalizePaths.loadSettingsFrom(settings);
         m_connectionTimeout.loadSettingsFrom(settings);
         m_readTimeout.loadSettingsFrom(settings);
+
+        if (settings.containsKey(KEY_BROWSER_PATH_RELATIVE)) {
+            m_browserPathRelative.loadSettingsFrom(settings);
+        } else {
+            m_browserPathRelative.setBooleanValue(false);
+        }
     }
 
     /**
@@ -225,12 +240,45 @@ public class CloudStorageConnectorSettings {
     }
 
     /**
+     * @return the browserPathRelative model
+     */
+    public SettingsModelBoolean getBrowserPathRelativeModel() {
+        return m_browserPathRelative;
+    }
+
+    /**
+     * @return the browser relativization behavior
+     */
+    public BrowserRelativizationBehavior getBrowserRelativizationBehavior() {
+        if (m_browserPathRelative.getBooleanValue()) {
+            return BrowserRelativizationBehavior.RELATIVE;
+        } else {
+            return BrowserRelativizationBehavior.ABSOLUTE;
+        }
+    }
+
+    /**
      *
      * @param con
      * @return The FSConnectionConfig for Cloud Storage
      */
     public CloudStorageConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
-        CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(getWorkingDirectory(), con);
+        return toFSConnectionConfig(con, getBrowserRelativizationBehavior());
+    }
+
+    /**
+     * @param con
+     *            The Google Api Connection.
+     * @return The FSConnectionConfig to be used with Working directory chooser
+     */
+    public CloudStorageConnectionConfig toFSConnectionConfigForWorkdirChooser(final GoogleApiConnection con) {
+        return toFSConnectionConfig(con, BrowserRelativizationBehavior.ABSOLUTE);
+    }
+
+    private CloudStorageConnectionConfig toFSConnectionConfig(final GoogleApiConnection con,
+            final BrowserRelativizationBehavior relativizationBehavior) {
+        CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(getWorkingDirectory(),
+                relativizationBehavior, con);
         config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
         config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
         config.setNormalizePaths(getNormalizePaths());

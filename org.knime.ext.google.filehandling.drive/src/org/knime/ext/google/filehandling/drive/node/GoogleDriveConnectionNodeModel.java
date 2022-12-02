@@ -159,9 +159,10 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      *            port object input specification.
      * @return file system connection.
      */
-    public static GoogleDriveFSConnection createConnection(final GoogleDriveConnectionSettingsModel settings,
+    public static GoogleDriveFSConnection createConnectionForWorkdirChooser(final GoogleDriveConnectionSettingsModel settings,
             final PortObjectSpec[] inputSpec) {
-        return new GoogleDriveFSConnection(settings.toFSConnectionConfig(getGoogleApiConnection(inputSpec)));
+        return new GoogleDriveFSConnection(
+                settings.toFSConnectionConfigForWorkdirChooser(getGoogleApiConnection(inputSpec)));
     }
 
     @Override
