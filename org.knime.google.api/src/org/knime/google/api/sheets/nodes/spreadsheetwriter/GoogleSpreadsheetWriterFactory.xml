@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="./googlesheets.png" type="Manipulator"
-	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+<knimeNode icon="./googlesheets.png" type="Manipulator" xmlns="http://knime.org/node/v4.1" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
 	<name>Google Sheets Writer</name>
 	<shortDescription>This node writes the input data table to a new Google Sheets spreadsheet.</shortDescription>
 	<fullDescription>
@@ -41,4 +41,7 @@
 		<inPort index="0" name="Google Sheets Connection">A Google Sheets connection.</inPort>
 		<inPort index="1" name="Buffered data table">Table to be written to a google sheet</inPort>
 	</ports>
+	<keywords>
+		<keyword>Spreadsheet</keyword>
+	</keywords>
 </knimeNode>

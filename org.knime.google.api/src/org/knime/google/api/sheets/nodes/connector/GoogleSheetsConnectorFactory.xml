@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="./googlesheetsconnector.png" type="Manipulator"
-	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+<knimeNode icon="./googlesheetsconnector.png" type="Manipulator" xmlns="http://knime.org/node/v4.1" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
 	<name>Google Sheets Connection</name>
 	<shortDescription>This node creates a connection to the Google Sheets API.</shortDescription>
 	<fullDescription>
@@ -21,4 +21,7 @@
 		<outPort index="0" name="Google Sheets Connection">A connection that can be used to
 			access Google Sheets</outPort>
 	</ports>
+	<keywords>
+		<keyword>Spreadsheet</keyword>
+	</keywords>
 </knimeNode>
