@@ -28,6 +28,10 @@
 		By selecting this option, you can specify a string you want to substitute for missing values.
 		If the option is left unchecked, the cells with missing values remain empty.
 		</option>
+		<option name="Write raw">
+			Values are written into the spreadsheet as-is (&quot;raw&quot;). Uncheck the option, if values should be 
+			written as if they were entered via the Google Sheets website.
+		</option>
 		<option name="Open spreadsheet after execution">
 		Opens the spreadsheet after it has been written successfully. 
 		The spreadsheet will be opened in the systems's default browser.

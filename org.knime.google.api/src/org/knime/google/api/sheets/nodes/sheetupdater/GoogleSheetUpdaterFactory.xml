@@ -43,6 +43,10 @@
 		By selecting this option, you can specify a string you want to substitute for missing values.
 		If the option is left unchecked, the cells with missing values remain empty.
 		</option>
+		<option name="Write raw">
+			Values are written into the spreadsheet as-is (&quot;raw&quot;). Uncheck the option, if values should be 
+			written as if they were entered via the Google Sheets website.
+		</option>
 		<option name="Append to sheet">
 		When this option is selected, the data table content will be appended to the selected sheet.
 		</option>

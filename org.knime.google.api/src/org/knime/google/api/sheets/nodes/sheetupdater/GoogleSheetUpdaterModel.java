@@ -68,6 +68,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
 import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -159,7 +160,7 @@ public class GoogleSheetUpdaterModel extends NodeModel {
         final boolean addRowHeader, final boolean addColumnHeader, final boolean handleMissingValues,
         final String missingValuePattern, final ExecutionContext exec)
                 throws IOException, CanceledExecutionException {
-        final String valueInputOption = writeRaw ? "RAW" : "USER_ENTERED";
+        final String valueInputOption = writeRaw ? ValueInputOption.RAW.name() : ValueInputOption.USER_ENTERED.name();
 
         ValueRange body =
                 GoogleSpreadsheetWriterModel.collectSheetData(dataTable, addRowHeader, addColumnHeader,

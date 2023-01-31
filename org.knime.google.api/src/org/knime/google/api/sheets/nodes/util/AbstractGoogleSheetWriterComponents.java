@@ -128,6 +128,8 @@ public abstract class AbstractGoogleSheetWriterComponents {
         panel.add(m_addRowHeader.getComponentPanel(), gbc);
         gbc.gridy++;
         panel.add(m_missingValue.getComponentPanel(), gbc);
+        gbc.gridy++;
+        panel.add(m_writeRaw.getComponentPanel(), gbc);
         panel = addWriterComponents(panel, gbc);
         return panel;
     }

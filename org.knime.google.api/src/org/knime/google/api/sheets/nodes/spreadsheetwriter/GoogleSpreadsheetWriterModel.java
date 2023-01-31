@@ -77,6 +77,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.util.DesktopUtil;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
+import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Create;
 import com.google.api.services.sheets.v4.model.Sheet;
@@ -200,7 +201,7 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         final boolean writeRaw, final String spreadsheetId, final String sheetName,final boolean addRowHeader,
         final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern,
         final ExecutionContext exec) throws IOException, CanceledExecutionException {
-        final String valueInputOption = writeRaw ? "RAW" : "USER_ENTERED";
+        final String valueInputOption = writeRaw ? ValueInputOption.RAW.name() : ValueInputOption.USER_ENTERED.name();
 
         ValueRange body =
             collectSheetData(dataTable, addRowHeader, addColumnHeader, handleMissingValues, missingValuePattern, exec);
