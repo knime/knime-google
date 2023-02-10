@@ -4,7 +4,7 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/io/connectors"
+            category-path="/io/connectors/googleservices"
             factory-class="org.knime.ext.google.filehandling.drive.node.GoogleDriveConnectionNodeFactory"/>
    </extension>
    

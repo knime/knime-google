@@ -4,59 +4,59 @@
    <extension-point id="knimeGoogleAuthScope" name="KnimeGoogleAuthScope" schema="schema/KnimeGoogleAuthScope.exsd"/>
    <extension point="org.knime.workbench.repository.nodes">
       <node 
-            category-path="/toolintegration/googleservices" 
-            factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory">
-      </node>
-      <node 
-            category-path="/toolintegration/googleservices/googleanalytics" 
+            category-path="/toolintegration/googleanalytics" 
             factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory">
       </node>
       <node 
-            category-path="/toolintegration/googleservices/googleanalytics"
+            category-path="/toolintegration/googleanalytics"
             factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory">
       </node>
       <node 
-            category-path="/toolintegration/googleservices" 
+            category-path="/io/connectors/googleservices" 
+            factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory">
+      </node>
+      <node
+            after="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" 
+            category-path="/io/connectors/googleservices" 
             factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory">
       </node>
       <node
-            category-path="/toolintegration/googleservices/googlesheets"
+            category-path="/io/connectors/googleservices"
+            deprecated="true"
+            factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
+      </node>
+      <node
+            category-path="/io/connectors/googleservices"
             deprecated="true"
             factory-class="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory">
       </node>
       <node
-            category-path="/toolintegration/googleservices/googlesheets"
+            after="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory"
+            category-path="/io/connectors/googleservices"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory">
       </node>
       <node
-            after="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory"
-            category-path="/toolintegration/googleservices/googlesheets"
+            category-path="/io/read"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory">
       </node>
       <node
-            after="org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderFactory"
-            category-path="/toolintegration/googleservices/googlesheets"
+            category-path="/io/write"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory">
       </node>
       <node
             after="org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterFactory"
-            category-path="/toolintegration/googleservices/googlesheets"
+            category-path="/io/write"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory">
       </node>
       <node
             after="org.knime.google.api.sheets.nodes.sheetappender.GoogleSheetAppenderFactory"
-            category-path="/toolintegration/googleservices/googlesheets"
+            category-path="/io/write"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.sheetupdater.GoogleSheetUpdaterFactory">
-      </node>
-      <node
-            category-path="/toolintegration/googleservices"
-            deprecated="true"
-            factory-class="org.knime.google.api.drive.node.connector.GoogleDriveConnectionNodeFactory">
       </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
@@ -64,22 +64,16 @@
             description="Nodes to access various Google APIs" 
             icon="icons/googleapicategory.png" 
             level-id="googleservices" 
-            name="Google Services" 
-            path="/toolintegration">
+            name="Google" 
+            path="/io/connectors"
+            after="knime">
       </category>
       <category 
             description="Nodes to access the Google Analytics API" 
             icon="icons/googleanalyticscategory.png" 
             level-id="googleanalytics" 
             name="Google Analytics" 
-            path="/toolintegration/googleservices">
-      </category>
-      <category
-            description="Nodes for interaction with Google Sheets"
-            icon="icons/googlesheetscategory.png"
-            level-id="googlesheets"
-            name="Google Sheets"
-            path="/toolintegration/googleservices">
+            path="/toolintegration">
       </category>
    </extension>
    <extension
