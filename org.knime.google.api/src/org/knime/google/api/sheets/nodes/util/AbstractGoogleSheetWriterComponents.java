@@ -95,7 +95,8 @@ public abstract class AbstractGoogleSheetWriterComponents {
                 AbstractGoogleSheetWriterSettings.getMissingValueModel(), "For missing values write: ");
 
     private final DialogComponentBoolean m_writeRaw =
-            new DialogComponentBoolean(AbstractGoogleSheetWriterSettings.getWriteRawModel(), "Write raw");
+            new DialogComponentBoolean(AbstractGoogleSheetWriterSettings.getWriteRawModel(),
+                "Write raw (do not parse numbers, dates, hyperlinks, etc.)");
 
     /**
      * Returns the panel containing the google sheets writer components.

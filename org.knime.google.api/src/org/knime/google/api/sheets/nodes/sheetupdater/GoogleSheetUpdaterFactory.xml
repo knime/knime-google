@@ -43,9 +43,14 @@
 		By selecting this option, you can specify a string you want to substitute for missing values.
 		If the option is left unchecked, the cells with missing values remain empty.
 		</option>
-		<option name="Write raw">
-			Values are written into the spreadsheet as-is (&quot;raw&quot;). Uncheck the option, if values should be 
-			written as if they were entered via the Google Sheets website.
+		<option name="Write raw (do not parse numbers, dates, hyperlinks, etc.)">
+			Values are written into the spreadsheet as-is (&quot;raw&quot;), i.e. they will <i>not</i> be parsed. 
+			Uncheck the option, if values should be written into the spreadsheet as if they were entered via the Google 
+			Sheets website. 
+			If unchecked, numbers will stay as numbers, but other strings may be converted to numbers, dates, etc. 
+			following the same rules that are applied when entering text into a cell via the Google Sheets website.
+			For example, strings like <code>=hyperlink("example.com", "example")</code> will be parsed to hyperlinks
+			if this option is unchecked.
 		</option>
 		<option name="Append to sheet">
 		When this option is selected, the data table content will be appended to the selected sheet.
