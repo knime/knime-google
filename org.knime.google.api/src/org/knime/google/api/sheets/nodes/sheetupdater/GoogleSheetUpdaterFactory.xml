@@ -49,7 +49,7 @@
 			Sheets website. 
 			If unchecked, numbers will stay as numbers, but other strings may be converted to numbers, dates, etc. 
 			following the same rules that are applied when entering text into a cell via the Google Sheets website.
-			For example, strings like <code>=hyperlink("example.com", "example")</code> will be parsed to hyperlinks
+			For example, strings like <tt>=hyperlink("example.com", "example")</tt> will be parsed to hyperlinks
 			if this option is unchecked.
 		</option>
 		<option name="Append to sheet">
