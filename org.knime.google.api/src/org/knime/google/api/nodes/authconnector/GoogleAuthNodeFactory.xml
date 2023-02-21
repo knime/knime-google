@@ -2,11 +2,11 @@
 <knimeNode icon="./googleapiconnector.png" type="Source" xmlns="http://knime.org/node/v4.1" 
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
-	<name>Google Authentication</name>
-	<shortDescription>Authenticates for Google Services</shortDescription>
+	<name>Google Authenticator</name>
+	<shortDescription>Authenticates to Google Services</shortDescription>
 	<fullDescription>
 		<intro>
-			This nodes authenticates for the Google services specified in the node settings.
+			This nodes authenticates to Google services specified in the node settings.
 			<p>
 			Authentication happens in the configuration window.
 			By default, credentials are stored in memory.

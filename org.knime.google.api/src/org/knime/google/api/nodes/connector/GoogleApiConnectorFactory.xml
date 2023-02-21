@@ -2,7 +2,7 @@
 <knimeNode icon="./googleapiconnector.png" type="Source"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Authentication (API Key)</name>
+	<name>Google Authenticator (API Key)</name>
 	<shortDescription>Create a connection to access various Google APIs. (Please note that we currently only provide nodes to connect to Google Analytics.)</shortDescription>
 	<fullDescription>
 		<intro>
