@@ -2,11 +2,11 @@
 <knimeNode icon="./googleanalyticsquery.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Analytics Query</name>
+	<name>Google Analytics Query (legacy)</name>
 	<shortDescription>Execute a query to retrieve data from the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Execute a query to retrieve data from the Google Analytics API.
+			Execute a query to retrieve data from the Google Analytics API (Universal Analytics).
 		</intro>
 		<option name="Dimensions">
 			<i>(Optional)</i>

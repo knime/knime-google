@@ -12,6 +12,14 @@
             factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory">
       </node>
       <node 
+            category-path="/toolintegration/googleanalytics" 
+            factory-class="org.knime.google.api.analytics.ga4.node.connector.GAConnectorFactory">
+      </node>
+      <node 
+            category-path="/toolintegration/googleanalytics" 
+            factory-class="org.knime.google.api.analytics.ga4.node.query.GAQueryFactory">
+      </node>
+      <node 
             category-path="/io/connectors/googleservices" 
             factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory">
       </node>
@@ -79,9 +87,18 @@
    <extension
          point="org.knime.core.PortType">
       <portType
-            color="#fe5617"
+            color="#de5246"
             hidden="true"
             name="Google Analytics"
+            objectClass="org.knime.google.api.analytics.ga4.port.GAConnectionPortObject"
+            objectSerializer="org.knime.google.api.analytics.ga4.port.GAConnectionPortObject$Serializer"
+            specClass="org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec"
+            specSerializer="org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#fe5617"
+            hidden="true"
+            name="Google Analytics (legacy)"
             objectClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject"
             objectSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject$Serializer"
             specClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec"

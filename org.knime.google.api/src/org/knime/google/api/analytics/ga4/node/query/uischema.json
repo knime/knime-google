@@ -1,0 +1,251 @@
+{
+    "elements":
+    [
+        {
+            "type": "Section",
+            "label": "Metrics & Dimensions",
+            "elements":
+            [
+                {
+                    "type": "Control",
+                    "label": "Metrics (up to ten)",
+                    "scope": "#/properties/model/properties/gaMetrics",
+                    "options":
+                    {
+                        "addButtonText": "Add metric",
+                        "showSortButtons": true,
+                        "detail":
+                        {
+                            "metric":
+                            {
+                                "type": "HorizontalLayout",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/name",
+                                        "options":
+                                        {
+                                            "format": "string"
+                                        }
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/expression",
+                                        "options":
+                                        {
+                                            "format": "string",
+                                            "isAdvanced": true
+                                        }
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/invisible",
+                                        "options":
+                                        {
+                                            "isAdvanced": true
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "label": "Dimensions (up to nine)",
+                    "scope": "#/properties/model/properties/gaDimensions",
+                    "options":
+                    {
+                        "addButtonText": "Add dimension",
+                        "showSortButtons": true,
+                        "detail":
+                        {
+                            "dimension":
+                            {
+                                "type": "HorizontalLayout",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/name",
+                                        "options":
+                                        {
+                                            "format": "string"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "label": "Date Ranges (up to four)",
+                    "scope": "#/properties/model/properties/dateRanges",
+                    "options":
+                    {
+                        "addButtonText": "Add date range",
+                        "detail":
+                        {
+                            "dateRange":
+                            {
+                                "type": "HorizontalLayout",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/fromDate",
+                                        "options":
+                                        {
+                                            "format": "string"
+                                        }
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/toDate",
+                                        "options":
+                                        {
+                                            "format": "string"
+                                        }
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/rangeName"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/includeDateRangeNameColumn",
+                    "options":
+                    {
+                        "isAdvanced": true
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Section",
+            "label": "Output",
+            "elements":
+            [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/gaOrderBy",
+                    "options":
+                    {
+                        "addButtonText": "Add order by",
+                        "showSortButtons": true,
+                        "detail":
+                        {
+                            "selectedOrderByType":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/selectedType",
+                                "options":
+                                {
+                                    "format": "valueSwitch",
+                                    "initial": "METRIC"
+                                }
+                            },
+                            "orderByMetric":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/orderByMetric",
+                                "label": "Metric",
+                                "rule":
+                                {
+                                    "effect": "SHOW",
+                                    "condition":
+                                    {
+                                        "scope": "#/properties/selectedType",
+                                        "schema":
+                                        {
+                                            "const": "METRIC"
+                                        }
+                                    }
+                                }
+                            },
+                            "orderByDimension":
+                            {
+                                "type": "HorizontalLayout",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/orderByDimension/properties/dimensionName"
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/orderByDimension/properties/orderType",
+                                        "options": {
+                                            "isAdvanced": true
+                                        }
+                                    }
+                                ],
+                                "rule":
+                                {
+                                    "effect": "SHOW",
+                                    "condition":
+                                    {
+                                        "scope": "#/properties/selectedType",
+                                        "schema":
+                                        {
+                                            "const": "DIMENSION"
+                                        }
+                                    }
+                                }
+                            },
+                            "descending":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/sortOrder",
+                                "options": 
+                                {
+                                    "format": "valueSwitch",
+                                    "initial": "DESCENDING"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/currencyCode",
+                    "options":
+                    {
+                        "isAdvanced": true
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/keepEmptyRows",
+                    "options":
+                    {
+                        "isAdvanced": true
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/returnResponseMetadata",
+                    "options":
+                    {
+                        "isAdvanced": true
+                    }
+                },
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/returnPropertyQuota",
+                    "options":
+                    {
+                        "isAdvanced": true
+                    }
+                }
+            ]
+        }
+    ]
+}

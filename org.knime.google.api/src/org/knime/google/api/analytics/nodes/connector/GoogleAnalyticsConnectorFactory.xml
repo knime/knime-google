@@ -2,11 +2,11 @@
 <knimeNode icon="./googleanalyticsconnector.png" type="Manipulator"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Analytics Connector</name>
+	<name>Google Analytics Connector (legacy)</name>
 	<shortDescription>Create a connection to the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Create a connection to the Google Analytics API, given a Google API connection.
+			Create a connection to the Google Analytics API (Universal Analytics), given a Google API connection.
 			<p>
 			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
 			</p>
