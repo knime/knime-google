@@ -9,6 +9,7 @@ Export-Package: org.knime.google.api.analytics.data,
   org.knime.google.api.data,
   org.knime.google.api.nodes.authconnector.util
 Require-Bundle: org.knime.base;bundle-version="[5.0.0,6.0.0)",
+  org.knime.core.ui;bundle-version="[5.0.0,6.0.0)",
   org.knime.base.filehandling;bundle-version="[5.0.0,6.0.0)",
   org.knime.cloud.core;bundle-version="[5.0.0,6.0.0)",
   org.apache.commons.lang3;bundle-version="[3.3.1,4.0.0)",
