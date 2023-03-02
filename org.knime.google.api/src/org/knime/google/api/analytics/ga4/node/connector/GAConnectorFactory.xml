@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./googleanalyticsconnector.png" type="Manipulator"
+	xmlns="http://knime.org/node/v4.1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
+	<name>Google Analytics Connection</name>
+	<shortDescription>Connect to Google Analytics 4 properties.</shortDescription>
+	<fullDescription>
+		<intro>
+			<p>This node connects to a Google Analytics 4 property using the 
+			<a href="https://developers.google.com/analytics/devguides/config/admin/v1?hl=en">Google Analytics Admin API
+			 v1</a> and the
+			 <a href="https://developers.google.com/analytics/devguides/reporting/data/v1?hl=en">Google Analytics Data 
+			 API v1</a>.</p>
+
+            <p>The Admin API is used to fetch compatible property IDs which are available from the connected
+            account.</p>
+
+            <p><b>Note:</b>
+            This node can only be used to connect with Google Analytics 4 properties and is not
+            compatible with Universal Analytics.
+            To migrate a website using Universal Analytics to Google Analytics 4, you can find more information
+            in the <a href="https://support.google.com/analytics/answer/10759417?hl=en">official migration guide</a>.
+            </p>
+		</intro>
+		<tab name="Options">
+			<option name="Google Analytics 4 property">
+			<p>
+			Specify the Google Analytics 4 
+			<a href="https://support.google.com/analytics/answer/9304153?hl=en#property">property</a> from which you 
+			want to query data.
+			</p>
+			<p>
+			If no properties are listed, check that your account has access to at least one <i>Google Analytics 4</i> 
+			property. Universal Analytics properties are not supported.
+			</p>
+			<p><b>Note for setting via a flow variable:</b>
+			The property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on 
+			<a href="https://analytics.google.com">analytics.google.com</a> under the &quot;Properties &amp; Apps&quot; 
+			navigation section.
+			</p>
+			</option>
+		</tab>
+        <tab name="Advanced Settings">
+			<option name="Connect timeout (seconds)">
+				Specify the timeout in seconds to establish a connection.
+			</option>
+			<option name="Read timeout (seconds)">
+				Specify the timeout in seconds to read data from an already established connection.
+			</option>
+			<option name="Retry timeout (seconds)">
+				Specify the total duration for which the same request is allowed to be retried in case of server
+                errors (5xx) and request timeouts (408), starting when the request is initially made.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Google Service Connection">The Google Service connection to use.</inPort>
+		<outPort index="0" name="Google Analytics Connection">
+			A connection to a Google Analytics 4 property.
+		</outPort>
+	</ports>
+</knimeNode>
