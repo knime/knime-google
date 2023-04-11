@@ -6,7 +6,7 @@ Bundle-Version: 5.1.0.qualifier
 Bundle-Vendor: 
 Require-Bundle: org.knime.core;bundle-version="[5.0.0,6.0.0)",
  org.knime.filehandling.core;bundle-version="[5.0.0,6.0.0)",
- org.knime.workbench.core;bundle-version="4.3.0",
+ org.knime.workbench.core;bundle-version="[5.0.0,6.0.0)",
  com.google.api.client.googleapis;bundle-version="[2.2.0,3.0.0)",
  com.google.apis.google-api-services-drive;bundle-version="[2.0.0,3.0.0)",
  com.google.http-client.google-http-client;bundle-version="[1.43.0,2.0.0)",
