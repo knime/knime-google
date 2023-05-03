@@ -98,6 +98,10 @@ import com.google.api.services.analyticsdata.v1beta.model.Dimension;
 import com.google.api.services.analyticsdata.v1beta.model.DimensionHeader;
 import com.google.api.services.analyticsdata.v1beta.model.DimensionOrderBy;
 import com.google.api.services.analyticsdata.v1beta.model.DimensionValue;
+import com.google.api.services.analyticsdata.v1beta.model.Filter;
+import com.google.api.services.analyticsdata.v1beta.model.FilterExpression;
+import com.google.api.services.analyticsdata.v1beta.model.FilterExpressionList;
+import com.google.api.services.analyticsdata.v1beta.model.InListFilter;
 import com.google.api.services.analyticsdata.v1beta.model.Metric;
 import com.google.api.services.analyticsdata.v1beta.model.MetricHeader;
 import com.google.api.services.analyticsdata.v1beta.model.MetricOrderBy;
@@ -108,6 +112,7 @@ import com.google.api.services.analyticsdata.v1beta.model.ResponseMetaData;
 import com.google.api.services.analyticsdata.v1beta.model.Row;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportRequest;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportResponse;
+import com.google.api.services.analyticsdata.v1beta.model.StringFilter;
 
 /**
  * Node model for the Google Analytics 4 Query node.
@@ -284,6 +289,9 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
             .collect(Collectors.toList());
         req.setMetrics(metrics);
 
+        final var filter = settings.m_gaDimensionFilter;
+        req.setDimensionFilter(createDimensionFilterExpression(filter));
+
         final var orderBys = Arrays.stream(settings.m_gaOrderBy).map(GAQueryNodeModel::mapToOrderBy)
             .collect(Collectors.toList());
         req.setOrderBys(orderBys);
@@ -297,6 +305,7 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
 
         return req;
     }
+
 
     private static OrderBy mapToOrderBy(final GAOrderBy o) {
         final var orderBy = new OrderBy().setDesc(o.m_sortOrder == SortOrder.DESCENDING);
@@ -572,4 +581,40 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
         };
     }
 
+    private static FilterExpression createDimensionFilterExpression(final GADimensionFilterExpression fx) {
+        final var filters = fx.m_filters;
+        if (filters.length == 0) {
+            return null;
+        } else if (filters.length == 1) {
+            return mapToFilterExpression(filters[0]);
+        }
+        final var fel = new FilterExpressionList().setExpressions(
+            Arrays.stream(filters).map(GAQueryNodeModel::mapToFilterExpression).collect(Collectors.toList()));
+        final var fex = new FilterExpression();
+        return switch (fx.m_connectVia) { // NOSONAR exhaustiveness check
+            case AND -> fex.setAndGroup(fel);
+            case OR -> fex.setOrGroup(fel);
+        };
+    }
+
+    private static FilterExpression mapToFilterExpression(final GADimensionFilter filter) {
+        final var f = new Filter().setFieldName(filter.m_name);
+        switch (filter.m_selectedType) { // NOSONAR exhaustive switch notifies us automatically
+                                         // when we add the other enum values
+            case STRING -> {
+                final var sf = filter.m_stringFilter;
+                f.setStringFilter(new StringFilter().setMatchType(sf.m_matchType.name()).setValue(sf.m_value)
+                    .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
+            }
+            case IN_LIST ->
+                f.setInListFilter(new InListFilter().setValues(
+                    Arrays.stream(filter.m_inListFilter.m_values).map(fv -> fv.m_value).collect(Collectors.toList()))
+                    .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
+        }
+        final var exp = new FilterExpression().setFilter(f);
+        if (filter.m_isNegated) {
+            return new FilterExpression().setNotExpression(exp);
+        }
+        return exp;
+    }
 }

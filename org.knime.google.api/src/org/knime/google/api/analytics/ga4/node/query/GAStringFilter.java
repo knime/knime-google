@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13 Mar 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
+ *   4 May 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
@@ -57,32 +57,56 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
- * Settings for a Google Analytics 4 Data API
- * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/Dimension">Dimension</a>.
+ * Filter dimension values based on string comparison.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction") // webui*
-final class GADimension implements DefaultNodeSettings {
+@SuppressWarnings("restriction") // webui* classes
+final class GAStringFilter implements DefaultNodeSettings {
 
-    @Widget(title = "Dimension",  description = """
-            Define up to nine names of dimensions. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions">
-            API documentation</a>.
-                """)
-    String m_name;
+    @Widget(title = "Match type")
+    MatchType m_matchType = MatchType.CONTAINS;
 
-    // Supporting "Dimension expression" requires a more complex UI than is currently feasible
+    @Widget(title = "Value")
+    String m_value;
 
-    GADimension() {
+    /**
+     * String matching types as supported by Google Analytics 4 Data API.
+     */
+    enum MatchType {
+        @Widget(title = "Exact")
+        EXACT,
+        @Widget(title = "Begins with")
+        BEGINS_WITH,
+        @Widget(title = "Ends with")
+        ENDS_WITH,
+        @Widget(title = "Contains")
+        CONTAINS,
+        /**
+         * For instance {@code .*dam} fully matches {@code Amsterdam} and {@code Rotterdam} but not {@code Amsterdam2}
+         */
+        @Widget(title = "Regular expression (full match)", description = "Matches if the whole string matches the regular expression.")
+        FULL_REGEXP,
+        /**
+         * For instance {@code (dap|omb)} partially matches {@code Budapest} and {@code Colombo}.
+         */
+        @Widget(title = "Regular expression (partial match)", description = "Matches if part of the string matches the regular expression.")
+        PARTIAL_REGEXP;
+    }
+
+    GAStringFilter() {
         // ser/de
     }
 
-    GADimension(final String name) {
-        m_name = Objects.requireNonNull(name);
+    GAStringFilter(final MatchType matchType, final String value) {
+        m_matchType = Objects.requireNonNull(matchType);
+        m_value = Objects.requireNonNull(value);
     }
 
     void validate() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Dimension name cannot be blank.");
+        CheckUtils.checkSettingNotNull(m_matchType, "Match type is missing.");
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_value), "Value is missing.");
     }
+
+
 }

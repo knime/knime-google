@@ -86,7 +86,7 @@ final class GAOrderBy implements DefaultNodeSettings {
         // ser/de
     }
 
-    GAOrderBy(@SuppressWarnings("unused") final SettingsCreationContext ctx) {
+    GAOrderBy(@SuppressWarnings("unused") final SettingsCreationContext ctx) { // NOSONAR unused
         m_orderByDimension = new GAOrderByDimension();
     }
 
@@ -116,10 +116,9 @@ final class GAOrderBy implements DefaultNodeSettings {
     private <X extends Throwable> void checkUnionValid(final Function<String, X> toThrowable) throws X {
         switch (m_selectedType) { // NOSONAR We want a warning about missing case label for enums,
             // e.g. for when we add PIVOT
-            case METRIC -> { // NOSONAR
+            case METRIC ->
                 CheckUtils.check(StringUtils.isNotBlank(m_orderByMetric), toThrowable,
                     () -> "Metric name must not be blank.");
-            }
             case DIMENSION -> {
                 CheckUtils.check(m_orderByDimension != null, toThrowable, () -> "Dimension is missing.");
                 CheckUtils.check(StringUtils.isNotBlank(m_orderByDimension.m_dimensionName), toThrowable,

@@ -44,45 +44,53 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13 Mar 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
+ *   4 May 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
 import java.util.Objects;
+import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
- * Settings for a Google Analytics 4 Data API
- * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/Dimension">Dimension</a>.
+ * An expression for combining filters on dimensions.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction") // webui*
-final class GADimension implements DefaultNodeSettings {
+@SuppressWarnings("restriction") // webui* classes
+final class GADimensionFilterExpression implements DefaultNodeSettings {
 
-    @Widget(title = "Dimension",  description = """
-            Define up to nine names of dimensions. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions">
-            API documentation</a>.
-                """)
-    String m_name;
+    @Widget(title = "Match...")
+    GAFilterGroup m_connectVia = GAFilterGroup.OR;
 
-    // Supporting "Dimension expression" requires a more complex UI than is currently feasible
+    @Widget(title = "Filters")
+    GADimensionFilter[] m_filters = new GADimensionFilter[0];
 
-    GADimension() {
+    GADimensionFilterExpression() {
         // ser/de
     }
 
-    GADimension(final String name) {
-        m_name = Objects.requireNonNull(name);
+    GADimensionFilterExpression(final GAFilterGroup connectVia, final GADimensionFilter[] filters) {
+        m_connectVia = Objects.requireNonNull(connectVia);
+        m_filters = checkFilters(filters, IllegalArgumentException::new);
+    }
+
+    private static final <X extends Throwable> GADimensionFilter[] checkFilters(final GADimensionFilter[] filters,
+            final Function<String, X> toThrowable) throws X {
+        CheckUtils.check(filters != null && filters.length > 0, toThrowable,
+                () -> "At least one filter is required in a filter expression");
+        return filters;
     }
 
     void validate() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Dimension name cannot be blank.");
+        if (m_filters != null) {
+            for (final var filter: m_filters) {
+                filter.validate();
+            }
+        }
     }
 }

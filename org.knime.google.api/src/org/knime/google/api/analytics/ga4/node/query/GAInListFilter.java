@@ -44,45 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13 Mar 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
+ *   4 May 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
- * Settings for a Google Analytics 4 Data API
- * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/Dimension">Dimension</a>.
+ * Filters dimension values based on list inclusion.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction") // webui*
-final class GADimension implements DefaultNodeSettings {
+@SuppressWarnings("restriction") // webui* classes
+final class GAInListFilter implements DefaultNodeSettings {
 
-    @Widget(title = "Dimension",  description = """
-            Define up to nine names of dimensions. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions">
-            API documentation</a>.
-                """)
-    String m_name;
+    @Widget(title = "In list")
+    FilterValue[] m_values = new FilterValue[0];
 
-    // Supporting "Dimension expression" requires a more complex UI than is currently feasible
-
-    GADimension() {
+    GAInListFilter() {
         // ser/de
     }
 
-    GADimension(final String name) {
-        m_name = Objects.requireNonNull(name);
+    GAInListFilter(final FilterValue[] values) {
+        m_values = Objects.requireNonNull(values);
     }
 
     void validate() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Dimension name cannot be blank.");
+        CheckUtils.checkSettingNotNull(m_values, "Values are missing.");
+        for (final var v : m_values) {
+            CheckUtils.checkSettingNotNull(v, "Value must not be null.");
+        }
+    }
+
+    static class FilterValue implements DefaultNodeSettings {
+        @Widget(title = "Dimension value")
+        String m_value;
     }
 }

@@ -49,6 +49,8 @@
 package org.knime.google.api.analytics.ga4.node.connector;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -144,7 +146,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
                     // what is currently going on (and we don't have access here to the user-provided values).
                     return new GAConnection(connSpec.get().getGoogleApiConnection(), d, d, d).accountSummaries()
                             .stream()
-                            .flatMap(acc -> acc.getPropertySummaries().stream()
+                            .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
                                 .map(p -> p.getProperty().replace("properties/", "")))
                             .collect(Collectors.toList())
                             .toArray(String[]::new);

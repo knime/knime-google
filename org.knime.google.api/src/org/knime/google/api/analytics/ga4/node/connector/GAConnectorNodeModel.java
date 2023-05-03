@@ -48,6 +48,7 @@
  */
 package org.knime.google.api.analytics.ga4.node.connector;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -99,10 +100,12 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
             throws InvalidSettingsException {
         final var connSpec = getGoogleApiConnectionPortObjectSpec(inSpecs)
                 .orElseThrow(() -> new InvalidSettingsException("Google API connection is missing."));
+        CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId, "Google Analytics Property ID is missing.");
         return new PortObjectSpec[] { connSpec };
     }
 
-    static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(final PortObjectSpec[] inSpecs) {
+    static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
+            final PortObjectSpec[] inSpecs) {
         if (inSpecs == null || inSpecs.length == 0 || inSpecs[GOOGLE_API_CONNECTION_PORT] == null) {
             return Optional.empty();
         }
@@ -116,7 +119,7 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
             final GAConnectorNodeSettings modelSettings) throws Exception {
         final var conn = getGAConnection(inObjects, modelSettings);
         final var props = conn.accountSummaries().stream()
-                .flatMap(acc -> acc.getPropertySummaries().stream()
+                .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
                     .map(p -> p.getProperty().replace("properties/", ""))).count();
         if (props == 0) {
             throw KNIMEException.of(createMessageBuilder()

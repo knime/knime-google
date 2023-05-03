@@ -3,12 +3,12 @@
     [
         {
             "type": "Section",
-            "label": "Metrics & Dimensions",
+            "label": "Metrics",
             "elements":
             [
                 {
                     "type": "Control",
-                    "label": "Metrics (up to ten)",
+                    "label": "Metrics (one to ten)",
                     "scope": "#/properties/model/properties/gaMetrics",
                     "options":
                     {
@@ -18,16 +18,30 @@
                         {
                             "metric":
                             {
-                                "type": "HorizontalLayout",
+                                "type": "VerticalLayout",
                                 "elements":
                                 [
                                     {
-                                        "type": "Control",
-                                        "scope": "#/properties/name",
-                                        "options":
-                                        {
-                                            "format": "string"
-                                        }
+                                        "type": "HorizontalLayout",
+                                        "elements":
+                                        [
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/name",
+                                                "options":
+                                                {
+                                                    "format": "string"
+                                                }
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/invisible",
+                                                "options":
+                                                {
+                                                    "isAdvanced": true
+                                                }
+                                            }
+                                        ]
                                     },
                                     {
                                         "type": "Control",
@@ -37,20 +51,19 @@
                                             "format": "string",
                                             "isAdvanced": true
                                         }
-                                    },
-                                    {
-                                        "type": "Control",
-                                        "scope": "#/properties/invisible",
-                                        "options":
-                                        {
-                                            "isAdvanced": true
-                                        }
                                     }
                                 ]
                             }
                         }
                     }
-                },
+                }
+            ]
+        },
+        {
+            "type": "Section",
+            "label": "Dimensions",
+            "elements":
+            [
                 {
                     "type": "Control",
                     "label": "Dimensions (up to nine)",
@@ -63,18 +76,12 @@
                         {
                             "dimension":
                             {
-                                "type": "HorizontalLayout",
-                                "elements":
-                                [
-                                    {
-                                        "type": "Control",
-                                        "scope": "#/properties/name",
-                                        "options":
-                                        {
-                                            "format": "string"
-                                        }
-                                    }
-                                ]
+                                "type": "Control",
+                                "scope": "#/properties/name",
+                                "options":
+                                {
+                                    "format": "string"
+                                }
                             }
                         }
                     }
@@ -124,6 +131,147 @@
                     "options":
                     {
                         "isAdvanced": true
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Section",
+            "label": "Dimension Filters",
+            "elements":
+            [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/gaDimensionFilter/properties/connectVia",
+                    "rule":
+                    {
+                        "effect": "SHOW",
+                        "condition":
+                        {
+                            "scope": "#/properties/model/properties/gaDimensionFilter/properties/filters",
+                            "schema":
+                            {
+                                "minItems": 2
+                            }
+                        }
+                    },
+                    "options":
+                    {
+                        "format": "valueSwitch",
+                        "initial": "ALL"
+                    }
+                },
+                {
+                    "type": "ListWithDetail",
+                    "scope": "#/properties/model/properties/gaDimensionFilter/properties/filters",
+                    "options":
+                    {
+                        "addButtonText": "Add dimension filter",
+                        "detail":
+                        {
+                            "name":
+                            {
+                                "type": "Control",
+                                "label": "Dimension",
+                                "scope": "#/properties/name"
+                            },
+                            "selectedType":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/selectedType",
+                                "options":
+                                {
+                                    "format": "valueSwitch",
+                                    "initial": "STRING"
+                                }
+                            },
+                            "isNegated":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/isNegated"
+                            },
+                            "stringFilter":
+                            {
+                                "type": "VerticalLayout",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/stringFilter/properties/matchType",
+                                        "options":
+                                        {
+                                            "initial": "CONTAINS"
+                                        }
+                                    },
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/stringFilter/properties/value"
+                                    }
+                                ],
+                                "rule":
+                                {
+                                    "effect": "SHOW",
+                                    "condition":
+                                    {
+                                        "scope": "#/properties/selectedType",
+                                        "schema":
+                                        {
+                                            "const": "STRING"
+                                        }
+                                    }
+                                }
+                            },
+                            "inListFilter":
+                            {
+                                "type": "Section",
+                                "label": "Dimension Values",
+                                "elements":
+                                [
+                                    {
+                                        "type": "Control",
+                                        "scope": "#/properties/inListFilter/properties/values",
+                                        "options":
+                                        {
+                                            "addButtonText": "Add dimension value",
+                                            "detail":
+                                            {
+                                                "dimension":
+                                                {
+                                                    "type": "Control",
+                                                    "scope": "#/properties/value",
+                                                    "options":
+                                                    {
+                                                        "format": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ],
+                                "rule":
+                                {
+                                    "effect": "SHOW",
+                                    "condition":
+                                    {
+                                        "scope": "#/properties/selectedType",
+                                        "schema":
+                                        {
+                                            "const": "IN_LIST"
+                                        }
+                                    }
+                                }
+                            },
+                            "caseSensitivity":
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/caseSensitivity",
+                                "options":
+                                {
+                                    "format": "valueSwitch",
+                                    "isAdvanced": true
+                                }
+                            }
+                        }
                     }
                 }
             ]
@@ -182,7 +330,8 @@
                                     {
                                         "type": "Control",
                                         "scope": "#/properties/orderByDimension/properties/orderType",
-                                        "options": {
+                                        "options":
+                                        {
                                             "isAdvanced": true
                                         }
                                     }
@@ -204,7 +353,7 @@
                             {
                                 "type": "Control",
                                 "scope": "#/properties/sortOrder",
-                                "options": 
+                                "options":
                                 {
                                     "format": "valueSwitch",
                                     "initial": "DESCENDING"
