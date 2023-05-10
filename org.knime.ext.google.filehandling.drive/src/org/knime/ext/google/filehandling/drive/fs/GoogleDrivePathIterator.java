@@ -108,9 +108,10 @@ final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
 
         final List<File> files;
         if (dir.isDrive()) {
-            files = dir.getFileSystem().provider().getHelper().listDrive(meta.getId());
+            files = dir.getFileSystem().provider().getHelper().listDrive(meta.getId(), meta.isSharedWithMe());
         } else {
-            files = dir.getFileSystem().provider().getHelper().listFolder(meta.getDriveId(), meta.getId());
+            files = dir.getFileSystem().provider().getHelper().listFolder(meta.getDriveId(), meta.getId(),
+                    meta.isSharedWithMe());
         }
 
         correctFileNames(files);
@@ -135,6 +136,8 @@ final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
         final List<GoogleDrivePath> files = createPathsAndCacheAttributes(dir, drivesToMetadata(sharedDrives));
         // add 'My Drive'
         files.add(0, dir.resolve(GoogleDriveFileSystemProvider.MY_DRIVE));
+        // add 'Shared with me'
+        files.add(dir.resolve(GoogleDriveFileSystemProvider.SHARED_WITH_ME));
         return files;
     }
 
@@ -199,7 +202,7 @@ final class GoogleDrivePathIterator extends BasePathIterator<GoogleDrivePath> {
      */
     private static List<FileMetadata> drivesToMetadata(final List<Drive> drives) {
         return drives.stream() //
-                .map(FileMetadata::new) //
+                .map(drive -> new FileMetadata(drive, drive.getName())) //
                 .collect(Collectors.toList());
     }
 

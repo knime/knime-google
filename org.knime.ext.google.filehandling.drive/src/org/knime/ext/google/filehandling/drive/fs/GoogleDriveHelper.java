@@ -126,13 +126,16 @@ public class GoogleDriveHelper {
      *            file name.
      * @param additionalName
      *            additional file name to search.
+     * @param sharedWithMe
+     *            whether the file is 'Shared with me'.
      * @return found file.
      * @throws IOException
      */
     public List<File> getFilesOfDriveByNameOrId(final String driveId, final String name,
-            final String additionalName)
+            final String additionalName, final boolean sharedWithMe)
             throws IOException {
-        return getFilesByNameOrId(driveId, driveId == null ? "root" : driveId, name, additionalName);
+        return getFilesByNameOrId(driveId, driveId == null && !sharedWithMe ? "root" : driveId, //
+                name, additionalName, sharedWithMe);
     }
 
     /**
@@ -144,27 +147,39 @@ public class GoogleDriveHelper {
      *            child name.
      * @param fileId
      *            additional file name.
+     * @param sharedWithMe
+     *            whether the file is 'Shared with me'.
      * @return file with given name and parent.
      * @throws IOException
      */
     public List<File> getFilesByNameOrId(final String driveId, final String parentId, final String name,
-            final String fileId)
+            final String fileId, final boolean sharedWithMe)
             throws IOException {
-        return doWithRetry(() -> getFilesByNameOrIdImpl(driveId, parentId, name, fileId));
+        return doWithRetry(() -> getFilesByNameOrIdImpl(driveId, parentId, name, fileId, sharedWithMe));
     }
 
     private List<File> getFilesByNameOrIdImpl(final String driveId, final String parentId, final String name,
-            final String fileId) throws IOException {
-        StringBuilder searchCriterias = new StringBuilder("trashed = false and ")
-                .append(createNameAndIdQueryPart(name, fileId)).append(" and '")
-                .append(parentId)
-                .append("' in parents ");
+            final String fileId, final boolean sharedWithMe) throws IOException {
+        final var searchCriterias = new StringBuilder("trashed = false and ")
+                .append(createNameAndIdQueryPart(name, fileId));
+
+        if (parentId != null) {
+            searchCriterias.append("and '" + parentId + "' in parents");
+        }
+        if (sharedWithMe) {
+            searchCriterias.append(" and sharedWithMe");
+        }
 
         Files.List query = m_driveService.files().list()
                 .setQ(searchCriterias.toString())
                 .setPageToken(null).setFields("nextPageToken, " + FILES_FIELDS_QUERY_PART)
                 .setSpaces("drive");
 
+        if (sharedWithMe) {
+            // include 'Shared with me' files from 'Shared drives'
+            query.setIncludeItemsFromAllDrives(true);
+            query.setSupportsAllDrives(true);
+        }
         if (driveId != null) {
             addDriveIdToQuery(query, driveId);
         }
@@ -191,7 +206,8 @@ public class GoogleDriveHelper {
     }
 
     private List<Drive> getDrivesImpl(final String name, final String driveId) throws IOException {
-        if (GoogleDriveFileSystemProvider.MY_DRIVE.equals(name)) {
+        if (GoogleDriveFileSystemProvider.MY_DRIVE.equals(name)
+                || GoogleDriveFileSystemProvider.SHARED_WITH_ME.equals(name)) {
             return new LinkedList<>();
         }
 
@@ -363,11 +379,13 @@ public class GoogleDriveHelper {
     /**
      * @param driveId
      *            drive ID or null in case of 'My Drive'
+     * @param sharedWithMe
+     *            whether the drive is 'Shared with me'.
      * @return files files.
      * @throws IOException
      */
-    public List<File> listDrive(final String driveId) throws IOException {
-        return listParent(driveId, driveId == null ? "root" : driveId);
+    public List<File> listDrive(final String driveId, final boolean sharedWithMe) throws IOException {
+        return listParent(driveId, driveId == null && !sharedWithMe ? "root" : driveId, sharedWithMe);
     }
 
     /**
@@ -375,11 +393,14 @@ public class GoogleDriveHelper {
      *            drive ID or null in case of 'My Drive'
      * @param parentId
      *            parent ID.
+     * @param sharedWithMe
+     *            whether the folder is 'Shared with me'.
      * @return files files.
      * @throws IOException
      */
-    public List<File> listFolder(final String driveId, final String parentId) throws IOException {
-        return listParent(driveId, parentId);
+    public List<File> listFolder(final String driveId, final String parentId, final boolean sharedWithMe)
+            throws IOException {
+        return listParent(driveId, parentId, sharedWithMe);
     }
 
     /**
@@ -387,18 +408,37 @@ public class GoogleDriveHelper {
      *            drive ID or null in case of 'My Drive'
      * @param parentId
      *            parent ID.
+     * @param sharedWithMe
+     *            whether parent is 'Shared with me'.
      * @return files files.
      * @throws IOException
      */
-    private List<File> listParent(final String driveId, final String parentId) throws IOException {
-        return doWithRetry(() -> listParentImpl(driveId, parentId));
+    private List<File> listParent(final String driveId, final String parentId, final boolean sharedWithMe)
+            throws IOException {
+        return doWithRetry(() -> listParentImpl(driveId, parentId, sharedWithMe));
     }
 
-    private List<File> listParentImpl(final String driveId, final String parentId) throws IOException {
+    private List<File> listParentImpl(final String driveId, final String parentId, final boolean sharedWithMe)
+            throws IOException {
+        final var searchCriterias = new StringBuilder("trashed = false");
+
+        if (parentId != null) {
+            searchCriterias.append("and '" + parentId + "' in parents");
+        }
+        if (sharedWithMe) {
+            searchCriterias.append(" and sharedWithMe");
+        }
+
         final Files.List query = m_driveService.files().list()
-                .setQ("trashed = false and '" + parentId + "' in parents")
+                .setQ(searchCriterias.toString())
                 .setFields("nextPageToken, " + FILES_FIELDS_QUERY_PART)
                 .setSpaces("drive");
+
+        if (sharedWithMe) {
+            // include 'Shared with me' files from 'Shared drives'
+            query.setIncludeItemsFromAllDrives(true);
+            query.setSupportsAllDrives(true);
+        }
         if (driveId != null) {
             addDriveIdToQuery(query, driveId);
         }

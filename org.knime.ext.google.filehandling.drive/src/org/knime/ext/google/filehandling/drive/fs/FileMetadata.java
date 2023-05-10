@@ -81,6 +81,10 @@ public class FileMetadata {
          */
         SHARED_DRIVE,
         /**
+         * Shared with me drive.
+         */
+        SHARED_WITH_ME,
+        /**
          * Folder.
          */
         FOLDER,
@@ -99,6 +103,7 @@ public class FileMetadata {
     private final long m_size;
     private final String m_name;
     private final String m_mimeType;
+    private final Boolean m_shared;
 
     /**
      * @param id
@@ -118,6 +123,7 @@ public class FileMetadata {
         m_lastModifiedTime = DEFAULT_FILE_TIME;
         m_lastAccessTime = DEFAULT_FILE_TIME;
         m_size = 0l;
+        m_shared = null;
     }
 
     /**
@@ -135,25 +141,37 @@ public class FileMetadata {
         m_lastAccessTime = m_lastModifiedTime = getTime(file.getModifiedTime(), m_createdTime);
 
         m_size = file.getSize() == null ? 0 : file.getSize();
+        m_shared = file.getShared();
     }
 
     /**
      * @param drive
      *            shared drive or null for `My Drive`
+     * @param driveName
+     *            drive name
      */
-    public FileMetadata(final Drive drive) {
-        if (drive == null) {
+    public FileMetadata(final Drive drive, final String driveName) {
+        if (GoogleDriveFileSystemProvider.MY_DRIVE.equals(driveName)) {
             // drive is the "My Drive"
             m_id = null;
             m_name = GoogleDriveFileSystemProvider.MY_DRIVE;
             m_type = FileType.MY_DRIVE;
             m_createdTime = DEFAULT_FILE_TIME;
+            m_shared = null;
+        } else if (GoogleDriveFileSystemProvider.SHARED_WITH_ME.equals(driveName)) {
+            // drive is the "Shared with me"
+            m_id = null;
+            m_name = GoogleDriveFileSystemProvider.SHARED_WITH_ME;
+            m_type = FileType.SHARED_WITH_ME;
+            m_createdTime = DEFAULT_FILE_TIME;
+            m_shared = Boolean.TRUE;
         } else {
             // drive is a shared drive
             m_id = drive.getId();
             m_name = drive.getName();
             m_type = FileType.SHARED_DRIVE;
             m_createdTime = getTime(drive.getCreatedTime(), DEFAULT_FILE_TIME);
+            m_shared = null;
         }
 
         m_mimeType = null;
@@ -239,5 +257,12 @@ public class FileMetadata {
      */
     public String getMimeType() {
         return m_mimeType;
+    }
+
+    /**
+     * @return true if the file has been shared otherwise false.
+     */
+    public boolean isSharedWithMe() {
+        return m_shared != null && m_shared;
     }
 }

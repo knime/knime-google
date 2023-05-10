@@ -97,6 +97,11 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     public static final String MY_DRIVE = "My Drive";
 
     /**
+     * Shared with me.
+     */
+    public static final String SHARED_WITH_ME = "Shared with me";
+
+    /**
      * Start of synthetic suffix for duplicate names.
      */
     public static final String SYNTHETIC_SUFFIX_START = " (";
@@ -135,7 +140,8 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
                     m_drives.put(gdrive, (GoogleDriveFileAttributes) attrs.get());
                 } else {
                     m_drives.put(gdrive, new GoogleDriveFileAttributes(gdrive,
-                            new FileMetadata(getDrive(drive.getFileName().toString()))));
+                            new FileMetadata(getDrive(drive.getFileName().toString()),
+                                    drive.getFileName().toString())));
                 }
             }
         }
@@ -300,11 +306,12 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
     protected void createDirectoryInternal(final GoogleDrivePath dir, final FileAttribute<?>... attrs)
             throws IOException {
 
-        if (dir.isRoot() || dir.isDrive()) {
+        final var parentDir = dir.getParent();
+        if (dir.isRoot() || dir.isDrive() || SHARED_WITH_ME.equals(parentDir.getFileName().toString())) {
             throw new AccessDeniedException(dir.toString());
         }
 
-        final FileMetadata parentMeta = readAttributes(dir.getParent()).getMetadata();
+        final FileMetadata parentMeta = readAttributes(parentDir).getMetadata();
         final File folder = m_helper.createFolder(parentMeta.getDriveId(), parentMeta.getId(),
                 dir.getFileName().toString());
         cacheAttributes(dir, new GoogleDriveFileAttributes(dir, new FileMetadata(folder)));
@@ -394,15 +401,16 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
             final GoogleDrivePath child = current.resolve(childName);
 
             if (current.isRoot()) {
-                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(getDrive(childName)));
+                attributes = new GoogleDriveFileAttributes(child, new FileMetadata(getDrive(childName), childName));
             } else {
                 FileMetadata meta = attributes.getMetadata();
                 if (current.isDrive()) {
                     attributes = new GoogleDriveFileAttributes(child,
-                            new FileMetadata(getFileOfDrive(meta.getId(), childName)));
+                            new FileMetadata(getFileOfDrive(meta.getId(), childName, meta.isSharedWithMe())));
                 } else {
                     attributes = new GoogleDriveFileAttributes(child,
-                            new FileMetadata(getFile(meta.getDriveId(), meta.getId(), childName)));
+                            new FileMetadata(
+                                    getFile(meta.getDriveId(), meta.getId(), childName, meta.isSharedWithMe())));
                 }
             }
 
@@ -484,7 +492,7 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      * @throws IOException
      */
     private Drive getDrive(final String originName) throws IOException {
-        if (MY_DRIVE.equals(originName)) {
+        if (MY_DRIVE.equals(originName) || SHARED_WITH_ME.equals(originName)) {
             return null;
         }
 
@@ -500,13 +508,16 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      *            parent ID.
      * @param originName
      *            file name.
+     * @param sharedWithMe
+     *            whether the file is 'Shared with me'.
      * @return
      * @throws IOException
      */
-    private File getFile(final String driveId, final String parentId, final String originName) throws IOException {
+    private File getFile(final String driveId, final String parentId, final String originName,
+            final boolean sharedWithMe) throws IOException {
         String name = decodeForwardSlashes(originName);
         String fileId = getIdFromSuffixOrNull(name);
-        return getBestFile(m_helper.getFilesByNameOrId(driveId, parentId, name, fileId), name);
+        return getBestFile(m_helper.getFilesByNameOrId(driveId, parentId, name, fileId, sharedWithMe), name);
     }
 
     /**
@@ -514,13 +525,16 @@ public class GoogleDriveFileSystemProvider extends BaseFileSystemProvider<Google
      *            drive ID.
      * @param originName
      *            file name.
+     * @param sharedWithMe
+     *            whether the file is 'Shared with me'.
      * @return
      * @throws IOException
      */
-    private File getFileOfDrive(final String driveId, final String originName) throws IOException {
+    private File getFileOfDrive(final String driveId, final String originName, final boolean sharedWithMe)
+            throws IOException {
         String name = decodeForwardSlashes(originName);
         String fileId = getIdFromSuffixOrNull(name);
-        return getBestFile(m_helper.getFilesOfDriveByNameOrId(driveId, name, fileId), name);
+        return getBestFile(m_helper.getFilesOfDriveByNameOrId(driveId, name, fileId, sharedWithMe), name);
     }
 
     private static File getBestFile(final List<File> files, final String name) throws IOException {

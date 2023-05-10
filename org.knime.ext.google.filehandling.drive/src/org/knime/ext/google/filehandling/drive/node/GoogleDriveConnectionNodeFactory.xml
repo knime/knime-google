@@ -25,6 +25,8 @@
                     <li>Followed by the name of a file (<tt>file.csv</tt>).</li>
                 </ol>
             </p>
+            <p><b>Shared with me</b> folder contains files and folders that have been shared with you.
+            </p>
         </intro>
 
         <tab name="Settings">
