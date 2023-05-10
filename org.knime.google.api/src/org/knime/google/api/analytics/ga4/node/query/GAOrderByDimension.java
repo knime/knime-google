@@ -48,8 +48,8 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -61,10 +61,10 @@ import org.knime.core.webui.node.dialog.impl.Schema;
 @SuppressWarnings("restriction") // webui*
 final class GAOrderByDimension implements DefaultNodeSettings {
 
-    @Schema(title = "Dimension", description = "The dimension to order by.")
+    @Widget(title = "Dimension", description = "The dimension to order by.")
     String m_dimensionName;
 
-    @Schema(title = "Order Type",
+    @Widget(title = "Order Type",
             description = """
                 Defines how the Google Analytics API should order the string dimension values.
                 "Alphanumeric" sorts by Unicode code point.
@@ -90,14 +90,14 @@ final class GAOrderByDimension implements DefaultNodeSettings {
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
     enum OrderType {
-        @Schema(title="Unspecified order", description = "Unspecific order.")
+        @Widget(title="Unspecified order", description = "Unspecific order.")
         ORDER_TYPE_UNSPECIFIED,
-        @Schema(title="Alphanumeric", description = "Alphanumeric sort by Unicode code point, e.g. \"2\" < \"A\".")
+        @Widget(title="Alphanumeric", description = "Alphanumeric sort by Unicode code point, e.g. \"2\" < \"A\".")
         ALPHANUMERIC,
-        @Schema(title="Case insensitive alphanumeric",
+        @Widget(title="Case insensitive alphanumeric",
             description = "Case insensitive alphanumeric sort by lower case Unicode code point.")
         CASE_INSENSITIVE_ALPHANUMERIC,
-        @Schema(title="Numeric", description = "Dimension values are converted to numbers before sorting.")
+        @Widget(title="Numeric", description = "Dimension values are converted to numbers before sorting.")
         NUMERIC;
     }
 }

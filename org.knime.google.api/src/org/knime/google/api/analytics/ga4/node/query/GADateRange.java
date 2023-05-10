@@ -58,10 +58,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
-import org.knime.core.webui.node.dialog.persistence.NodeSettingsPersistorWithConfigKey;
-import org.knime.core.webui.node.dialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 /**
  * Settings for a Google Analytics 4 Data API
  * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/DateRange">
@@ -76,22 +77,20 @@ final class GADateRange implements DefaultNodeSettings {
     static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     @Persist(customPersistor = LocalDatePersistor.class)
-    @Schema(
-        title = "From Date",
-        description = """
-                The inclusive start date for the query in the format yyyy-MM-dd
-                before the end date.
-                """,
-        pattern = "\\d{4}-\\d{2}-\\d{2}"
-    )
+    @Widget(title = "From Date", description = """
+            The inclusive start date for the query in the format yyyy-MM-dd
+            before the end date.
+            """)
+    @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
     LocalDate m_fromDate;
 
     @Persist(customPersistor = LocalDatePersistor.class)
-    @Schema(title = "To Date", description = "The inclusive end date for the query in the format yyyy-MM-dd "
-        + "after the start date.", pattern = "\\d{4}-\\d{2}-\\d{2}")
+    @Widget(title = "To Date",
+        description = "The inclusive end date for the query in the format yyyy-MM-dd " + "after the start date.")
+    @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
     LocalDate m_toDate;
 
-    @Schema(title = "Name (optional)", description = "An optional name for the date range to which the dimension "
+    @Widget(title = "Name (optional)", description = "An optional name for the date range to which the dimension "
         + "<tt>dateRange</tt> is valued. If omitted, the date ranges are named by their zero based index: "
         + "<tt>date_range_0</tt>, <tt>date_range_1</tt>, etc.")
     // How to validate in UI that it does not begin with "date_range_" or "RESERVED_"?

@@ -53,8 +53,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -67,19 +68,18 @@ final class GAMetric implements DefaultNodeSettings {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$"); // NOSONAR pattern from Google
 
-    @Schema(title = "Metric",
-            description = """
-                Define up to ten names of metrics. Available names can be seen in the
-                <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#metrics">
-                API documentation</a>.
-                    """,
-            pattern = "[a-zA-Z0-9_]+")
+    @Widget(title = "Metric", description = """
+            Define up to ten names of metrics. Available names can be seen in the
+            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-Widget#metrics">
+            API documentation</a>.
+                """)
+    @TextInputWidget(pattern = "[a-zA-Z0-9_]+")
     String m_name;
 
-    @Schema(title = "Expression (optional)")
+    @Widget(title = "Expression (optional)")
     String m_expression;
 
-    @Schema(title = "Invisible")
+    @Widget(title = "Invisible")
     boolean m_invisible;
 
     GAMetric() {

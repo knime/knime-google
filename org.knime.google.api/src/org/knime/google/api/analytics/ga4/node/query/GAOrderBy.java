@@ -54,8 +54,8 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -67,17 +67,17 @@ import org.knime.core.webui.node.dialog.impl.Schema;
 @SuppressWarnings("restriction") // webui*
 final class GAOrderBy implements DefaultNodeSettings {
 
-    @Schema(title = "Sort order")
+    @Widget(title = "Sort order")
     SortOrder m_sortOrder = SortOrder.DESCENDING;
 
-    @Schema(title = "Order by")
+    @Widget(title = "Order by")
     OrderByType m_selectedType = OrderByType.METRIC;
 
     // BEGIN Union type (how to better represent a Union type and have it show up correctly in the modern ui?)
-    @Schema(title = "Metric")
+    @Widget(title = "Metric")
     String m_orderByMetric;
 
-    @Schema(title = "Dimension")
+    @Widget(title = "Dimension")
     GAOrderByDimension m_orderByDimension;
     // END Union
 
@@ -91,17 +91,17 @@ final class GAOrderBy implements DefaultNodeSettings {
     }
 
     enum OrderByType {
-        @Schema(title="Metric")
+        @Widget(title="Metric")
         METRIC,
-        @Schema(title="Dimension")
+        @Widget(title="Dimension")
         DIMENSION;
         // PIVOT?
     }
 
     enum SortOrder {
-        @Schema(title="Ascending")
+        @Widget(title="Ascending")
         ASCENDING,
-        @Schema(title="Descending")
+        @Widget(title="Descending")
         DESCENDING;
     }
 

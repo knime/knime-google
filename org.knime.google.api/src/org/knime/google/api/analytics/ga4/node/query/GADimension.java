@@ -51,8 +51,8 @@ package org.knime.google.api.analytics.ga4.node.query;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -63,7 +63,7 @@ import org.knime.core.webui.node.dialog.impl.Schema;
 @SuppressWarnings("restriction") // webui*
 final class GADimension implements DefaultNodeSettings {
 
-    @Schema(title = "Dimension",  description = """
+    @Widget(title = "Dimension",  description = """
             Define up to nine names of dimensions. Available names can be seen in the
             <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions">
             API documentation</a>.

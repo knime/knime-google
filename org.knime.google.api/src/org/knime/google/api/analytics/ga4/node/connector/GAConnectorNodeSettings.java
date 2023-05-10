@@ -56,11 +56,13 @@ import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.webui.node.dialog.impl.ChoicesProvider;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
-import org.knime.core.webui.node.dialog.persistence.NodeSettingsPersistorWithConfigKey;
-import org.knime.core.webui.node.dialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 
@@ -75,37 +77,37 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
     @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
-    @Schema(title = "Google Analytics (GA4) Property ID (fetched from API)",
-            description = """
-                Specify the ID of the
-                Google Analytics 4 <a href="https://support.google.com/analytics/answer/9304153#property">property</a>
-                of which you want to access Google Analytics data.
-                    """,
-            choices = AnalyticsPropertiesProvider.class
-            )
+    @Widget(title = "Google Analytics (GA4) Property ID (fetched from API)", description = """
+            Specify the ID of the
+            Google Analytics 4 <a href="https://support.google.com/analytics/answer/9304153#property">property</a>
+            of which you want to access Google Analytics data.
+                """)
+    @ChoicesWidget(choices = AnalyticsPropertiesProvider.class)
     // will implicitly be handled as string
     GAProperty m_analyticsPropertyId;
 
     /* Advanced settings */
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_CONNECT_TIMEOUT)
-    @Schema(title="Connect Timeout (seconds)", description="""
+    @Widget(title = "Connect Timeout (seconds)", description = """
                     Specify the timeout in seconds to establish a connection.
-            """, min = 1)
+            """)
+    @NumberInputWidget(min = 1)
     Duration m_connTimeoutSec = GAConnection.DEFAULT_CONNECT_TIMEOUT;
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_READ_TIMEOUT)
-    @Schema(title="Read Timeout (seconds)", description="""
+    @Widget(title = "Read Timeout (seconds)", description = """
                     Specify the timeout in seconds to read data from an already established connection.
-            """, min = 1)
+            """)
+    @NumberInputWidget(min = 1)
     Duration m_readTimeoutSec = GAConnection.DEFAULT_READ_TIMEOUT;
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_ERR_RETRY_MAX_ELAPSED_TIME)
-    @Schema(title="Retry Timeout (seconds)",
-            description = """
+    @Widget(title = "Retry Timeout (seconds)", description = """
                     Specify the total duration for which the same request is allowed to be retried in case of server
                     errors (5xx) and request timeouts (408), starting when the request is initially made.
-            """, min = 1)
+            """)
+    @NumberInputWidget(min = 1)
     Duration m_retryMaxElapsedTimeSec = GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME;
 
     /**

@@ -54,8 +54,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
  * Settings for the Google Analytics 4 query node.
@@ -73,58 +74,53 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     private static final int MAX_NUM_DATE_RANGES = 4;
 
     /** Metrics to query. */
-    @Schema(title = "Metrics (up to ten)",
+    @Widget(title = "Metrics (up to ten)",
             description = """
             Define up to ten names of metrics. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#metrics">
+            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-Widget#metrics">
             API documentation</a>.
-                """,
-            minLength = 1,
-            maxLength = MAX_NUM_METRICS)
+                """)
+    @ArrayWidget
     GAMetric[] m_gaMetrics;
 
     /** Dimensions to query metrics under. */
-    @Schema(title = "Dimensions (up to nine)",
+    @Widget(title = "Dimensions (up to nine)",
             description = """
                 Define up to nine names of dimensions. Available names can be seen in the
-                <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions">
+                <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-Widget#dimensions">
                 API documentation</a>.
-                    """,
-        minLength = 0,
-        maxLength = MAX_NUM_DIMENSIONS)
+                    """)
     GADimension[] m_gaDimensions;
 
     /** Date ranges to make an API call with. */
-    @Schema(title = "Date Ranges (up to four)",
+    @Widget(title = "Date Ranges (up to four)",
             description = """
                 Define up to four date ranges (with optional names). When multiple date ranges are specified, a column
                 with the name of the range is added automatically.
-                    """,
-            minLength = 1,
-            maxLength = MAX_NUM_DATE_RANGES)
+                    """)
     GADateRange[] m_dateRanges;
 
-    @Schema(title = "Include date range name column",
+    @Widget(title = "Include date range name column",
             description = """
                 Include a column containing the name of the date range. If a date range is not given a name
                 explicitly, Google Analytics will auto-generate a name.
                     """)
     boolean m_includeDateRangeNameColumn = true;
 
-    @Schema(title = "Order by", description = "Order the output by the metrics/dimensions specified. All "
+    @Widget(title = "Order by", description = "Order the output by the metrics/dimensions specified. All "
         + "metrics/dimensions to order by must be included in the report and must be visible.")
     GAOrderBy[] m_gaOrderBy;
 
-    @Schema(title = "Currency code", description = "Currency code to use, specified in three letter ISO-4217 format. "
+    @Widget(title = "Currency code", description = "Currency code to use, specified in three letter ISO-4217 format. "
         + "If left empty, the report uses the property's default currency.")
     String m_currencyCode;
 
-    @Schema(title = "Keep empty rows",
+    @Widget(title = "Keep empty rows",
             description = "If enabled, rows will also be returned if all their metrics are equal to 0. "
                 + "Otherwise they are omitted from the result.")
     boolean m_keepEmptyRows;
 
-    @Schema(title = "Output Response Metadata as Flow Variables",
+    @Widget(title = "Output Response Metadata as Flow Variables",
             description = """
                     If enabled, outputs response metadata from the Google Analytics API as flow variables.
                     In particular, the following fields are returned: <tt>dataLossFromOtherRow</tt>,
@@ -138,7 +134,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                     """)
     boolean m_returnResponseMetadata;
 
-    @Schema(title = "Output Property Quotas as Flow Variables",
+    @Widget(title = "Output Property Quotas as Flow Variables",
         description = """
             Return the Property Quotas as flow variables. Each quota will indicate the "consumed" and "remaining"
             tokens after the last API request of the node. The format of the flow variable name follows the pattern

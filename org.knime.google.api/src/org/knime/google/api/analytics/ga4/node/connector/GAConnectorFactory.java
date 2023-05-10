@@ -48,8 +48,8 @@
  */
 package org.knime.google.api.analytics.ga4.node.connector;
 
-import org.knime.core.webui.node.dialog.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.dialog.impl.WebUINodeFactory;
+import org.knime.core.webui.node.impl.WebUINodeConfiguration;
+import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
 import org.knime.google.api.data.GoogleApiConnectionPortObject;
 
