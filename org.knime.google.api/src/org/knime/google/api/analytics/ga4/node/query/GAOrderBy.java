@@ -55,6 +55,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -91,17 +92,17 @@ final class GAOrderBy implements DefaultNodeSettings {
     }
 
     enum OrderByType {
-        @Widget(title="Metric")
+        @Label("Metric")
         METRIC,
-        @Widget(title="Dimension")
+        @Label("Dimension")
         DIMENSION;
         // PIVOT?
     }
 
     enum SortOrder {
-        @Widget(title="Ascending")
+        @Label("Ascending")
         ASCENDING,
-        @Widget(title="Descending")
+        @Label("Descending")
         DESCENDING;
     }
 

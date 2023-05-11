@@ -49,6 +49,7 @@
 package org.knime.google.api.analytics.ga4.node.query;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -64,14 +65,13 @@ final class GAOrderByDimension implements DefaultNodeSettings {
     @Widget(title = "Dimension", description = "The dimension to order by.")
     String m_dimensionName;
 
-    @Widget(title = "Order Type",
-            description = """
-                Defines how the Google Analytics API should order the string dimension values.
-                "Alphanumeric" sorts by Unicode code point.
-                "Case insensitive alphanumeric" sorts by lower-case Unicode code point.
-                "Numeric" sorts dimension values as numbers and all non-numeric dimension values have an equal ordering
-                value below all numeric values.
-                        """)
+    @Widget(title = "Order Type", description = """
+            Defines how the Google Analytics API should order the string dimension values.
+            "Alphanumeric" sorts by Unicode code point.
+            "Case insensitive alphanumeric" sorts by lower-case Unicode code point.
+            "Numeric" sorts dimension values as numbers and all non-numeric dimension values have an equal ordering
+            value below all numeric values.
+                    """)
     OrderType m_orderType = OrderType.ALPHANUMERIC;
 
     GAOrderByDimension() {
@@ -90,14 +90,25 @@ final class GAOrderByDimension implements DefaultNodeSettings {
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
     enum OrderType {
-        @Widget(title="Unspecified order", description = "Unspecific order.")
-        ORDER_TYPE_UNSPECIFIED,
-        @Widget(title="Alphanumeric", description = "Alphanumeric sort by Unicode code point, e.g. \"2\" < \"A\".")
-        ALPHANUMERIC,
-        @Widget(title="Case insensitive alphanumeric",
-            description = "Case insensitive alphanumeric sort by lower case Unicode code point.")
-        CASE_INSENSITIVE_ALPHANUMERIC,
-        @Widget(title="Numeric", description = "Dimension values are converted to numbers before sorting.")
-        NUMERIC;
+            /**
+             * Unspecific order.
+             */
+            @Label("Unspecified order")
+            ORDER_TYPE_UNSPECIFIED,
+            /**
+             * Alphanumeric sort by Unicode code point, e.g. \"2\" < \"A\".
+             */
+            @Label("Alphanumeric")
+            ALPHANUMERIC,
+            /**
+             * Case insensitive alphanumeric sort by lower case Unicode code point.
+             */
+            @Label("Case insensitive alphanumeric")
+            CASE_INSENSITIVE_ALPHANUMERIC,
+            /**
+             * Dimension values are converted to numbers before sorting.
+             */
+            @Label("Numeric")
+            NUMERIC;
     }
 }
