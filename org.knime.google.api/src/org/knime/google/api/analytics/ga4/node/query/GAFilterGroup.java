@@ -48,7 +48,7 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 
 /**
  * Specifies how to group a list of filters.
@@ -57,8 +57,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  */
 @SuppressWarnings("restriction") // webui* classes
 enum GAFilterGroup {
-    @Widget(title = "ALL", description = "Output results where all filters match.")
+    @Label("All")
     AND,
-    @Widget(title = "ANY", description = "Output results where any filter matches.")
+    @Label("Any")
     OR;
 }

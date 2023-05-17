@@ -51,6 +51,7 @@ package org.knime.google.api.analytics.ga4.node.query;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
+import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Factory for the Google Analytics Query node.
@@ -71,26 +72,24 @@ public final class GAQueryFactory extends WebUINodeFactory<GAQueryNodeModel>{
             .shortDescription("Query Google Analytics (GA4) properties.")
             .fullDescription("""
                     This node queries Google Analytics 4 properties using the
-                    <a href="https://developers.google.com/analytics/devguides/reporting/data/v1">Google Analytics
-                    Data API v1</a>.
+                    <a href="%s">Google Analytics Data API v1</a>.
 
-                    The node supports building a <a href="https://support.google.com/analytics/answer/9212670?hl=en
-                    &amp;ref_topic=13395703">Report</a> by specifying
-                    <a href="https://support.google.com/analytics/answer/9143382?hl=en&amp;ref_topic=11151952">metrics</a>,
-                    <a href="https://support.google.com/analytics/answer/9143382?hl=en&amp;ref_topic=11151952">dimensions</a>,
-                    and date ranges.
+                    The node supports building a <a href="%s">Report</a> by specifying
+                    <a href="%s">metrics, dimensions</a>, and date ranges.
 
                     In order to find available metrics and dimensions, you can use the
-                    <a href="https://ga-dev-tools.google/ga4/dimensions-metrics-explorer/">GA4 Dimensions &amp; Metrics
-                    Explorer</a> offered by Google.
-
+                    <a href="%s">GA4 Dimensions &amp; Metrics Explorer</a> offered by Google.
+                    <br/><br/>
                     <b>Note:</b>
                     This node can only be used to connect with Google Analytics 4 properties and is not
                     compatible with Universal Analytics.
                     To migrate a website using Universal Analytics to Google Analytics 4, you can find more information
-                    in the <a href="https://support.google.com/analytics/answer/9744165?ref_topic=9303319#zippy=%2Cin-this-article">
-                    official migration guide</a>.
-                    """)
+                    in the <a href="%s">official migration guide</a>.
+                    """.formatted(ExternalLinks.API_DATA,
+                        ExternalLinks.EXPLAIN_REPORT,
+                        ExternalLinks.EXPLAIN_METRICS_AND_DIMENSIONS,
+                        ExternalLinks.EXPLORER_TOOL,
+                        ExternalLinks.EXPLAIN_MIGRATION))
             .modelSettingsClass(GAQueryNodeSettings.class)
             .addInputPort("Google Analytics connection", GAConnectionPortObject.TYPE,
                 "Google Analytics connection to use")

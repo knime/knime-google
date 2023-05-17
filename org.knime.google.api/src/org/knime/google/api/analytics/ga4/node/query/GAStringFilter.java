@@ -54,6 +54,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -74,23 +75,23 @@ final class GAStringFilter implements DefaultNodeSettings {
      * String matching types as supported by Google Analytics 4 Data API.
      */
     enum MatchType {
-        @Widget(title = "Exact")
+        @Label("Exact")
         EXACT,
-        @Widget(title = "Begins with")
+        @Label("Begins with")
         BEGINS_WITH,
-        @Widget(title = "Ends with")
+        @Label("Ends with")
         ENDS_WITH,
-        @Widget(title = "Contains")
+        @Label("Contains")
         CONTAINS,
         /**
          * For instance {@code .*dam} fully matches {@code Amsterdam} and {@code Rotterdam} but not {@code Amsterdam2}
          */
-        @Widget(title = "Regular expression (full match)", description = "Matches if the whole string matches the regular expression.")
+        @Label("Regular expression (full match)") // , description = "Matches if the whole string matches the regular expression.")
         FULL_REGEXP,
         /**
          * For instance {@code (dap|omb)} partially matches {@code Budapest} and {@code Colombo}.
          */
-        @Widget(title = "Regular expression (partial match)", description = "Matches if part of the string matches the regular expression.")
+        @Label("Regular expression (partial match)") // , description = "Matches if part of the string matches the regular expression.")
         PARTIAL_REGEXP;
     }
 

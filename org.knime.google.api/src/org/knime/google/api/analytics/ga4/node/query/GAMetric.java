@@ -56,6 +56,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -68,18 +69,23 @@ final class GAMetric implements DefaultNodeSettings {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$"); // NOSONAR pattern from Google
 
-    @Widget(title = "Metric", description = """
-            Define up to ten names of metrics. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-Widget#metrics">
-            API documentation</a>.
-                """)
+    @Widget(title = "Metric", description = "Define up to ten names of metrics. "
+        + "Metrics are quantitative measurements of a report. For example, the metric eventCount is the total number of events. "
+        + "Available names can be seen in the <a href=\"" + ExternalLinks.API_LIST_METRIC + "\">API documentation</a>.")
     @TextInputWidget(pattern = "[a-zA-Z0-9_]+")
     String m_name;
 
-    @Widget(title = "Expression (optional)")
+    @Widget(title = "Expression (optional)", description = """
+            A mathematical expression for derived metrics.
+            For example, the metric Event count per user is eventCount/totalUsers.
+            """)
     String m_expression;
 
-    @Widget(title = "Invisible")
+    @Widget(title = "Invisible", description = """
+            Indicates if a metric is invisible in the report response.
+            If a metric is invisible, the metric will not produce a column in the response,
+            but can be used in metricFilter, orderBys, or a metric expression.
+            """)
     boolean m_invisible;
 
     GAMetric() {

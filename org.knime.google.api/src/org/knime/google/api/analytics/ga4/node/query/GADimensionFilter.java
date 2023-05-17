@@ -59,6 +59,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.FieldBasedNodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -73,7 +74,7 @@ final class GADimensionFilter implements DefaultNodeSettings {
     @Widget(title = "Name", description = "The name of the dimension to filter on.")
     String m_name;
 
-    @Widget(title = "Filter by...")
+    @Widget(title = "Filter by")
     DimensionFilterType m_selectedType = DimensionFilterType.STRING;
 
     // BEGIN Union type
@@ -110,9 +111,9 @@ final class GADimensionFilter implements DefaultNodeSettings {
     }
 
     enum DimensionFilterType {
-        @Widget(title = "String value")
+        @Label("String value")
         STRING,
-        @Widget(title = "List inclusion")
+        @Label("List inclusion")
         IN_LIST;
     }
 

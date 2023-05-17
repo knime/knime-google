@@ -57,6 +57,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Settings for the Google Analytics 4 query node.
@@ -75,21 +76,15 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
 
     /** Metrics to query. */
     @Widget(title = "Metrics",
-            description = """
-            Define at least one and up to ten names of metrics. Available names can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#metrics">
-            API documentation</a>.
-                """)
+        description = "Define at least one and up to ten names of metrics. Available names can be seen in the <a href=\""
+            + ExternalLinks.API_LIST_METRIC + "\">API documentation</a>.")
     @ArrayWidget // TODO add validation constraints min = 1, max = MAX_NUM_METRICS
     GAMetric[] m_gaMetrics;
 
     /** Dimensions to query metrics under. */
     @Widget(title = "Dimensions",
-            description = """
-                Define up to nine names of dimensions. Available names can be seen in the
-                <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/api-Widget#dimensions">
-                API documentation</a>.
-                    """)
+        description = "Define up to nine names of dimensions. Available names can be seen in the <a href=\""
+            + ExternalLinks.API_LIST_DIMENSION + "\">API documentation</a>.")
     @ArrayWidget // TODO add validation constraints max = MAX_NUM_DIMENSIONS
     GADimension[] m_gaDimensions;
 
@@ -135,9 +130,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                     specifies the field name.
 
                     More information can be obtained from the
-                    <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/ResponseMetaData">
-                    API documentation</a>.
-                    """)
+                    """ +
+                    "<a href=\"" + ExternalLinks.API_RESPONSE_METADATA + "\">API documentation</a>.")
     boolean m_returnResponseMetadata;
 
     @Widget(title = "Output Property Quotas as Flow Variables",
@@ -146,12 +140,11 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             tokens after the last API request of the node. The format of the flow variable name follows the pattern
             "analytics.quota.$QUOTA.$TYPE", where $QUOTA specifies the quota and $TYPE is either "consumed" or
             "remaining".
-            Available quotas can be seen in the
-            <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/quotas">API documentation</a>.
-
+            Available quotas can be seen in the """ +
+            " <a href=\"" + ExternalLinks.API_QUOTAS + "\">API documentation</a>. " + """
             Retrieving a lot of data (many rows, many columns, or long date ranges) or specifying complex filter
             criteria may be responsible for consumption of many tokens per node execution.
-                """)
+            """)
     boolean m_returnPropertyQuota;
 
 

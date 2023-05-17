@@ -67,6 +67,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
+import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Settings for the Google Analytics 4 Connector node.
@@ -79,11 +80,9 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
     @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
-    @Widget(title = "Google Analytics (GA4) Property ID (fetched from API)", description = """
-            Specify the ID of the
-            Google Analytics 4 <a href="https://support.google.com/analytics/answer/9304153#property">property</a>
-            of which you want to access Google Analytics data.
-                """)
+    @Widget(title = "Google Analytics (GA4) Property ID (fetched from API)",
+        description = "Specify the ID of the Google Analytics 4 <a href=\"" + ExternalLinks.EXPLAIN_PROPERTY
+            + "\">property</a> of which you want to access Google Analytics data.")
     @ChoicesWidget(choices = AnalyticsPropertiesProvider.class)
     // will implicitly be handled as string
     GAProperty m_analyticsPropertyId;

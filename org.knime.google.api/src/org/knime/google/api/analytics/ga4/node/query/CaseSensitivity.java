@@ -48,7 +48,7 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 
 /**
  * Case sensitivity for string-based filters.
@@ -57,8 +57,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  */
 @SuppressWarnings("restriction") // webui* classes
 enum CaseSensitivity {
-    @Widget(title = "Case insensitive")
+    @Label("Case insensitive")
     CASE_INSENSITIVE,
-    @Widget(title = "Case sensitive")
+    @Label("Case sensitive")
     CASE_SENSITIVE;
 }

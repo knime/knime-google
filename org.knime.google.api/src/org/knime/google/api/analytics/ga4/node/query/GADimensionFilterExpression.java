@@ -64,7 +64,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @SuppressWarnings("restriction") // webui* classes
 final class GADimensionFilterExpression implements DefaultNodeSettings {
 
-    @Widget(title = "Match...")
+    @Widget(title = "Match")
     GAFilterGroup m_connectVia = GAFilterGroup.OR;
 
     @Widget(title = "Filters")

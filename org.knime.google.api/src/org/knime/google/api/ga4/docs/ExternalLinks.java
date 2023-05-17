@@ -44,58 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   24 Feb 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
+ *   17 May 2023 (carlwitt): created
  */
-package org.knime.google.api.analytics.ga4.node.connector;
-
-import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.impl.WebUINodeFactory;
-import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.ga4.docs.ExternalLinks;
+package org.knime.google.api.ga4.docs;
 
 /**
- * Factory for the Google Analytics Connector node.
+ * User facing links via node description or widget help texts.
  *
- * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * Make sure hl=en sets the language in order to get a uniform experience and the correct API identifiers (for instance,
+ * issuing a query with dimension = "Stadt" will return an API error, it needs to be "city").
+ *
+ * Make sure to escape the ampersand
+ *
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-@SuppressWarnings("restriction") // webui classes
-public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeModel> {
+public final class ExternalLinks {
 
-    private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
-            .name("Google Analytics Connector")//
-            .icon("./googleanalyticsconnector.png")//
-            .shortDescription("Connect to Google Analytics (GA4) properties.")//
-            .fullDescription("""
-                    This node connects to Google Analytics (GA4) properties using the
-                    <a href="%s">Google Analytics Admin API v1</a> and the
-                    <a href="%s">Google Analytics Data API v1</a>.
+    public static final String API_ADMIN = "https://developers.google.com/analytics/devguides/config/admin/v1?hl=en";
 
-                    The Admin API is used to fetch compatible property IDs which are available from the connected
-                    account.
+    public static final String API_DATA = "https://developers.google.com/analytics/devguides/reporting/data/v1?hl=en";
 
-                    <br/><b>Note:</b> This node can only be used to connect with Google Analytics 4 properties and is not compatible
-                    with Universal Analytics.
-                    """.formatted(ExternalLinks.API_ADMIN, ExternalLinks.API_DATA)
-                )//
-            .modelSettingsClass(GAConnectorNodeSettings.class)//
-            .addInputPort("Google API Connection", GoogleApiConnectionPortObject.TYPE, "The Google API connection that "
-                + "will be used.")
-            .addOutputPort("Google Analytics 4 Connection", GAConnectionPortObject.TYPE, "A connection that can be used"
-                + " to access the Google Analytics Data API v1 for Google Analytics 4 (GA4).")
-            .sinceVersion(5, 1, 0)
-            .build();
+    /** List of standard dimensions. */
+    public static final String API_LIST_DIMENSION =
+        "https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema?hl=en#dimensions";
 
-        /**
-         * Constructor.
-         */
-        public GAConnectorFactory() {
-            super(CONFIG);
-        }
+    /** List of standard metrics. */
+    public static final String API_LIST_METRIC =
+        "https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema?hl=en#metrics";
 
-        @Override
-        public GAConnectorNodeModel createNodeModel() {
-            return new GAConnectorNodeModel(CONFIG);
-        }
+    public static final String API_RESPONSE_METADATA =
+        "https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/ResponseMetaData?hl=en";
 
+    public static final String API_QUOTAS =
+        "https://developers.google.com/analytics/devguides/reporting/data/v1/quotas?hl=en";
+
+    /** Explains how to create a property. */
+    public static final String EXPLAIN_PROPERTY = "https://support.google.com/analytics/answer/9304153?hl=en#property";
+
+    /** Explains the report concept. */
+    public static final String EXPLAIN_REPORT =
+        "https://support.google.com/analytics/answer/9212670?hl=en&amp;ref_topic=13395703";
+
+    /** Explains the metrics and dimensions concept. */
+    public static final String EXPLAIN_METRICS_AND_DIMENSIONS =
+        "https://support.google.com/analytics/answer/9143382?hl=en&amp;ref_topic=11151952";
+
+    /** How to migrate to Google Analytics 4. */
+    public static final String EXPLAIN_MIGRATION = "https://support.google.com/analytics/answer/10759417?hl=en";
+
+    /** Web page that allows to investigate your metrics. */
+    public static final String EXPLORER_TOOL = "https://ga-dev-tools.google/ga4/dimensions-metrics-explorer/";
 }
