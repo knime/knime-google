@@ -59,6 +59,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
@@ -76,17 +78,22 @@ final class GADateRange implements DefaultNodeSettings {
 
     static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    @HorizontalLayout
+    interface DateRangeLayout {}
+
     @Persist(customPersistor = LocalDatePersistor.class)
     @Widget(title = "From date", description = """
             The inclusive start date for the query in the format <tt>yyyy-MM-dd</tt> before the end date.
             """)
     @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
+    @Layout(DateRangeLayout.class)
     LocalDate m_fromDate;
 
     @Persist(customPersistor = LocalDatePersistor.class)
     @Widget(title = "To date",
         description = "The inclusive end date for the query in the format <tt>yyyy-MM-dd</tt> after the start date.")
     @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
+    @Layout(DateRangeLayout.class)
     LocalDate m_toDate;
 
     @Widget(title = "Name (optional)",
@@ -98,6 +105,7 @@ final class GADateRange implements DefaultNodeSettings {
                     <b>Note:</b> The custom name must not start with "date_range_" or "RESERVED_".
                     """)
     // How to validate in UI that it does not begin with "date_range_" or "RESERVED_"?
+    @Layout(DateRangeLayout.class)
     String m_rangeName;
 
     private GADateRange() {

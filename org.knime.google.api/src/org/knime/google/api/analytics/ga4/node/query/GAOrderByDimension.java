@@ -49,9 +49,13 @@
 package org.knime.google.api.analytics.ga4.node.query;
 
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.IsMetricOrderByType;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -61,10 +65,11 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui*
-final class GAOrderByDimension implements DefaultNodeSettings {
+final class GAOrderByDimension implements DefaultNodeSettings, LayoutGroup {
 
     @Widget(title = "Dimension", description = "The dimension to order by.")
     @ChoicesWidget(choices = DimensionChoicesProvider.class)
+    @Effect(signals = IsMetricOrderByType.class, type = EffectType.HIDE)
     String m_dimensionName;
 
     @Widget(title = "Order Type", description = """
@@ -73,7 +78,8 @@ final class GAOrderByDimension implements DefaultNodeSettings {
             "Case insensitive alphanumeric" sorts by lower-case Unicode code point.
             "Numeric" sorts dimension values as numbers and all non-numeric dimension values have an equal ordering
             value below all numeric values.
-                    """)
+                    """, advanced = true)
+    @Effect(signals = IsMetricOrderByType.class, type = EffectType.HIDE)
     OrderType m_orderType = OrderType.ALPHANUMERIC;
 
     GAOrderByDimension() {

@@ -56,12 +56,22 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Before;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.FieldBasedNodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterCriterionLayout.AfterFilterTypeSelection;
+import org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterCriterionLayout.BeforeFilterTypeSelection;
+import org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterCriterionLayout.FilterTypeSelection;
 
 /**
  * A Google Analytics dimension filter criterion.
@@ -72,32 +82,59 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @Persistor(org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterSettingsPersistor.class)
 final class GADimensionFilterCriterion implements DefaultNodeSettings {
 
-    @Widget(title = "Name", description = "The name of the dimension to filter on.")
+    interface GADimensionFilterCriterionLayout {
+        @Before(FilterTypeSelection.class)
+        interface BeforeFilterTypeSelection{}
+
+        @HorizontalLayout
+        @After(BeforeFilterTypeSelection.class)
+        @Before(AfterFilterTypeSelection.class)
+        interface FilterTypeSelection {}
+
+        @HorizontalLayout
+        @After(FilterTypeSelection.class)
+        interface AfterFilterTypeSelection {}
+
+    }
+
+    @Widget(title = "Dimension", description = "The name of the dimension to filter on.")
     @ChoicesWidget(choices = DimensionChoicesProvider.class)
+    @Layout(BeforeFilterTypeSelection.class)
     String m_name;
-
-    @Widget(title = "Match by",
-            description = """
-                    Match results by comparing values of the dimension to strings or based on list inclusion.
-                    """)
-    DimensionFilterType m_selectedType = DimensionFilterType.STRING;
-
-    // BEGIN Union type
-    GAStringFilter m_stringFilter;
-    GAInListFilter m_inListFilter;
-    // END Union type
-
-    @Widget(title = "Case handling",
-            description = """
-                    Specifies whether strings should be matched case-insensitive or case-sensitive.
-                    """)
-    CaseSensitivity m_caseSensitivity = CaseSensitivity.CASE_INSENSITIVE;
 
     @Widget(title = "Invert matches",
             description = """
                     Invert results matched by the criterion in order to <i>exclude</i> certain events from the result.
                     """)
+    @Layout(BeforeFilterTypeSelection.class)
     boolean m_isNegated;
+
+    interface IsStringFilterSelected {}
+
+    @Widget(title = "Match by",
+            description = """
+                    Match results by comparing values of the dimension to strings or based on list inclusion.
+                    """)
+    @Signal(id = IsStringFilterSelected.class, condition = DimensionFilterType.IsString.class)
+    @ValueSwitchWidget
+    @Layout(FilterTypeSelection.class)
+    DimensionFilterType m_selectedType = DimensionFilterType.STRING;
+
+    @Widget(title = "Case handling",
+            description = """
+                    Specifies whether strings should be matched case-insensitive or case-sensitive.
+                    """, advanced = true)
+    @ValueSwitchWidget
+    @Layout(FilterTypeSelection.class)
+    CaseSensitivity m_caseSensitivity = CaseSensitivity.CASE_INSENSITIVE;
+
+    // BEGIN Union type
+    @Layout(AfterFilterTypeSelection.class)
+    GAStringFilter m_stringFilter;
+
+    @Layout(AfterFilterTypeSelection.class)
+    GAInListFilter m_inListFilter;
+    // END Union type
 
     GADimensionFilterCriterion() {
         // ser/de
@@ -126,6 +163,15 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
         STRING,
         @Label("List inclusion")
         IN_LIST;
+
+        static class IsString extends OneOfEnumCondition<DimensionFilterType> {
+
+            @Override
+            public DimensionFilterType[] oneOf() {
+                return new DimensionFilterType[] {STRING};
+            }
+
+        }
     }
 
     void validate() throws InvalidSettingsException {

@@ -54,6 +54,13 @@ import java.util.function.Function;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.HasMultipleItemsCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -62,7 +69,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GADimensionFilterExpression implements DefaultNodeSettings {
+final class GADimensionFilterExpression implements DefaultNodeSettings, LayoutGroup {
 
     @Widget(title = "Filter if matched by",
             description = """
@@ -74,8 +81,12 @@ final class GADimensionFilterExpression implements DefaultNodeSettings {
                         criteria (union of matches)</li>
                     </ul>
                     """)
+    @Effect(signals = HasMultipleItemsCondition.class, type = EffectType.SHOW)
+    @ValueSwitchWidget
     GAFilterGroup m_connectVia = GAFilterGroup.AND;
 
+    @Signal(condition = HasMultipleItemsCondition.class)
+    @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Filter criterion")
     @Widget
     GADimensionFilterCriterion[] m_filters = new GADimensionFilterCriterion[0];
 

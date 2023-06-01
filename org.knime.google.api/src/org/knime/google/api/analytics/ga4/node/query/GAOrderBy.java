@@ -55,9 +55,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Before;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.GAOrderByLayout.OrderByTypeHorizontalPart;
+import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.GAOrderByLayout.OrderByTypeLayout;
+import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.GAOrderByLayout.SortOrderLayout;
 
 /**
  * Settings for a Google Analytics 4 Data API
@@ -69,21 +81,43 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @SuppressWarnings("restriction") // webui*
 final class GAOrderBy implements DefaultNodeSettings {
 
-    @Widget(title = "Sort order")
-    SortOrder m_sortOrder = SortOrder.DESCENDING;
+    interface GAOrderByLayout {
+        @Before(OrderByTypeHorizontalPart.class)
+        interface OrderByTypeLayout {}
+
+        @HorizontalLayout
+        @After(OrderByTypeLayout.class)
+        @Before(SortOrderLayout.class)
+        interface OrderByTypeHorizontalPart {}
+
+        @After(OrderByTypeHorizontalPart.class)
+        interface SortOrderLayout {}
+    }
+
+    interface IsMetricOrderByType {}
 
     @Widget(title = "Order by")
+    @Signal(id = IsMetricOrderByType.class, condition = OrderByType.IsMetric.class)
+    @ValueSwitchWidget
+    @Layout(OrderByTypeLayout.class)
     OrderByType m_selectedType = OrderByType.METRIC;
 
     // BEGIN Union type (how to better represent a Union type and have it show up correctly in the modern ui?)
     @Widget(title = "Metric")
+    @Effect(signals = IsMetricOrderByType.class, type = EffectType.SHOW)
     @ChoicesWidget(choices = MetricsChoicesProvider.class)
+    @Layout(OrderByTypeHorizontalPart.class)
     String m_orderByMetric;
 
     @Widget(title = "Dimension")
+    @Layout(OrderByTypeHorizontalPart.class)
     GAOrderByDimension m_orderByDimension;
     // END Union
 
+    @Widget(title = "Sort order")
+    @ValueSwitchWidget
+    @Layout(SortOrderLayout.class)
+    SortOrder m_sortOrder = SortOrder.DESCENDING;
 
     GAOrderBy() {
         // ser/de
@@ -99,6 +133,15 @@ final class GAOrderBy implements DefaultNodeSettings {
         @Label("Dimension")
         DIMENSION;
         // PIVOT?
+
+        static class IsMetric extends OneOfEnumCondition<OrderByType> {
+
+            @Override
+            public OrderByType[] oneOf() {
+                return new OrderByType[] {METRIC};
+            }
+
+        }
     }
 
     enum SortOrder {

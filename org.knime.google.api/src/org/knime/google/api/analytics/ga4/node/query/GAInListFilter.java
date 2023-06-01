@@ -54,8 +54,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.IsStringFilterSelected;
 
 /**
  * Filters dimension values based on list inclusion.
@@ -63,10 +67,13 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GAInListFilter implements DefaultNodeSettings {
+final class GAInListFilter implements DefaultNodeSettings, LayoutGroup {
+
 
     @Widget(title = "Dimension values", description = "Specify the list of values to filter the dimension with.")
-    // @ChoicesWidget(multiple = true, choices = None.class) // TODO enable the choicesprovider once UIEXT-993 is done
+    @Effect(signals = IsStringFilterSelected.class, type = EffectType.HIDE)
+    // @ChoicesWidget(choices = None.class) // TODO enable the choicesprovider once UIEXT-993 is done
+    // @ArrayWidget(addButtonText = "Add dimension value")
     String[] m_values = new String[0];
 
     // No actual choices, just to entice the combobox UI to be used
