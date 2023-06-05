@@ -50,8 +50,8 @@ package org.knime.google.api.analytics.ga4.node.query;
 
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
+import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
-import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Factory for the Google Analytics Query node.

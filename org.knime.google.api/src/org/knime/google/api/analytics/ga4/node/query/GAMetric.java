@@ -56,7 +56,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.google.api.ga4.docs.ExternalLinks;
+import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
 /**
  * Settings for a Google Analytics 4 Data API

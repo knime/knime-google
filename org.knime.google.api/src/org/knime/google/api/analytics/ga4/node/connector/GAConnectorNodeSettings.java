@@ -65,9 +65,9 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
-import org.knime.google.api.ga4.docs.ExternalLinks;
 
 /**
  * Settings for the Google Analytics 4 Connector node.

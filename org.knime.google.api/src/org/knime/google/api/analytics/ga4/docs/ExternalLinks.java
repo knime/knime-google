@@ -46,7 +46,7 @@
  * History
  *   17 May 2023 (carlwitt): created
  */
-package org.knime.google.api.ga4.docs;
+package org.knime.google.api.analytics.ga4.docs;
 
 /**
  * User facing links via node description or widget help texts.
