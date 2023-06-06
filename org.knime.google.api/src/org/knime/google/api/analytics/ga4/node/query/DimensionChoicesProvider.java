@@ -44,73 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   14 Mar 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
+ *   1 Jun 2023 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.node.KNIMEException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.SettingsCreationContext;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
+
+import com.google.api.services.analyticsdata.v1beta.model.DimensionMetadata;
 
 /**
- * Settings for a Google Analytics 4 Data API
- * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/OrderBy#DimensionOrderBy">
- * DimensionOrderBy</a>.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("restriction") // webui*
-final class GAOrderByDimension implements DefaultNodeSettings {
+@SuppressWarnings("restriction") // webui* classes
+final class DimensionChoicesProvider implements ChoicesProvider {
 
-    @Widget(title = "Dimension", description = "The dimension to order by.")
-    @ChoicesWidget(choices = DimensionChoicesProvider.class)
-    String m_dimensionName;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DimensionChoicesProvider.class);
 
-    @Widget(title = "Order Type", description = """
-            Defines how the Google Analytics API should order the string dimension values.
-            "Alphanumeric" sorts by Unicode code point.
-            "Case insensitive alphanumeric" sorts by lower-case Unicode code point.
-            "Numeric" sorts dimension values as numbers and all non-numeric dimension values have an equal ordering
-            value below all numeric values.
-                    """)
-    OrderType m_orderType = OrderType.ALPHANUMERIC;
-
-    GAOrderByDimension() {
-        // ser/de
-    }
-
-    GAOrderByDimension(final String name, final OrderType type) {
-        m_dimensionName = name;
-        m_orderType = type;
-    }
-
-    /**
-     * Descriptions from
-     * https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/OrderBy#ordertype
-     *
-     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
-     */
-    enum OrderType {
-            /**
-             * Unspecific order.
-             */
-            @Label("Unspecified order")
-            ORDER_TYPE_UNSPECIFIED,
-            /**
-             * Alphanumeric sort by Unicode code point, e.g. \"2\" < \"A\".
-             */
-            @Label("Alphanumeric")
-            ALPHANUMERIC,
-            /**
-             * Case insensitive alphanumeric sort by lower case Unicode code point.
-             */
-            @Label("Case insensitive alphanumeric")
-            CASE_INSENSITIVE_ALPHANUMERIC,
-            /**
-             * Dimension values are converted to numbers before sorting.
-             */
-            @Label("Numeric")
-            NUMERIC;
-    }
+        @Override
+        public String[] choices(final SettingsCreationContext ctx) {
+            final var connSpec = GAQueryNodeModel.getGoogleAnalyticsConnectionPortObjectSpec(ctx.getPortObjectSpecs());
+            if (connSpec.isPresent()) {
+                try {
+                    final var pos = connSpec.get();
+                    final var conn = pos.getConnection();
+                    return conn.metadata(pos.getProperty()).getDimensions()
+                            .stream()
+                            .map(DimensionMetadata::getApiName)
+                            .toArray(String[]::new);
+                } catch (KNIMEException e) {
+                    LOGGER.error("Failed to retrieve Google Analytics 4 dimensions from Google Analytics API.", e);
+                }
+            }
+            return new String[0];
+        }
 }

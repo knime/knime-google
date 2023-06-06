@@ -55,6 +55,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
@@ -76,6 +77,7 @@ final class GAOrderBy implements DefaultNodeSettings {
 
     // BEGIN Union type (how to better represent a Union type and have it show up correctly in the modern ui?)
     @Widget(title = "Metric")
+    @ChoicesWidget(choices = MetricsChoicesProvider.class)
     String m_orderByMetric;
 
     @Widget(title = "Dimension")

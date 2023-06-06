@@ -84,6 +84,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.analyticsadmin.v1beta.GoogleAnalyticsAdmin;
 import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaAccountSummary;
 import com.google.api.services.analyticsdata.v1beta.AnalyticsData;
+import com.google.api.services.analyticsdata.v1beta.model.Metadata;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportRequest;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportResponse;
 
@@ -225,6 +226,38 @@ public final class GAConnection {
     public List<GoogleAnalyticsAdminV1betaAccountSummary> accountSummaries() throws KNIMEException {
         return exceptionsWrapped(
             () -> accountSummaries(m_connection, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
+    }
+
+    /**
+     * Get
+     * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/getMetadata">metadata</a>
+     * for a given property, such as dimensions and metrics.
+     *
+     * @param property Google Analytics 4 property
+     * @param connection Google API connection to use
+     * @param connectTimeout connection timeout
+     * @param readTimeout read timeout
+     * @param retryMaxElapsedTime maximum elapsed time after the first request for retries
+     * @return available metadata for the property
+     * @throws IOException exception thrown from underlying API requests
+     */
+    public static final Metadata metadata(final GAProperty property,
+        final GoogleApiConnection connection, final Duration connectTimeout, final Duration readTimeout,
+        final Duration retryMaxElapsedTime) throws IOException {
+        return withDataAPI(connection, connectTimeout, readTimeout, retryMaxElapsedTime,
+            data -> data.properties().getMetadata("properties/%s/metadata".formatted(property.m_propertyId())).execute()
+            );
+    }
+
+    /**
+     * Get metadata for a given property.
+     * @param property Google Analytics 4 property
+     * @return available metadata for the property
+     * @throws KNIMEException exception throw from underlying API requests
+     */
+    public Metadata metadata(final GAProperty property) throws KNIMEException {
+        return exceptionsWrapped(
+            () -> metadata(property, m_connection, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
     }
 
     /**
