@@ -139,9 +139,9 @@ final class GAOrderBy implements DefaultNodeSettings {
     }
 
     private void checkInMetrics(final GAMetric[] metrics) throws InvalidSettingsException {
-        if (Arrays.stream(metrics).noneMatch(m -> m.m_name.equals(m_orderByMetric) && !m.m_invisible)) {
+        if (Arrays.stream(metrics).noneMatch(m -> m.m_name.equals(m_orderByMetric))) {
             throw new InvalidSettingsException(
-                "The metric order by \"%s\" must be in the list of metrics and be visible (advanced setting)."
+                "The metric order by \"%s\" must be in the list of metrics."
                     .formatted(m_orderByMetric));
         }
     }

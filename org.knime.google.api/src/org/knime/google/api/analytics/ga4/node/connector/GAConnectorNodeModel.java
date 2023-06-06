@@ -56,6 +56,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
@@ -64,7 +65,6 @@ import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
 import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
@@ -98,26 +98,21 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final GAConnectorNodeSettings modelSettings)
             throws InvalidSettingsException {
-        final var connSpec = getGoogleApiConnectionPortObjectSpec(inSpecs)
+        final var connSpec = GAConnectionPortObjectSpec
+                .getGoogleApiConnectionPortObjectSpec(inSpecs, GOOGLE_API_CONNECTION_PORT)
                 .orElseThrow(() -> new InvalidSettingsException("Google API connection is missing."));
         CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId, "Google Analytics Property ID is missing.");
         return new PortObjectSpec[] { connSpec };
     }
 
-    static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
-            final PortObjectSpec[] inSpecs) {
-        if (inSpecs == null || inSpecs.length == 0 || inSpecs[GOOGLE_API_CONNECTION_PORT] == null) {
-            return Optional.empty();
-        }
-        return Optional.of(CheckUtils.checkCast(inSpecs[GOOGLE_API_CONNECTION_PORT],
-            GoogleApiConnectionPortObjectSpec.class, IllegalArgumentException::new,
-            "Input Port Object is not a Google API Connection."));
-    }
-
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
             final GAConnectorNodeSettings modelSettings) throws Exception {
-        final var conn = getGAConnection(inObjects, modelSettings);
+        final var apiConnPO = GAConnectionPortObject
+                .getGoogleApiConnectionPortObject(inObjects, GOOGLE_API_CONNECTION_PORT)
+                .orElseThrow(() -> KNIMEException.of(Message.fromSummary("Google API connection is missing")));
+        final var conn = new GAConnection(apiConnPO.getGoogleApiConnection(), modelSettings.m_connTimeoutSec,
+            modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
         final var props = conn.accountSummaries().stream()
                 .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
                     .map(p -> p.getProperty().replace("properties/", ""))).count();
@@ -130,12 +125,9 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
         return new PortObject[] { new GAConnectionPortObject(spec) };
     }
 
-    private static GAConnection getGAConnection(final PortObject[] inObjects, final GAConnectorNodeSettings settings)
-            throws KNIMEException {
-        final var apiConnPO = CheckUtils.checkCast(inObjects[GOOGLE_API_CONNECTION_PORT],
-            GoogleApiConnectionPortObject.class, KNIMEException::new, "No Google API connection available.");
-        return new GAConnection(apiConnPO.getGoogleApiConnection(),
-            settings.m_connTimeoutSec, settings.m_readTimeoutSec, settings.m_retryMaxElapsedTimeSec);
+    public static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
+            final PortObjectSpec[] pos) {
+        return GAConnectionPortObjectSpec.getGoogleApiConnectionPortObjectSpec(pos, GOOGLE_API_CONNECTION_PORT);
     }
 
 }

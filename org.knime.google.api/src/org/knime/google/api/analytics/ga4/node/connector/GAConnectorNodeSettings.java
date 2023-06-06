@@ -90,21 +90,21 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     /* Advanced settings */
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_CONNECT_TIMEOUT)
-    @Widget(title = "Connect Timeout (seconds)", description = """
+    @Widget(title = "Connect timeout (seconds)", description = """
                     Specify the timeout in seconds to establish a connection.
             """)
     @NumberInputWidget(min = 1)
     Duration m_connTimeoutSec = GAConnection.DEFAULT_CONNECT_TIMEOUT;
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_READ_TIMEOUT)
-    @Widget(title = "Read Timeout (seconds)", description = """
+    @Widget(title = "Read timeout (seconds)", description = """
                     Specify the timeout in seconds to read data from an already established connection.
             """)
     @NumberInputWidget(min = 1)
     Duration m_readTimeoutSec = GAConnection.DEFAULT_READ_TIMEOUT;
 
     @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_ERR_RETRY_MAX_ELAPSED_TIME)
-    @Widget(title = "Retry Timeout (seconds)", description = """
+    @Widget(title = "Retry timeout (seconds)", description = """
                     Specify the total duration for which the same request is allowed to be retried in case of server
                     errors (5xx) and request timeouts (408), starting when the request is initially made.
             """)
@@ -139,7 +139,6 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
             final var connSpec = GAConnectorNodeModel.getGoogleApiConnectionPortObjectSpec(ctx.getPortObjectSpecs());
             if (connSpec.isPresent()) {
                 try {
-
                     final var d = Duration.ofSeconds(6);
                     // We intentionally use a very short duration since the user likely does not see
                     // what is currently going on (and we don't have access here to the user-provided values).

@@ -57,8 +57,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
  */
 @SuppressWarnings("restriction") // webui* classes
 enum GAFilterGroup {
-    @Label("All")
+    @Label("All criteria")
     AND,
-    @Label("Any")
+    @Label("Any criterion")
     OR;
 }

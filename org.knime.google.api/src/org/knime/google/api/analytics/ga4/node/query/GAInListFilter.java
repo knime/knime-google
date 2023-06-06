@@ -50,9 +50,11 @@ package org.knime.google.api.analytics.ga4.node.query;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
@@ -63,26 +65,30 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @SuppressWarnings("restriction") // webui* classes
 final class GAInListFilter implements DefaultNodeSettings {
 
-    @Widget(title = "In list")
-    FilterValue[] m_values = new FilterValue[0];
+    @Widget(title = "Dimension values", description = "Specify the list of values to filter the dimension with.")
+    // @ChoicesWidget(multiple = true, choices = None.class) // TODO enable the choicesprovider once UIEXT-993 is done
+    String[] m_values = new String[0];
+
+    // No actual choices, just to entice the combobox UI to be used
+    static class None implements ChoicesProvider {
+        @Override
+        public String[] choices(final SettingsCreationContext context) {
+            return new String[0];
+        }
+    }
 
     GAInListFilter() {
         // ser/de
     }
 
-    GAInListFilter(final FilterValue[] values) {
+    GAInListFilter(final String[] values) {
         m_values = Objects.requireNonNull(values);
     }
 
     void validate() throws InvalidSettingsException {
         CheckUtils.checkSettingNotNull(m_values, "Values are missing.");
         for (final var v : m_values) {
-            CheckUtils.checkSettingNotNull(v, "Value must not be null.");
+            CheckUtils.checkSetting(StringUtils.isNotBlank(v), "Values must be non-empty strings.");
         }
-    }
-
-    static class FilterValue implements DefaultNodeSettings {
-        @Widget(title = "Dimension value")
-        String m_value;
     }
 }

@@ -49,6 +49,7 @@
 package org.knime.google.api.analytics.ga4.port;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -58,8 +59,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
+import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * Specification for the {@link GAConnectionPortObject}.
@@ -101,7 +105,7 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
      * Gets the Google Analytics connection if available.
      * @return connection or empty if the connection is not available
      */
-    GAConnection getConnection() {
+    public GAConnection getConnection() {
         return m_connection;
     }
 
@@ -109,7 +113,7 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
      * Get the Google Analytics Property if available.
      * @return property or empty if property is not available
      */
-    GAProperty getProperty() {
+    public GAProperty getProperty() {
         return m_property;
     }
 
@@ -168,6 +172,56 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(m_connection).append(m_property).toHashCode();
+    }
+
+    /**
+     * Convenience method to obtain a Google Analytics connection port object spec from the input specs at the given
+     * offset.
+     *
+     * If the index is not occupied by any port object spec (possibly since the array is null or empty, or there is a
+     * null value at the specified index) and empty optional is returned.
+     *
+     * If the existing port object spec is not of type {@link GAConnectionPortObjectSpec}, an exception is thrown.
+     *
+     * @param inSpecs input port object specs, possibly null or empty
+     * @param portIdx index to look at
+     * @return a Google Analytics connection port object spec, or empty optional if no spec is available
+     * @throws IllegalArgumentException if the existing port object spec is not of type
+     *             {@link GAConnectionPortObjectSpec}
+     */
+    public static Optional<GAConnectionPortObjectSpec> getGoogleAnalyticsConnectionPortObjectSpec(
+            final PortObjectSpec[] inSpecs, final int portIdx) {
+        if (inSpecs == null || inSpecs.length == 0 || inSpecs[portIdx] == null) {
+            return Optional.empty();
+        }
+        return Optional.of(CheckUtils.checkCast(inSpecs[portIdx],
+            GAConnectionPortObjectSpec.class, IllegalArgumentException::new,
+            "Input Port Object Spec is not a Google Analytics Connection."));
+    }
+
+    /**
+     * Convenience method to obtain a Google API connection port object spec from the input specs at the given
+     * offset.
+     *
+     * If the index is not occupied by any port object spec (possibly since the array is null or empty, or there is a
+     * null value at the specified index) and empty optional is returned.
+     *
+     * If the existing port object spec is not of type {@link GoogleApiConnectionPortObjectSpec}, an exception is thrown.
+     *
+     * @param inSpecs input port object specs, possibly null or empty
+     * @param portIdx index to look at
+     * @return a Google API connection port object spec, or empty optional if no spec is available
+     * @throws IllegalArgumentException if the existing port object spec is not of type
+     *             {@link GoogleApiConnectionPortObjectSpec}
+     */
+    public static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
+            final PortObjectSpec[] inSpecs, final int portIdx) {
+        if (inSpecs == null || inSpecs.length == 0 || inSpecs[portIdx] == null) {
+            return Optional.empty();
+        }
+        return Optional.of(CheckUtils.checkCast(inSpecs[portIdx],
+            GoogleApiConnectionPortObjectSpec.class, IllegalArgumentException::new,
+            "Input Port Object Spec is not a Google API Connection."));
     }
 
 }

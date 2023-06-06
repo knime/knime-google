@@ -77,22 +77,26 @@ final class GADateRange implements DefaultNodeSettings {
     static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     @Persist(customPersistor = LocalDatePersistor.class)
-    @Widget(title = "From Date", description = """
-            The inclusive start date for the query in the format yyyy-MM-dd
-            before the end date.
+    @Widget(title = "From date", description = """
+            The inclusive start date for the query in the format <tt>yyyy-MM-dd</tt> before the end date.
             """)
     @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
     LocalDate m_fromDate;
 
     @Persist(customPersistor = LocalDatePersistor.class)
-    @Widget(title = "To Date",
-        description = "The inclusive end date for the query in the format yyyy-MM-dd " + "after the start date.")
+    @Widget(title = "To date",
+        description = "The inclusive end date for the query in the format <tt>yyyy-MM-dd</tt> after the start date.")
     @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
     LocalDate m_toDate;
 
-    @Widget(title = "Name (optional)", description = "An optional name for the date range to which the dimension "
-        + "<tt>dateRange</tt> is valued. If omitted, the date ranges are named by their zero based index: "
-        + "<tt>date_range_0</tt>, <tt>date_range_1</tt>, etc.")
+    @Widget(title = "Name (optional)",
+            description = """
+                    A custom name for the date range to which the dimension <tt>dateRange</tt> is valued.
+                    If no name is given, Google Analytics automatically names each date range based on their index:
+                    <tt>date_range_0</tt>, <tt>date_range_1</tt>, etc.
+
+                    <b>Note:</b> The custom name must not start with "date_range_" or "RESERVED_".
+                    """)
     // How to validate in UI that it does not begin with "date_range_" or "RESERVED_"?
     String m_rangeName;
 

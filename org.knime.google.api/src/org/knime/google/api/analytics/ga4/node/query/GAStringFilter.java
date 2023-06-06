@@ -65,10 +65,28 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 @SuppressWarnings("restriction") // webui* classes
 final class GAStringFilter implements DefaultNodeSettings {
 
-    @Widget(title = "Match type")
+    @Widget(title = "String matching", description = """
+            Specify how the string value is matched with the dimension value.
+            <ul>
+                <li><b>Exact:</b> the string value must match the dimension value exactly
+                </li>
+                <li><b>Begins with:</b> the dimension value must begin with the string value
+                </li>
+                <li><b>Ends with:</b> the dimension value must end with the string value
+                </li>
+                <li><b>Contains:</b> the dimension value must contain the string value
+                </li>
+                <li><b>Regular expression (full match):</b> the string value is interpreted as a regular expression and
+                    must match the dimension value completely
+                </li>
+                <li><b>Regular expression (partial match):</b> the string value is interpreted as a regular expression
+                    and must match the dimension value at least partially
+                </li>
+            </ul>
+            """)
     MatchType m_matchType = MatchType.CONTAINS;
 
-    @Widget(title = "Value")
+    @Widget(title = "String value", description = "Specify the string value to match to the dimension value.")
     String m_value;
 
     /**

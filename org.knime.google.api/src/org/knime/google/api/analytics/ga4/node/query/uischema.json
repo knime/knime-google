@@ -18,42 +18,13 @@
                         {
                             "metric":
                             {
-                                "type": "VerticalLayout",
-                                "elements":
-                                [
-                                    {
-                                        "type": "HorizontalLayout",
-                                        "elements":
-                                        [
-                                            {
-                                                "type": "Control",
-                                                "scope": "#/properties/name",
-                                                "options":
-                                                {
-                                                    "format": "string"
-                                                }
-                                            },
-                                            {
-                                                "type": "Control",
-                                                "scope": "#/properties/invisible",
-                                                "options":
-                                                {
-                                                    "isAdvanced": true
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "Control",
-                                        "scope": "#/properties/expression",
-                                        "options":
-                                        {
-                                            "format": "string",
-                                            "isAdvanced": true
-                                        }
-                                    }
-                                ]
-                            }
+								"type": "Control",
+								"scope": "#/properties/name",
+								"options":
+								{
+									"format": "dropdown"
+								}
+							}
                         }
                     }
                 }
@@ -80,7 +51,7 @@
                                 "scope": "#/properties/name",
                                 "options":
                                 {
-                                    "format": "string"
+                                    "format": "dropdown"
                                 }
                             }
                         }
@@ -88,7 +59,7 @@
                 },
                 {
                     "type": "Control",
-                    "label": "Date Ranges (up to four)",
+                    "label": "Date ranges (up to four)",
                     "scope": "#/properties/model/properties/dateRanges",
                     "options":
                     {
@@ -137,7 +108,7 @@
         },
         {
             "type": "Section",
-            "label": "Dimension Filters",
+            "label": "Dimension filter",
             "elements":
             [
                 {
@@ -166,33 +137,49 @@
                     "scope": "#/properties/model/properties/gaDimensionFilter/properties/filters",
                     "options":
                     {
-                        "addButtonText": "Add dimension filter",
+                        "addButtonText": "Add filter criterion",
+                        "arrayElementTitle": "Filter criterion",
                         "detail":
                         {
-                            "name":
+                            "dimension":
                             {
-                                "type": "Control",
-                                "label": "Dimension",
-                                "scope": "#/properties/name"
-                            },
-                            "selectedType":
-                            {
-                                "type": "Control",
-                                "scope": "#/properties/selectedType",
-                                "options":
-                                {
-                                    "format": "valueSwitch",
-                                    "initial": "STRING"
-                                }
-                            },
-                            "isNegated":
-                            {
-                                "type": "Control",
-                                "scope": "#/properties/isNegated"
-                            },
+								"type": "Control",
+								"label": "Dimension",
+								"scope": "#/properties/name"
+							},
+							"negate":
+							{
+								"type": "Control",
+								"scope": "#/properties/isNegated"
+							},
+							"filterType":
+							{
+								"type": "HorizontalLayout",
+								"elements":
+								[
+									{
+										"type": "Control",
+										"scope": "#/properties/selectedType",
+										"options":
+										{
+											"format": "valueSwitch",
+											"initial": "STRING"
+										}
+									},
+									{
+										"type": "Control",
+										"scope": "#/properties/caseSensitivity",
+										"options":
+										{
+											"format": "valueSwitch",
+											"isAdvanced": true
+										}
+									}
+								]
+							},
                             "stringFilter":
                             {
-                                "type": "VerticalLayout",
+                                "type": "HorizontalLayout",
                                 "elements":
                                 [
                                     {
@@ -223,31 +210,12 @@
                             },
                             "inListFilter":
                             {
-                                "type": "Section",
-                                "label": "Dimension Values",
-                                "elements":
-                                [
-                                    {
-                                        "type": "Control",
-                                        "scope": "#/properties/inListFilter/properties/values",
-                                        "options":
-                                        {
-                                            "addButtonText": "Add dimension value",
-                                            "detail":
-                                            {
-                                                "dimension":
-                                                {
-                                                    "type": "Control",
-                                                    "scope": "#/properties/value",
-                                                    "options":
-                                                    {
-                                                        "format": "string"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                ],
+                                "type": "Control",
+								"scope": "#/properties/inListFilter/properties/values",
+								"options":
+								{
+									"format": "combobox"
+								},
                                 "rule":
                                 {
                                     "effect": "SHOW",
@@ -259,16 +227,6 @@
                                             "const": "IN_LIST"
                                         }
                                     }
-                                }
-                            },
-                            "caseSensitivity":
-                            {
-                                "type": "Control",
-                                "scope": "#/properties/caseSensitivity",
-                                "options":
-                                {
-                                    "format": "valueSwitch",
-                                    "isAdvanced": true
                                 }
                             }
                         }
@@ -287,6 +245,7 @@
                     "options":
                     {
                         "addButtonText": "Add order by",
+                        "arrayElementTitle": "Order by",
                         "showSortButtons": true,
                         "detail":
                         {
@@ -304,6 +263,7 @@
                             {
                                 "type": "Control",
                                 "scope": "#/properties/orderByMetric",
+                                "format": "dropdown",
                                 "label": "Metric",
                                 "rule":
                                 {
@@ -325,7 +285,8 @@
                                 [
                                     {
                                         "type": "Control",
-                                        "scope": "#/properties/orderByDimension/properties/dimensionName"
+                                        "scope": "#/properties/orderByDimension/properties/dimensionName",
+										"format": "dropdown"
                                     },
                                     {
                                         "type": "Control",

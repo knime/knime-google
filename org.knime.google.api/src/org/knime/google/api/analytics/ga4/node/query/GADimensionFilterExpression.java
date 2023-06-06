@@ -57,32 +57,41 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
- * An expression for combining filters on dimensions.
+ * An expression for combining dimension filter critera.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
 final class GADimensionFilterExpression implements DefaultNodeSettings {
 
-    @Widget(title = "Match")
-    GAFilterGroup m_connectVia = GAFilterGroup.OR;
+    @Widget(title = "Filter if matched by",
+            description = """
+                    Output the event if it is matched by:
+                    <ul>
+                        <li><b>All criteria</b>: an event is included if it is matched by <i>all</i> of the criteria
+                        (intersection of matches)</li>
+                        <li><b>Any criterion</b>: an event is included if it is matched by <i>at least one</i> of the
+                        criteria (union of matches)</li>
+                    </ul>
+                    """)
+    GAFilterGroup m_connectVia = GAFilterGroup.AND;
 
-    @Widget(title = "Filters")
-    GADimensionFilter[] m_filters = new GADimensionFilter[0];
+    @Widget
+    GADimensionFilterCriterion[] m_filters = new GADimensionFilterCriterion[0];
 
     GADimensionFilterExpression() {
         // ser/de
     }
 
-    GADimensionFilterExpression(final GAFilterGroup connectVia, final GADimensionFilter[] filters) {
+    GADimensionFilterExpression(final GAFilterGroup connectVia, final GADimensionFilterCriterion[] filters) {
         m_connectVia = Objects.requireNonNull(connectVia);
         m_filters = checkFilters(filters, IllegalArgumentException::new);
     }
 
-    private static final <X extends Throwable> GADimensionFilter[] checkFilters(final GADimensionFilter[] filters,
-            final Function<String, X> toThrowable) throws X {
+    private static final <X extends Throwable> GADimensionFilterCriterion[] checkFilters(
+            final GADimensionFilterCriterion[] filters, final Function<String, X> toThrowable) throws X {
         CheckUtils.check(filters != null && filters.length > 0, toThrowable,
-                () -> "At least one filter is required in a filter expression");
+                () -> "At least one criterion is required in a dimension filter.");
         return filters;
     }
 

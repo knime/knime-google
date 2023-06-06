@@ -67,43 +67,36 @@ import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 @SuppressWarnings("restriction") // webui*
 final class GAMetric implements DefaultNodeSettings {
 
-    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$"); // NOSONAR pattern from Google
+    // custom metrics are prefixed by colon
+    private static final String PAT_STR = "^([a-zA-Z0-9_]+:)?[a-zA-Z0-9_]+$"; // NOSONAR pattern from Google
+    private static final Pattern NAME_PATTERN = Pattern.compile(PAT_STR);
 
-    @Widget(title = "Metric", description = "Define up to ten names of metrics. "
-        + "Metrics are quantitative measurements of a report. For example, the metric eventCount is the total number of events. "
-        + "Available names can be seen in the <a href=\"" + ExternalLinks.API_LIST_METRIC + "\">API documentation</a>.")
-    @TextInputWidget(pattern = "[a-zA-Z0-9_]+")
+    @Widget(title = "Metric",
+            description = """
+                Specify the name of the metric.
+                For example, the metric "eventCount" is the total number of events.
+
+                Available metric names can be seen in the
+                <a href=" """ + ExternalLinks.API_LIST_METRIC + """
+                ">list of metrics</a> under the column "API Name".
+                """)
+    @TextInputWidget(pattern = PAT_STR)
     String m_name;
-
-    @Widget(title = "Expression (optional)", description = """
-            A mathematical expression for derived metrics.
-            For example, the metric Event count per user is eventCount/totalUsers.
-            """)
-    String m_expression;
-
-    @Widget(title = "Invisible", description = """
-            Indicates if a metric is invisible in the report response.
-            If a metric is invisible, the metric will not produce a column in the response,
-            but can be used in metricFilter, orderBys, or a metric expression.
-            """)
-    boolean m_invisible;
 
     GAMetric() {
         // ser/de
     }
 
-    GAMetric(final String name, final String exp, final boolean invis) {
+    GAMetric(final String name) {
         m_name = name;
-        m_expression = exp;
-        m_invisible = invis;
     }
 
     void validate() throws InvalidSettingsException {
-        if (StringUtils.isBlank(m_expression)) {
-            CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Metric name cannot be blank unless an expression is specified.");
-        }
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name),
+            "Metric name cannot be blank.");
         if (StringUtils.isNotEmpty(m_name)) {
-            CheckUtils.checkSetting(NAME_PATTERN.matcher(m_name).matches(), "Metric name must follow the pattern \"[a-zA-Z0-9_]+\".");
+            CheckUtils.checkSetting(NAME_PATTERN.matcher(m_name).matches(),
+                "Metric name must follow the pattern \"%s\".".formatted(PAT_STR));
         }
     }
 }

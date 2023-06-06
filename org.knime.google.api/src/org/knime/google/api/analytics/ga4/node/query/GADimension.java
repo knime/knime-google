@@ -67,14 +67,14 @@ import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 final class GADimension implements DefaultNodeSettings {
 
     @Widget(title = "Dimension",
-        description = "Define up to nine names of dimensions. "
-            + """
-              Dimensions are attributes of your data.
-              For example, the dimension city indicates the city from which an event originates.
-              Dimension values in report responses are strings; for example, the city could be "Paris" or "New York".
-              """
-            + "Available names can be seen in the <a href=\""
-            + ExternalLinks.API_LIST_DIMENSION + "\">API documentation</a>.")
+            description = """
+                  Specify the name of the dimension to request.
+                  For example, the dimension "city" indicates the city from which an event originates.
+                  Dimension values in report data are always strings; for example, the city could be "Paris" or
+                  "New York".
+                  """
+                + "Available names can be seen in the <a href=\""
+                + ExternalLinks.API_LIST_DIMENSION + "\">list of dimensions</a> under the column \"API Name\".")
     String m_name;
 
     // Supporting "Dimension expression" requires a more complex UI than is currently feasible

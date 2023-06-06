@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -92,6 +93,7 @@ import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.SortOrder;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
+import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
 
 import com.google.api.services.analyticsdata.v1beta.model.DateRange;
 import com.google.api.services.analyticsdata.v1beta.model.Dimension;
@@ -124,6 +126,8 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAQueryNodeModel.class);
 
+    private static final int GA_CONNECTION_PORT = 0;
+
     /**
      * By default Google Analytics Data API v1 will return 10000 rows at a time.
      * But we can also set the limit ourselves and request more data at once, 100000 being the hard limit.
@@ -150,7 +154,11 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
 
     @Override
     protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs, final GAQueryNodeSettings settings)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
+        // make sure we have a Google Analytics connection
+        if (getGoogleAnalyticsConnectionPortObjectSpec(inSpecs).isEmpty()) {
+            throw new InvalidSettingsException("Google Analytics connection is missing.");
+        }
         // cannot really know the spec for sure before we make the first request
         return new DataTableSpec[] { null };
     }
@@ -163,7 +171,7 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
     @Override
     protected BufferedDataTable[] execute(final PortObject[] inObjects, final ExecutionContext exec,
             final GAQueryNodeSettings settings) throws Exception {
-        final var spec = ((GAConnectionPortObject)inObjects[0]);
+        final var spec = ((GAConnectionPortObject)inObjects[GA_CONNECTION_PORT]);
         final GAConnection conn = spec.getConnection();
         final var prop = spec.getProperty();
 
@@ -265,45 +273,24 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
      * @return a configured run report request
      */
     private static RunReportRequest configureRequest(final GAQueryNodeSettings settings, final int limit) {
-        final var req = new RunReportRequest();
-
-        final var ranges = Arrays.stream(settings.m_dateRanges).map(
-                r -> new DateRange()
-                    .setStartDate(r.m_fromDate.format(DateTimeFormatter.ISO_LOCAL_DATE))
-                    .setEndDate(r.m_toDate.format(DateTimeFormatter.ISO_LOCAL_DATE))
-                    .setName(r.m_rangeName))
-            .collect(Collectors.toList());
-        req.setDateRanges(ranges);
-
-        final var dimensions = Arrays.stream(settings.m_gaDimensions).map(
-                d -> new Dimension()
-                    .setName(d.m_name))
-            .collect(Collectors.toList());
-        req.setDimensions(dimensions);
-
-        final var metrics = Arrays.stream(settings.m_gaMetrics).map(
-                m -> new Metric()
-                    .setName(m.m_name)
-                    .setExpression(m.m_expression)
-                    .setInvisible(m.m_invisible))
-            .collect(Collectors.toList());
-        req.setMetrics(metrics);
-
-        final var filter = settings.m_gaDimensionFilter;
-        req.setDimensionFilter(createDimensionFilterExpression(filter));
-
-        final var orderBys = Arrays.stream(settings.m_gaOrderBy).map(GAQueryNodeModel::mapToOrderBy)
-            .collect(Collectors.toList());
-        req.setOrderBys(orderBys);
-
-        req.setLimit(Long.valueOf(limit));
-
-        req.setCurrencyCode(settings.m_currencyCode);
-        req.setKeepEmptyRows(settings.m_keepEmptyRows);
-
-        req.setReturnPropertyQuota(settings.m_returnPropertyQuota);
-
-        return req;
+        return new RunReportRequest()
+            .setDateRanges(Arrays.stream(settings.m_dateRanges).map(
+                        r -> new DateRange()
+                            .setStartDate(r.m_fromDate.format(DateTimeFormatter.ISO_LOCAL_DATE))
+                            .setEndDate(r.m_toDate.format(DateTimeFormatter.ISO_LOCAL_DATE))
+                            .setName(r.m_rangeName))
+                .collect(Collectors.toList()))
+            .setDimensions(Arrays.stream(settings.m_gaDimensions).map(d -> new Dimension().setName(d.m_name))
+                .collect(Collectors.toList()))
+            .setMetrics(Arrays.stream(settings.m_gaMetrics).map(m -> new Metric().setName(m.m_name))
+                .collect(Collectors.toList()))
+            .setDimensionFilter(createDimensionFilterExpression(settings.m_gaDimensionFilter))
+            .setOrderBys(Arrays.stream(settings.m_gaOrderBy).map(GAQueryNodeModel::mapToOrderBy)
+                .collect(Collectors.toList()))
+            .setLimit(Long.valueOf(limit))
+            .setCurrencyCode(settings.m_currencyCode)
+            .setKeepEmptyRows(settings.m_keepEmptyRows)
+            .setReturnPropertyQuota(settings.m_returnPropertyQuota);
     }
 
 
@@ -597,7 +584,7 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
         };
     }
 
-    private static FilterExpression mapToFilterExpression(final GADimensionFilter filter) {
+    private static FilterExpression mapToFilterExpression(final GADimensionFilterCriterion filter) {
         final var f = new Filter().setFieldName(filter.m_name);
         switch (filter.m_selectedType) { // NOSONAR exhaustive switch notifies us automatically
                                          // when we add the other enum values
@@ -608,7 +595,7 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
             }
             case IN_LIST ->
                 f.setInListFilter(new InListFilter().setValues(
-                    Arrays.stream(filter.m_inListFilter.m_values).map(fv -> fv.m_value).collect(Collectors.toList()))
+                    Arrays.stream(filter.m_inListFilter.m_values).collect(Collectors.toList()))
                     .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
         }
         final var exp = new FilterExpression().setFilter(f);
@@ -616,5 +603,10 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
             return new FilterExpression().setNotExpression(exp);
         }
         return exp;
+    }
+
+    public static Optional<GAConnectionPortObjectSpec> getGoogleAnalyticsConnectionPortObjectSpec(
+            final PortObjectSpec[] pos) {
+        return GAConnectionPortObjectSpec.getGoogleAnalyticsConnectionPortObjectSpec(pos, GA_CONNECTION_PORT);
     }
 }

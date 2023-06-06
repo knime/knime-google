@@ -59,22 +59,27 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.FieldBasedNodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
 /**
- * Google Analytics dimension filter.
+ * A Google Analytics dimension filter criterion.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-@Persistor(org.knime.google.api.analytics.ga4.node.query.GADimensionFilter.GADimensionFilterSettingsPersistor.class)
-final class GADimensionFilter implements DefaultNodeSettings {
+@Persistor(org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterSettingsPersistor.class)
+final class GADimensionFilterCriterion implements DefaultNodeSettings {
 
     @Widget(title = "Name", description = "The name of the dimension to filter on.")
+    @ChoicesWidget(choices = DimensionChoicesProvider.class)
     String m_name;
 
-    @Widget(title = "Filter by")
+    @Widget(title = "Match by",
+            description = """
+                    Match results by comparing values of the dimension to strings or based on list inclusion.
+                    """)
     DimensionFilterType m_selectedType = DimensionFilterType.STRING;
 
     // BEGIN Union type
@@ -82,17 +87,23 @@ final class GADimensionFilter implements DefaultNodeSettings {
     GAInListFilter m_inListFilter;
     // END Union type
 
-    @Widget(title = "Case sensitivity")
+    @Widget(title = "Case handling",
+            description = """
+                    Specifies whether strings should be matched case-insensitive or case-sensitive.
+                    """)
     CaseSensitivity m_caseSensitivity = CaseSensitivity.CASE_INSENSITIVE;
 
-    @Widget(title = "Negate filter")
+    @Widget(title = "Invert matches",
+            description = """
+                    Invert results matched by the criterion in order to <i>exclude</i> certain events from the result.
+                    """)
     boolean m_isNegated;
 
-    GADimensionFilter() {
+    GADimensionFilterCriterion() {
         // ser/de
     }
 
-    public GADimensionFilter(final String name, final GAStringFilter stringFilter,
+    public GADimensionFilterCriterion(final String name, final GAStringFilter stringFilter,
             final CaseSensitivity caseSensitivity, final boolean isNegated) {
         m_name = Objects.requireNonNull(name);
         m_selectedType = DimensionFilterType.STRING;
@@ -101,7 +112,7 @@ final class GADimensionFilter implements DefaultNodeSettings {
         m_isNegated = isNegated;
     }
 
-    public GADimensionFilter(final String name, final GAInListFilter inListFilter,
+    public GADimensionFilterCriterion(final String name, final GAInListFilter inListFilter,
             final CaseSensitivity caseSensitivity, final boolean isNegated) {
         m_name = Objects.requireNonNull(name);
         m_selectedType = DimensionFilterType.IN_LIST;
@@ -111,7 +122,7 @@ final class GADimensionFilter implements DefaultNodeSettings {
     }
 
     enum DimensionFilterType {
-        @Label("String value")
+        @Label("String comparison")
         STRING,
         @Label("List inclusion")
         IN_LIST;
@@ -141,7 +152,12 @@ final class GADimensionFilter implements DefaultNodeSettings {
         }
     }
 
-    static final class GADimensionFilterSettingsPersistor implements NodeSettingsPersistor<GADimensionFilter> {
+    /**
+     * Custom persistor for the union of string- and list-based filter criteria.
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     */
+    static final class GADimensionFilterSettingsPersistor implements NodeSettingsPersistor<GADimensionFilterCriterion> {
 
         private static final String CFG_KEY_FILTER_TYPE = "selectedType";
         private static final String CFG_KEY_NAME = "name";
@@ -149,21 +165,31 @@ final class GADimensionFilter implements DefaultNodeSettings {
         private static final String CFG_KEY_IS_NEGATED = "isNegated";
 
         @Override
-        public GADimensionFilter load(final NodeSettingsRO settings) throws InvalidSettingsException {
+        public GADimensionFilterCriterion load(final NodeSettingsRO settings) throws InvalidSettingsException {
             final var selected = valueOf(DimensionFilterType.class, settings, CFG_KEY_FILTER_TYPE);
             final var name = settings.getString(CFG_KEY_NAME);
             final var caseSensitivity = valueOf(CaseSensitivity.class, settings, CFG_KEY_CASE_SENSITIVITY);
             final var isNegated = settings.getBoolean(CFG_KEY_IS_NEGATED);
             return switch (selected) { // NOSONAR exhaustiveness
-                case STRING -> new GADimensionFilter(name, new FieldBasedNodeSettingsPersistor<>(GAStringFilter.class)
-                    .load(settings), caseSensitivity, isNegated);
-                case IN_LIST -> new GADimensionFilter(name, new FieldBasedNodeSettingsPersistor<>(GAInListFilter.class)
-                    .load(settings), caseSensitivity, isNegated);
+                case STRING -> new GADimensionFilterCriterion(name,
+                    new FieldBasedNodeSettingsPersistor<>(GAStringFilter.class).load(settings),
+                    caseSensitivity, isNegated);
+                case IN_LIST -> new GADimensionFilterCriterion(name,
+                    new FieldBasedNodeSettingsPersistor<>(GAInListFilter.class).load(settings),
+                    caseSensitivity, isNegated);
             };
         }
 
         private static <T extends Enum<T>> T valueOf(final Class<T> enumClass, final NodeSettingsRO settings,
-                final String key) throws InvalidSettingsException {
+            final String key) throws InvalidSettingsException {
+            return valueOf(enumClass, settings, key, null);
+        }
+
+        private static <T extends Enum<T>> T valueOf(final Class<T> enumClass, final NodeSettingsRO settings,
+                final String key, final T defaultValue) throws InvalidSettingsException {
+            if (defaultValue != null && !settings.containsKey(key)) {
+                return defaultValue;
+            }
             final var enumValue = settings.getString(key);
             try {
                 return Enum.valueOf(enumClass, enumValue);
@@ -174,7 +200,7 @@ final class GADimensionFilter implements DefaultNodeSettings {
         }
 
         @Override
-        public void save(final GADimensionFilter filter, final NodeSettingsWO settings) {
+        public void save(final GADimensionFilterCriterion filter, final NodeSettingsWO settings) {
             settings.addString(CFG_KEY_FILTER_TYPE, filter.m_selectedType.name());
             settings.addString(CFG_KEY_NAME, filter.m_name);
             settings.addString(CFG_KEY_CASE_SENSITIVITY, filter.m_caseSensitivity.name());
