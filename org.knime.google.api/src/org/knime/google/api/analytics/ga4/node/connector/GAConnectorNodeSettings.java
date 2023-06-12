@@ -80,9 +80,11 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
     @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
-    @Widget(title = "Google Analytics (GA4) Property ID (fetched from API)",
-        description = "Specify the ID of the Google Analytics 4 <a href=\"" + ExternalLinks.EXPLAIN_PROPERTY
-            + "\">property</a> of which you want to access Google Analytics data.")
+    @Widget(title = "Google Analytics 4 property",
+        description = "Specify the Google Analytics 4 <a href=\"" + ExternalLinks.EXPLAIN_PROPERTY
+            + "\">property</a> of which you want to access Google Analytics data. If no properties are listed,"
+            + "check that your account has access to at least one <i>Google Analytics 4</i> property. "
+            + "Universal Analytics properties are not supported.")
     @ChoicesWidget(choices = AnalyticsPropertiesProvider.class)
     // will implicitly be handled as string
     GAProperty m_analyticsPropertyId;
