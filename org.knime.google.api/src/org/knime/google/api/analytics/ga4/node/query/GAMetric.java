@@ -82,7 +82,7 @@ final class GAMetric implements DefaultNodeSettings {
                 ">list of metrics</a> under the column "API Name".
                 """)
     @TextInputWidget(pattern = PAT_STR)
-    @ChoicesWidget(choices = MetricsChoicesProvider.class, multiple = false)
+    @ChoicesWidget(choices = MetricsChoicesProvider.class)
     String m_name;
 
     GAMetric() {
