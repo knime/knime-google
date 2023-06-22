@@ -96,7 +96,9 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, LayoutGr
 
     GADimensionFilterExpression(final GAFilterGroup connectVia, final GADimensionFilterCriterion[] filters) {
         m_connectVia = Objects.requireNonNull(connectVia);
-        m_filters = checkFilters(filters, IllegalArgumentException::new);
+        if (filters != null) {
+            m_filters = checkFilters(filters, IllegalArgumentException::new);
+        }
     }
 
     private static final <X extends Throwable> GADimensionFilterCriterion[] checkFilters(

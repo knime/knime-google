@@ -58,6 +58,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
@@ -144,7 +145,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             must match for a result to be returned, or such that <i>any</i> criterion must match.
             """)
     @Layout(DimensionFiltersSection.class)
-    GADimensionFilterExpression m_gaDimensionFilter;
+    @Persist(optional = true)
+    GADimensionFilterExpression m_gaDimensionFilter = new GADimensionFilterExpression(GAFilterGroup.AND, null);
 
     @Section(title = "Output")
     @After(DimensionsSection.class)
@@ -157,13 +159,15 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             """)
     @Layout(OutputSection.class)
     @ArrayWidget(addButtonText = "Add order by", showSortButtons = true, elementTitle = "Order by")
-    GAOrderBy[] m_gaOrderBy;
+    @Persist(optional = true)
+    GAOrderBy[] m_gaOrderBy = new GAOrderBy[0];
 
     @Widget(title = "Currency code", description = """
             Specify the currency code to use for currency returning metrics, to be stated in three letter
             ISO-4217 format. If it is left empty, the report uses the property's default currency.
             """, advanced = true)
     @Layout(OutputSection.class)
+    @Persist(optional = true)
     String m_currencyCode;
 
     @Widget(title = "Keep empty rows",
@@ -171,6 +175,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             + "Otherwise they are omitted from the result.",
         advanced = true)
     @Layout(OutputSection.class)
+    @Persist(optional = true)
     boolean m_keepEmptyRows;
 
     @Widget(title = "Output response metadata as flow variables", description = """
@@ -183,6 +188,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             More information can be obtained from the
             """ + "<a href=\"" + ExternalLinks.API_RESPONSE_METADATA + "\">API documentation</a>.", advanced = true)
     @Layout(OutputSection.class)
+    @Persist(optional = true)
     boolean m_returnResponseMetadata;
 
     @Widget(title = "Output property quotas as flow variables",
@@ -201,6 +207,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                     """,
         advanced = true)
     @Layout(OutputSection.class)
+    @Persist(optional = true)
     boolean m_returnPropertyQuota;
 
     /**
