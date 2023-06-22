@@ -102,7 +102,11 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
                 .getGoogleApiConnectionPortObjectSpec(inSpecs, GOOGLE_API_CONNECTION_PORT)
                 .orElseThrow(() -> new InvalidSettingsException("Google API connection is missing."));
         CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId, "Google Analytics Property ID is missing.");
-        return new PortObjectSpec[] { connSpec };
+
+        final var conn = new GAConnection(connSpec.getGoogleApiConnection(), modelSettings.m_connTimeoutSec,
+            modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
+
+        return new PortObjectSpec[] {new GAConnectionPortObjectSpec(conn, modelSettings.m_analyticsPropertyId)};
     }
 
     @Override
