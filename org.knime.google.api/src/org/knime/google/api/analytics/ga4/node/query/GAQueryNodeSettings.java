@@ -148,19 +148,10 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     @Persist(optional = true)
     GADimensionFilterExpression m_gaDimensionFilter = new GADimensionFilterExpression(GAFilterGroup.AND, null);
 
-    @Section(title = "Output")
+    @Section(title = "Output", advanced = true)
     @After(DimensionsSection.class)
     interface OutputSection {
     }
-
-    @Widget(title = "Order by", description = """
-            Order the output by the metrics/dimensions specified. All
-            metrics/dimensions to order by must be included in the report.
-            """)
-    @Layout(OutputSection.class)
-    @ArrayWidget(addButtonText = "Add order by", showSortButtons = true, elementTitle = "Order by")
-    @Persist(optional = true)
-    GAOrderBy[] m_gaOrderBy = new GAOrderBy[0];
 
     @Widget(title = "Currency code", description = """
             Specify the currency code to use for currency returning metrics, to be stated in three letter
@@ -265,14 +256,6 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
         if (m_gaDimensionFilter != null) {
             m_gaDimensionFilter.validate();
         }
-
-        // validate order by
-        if (m_gaOrderBy != null) {
-            for (final var o : m_gaOrderBy) {
-                // order by's must be in metrics/dimensions (the metric must be visible)
-                o.validate(m_gaMetrics, m_gaDimensions);
-            }
-        }
     }
 
     GAQueryNodeSettings() {
@@ -284,7 +267,6 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
         m_gaDimensions = new GADimension[0];
         m_gaDimensionFilter = new GADimensionFilterExpression();
         m_dateRanges = new GADateRange[]{GADateRange.lastWeek()};
-        m_gaOrderBy = new GAOrderBy[0];
     }
 
 }
