@@ -48,8 +48,6 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
@@ -68,10 +66,6 @@ import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 @SuppressWarnings("restriction") // webui*
 final class GAMetric implements DefaultNodeSettings {
 
-    // custom metrics are prefixed by colon
-    private static final String PAT_STR = "^([a-zA-Z0-9_]+:)?[a-zA-Z0-9_]+$"; // NOSONAR pattern from Google
-    private static final Pattern NAME_PATTERN = Pattern.compile(PAT_STR);
-
     @Widget(title = "Metric",
             description = """
                 Specify the name of the metric.
@@ -81,7 +75,7 @@ final class GAMetric implements DefaultNodeSettings {
                 <a href=" """ + ExternalLinks.API_LIST_METRIC + """
                 ">list of metrics</a> under the column "API Name".
                 """)
-    @TextInputWidget(pattern = PAT_STR)
+    @TextInputWidget()
     @ChoicesWidget(choices = MetricsChoicesProvider.class)
     String m_name;
 
@@ -94,11 +88,6 @@ final class GAMetric implements DefaultNodeSettings {
     }
 
     void validate() throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name),
-            "Metric name cannot be blank.");
-        if (StringUtils.isNotEmpty(m_name)) {
-            CheckUtils.checkSetting(NAME_PATTERN.matcher(m_name).matches(),
-                "Metric name must follow the pattern \"%s\".".formatted(PAT_STR));
-        }
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Metric name cannot be blank.");
     }
 }
