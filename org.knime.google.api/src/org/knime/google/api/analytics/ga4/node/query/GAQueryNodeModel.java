@@ -90,7 +90,6 @@ import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
-import org.knime.google.api.analytics.ga4.node.query.GAOrderBy.SortOrder;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
@@ -98,7 +97,6 @@ import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
 import com.google.api.services.analyticsdata.v1beta.model.DateRange;
 import com.google.api.services.analyticsdata.v1beta.model.Dimension;
 import com.google.api.services.analyticsdata.v1beta.model.DimensionHeader;
-import com.google.api.services.analyticsdata.v1beta.model.DimensionOrderBy;
 import com.google.api.services.analyticsdata.v1beta.model.DimensionValue;
 import com.google.api.services.analyticsdata.v1beta.model.Filter;
 import com.google.api.services.analyticsdata.v1beta.model.FilterExpression;
@@ -106,8 +104,6 @@ import com.google.api.services.analyticsdata.v1beta.model.FilterExpressionList;
 import com.google.api.services.analyticsdata.v1beta.model.InListFilter;
 import com.google.api.services.analyticsdata.v1beta.model.Metric;
 import com.google.api.services.analyticsdata.v1beta.model.MetricHeader;
-import com.google.api.services.analyticsdata.v1beta.model.MetricOrderBy;
-import com.google.api.services.analyticsdata.v1beta.model.OrderBy;
 import com.google.api.services.analyticsdata.v1beta.model.PropertyQuota;
 import com.google.api.services.analyticsdata.v1beta.model.QuotaStatus;
 import com.google.api.services.analyticsdata.v1beta.model.ResponseMetaData;
@@ -285,25 +281,10 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
             .setMetrics(Arrays.stream(settings.m_gaMetrics).map(m -> new Metric().setName(m.m_name))
                 .collect(Collectors.toList()))
             .setDimensionFilter(createDimensionFilterExpression(settings.m_gaDimensionFilter))
-            .setOrderBys(Arrays.stream(settings.m_gaOrderBy).map(GAQueryNodeModel::mapToOrderBy)
-                .collect(Collectors.toList()))
             .setLimit(Long.valueOf(limit))
             .setCurrencyCode(settings.m_currencyCode)
             .setKeepEmptyRows(settings.m_keepEmptyRows)
             .setReturnPropertyQuota(settings.m_returnPropertyQuota);
-    }
-
-
-    private static OrderBy mapToOrderBy(final GAOrderBy o) {
-        final var orderBy = new OrderBy().setDesc(o.m_sortOrder == SortOrder.DESCENDING);
-        return switch (o.m_selectedType) {
-            case METRIC -> orderBy.setMetric(new MetricOrderBy().setMetricName(o.m_orderByMetric));
-            case DIMENSION -> {
-                final var dim = o.m_orderByDimension;
-                yield orderBy.setDimension(new DimensionOrderBy().setDimensionName(dim.m_dimensionName)
-                        .setOrderType(dim.m_orderType.name()));
-            }
-        };
     }
 
     /*
