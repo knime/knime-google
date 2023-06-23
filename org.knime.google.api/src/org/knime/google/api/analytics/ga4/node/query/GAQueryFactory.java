@@ -69,31 +69,33 @@ public final class GAQueryFactory extends WebUINodeFactory<GAQueryNodeModel>{
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()
             .name("Google Analytics Query")
             .icon("./googleanalyticsquery.png")
-            .shortDescription("Query Google Analytics (GA4) properties.")
+            .shortDescription("Query a connected Google Analytics 4 property.")
             .fullDescription("""
-                    This node queries Google Analytics 4 properties using the
-                    <a href="%s">Google Analytics Data API v1</a>.
-
-                    The node supports building a <a href="%s">Report</a> by specifying
-                    <a href="%s">metrics, dimensions</a>, and date ranges.
-
+                    <p>This node queries a connected Google Analytics 4 property using the
+                    <a href="%s">Google Analytics Data API v1</a>.</p>
+                    <p>
+                    The node supports building a
+                    <a href="%s">Report</a> by specifying <a href="%s"> metrics, dimensions</a>, and date ranges.
+                    </p>
+                    <p>
                     In order to find available metrics and dimensions, you can use the
                     <a href="%s">GA4 Dimensions &amp; Metrics Explorer</a> offered by Google.
-                    <br/><br/>
-                    <b>Note:</b>
+                    </p>
+                    <p><b>Note:</b>
                     This node can only be used to connect with Google Analytics 4 properties and is not
                     compatible with Universal Analytics.
                     To migrate a website using Universal Analytics to Google Analytics 4, you can find more information
                     in the <a href="%s">official migration guide</a>.
+                    </p>
                     """.formatted(ExternalLinks.API_DATA,
                         ExternalLinks.EXPLAIN_REPORT,
                         ExternalLinks.EXPLAIN_METRICS_AND_DIMENSIONS,
                         ExternalLinks.EXPLORER_TOOL,
                         ExternalLinks.EXPLAIN_MIGRATION))
             .modelSettingsClass(GAQueryNodeSettings.class)
-            .addInputPort("Google Analytics connection", GAConnectionPortObject.TYPE,
-                "Google Analytics connection to use")
-            .addOutputTable("Google Analytics data", "Google Analytics data according to the query.")
+            .addInputPort("Google Analytics Connection", GAConnectionPortObject.TYPE,
+                "The connection to a Google Analytics 4 property.")
+            .addOutputTable("Google Analytics data", "A table with data according to the query.")
             .sinceVersion(5, 1, 0)
             .build();
 

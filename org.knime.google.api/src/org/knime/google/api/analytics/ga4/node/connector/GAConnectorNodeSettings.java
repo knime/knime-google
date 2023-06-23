@@ -81,10 +81,23 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
 
     @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
     @Widget(title = "Google Analytics 4 property",
-        description = "Specify the Google Analytics 4 <a href=\"" + ExternalLinks.EXPLAIN_PROPERTY
-            + "\">property</a> of which you want to access Google Analytics data. If no properties are listed,"
-            + "check that your account has access to at least one <i>Google Analytics 4</i> property. "
-            + "Universal Analytics properties are not supported.")
+        description = """
+                <p>
+                Specify the Google Analytics 4
+                <a href="
+                """ + ExternalLinks.EXPLAIN_PROPERTY + """
+                ">property</a> from which you want to query data.
+                </p>
+                <p>
+                If no properties are listed, check that your account has access to at least one <i>Google Analytics 4
+                </i> property. Universal Analytics properties are not supported.
+                </p>
+                <p><b>Note for setting via a flow variable:</b>
+                The property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on
+                <a href="https://analytics.google.com">analytics.google.com</a> under the
+                &quot;Properties &amp; Apps &quot; navigation section.
+                </p>
+                """)
     @ChoicesWidget(choices = AnalyticsPropertiesProvider.class)
     // will implicitly be handled as string
     GAProperty m_analyticsPropertyId;

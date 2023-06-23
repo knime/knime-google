@@ -65,24 +65,27 @@ public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeMo
     private static final WebUINodeConfiguration CONFIG = WebUINodeConfiguration.builder()//
             .name("Google Analytics Connector")//
             .icon("./googleanalyticsconnector.png")//
-            .shortDescription("Connect to Google Analytics (GA4) properties.")//
+            .shortDescription("Connect to Google Analytics 4 properties.")//
             .fullDescription("""
-                    This node connects to Google Analytics (GA4) properties using the
+                    <p>This node connects to a Google Analytics 4 property using the
                     <a href="%s">Google Analytics Admin API v1</a> and the
-                    <a href="%s">Google Analytics Data API v1</a>.
+                    <a href="%s">Google Analytics Data API v1</a>.</p>
 
-                    The Admin API is used to fetch compatible property IDs which are available from the connected
-                    account.
+                    <p>The Admin API is used to fetch compatible property IDs which are available from the connected
+                    account.</p>
 
-                    <br/><b>Note:</b> This node can only be used to connect with Google Analytics 4 properties and is not compatible
-                    with Universal Analytics.
-                    """.formatted(ExternalLinks.API_ADMIN, ExternalLinks.API_DATA)
+                    <p><b>Note:</b> This node can only be used to connect with Google Analytics 4 properties and is not
+                    compatible with Universal Analytics.
+                    To migrate a website using Universal Analytics to Google Analytics 4, you can find more information
+                    in the <a href="%s">official migration guide</a>.
+                    </p>
+                    """.formatted(ExternalLinks.API_ADMIN, ExternalLinks.API_DATA, ExternalLinks.EXPLAIN_MIGRATION)
                 )//
             .modelSettingsClass(GAConnectorNodeSettings.class)//
-            .addInputPort("Google API Connection", GoogleApiConnectionPortObject.TYPE, "The Google API connection that "
-                + "will be used.")
-            .addOutputPort("Google Analytics 4 Connection", GAConnectionPortObject.TYPE, "A connection that can be used"
-                + " to access the Google Analytics Data API v1 for Google Analytics 4 (GA4).")
+            .addInputPort("Google Service Connection", GoogleApiConnectionPortObject.TYPE,
+                "The Google Service connection to use.")
+            .addOutputPort("Google Analytics Connection", GAConnectionPortObject.TYPE,
+                "A connection to a Google Analytics 4 property.")
             .sinceVersion(5, 1, 0)
             .build();
 
