@@ -91,12 +91,12 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, LayoutGr
     GADimensionFilterCriterion[] m_filters = new GADimensionFilterCriterion[0];
 
     GADimensionFilterExpression() {
-        // ser/de
+        // ser/de and for optional annotation in settings
     }
 
     GADimensionFilterExpression(final GAFilterGroup connectVia, final GADimensionFilterCriterion[] filters) {
         m_connectVia = Objects.requireNonNull(connectVia);
-        m_filters = checkFilters(filters, IllegalArgumentException::new);
+        m_filters = checkFilters(Objects.requireNonNull(filters), IllegalArgumentException::new);
     }
 
     private static final <X extends Throwable> GADimensionFilterCriterion[] checkFilters(

@@ -550,6 +550,9 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
     }
 
     private static FilterExpression createDimensionFilterExpression(final GADimensionFilterExpression fx) {
+        if (fx == null) {
+            return null;
+        }
         final var filters = fx.m_filters;
         if (filters.length == 0) {
             return null;

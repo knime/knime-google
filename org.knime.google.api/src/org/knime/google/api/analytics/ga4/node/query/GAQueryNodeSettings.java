@@ -58,6 +58,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
@@ -144,7 +145,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             must match for a result to be returned, or such that <i>any</i> criterion must match.
             """)
     @Layout(DimensionFiltersSection.class)
-    GADimensionFilterExpression m_gaDimensionFilter;
+    @Persist(optional = true) // optional since unavailable in 4.7
+    GADimensionFilterExpression m_gaDimensionFilter = new GADimensionFilterExpression();
 
     @Section(title = "Output", advanced = true)
     @After(DimensionsSection.class)
