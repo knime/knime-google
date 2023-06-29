@@ -55,15 +55,10 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 /**
  * Settings for a Google Analytics 4 Data API
@@ -81,18 +76,14 @@ final class GADateRange implements DefaultNodeSettings {
     @HorizontalLayout
     interface DateRangeLayout {}
 
-    @Persist(customPersistor = LocalDatePersistor.class)
     @Widget(title = "From date", description = """
-            The inclusive start date for the query in the format <tt>yyyy-MM-dd</tt> before the end date.
+            The inclusive start date for the query, not after the end date.
             """)
-    @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
     @Layout(DateRangeLayout.class)
     LocalDate m_fromDate;
 
-    @Persist(customPersistor = LocalDatePersistor.class)
     @Widget(title = "To date",
-        description = "The inclusive end date for the query in the format <tt>yyyy-MM-dd</tt> after the start date.")
-    @TextInputWidget(pattern = "\\d{4}-\\d{2}-\\d{2}")
+        description = "The inclusive end date for the query, not before the start date.")
     @Layout(DateRangeLayout.class)
     LocalDate m_toDate;
 
@@ -169,19 +160,5 @@ final class GADateRange implements DefaultNodeSettings {
             }
         }
         return Optional.empty();
-    }
-
-    static final class LocalDatePersistor extends NodeSettingsPersistorWithConfigKey<LocalDate> {
-
-        @Override
-        public LocalDate load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            return LocalDate.parse(settings.getString(getConfigKey()), DATE_FMT);
-        }
-
-        @Override
-        public void save(final LocalDate date, final NodeSettingsWO settings) {
-            settings.addString(getConfigKey(), date.format(DATE_FMT));
-        }
-
     }
 }
