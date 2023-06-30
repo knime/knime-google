@@ -260,14 +260,16 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                 """, MAX_NUM_DATE_RANGES);
         final var names = new HashSet<String>(4);
         for (final var range : m_dateRanges) {
+            // validate individually
+            range.validate();
+
+            // check for ambiguous names
             final var name = range.m_rangeName;
-            // empty name is ok, since the Analytics API will generate a range name
+            // duplicated empty names are ok, since the Analytics API will generate a unique range name for each of them
             if (name != null && StringUtils.isNotEmpty(name)) {
-                range.validate();
                 if (names.contains(name)) {
-                    throw new InvalidSettingsException("Ambiguous date range name %s.".formatted(name));
+                    throw new InvalidSettingsException("Ambiguous date range name \"%s\".".formatted(name));
                 }
-                // Check with auto-generated names by GA API?
                 names.add(name);
             }
         }
