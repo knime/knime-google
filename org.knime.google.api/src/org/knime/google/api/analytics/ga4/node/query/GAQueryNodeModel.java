@@ -101,7 +101,6 @@ import com.google.api.services.analyticsdata.v1beta.model.DimensionValue;
 import com.google.api.services.analyticsdata.v1beta.model.Filter;
 import com.google.api.services.analyticsdata.v1beta.model.FilterExpression;
 import com.google.api.services.analyticsdata.v1beta.model.FilterExpressionList;
-import com.google.api.services.analyticsdata.v1beta.model.InListFilter;
 import com.google.api.services.analyticsdata.v1beta.model.Metric;
 import com.google.api.services.analyticsdata.v1beta.model.MetricHeader;
 import com.google.api.services.analyticsdata.v1beta.model.PropertyQuota;
@@ -570,18 +569,9 @@ final class GAQueryNodeModel extends WebUINodeModel<GAQueryNodeSettings> {
 
     private static FilterExpression mapToFilterExpression(final GADimensionFilterCriterion filter) {
         final var f = new Filter().setFieldName(filter.m_name);
-        switch (filter.m_selectedType) { // NOSONAR exhaustive switch notifies us automatically
-                                         // when we add the other enum values
-            case STRING -> {
-                final var sf = filter.m_stringFilter;
-                f.setStringFilter(new StringFilter().setMatchType(sf.m_matchType.name()).setValue(sf.m_value)
-                    .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
-            }
-            case IN_LIST ->
-                f.setInListFilter(new InListFilter().setValues(
-                    Arrays.stream(filter.m_inListFilter.m_values).collect(Collectors.toList()))
-                    .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
-        }
+        final var sf = filter.m_stringFilter;
+        f.setStringFilter(new StringFilter().setMatchType(sf.m_matchType.name()).setValue(sf.m_value)
+            .setCaseSensitive(filter.m_caseSensitivity == CaseSensitivity.CASE_SENSITIVE));
         final var exp = new FilterExpression().setFilter(f);
         if (filter.m_isNegated) {
             return new FilterExpression().setNotExpression(exp);

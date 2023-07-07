@@ -55,11 +55,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.IsStringFilterSelected;
 
 /**
  * Filter dimension values based on string comparison.
@@ -88,11 +85,9 @@ final class GAStringFilter implements DefaultNodeSettings, LayoutGroup {
                 </li>
             </ul>
             """)
-    @Effect(signals = IsStringFilterSelected.class, type = EffectType.SHOW)
     MatchType m_matchType = MatchType.CONTAINS;
 
     @Widget(title = "String value", description = "Specify the string value to match to the dimension value.")
-    @Effect(signals = IsStringFilterSelected.class, type = EffectType.SHOW)
     String m_value;
 
     /**
