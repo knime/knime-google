@@ -1,0 +1,84 @@
+{
+  "data" : {
+    "model" : {
+      "connTimeoutSec" : 30.0,
+      "readTimeoutSec" : 30.0,
+      "retryMaxElapsedTimeSec" : 60.0
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "analyticsPropertyId" : {
+            "type" : "object",
+            "title" : "Google Analytics 4 property",
+            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#property\">property</a> from which you want to query data.\n</p>\n<p>\nIf no properties are listed, check that your account has access to at least one <i>Google Analytics 4\n</i> property. Universal Analytics properties are not supported.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Properties &amp; Apps &quot; navigation section.\n</p>\n",
+            "configKeys" : [ "ga4Property" ]
+          },
+          "connTimeoutSec" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Connect timeout (seconds)",
+            "description" : "        Specify the timeout in seconds to establish a connection.\n",
+            "default" : 30.0,
+            "minimum" : 1,
+            "configKeys" : [ "connectTimeout" ]
+          },
+          "readTimeoutSec" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Read timeout (seconds)",
+            "description" : "        Specify the timeout in seconds to read data from an already established connection.\n",
+            "default" : 30.0,
+            "minimum" : 1,
+            "configKeys" : [ "readTimeout" ]
+          },
+          "retryMaxElapsedTimeSec" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Retry timeout (seconds)",
+            "description" : "        Specify the total duration for which the same request is allowed to be retried in case of server\n        errors (5xx) and request timeouts (408), starting when the request is initially made.\n",
+            "default" : 60.0,
+            "minimum" : 1,
+            "configKeys" : [ "serverErrorRetryMaxElapsedTime" ]
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/analyticsPropertyId",
+      "options" : {
+        "possibleValues" : [ ],
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/connTimeoutSec",
+      "options" : {
+        "isAdvanced" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/readTimeoutSec",
+      "options" : {
+        "isAdvanced" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/retryMaxElapsedTimeSec",
+      "options" : {
+        "isAdvanced" : true
+      }
+    } ]
+  }
+}
