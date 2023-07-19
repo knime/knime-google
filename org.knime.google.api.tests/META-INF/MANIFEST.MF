@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Unit-Tests for org.knime.google.api
+Bundle-SymbolicName: org.knime.google.api.tests;singleton:=true
+Bundle-Version: 5.1.0.qualifier
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Fragment-Host: org.knime.google.api;bundle-version="[5.0.0,6.0.0)"
+Eclipse-BundleShape: dir
+Automatic-Module-Name: org.knime.google.api.tests
+Require-Bundle: org.knime.core.ui.testing;bundle-version="[4.7.0,6.0.0)",
+ junit-jupiter-api;bundle-version="[5.9.2,6.0.0)"
+Bundle-ClassPath: .
+Import-Package: org.knime.google.api.data
