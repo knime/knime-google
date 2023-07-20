@@ -138,7 +138,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @param ctx context for auto-configuration
      */
-    GAConnectorNodeSettings(final SettingsCreationContext ctx) {
+    GAConnectorNodeSettings(final DefaultNodeSettingsContext ctx) {
         //
     }
 
@@ -150,7 +150,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     static final class AnalyticsPropertiesProvider implements ChoicesProvider {
 
         @Override
-        public String[] choices(final SettingsCreationContext ctx) {
+        public String[] choices(final DefaultNodeSettingsContext ctx) {
             final var connSpec = GAConnectorNodeModel.getGoogleApiConnectionPortObjectSpec(ctx.getPortObjectSpecs());
             if (connSpec.isPresent()) {
                 try {

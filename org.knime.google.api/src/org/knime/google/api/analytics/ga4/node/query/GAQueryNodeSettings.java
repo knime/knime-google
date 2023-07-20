@@ -284,7 +284,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
         // for de-/serialization
     }
 
-    GAQueryNodeSettings(@SuppressWarnings("unused") final SettingsCreationContext ctx) {// NOSONAR required by framework
+    GAQueryNodeSettings(@SuppressWarnings("unused") final DefaultNodeSettingsContext ctx) {// NOSONAR required by framework
         m_gaMetrics = new GAMetric[0];
         m_gaDimensions = new GADimension[0];
         m_gaDimensionFilter = new GADimensionFilterExpression();

@@ -50,7 +50,7 @@ package org.knime.google.api.analytics.ga4.node.query;
 
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.SettingsCreationContext;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 
 import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;
@@ -66,7 +66,7 @@ final class MetricsChoicesProvider implements ChoicesProvider {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MetricsChoicesProvider.class);
 
         @Override
-        public String[] choices(final SettingsCreationContext ctx) {
+        public String[] choices(final DefaultNodeSettingsContext ctx) {
             final var connSpec = GAQueryNodeModel.getGoogleAnalyticsConnectionPortObjectSpec(ctx.getPortObjectSpecs());
             if (connSpec.isPresent()) {
                 try {
