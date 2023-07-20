@@ -48,8 +48,6 @@
  */
 package org.knime.google.api.analytics.ga4.node.connector;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Map;
 
 import org.knime.core.node.port.PortObjectSpec;
@@ -63,7 +61,7 @@ import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
 class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
     @SuppressWarnings("restriction")
-    protected GAConnectorNodeSettingsTest() throws GeneralSecurityException, IOException {
+    protected GAConnectorNodeSettingsTest() {
         super(Map.of(SettingsType.MODEL, GAConnectorNodeSettings.class), new PortObjectSpec[] {});
     }
 
