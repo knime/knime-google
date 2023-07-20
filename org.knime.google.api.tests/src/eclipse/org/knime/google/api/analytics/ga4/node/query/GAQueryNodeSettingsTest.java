@@ -48,21 +48,78 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.google.api.analytics.ga4.node.GAProperty;
+import org.knime.google.api.analytics.ga4.port.GAConnection;
+import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
 import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import com.google.api.services.analyticsdata.v1beta.model.DimensionMetadata;
+import com.google.api.services.analyticsdata.v1beta.model.Metadata;
+import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;
 
 /**
  *
  * @author Rupert Ettrich
  */
+@SuppressWarnings("restriction")
 class GAQueryNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
-    @SuppressWarnings("restriction")
+    private MockedStatic<GADateRange> dateRangeMock;
+
+    private final static GADateRange testDateRange = GADateRange.lastWeek();
+
+    @BeforeAll
+    static void beforeAll() {
+        testDateRange.m_fromDate = LocalDate.of(2023, 01, 02);
+        testDateRange.m_toDate = LocalDate.of(2023, 02, 03);
+    }
+
+    @BeforeEach
+    void beginTest() {
+        dateRangeMock = Mockito.mockStatic(GADateRange.class);
+        dateRangeMock.when(() -> GADateRange.lastWeek()).thenReturn(testDateRange);
+    }
+
+    @AfterEach
+    void endTest() {
+        dateRangeMock.close();
+    }
+
     protected GAQueryNodeSettingsTest() {
-        super(Map.of(SettingsType.MODEL, GAQueryNodeSettings.class), new PortObjectSpec[] {});
+        super(Map.of(SettingsType.MODEL, GAQueryNodeSettings.class), new PortObjectSpec[] { createPortObjectSpec() });
+    }
+
+    private static GAConnectionPortObjectSpec createPortObjectSpec() {
+        // Mock the connection just enough to configure metrics and dimension choices providers in the settings
+        final var prop = new GAProperty("424242424242");
+        final var metadata = new Metadata()
+                .setDimensions(List.of(
+                    new DimensionMetadata().setApiName("testDim1"),
+                    new DimensionMetadata().setApiName("testDim2")))
+                .setMetrics(List.of(
+                    new MetricMetadata().setApiName("testMetric1"),
+                    new MetricMetadata().setApiName("testMetric2")));
+        final var connMock = Mockito.mock(GAConnection.class);
+        try {
+            Mockito.when(connMock.metadata(prop)).thenReturn(metadata);
+        } catch (final KNIMEException e) {
+            fail("Failed to set up mock connection.", e);
+        }
+        return new GAConnectionPortObjectSpec(connMock, prop);
     }
 
 }

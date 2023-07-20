@@ -48,11 +48,27 @@
  */
 package org.knime.google.api.analytics.ga4.node.connector;
 
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsPropertiesProvider;
+import org.knime.google.api.analytics.ga4.port.GAConnection;
+import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
+import org.mockito.ArgumentMatchers;
+import org.mockito.MockedConstruction;
+import org.mockito.Mockito;
+
+import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaAccountSummary;
 
 /**
  *
@@ -60,9 +76,39 @@ import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
  */
 class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
-    @SuppressWarnings("restriction")
-    protected GAConnectorNodeSettingsTest() {
-        super(Map.of(SettingsType.MODEL, GAConnectorNodeSettings.class), new PortObjectSpec[] {});
+    MockedConstruction<AnalyticsPropertiesProvider> mockedPropertiesProviderConstruction;
+
+    @BeforeEach
+    void beforeTest() {
+        mockedPropertiesProviderConstruction =
+            Mockito.mockConstruction(AnalyticsPropertiesProvider.class, (mock, context) -> {
+                when(mock.choices(ArgumentMatchers.any())).thenReturn(new String[]{"choice1", "choice2"});
+            });
     }
 
+    @AfterEach
+    void afterTest() {
+        mockedPropertiesProviderConstruction.close();
+    }
+
+    @SuppressWarnings("restriction")
+    protected GAConnectorNodeSettingsTest() {
+        super(Map.of(SettingsType.MODEL, GAConnectorNodeSettings.class), new PortObjectSpec[]{createPortObjectSpec()});
+    }
+
+    private static GoogleApiConnectionPortObjectSpec createPortObjectSpec() {
+
+        final var gaConnMock = Mockito.mock(GAConnection.class);
+        try {
+            Mockito.when(gaConnMock.accountSummaries())
+                .thenReturn(List.of(new GoogleAnalyticsAdminV1betaAccountSummary().setAccount("accounts/424242")
+                    .setName("accountsummaries/424242")));
+        } catch (KNIMEException e) {
+            fail("Failed to set up mock connection.", e);
+        }
+
+        final var connMock = Mockito.mock(GoogleApiConnection.class);
+
+        return new GoogleApiConnectionPortObjectSpec(connMock);
+    }
 }

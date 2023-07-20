@@ -1,26 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.knime</groupId>
-        <artifactId>knime-google</artifactId>
-        <version>${revision}${changelist}</version>
-    </parent>
+	<parent>
+		<groupId>org.knime</groupId>
+		<artifactId>knime-google</artifactId>
+		<version>${revision}${changelist}</version>
+	</parent>
 
-    <groupId>org.knime</groupId>
-    <artifactId>org.knime.google.api.tests</artifactId>
-    <name>KNIME Google API Nodes Tests</name>
-    <version>${revision}${changelist}</version>
-    <description>Tests for the KNIME Google API Nodes</description>
-    <packaging>eclipse-test-plugin</packaging>
+	<groupId>org.knime</groupId>
+	<artifactId>org.knime.google.api.tests</artifactId>
+	<name>KNIME Google API Nodes Tests</name>
+	<version>${revision}${changelist}</version>
+	<description>Tests for the KNIME Google API Nodes</description>
+	<packaging>eclipse-test-plugin</packaging>
 
-    <properties>
+	<properties>
 		<revision>5.1.0</revision>
-		<sonar.sources/>
+		<sonar.sources />
 		<sonar.tests>src/eclipse</sonar.tests>
-    </properties>
+	</properties>
 
-    <build>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
@@ -29,7 +32,7 @@
 				<configuration>
 					<dependency-resolution>
 						<extraRequirements>
-             <requirement>
+							<requirement>
 								<type>eclipse-feature</type>
 								<id>org.knime.features.clfixes</id>
 								<versionRange>0.0.0</versionRange>

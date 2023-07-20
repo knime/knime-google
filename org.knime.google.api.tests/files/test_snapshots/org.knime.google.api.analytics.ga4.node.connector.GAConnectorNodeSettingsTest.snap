@@ -54,7 +54,13 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
-        "possibleValues" : [ ],
+        "possibleValues" : [ {
+          "id" : "choice1",
+          "text" : "choice1"
+        }, {
+          "id" : "choice2",
+          "text" : "choice2"
+        } ],
         "format" : "dropDown",
         "showNoneColumn" : false,
         "showRowKeys" : false,
