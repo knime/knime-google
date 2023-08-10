@@ -26,7 +26,8 @@
       <node
             after="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory" 
             category-path="/io/connectors/googleservices" 
-            factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory">
+            factory-class="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory"
+            deprecated="true">
       </node>
       <node
             category-path="/io/connectors/googleservices"
@@ -65,6 +66,10 @@
             category-path="/io/write"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.sheetupdater.GoogleSheetUpdaterFactory">
+      </node>
+      <node
+            category-path="/io/connectors/googleservices"
+            factory-class="org.knime.google.api.nodes.authenticator.GoogleAuthenticatorNodeFactory">
       </node>
    </extension>
    <extension point="org.knime.workbench.repository.categories">
