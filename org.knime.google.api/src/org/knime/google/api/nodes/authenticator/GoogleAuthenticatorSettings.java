@@ -71,6 +71,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
@@ -83,6 +84,7 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.api.client.auth.oauth2.Credential;
 
 /**
@@ -93,14 +95,47 @@ import com.google.api.client.auth.oauth2.Credential;
 @SuppressWarnings("restriction")
 public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
+    @Section(title = "API Key")
+    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.HIDE)
+    interface APIKeyTypeSection {
+        interface TypeSwitcher {
+        }
+
+        @After(TypeSwitcher.class)
+        interface Content {
+        }
+    }
+
     @Section(title = "Scopes")
+    @After(APIKeyTypeSection.class)
     interface ScopesSection {
     }
 
     @Section(title = "Authentication")
+    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     @After(ScopesSection.class)
     interface AuthenticationSection {
     }
+
+    enum AuthType {
+        @Label("Interactive")
+        INTERACTIVE,
+        @Label("API Key")
+        API_KEY;
+    }
+
+    static class AuthTypeIsInteractive extends OneOfEnumCondition<AuthType> {
+        @Override
+        public AuthType[] oneOf() {
+            return new AuthType[] { AuthType.INTERACTIVE };
+        }
+    }
+
+    @Widget(title = "Authentication type", description = "Authentication method to use.")
+    @Signal(condition = AuthTypeIsInteractive.class)
+    AuthType m_authType = AuthType.INTERACTIVE;
+
+    APIKeySettings m_apiKeySettings = new APIKeySettings();
 
     @Widget(title = "Scopes selection mode", description = "", hideTitle = true)
     @Layout(ScopesSection.class)
@@ -145,7 +180,6 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
                     .map(KnimeGoogleAuthScope::getAuthScopeName) //
                     .toArray(String[]::new);
             }
-
         }
     }
 
@@ -177,6 +211,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             + "allows to interactively log into the service.")
     @Persist(optional = true, hidden = true, customPersistor = TokenCacheKeyPersistor.class)
     @Layout(AuthenticationSection.class)
+    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     UUID m_tokenCacheKey;
 
     static class LoginActionHandler extends CancelableActionHandler<UUID, GoogleAuthenticatorSettings> {
@@ -191,34 +226,16 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             }
 
             try {
-                var holder = GenericTokenHolder.store(fetchAccessToken(settings));
+                var holder = GenericTokenHolder.store(fetchAccessToken(settings.getSelectedScopes()));
                 return holder.getCacheKey();
             } catch (Exception e) {//NOSONAR
                 throw new WidgetHandlerException(e.getMessage());
             }
         }
 
-        private static Credential fetchAccessToken(final GoogleAuthenticatorSettings settings) throws IOException {
+        private static Credential fetchAccessToken(final List<KnimeGoogleAuthScope> scopes) throws IOException {
             return GoogleAuthentication.getCredential(GoogleAuthLocationType.MEMORY, null,
-                getRelevantKnimeAuthScopes(settings), null);
-        }
-
-        private static List<KnimeGoogleAuthScope>
-            getRelevantKnimeAuthScopes(final GoogleAuthenticatorSettings settings) {
-            if (settings.m_scopesSelectionMode == ScopesSelectionMode.ALL_SCOPES) {
-                return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes();
-            } else {
-                return getSelectedScopes(settings);
-            }
-        }
-
-        private static List<KnimeGoogleAuthScope> getSelectedScopes(final GoogleAuthenticatorSettings settings) {
-            var scopeByName = KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes().stream()
-                .collect(Collectors.toMap(KnimeGoogleAuthScope::getAuthScopeName, s -> s));
-
-            return Stream.of(settings.m_scopes) //
-                .map(s -> scopeByName.get(s.m_scopeName)) //
-                .collect(Collectors.toList());
+                scopes, null);
         }
 
         @Override
@@ -240,16 +257,36 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
     }
 
+    @JsonIgnore
+    List<KnimeGoogleAuthScope> getSelectedScopes() {
+        if (m_scopesSelectionMode == ScopesSelectionMode.ALL_SCOPES) {
+            return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes();
+        } else {
+            return getSpecificScopes();
+        }
+    }
+
+    private List<KnimeGoogleAuthScope> getSpecificScopes() {
+        var scopeByName = KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes().stream()
+            .collect(Collectors.toMap(KnimeGoogleAuthScope::getAuthScopeName, s -> s));
+        return Stream.of(m_scopes) //
+            .map(s -> scopeByName.get(s.m_scopeName)) //
+            .collect(Collectors.toList());
+    }
+
     /**
      * Validates the settings.
      *
      * @throws InvalidSettingsException
      */
     public void validate() throws InvalidSettingsException {
+        if (m_authType == AuthType.API_KEY) {
+            m_apiKeySettings.validate();
+        }
+
         if (m_scopesSelectionMode == ScopesSelectionMode.SPECIFIC_SCOPES
             && (m_scopes == null || m_scopes.length == 0)) {
             throw new InvalidSettingsException("Please specify at least one scope");
         }
     }
-
 }

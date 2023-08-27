@@ -48,25 +48,41 @@
  */
 package org.knime.google.api.nodes.authenticator;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.nio.file.InvalidPathException;
+import java.security.GeneralSecurityException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.util.FileUtil;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.credentials.base.Credential;
 import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.GenericTokenHolder;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
 import org.knime.credentials.base.oauth.api.AccessTokenCredential;
+import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
 import com.google.api.client.auth.oauth2.RefreshTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 
 /**
  * The Google Authenticator node. Performs OAuth authentication to selected Google services and produces
@@ -78,6 +94,10 @@ import com.google.api.client.http.GenericUrl;
 public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleAuthenticatorSettings> {
 
     private static final String LOGIN_FIRST_ERROR = "Please use the configuration dialog to log in first.";
+
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+
+    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
     private GenericTokenHolder<com.google.api.client.auth.oauth2.Credential> m_tokenHolder;
 
@@ -93,23 +113,38 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         throws InvalidSettingsException {
         settings.validate();
 
-        if (settings.m_tokenCacheKey == null) {
-            throw new InvalidSettingsException(LOGIN_FIRST_ERROR);
+        if (settings.m_authType == GoogleAuthenticatorSettings.AuthType.INTERACTIVE) {
+            if (settings.m_tokenCacheKey == null) {
+                throw new InvalidSettingsException(LOGIN_FIRST_ERROR);
+            } else {
+                m_tokenHolder = CredentialCache.<GenericTokenHolder<com.google.api.client.auth.oauth2.Credential>> get(
+                    settings.m_tokenCacheKey)//
+                    .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
+            }
         } else {
-            m_tokenHolder = CredentialCache.<GenericTokenHolder<com.google.api.client.auth.oauth2.Credential>> get(settings.m_tokenCacheKey)//
-                .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
+            // we have an access token from a previous interactive login -> remove it
+            if (m_tokenHolder != null) {
+                CredentialCache.delete(m_tokenHolder.getCacheKey());
+                m_tokenHolder = null;
+            }
         }
     }
 
     @Override
     protected Credential createCredential(final PortObject[] inObjects, final ExecutionContext exec,
         final GoogleAuthenticatorSettings settings) throws Exception {
-        return fromGoogleToken(m_tokenHolder.getToken());
+        switch (settings.m_authType) {
+            case INTERACTIVE:
+                return fromGoogleToken(m_tokenHolder.getToken());
+            case API_KEY:
+                return fromGoogleToken(getTokenUsingAPIKey(settings));
+            default:
+                throw new IllegalArgumentException("Usupported auth type: " + settings.m_authType);
+        }
     }
 
     private Credential fromGoogleToken(final com.google.api.client.auth.oauth2.Credential token) {
         var accessToken = token.getAccessToken();
-        var refreshToken = token.getRefreshToken();
         var expiresAfter = Optional.ofNullable(token.getExpiresInSeconds())//
             .map(secs -> Instant.now().plusSeconds(secs))//
             .orElse(null);
@@ -118,18 +153,20 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         return new AccessTokenCredential(accessToken, //
             expiresAfter, //
             tokenType, //
-            createTokenRefresher(refreshToken));
+            createTokenRefresher(token));
 
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Credential> Supplier<T> createTokenRefresher(final String refreshToken) {
-        var transport = m_tokenHolder.getToken().getTransport();
-        var jsonFactory = m_tokenHolder.getToken().getJsonFactory();
-        var tokenServerEncodedUrl = m_tokenHolder.getToken().getTokenServerEncodedUrl();
-        var clientAuthentication = m_tokenHolder.getToken().getClientAuthentication();
-        var requestInitializer = m_tokenHolder.getToken().getRequestInitializer();
-        var accessMethod = m_tokenHolder.getToken().getMethod();
+    private <T extends Credential> Supplier<T>
+        createTokenRefresher(final com.google.api.client.auth.oauth2.Credential token) {
+        var refreshToken = token.getRefreshToken();
+        var transport = token.getTransport();
+        var jsonFactory = token.getJsonFactory();
+        var tokenServerEncodedUrl = token.getTokenServerEncodedUrl();
+        var clientAuthentication = token.getClientAuthentication();
+        var requestInitializer = token.getRequestInitializer();
+        var accessMethod = token.getMethod();
 
         return () -> {//NOSONAR
             var request =
@@ -146,6 +183,74 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
                 throw new UncheckedIOException(e);
             }
         };
+    }
+
+    private static com.google.api.client.auth.oauth2.Credential
+        getTokenUsingAPIKey(final GoogleAuthenticatorSettings settings) throws InvalidSettingsException {
+
+        final var apiKeysettings = settings.m_apiKeySettings;
+        final var scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(settings.getSelectedScopes());
+
+        com.google.api.client.auth.oauth2.Credential credential;
+
+        if (apiKeysettings.m_apiKeyType == APIKeySettings.APIKeyType.JSON) {
+            final var path = resolveKeyFilePath(apiKeysettings.m_jsonFile);
+            credential = getTokenlUsingJSONKey(path, scopes);
+        } else {
+            final var path = resolveKeyFilePath(apiKeysettings.m_p12File);
+            credential = getTokenUsingP12Key(apiKeysettings.m_serviceAccountEmail, path, scopes);
+        }
+        try {
+            // get access token by refreshing token
+            credential.refreshToken();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return credential;
+    }
+
+    private static String resolveKeyFilePath(final String keyFilePath) throws InvalidSettingsException {
+        String result = keyFilePath;
+        try {
+            final var keyFileURL = FileUtil.toURL(result);
+            final var path = FileUtil.resolveToPath(keyFileURL);
+            if (path != null) {
+                result = path.toString();
+            } else {
+                String simpleFileBaseName = FilenameUtils.getBaseName(keyFileURL.getFile()); // /foo/bar.key -> 'bar'
+                String fileExtension = FilenameUtils.getExtension(keyFileURL.getFile());     // /foo/bar.key -> 'key'
+                final var keyFileTemp = FileUtil.createTempFile(simpleFileBaseName, fileExtension);
+                try (InputStream in = FileUtil.openStreamWithTimeout(keyFileURL)) {
+                    FileUtils.copyInputStreamToFile(in, keyFileTemp);
+                }
+                result = keyFileTemp.getAbsolutePath();
+            }
+        } catch (URISyntaxException | InvalidPathException | IOException e) {
+            throw new InvalidSettingsException(e);
+        }
+        return result;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static com.google.api.client.auth.oauth2.Credential getTokenUsingP12Key(final String serviceAccountEmail,
+        final String filePath, final List<String> scopes) throws InvalidSettingsException {
+        try {
+            return new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
+                    .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(scopes)
+                    .setServiceAccountPrivateKeyFromP12File(new File(filePath)).build();
+        } catch (GeneralSecurityException | IOException e) {
+            throw new InvalidSettingsException(e);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static com.google.api.client.auth.oauth2.Credential getTokenlUsingJSONKey(final String filePath,
+        final List<String> scopes) throws InvalidSettingsException {
+        try (final var inputStream = new FileInputStream(filePath)) {
+            return GoogleCredential.fromStream(inputStream, HTTP_TRANSPORT, JSON_FACTORY).createScoped(scopes);
+        } catch (IOException e) {
+            throw new InvalidSettingsException(e);
+        }
     }
 
     @Override
