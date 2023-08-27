@@ -52,7 +52,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -61,6 +61,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.credentials.base.Credential;
 import org.knime.credentials.base.CredentialCache;
+import org.knime.credentials.base.GenericTokenHolder;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
 import org.knime.credentials.base.oauth.api.AccessTokenCredential;
 
@@ -78,7 +79,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
 
     private static final String LOGIN_FIRST_ERROR = "Please use the configuration dialog to log in first.";
 
-    private GoogleCredentialHolder m_tokenHolder;
+    private GenericTokenHolder<com.google.api.client.auth.oauth2.Credential> m_tokenHolder;
 
     /**
      * @param configuration The node configuration.
@@ -95,7 +96,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         if (settings.m_tokenCacheKey == null) {
             throw new InvalidSettingsException(LOGIN_FIRST_ERROR);
         } else {
-            m_tokenHolder = CredentialCache.<GoogleCredentialHolder> get(settings.m_tokenCacheKey)//
+            m_tokenHolder = CredentialCache.<GenericTokenHolder<com.google.api.client.auth.oauth2.Credential>> get(settings.m_tokenCacheKey)//
                 .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
         }
     }
@@ -103,7 +104,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
     @Override
     protected Credential createCredential(final PortObject[] inObjects, final ExecutionContext exec,
         final GoogleAuthenticatorSettings settings) throws Exception {
-        return fromGoogleToken(m_tokenHolder.m_token);
+        return fromGoogleToken(m_tokenHolder.getToken());
     }
 
     private Credential fromGoogleToken(final com.google.api.client.auth.oauth2.Credential token) {
@@ -115,23 +116,22 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         var tokenType = "Bearer";
 
         return new AccessTokenCredential(accessToken, //
-            refreshToken, //
             expiresAfter, //
             tokenType, //
-            createTokenRefresher());
+            createTokenRefresher(refreshToken));
 
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Credential> Function<String, T> createTokenRefresher() {
-        var transport = m_tokenHolder.m_token.getTransport();
-        var jsonFactory = m_tokenHolder.m_token.getJsonFactory();
-        var tokenServerEncodedUrl = m_tokenHolder.m_token.getTokenServerEncodedUrl();
-        var clientAuthentication = m_tokenHolder.m_token.getClientAuthentication();
-        var requestInitializer = m_tokenHolder.m_token.getRequestInitializer();
-        var accessMethod = m_tokenHolder.m_token.getMethod();
+    private <T extends Credential> Supplier<T> createTokenRefresher(final String refreshToken) {
+        var transport = m_tokenHolder.getToken().getTransport();
+        var jsonFactory = m_tokenHolder.getToken().getJsonFactory();
+        var tokenServerEncodedUrl = m_tokenHolder.getToken().getTokenServerEncodedUrl();
+        var clientAuthentication = m_tokenHolder.getToken().getClientAuthentication();
+        var requestInitializer = m_tokenHolder.getToken().getRequestInitializer();
+        var accessMethod = m_tokenHolder.getToken().getMethod();
 
-        return refreshToken -> {//NOSONAR
+        return () -> {//NOSONAR
             var request =
                 new RefreshTokenRequest(transport, jsonFactory, new GenericUrl(tokenServerEncodedUrl), refreshToken)
                     .setClientAuthentication(clientAuthentication) //
@@ -153,7 +153,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         // dispose of the google token that was retrieved interactively in the node
         // dialog
         if (m_tokenHolder != null) {
-            CredentialCache.delete(m_tokenHolder.m_cacheKey);
+            CredentialCache.delete(m_tokenHolder.getCacheKey());
             m_tokenHolder = null;
         }
     }

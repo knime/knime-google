@@ -55,7 +55,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -77,7 +76,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
-import org.knime.credentials.base.CredentialCache;
+import org.knime.credentials.base.GenericTokenHolder;
+import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
@@ -191,10 +191,8 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             }
 
             try {
-                var holder = new GoogleCredentialHolder();
-                holder.m_token = fetchAccessToken(settings);
-                holder.m_cacheKey = CredentialCache.store(holder);
-                return holder.m_cacheKey;
+                var holder = GenericTokenHolder.store(fetchAccessToken(settings));
+                return holder.getCacheKey();
             } catch (Exception e) {//NOSONAR
                 throw new WidgetHandlerException(e.getMessage());
             }
@@ -240,31 +238,6 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     }
 
     static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
-    }
-
-    private static class TokenCacheKeyPersistor extends NodeSettingsPersistorWithConfigKey<UUID> {
-
-        @Override
-        public UUID load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            if (settings.containsKey(getConfigKey())) {
-                var uuidStr = settings.getString(getConfigKey());
-                if (!StringUtils.isBlank(uuidStr)) {
-                    final var uuid = UUID.fromString(uuidStr);
-                    if (CredentialCache.get(uuid).isPresent()) {
-                        return uuid;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public void save(final UUID uuid, final NodeSettingsWO settings) {
-            if (uuid != null) {
-                settings.addString(getConfigKey(), uuid.toString());
-            }
-        }
     }
 
     /**
