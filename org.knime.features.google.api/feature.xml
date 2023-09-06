@@ -730,6 +730,13 @@ propagated with or for interoperation with KNIME.
    <requires>
       <import feature="org.knime.features.cloud.core.deprecated"/>
    </requires>
+   
+   <plugin
+         id="org.knime.ext.google.sdk"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
    <plugin
          id="org.knime.google.api"

@@ -72,7 +72,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
@@ -94,7 +94,7 @@ public class GoogleSheetsInteractiveAuthentication {
     private static final String CLIENT_SECRET = "knime_client_secret_deprecated.json";
 
     /** Global instance of the JSON factory. */
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final JsonFactory JSON_FACTORY = new GsonFactory();
 
     /** Global instance of the HTTP transport. */
     private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();

@@ -1,0 +1,7 @@
+autoEnabled=true
+bindingSuggestionsDisabled=false
+eclipse.preferences.version=1
+idePrefixKey=libs
+projectKey=org.knime\:knime-google
+serverId=sonar.knime.com
+sqPrefixKey=org.knime.ext.google.sdk

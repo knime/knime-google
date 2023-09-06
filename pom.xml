@@ -21,6 +21,10 @@
 	</properties>
 
 	<modules>
+                <!-- this needs to go first because it ensures that jar files required  are present -->
+                <module>org.knime.ext.google.sdk/libs/fetch_jars</module>
+		<module>org.knime.ext.google.sdk</module>	
+
 		<module>org.knime.google.api</module>
 		<module>org.knime.google.api.tests/lib/fetch_jars</module>
 		<module>org.knime.google.api.tests</module>

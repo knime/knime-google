@@ -76,7 +76,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 
 /**
  * Object that represents a connection to the Google API.
@@ -339,7 +339,7 @@ public final class GoogleApiConnection {
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    private static final JsonFactory JSON_FACTORY = new GsonFactory();
 
     private static final String CFG_SERVICE_ACCOUNT_EMAIL = "service_account_email";
 
