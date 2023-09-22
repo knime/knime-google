@@ -18,11 +18,12 @@
 		<changelist>-SNAPSHOT</changelist>
 		<feature-branch-extension.branchListProperty>git.branch</feature-branch-extension.branchListProperty>
 		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
+		<knime.sonar-env>Sonarcloud</knime.sonar-env>
 	</properties>
 
 	<modules>
-                <!-- this needs to go first because it ensures that jar files required  are present -->
-                <module>org.knime.ext.google.sdk/libs/fetch_jars</module>
+        <!-- this needs to go first because it ensures that jar files required  are present -->
+        <module>org.knime.ext.google.sdk/libs/fetch_jars</module>
 		<module>org.knime.ext.google.sdk</module>	
 
 		<module>org.knime.google.api</module>
