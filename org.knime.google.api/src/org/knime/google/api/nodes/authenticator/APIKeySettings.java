@@ -84,11 +84,12 @@ class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
         }
     }
 
-    @Widget(hideTitle = true)
+    @Widget(title = "API key format",//
+            description = "Which format of API key to use. Google cloud provides API keys as either JSON or P12 (legacy).")
     @Layout(APIKeyTypeSection.TypeSwitcher.class)
     @Signal(condition = APIKeyTypeIsJSON.class)
     @ValueSwitchWidget
-    APIKeyType m_apiKeyType = APIKeyType.JSON;
+    APIKeyType m_apiKeyFormat = APIKeyType.JSON;
 
     @Widget(title = "JSON file", description = "Path to the private JSON key file.")
     @Layout(APIKeyTypeSection.Content.class)
@@ -110,7 +111,7 @@ class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
      *             when one of the settings was invalid.
      */
     public void validate() throws InvalidSettingsException {
-        if (m_apiKeyType == APIKeyType.P12) {
+        if (m_apiKeyFormat == APIKeyType.P12) {
             if (StringUtils.isEmpty(m_serviceAccountEmail)) {
                 throw new InvalidSettingsException("Please specify email address of the service account");
             }

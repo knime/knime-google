@@ -74,7 +74,6 @@ import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.GenericTokenHolder;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
 import org.knime.credentials.base.oauth.api.AccessTokenCredential;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
 import com.google.api.client.auth.oauth2.RefreshTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -189,11 +188,11 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         getTokenUsingAPIKey(final GoogleAuthenticatorSettings settings) throws InvalidSettingsException {
 
         final var apiKeysettings = settings.m_apiKeySettings;
-        final var scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(settings.getSelectedScopes());
+        final var scopes = settings.m_scopeSettings.getScopes();
 
         com.google.api.client.auth.oauth2.Credential credential;
 
-        if (apiKeysettings.m_apiKeyType == APIKeySettings.APIKeyType.JSON) {
+        if (apiKeysettings.m_apiKeyFormat == APIKeySettings.APIKeyType.JSON) {
             final var path = resolveKeyFilePath(apiKeysettings.m_jsonFile);
             credential = getTokenlUsingJSONKey(path, scopes);
         } else {

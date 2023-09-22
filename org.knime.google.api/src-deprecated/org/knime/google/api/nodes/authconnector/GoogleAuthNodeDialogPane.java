@@ -219,8 +219,10 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                         m_scopeChanged = false;
                     }
                     m_settings.validate();
-                    Credential credential = GoogleAuthentication.getCredential(m_settings.getCredentialLocationType(),
-                        m_settings.getCredentialLocation(), m_settings.getRelevantKnimeAuthScopes(), m_settings.getClientIdFile());
+                    var credential = GoogleAuthentication.getCredential(m_settings.getCredentialLocationType(),
+                        m_settings.getCredentialLocation(),
+                        KnimeGoogleAuthScopeRegistry.getAuthScopes(m_settings.getRelevantKnimeAuthScopes()),
+                        m_settings.getClientIdFile());
                     m_settings.setAccessTokenHash(credential.getAccessToken().hashCode());
                     return credential;
                 }

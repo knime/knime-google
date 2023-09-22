@@ -49,30 +49,21 @@
 package org.knime.google.api.nodes.authenticator;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.And;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler;
@@ -81,10 +72,7 @@ import org.knime.credentials.base.GenericTokenHolder;
 import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.api.client.auth.oauth2.Credential;
 
 /**
@@ -106,14 +94,19 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         }
     }
 
-    @Section(title = "Scopes")
+    @Section(title = "Scopes of access")
     @After(APIKeyTypeSection.class)
     interface ScopesSection {
     }
 
+    @Section(title = "Client ID", advanced = true)
+    @After(ScopesSection.class)
+    interface ClientIdSection {
+    }
+
     @Section(title = "Authentication")
     @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
-    @After(ScopesSection.class)
+    @After(ClientIdSection.class)
     interface AuthenticationSection {
     }
 
@@ -137,71 +130,8 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     APIKeySettings m_apiKeySettings = new APIKeySettings();
 
-    @Widget(title = "Scopes selection mode", description = "", hideTitle = true)
     @Layout(ScopesSection.class)
-    @Signal(condition = ScopeSelectionIsSpecificScopes.class)
-    @ValueSwitchWidget
-    ScopesSelectionMode m_scopesSelectionMode = ScopesSelectionMode.SPECIFIC_SCOPES;
-
-    enum ScopesSelectionMode {
-            SPECIFIC_SCOPES, ALL_SCOPES;
-    }
-
-    static class ScopeSelectionIsSpecificScopes extends OneOfEnumCondition<ScopesSelectionMode> {
-        @Override
-        public ScopesSelectionMode[] oneOf() {
-            return new ScopesSelectionMode[]{ScopesSelectionMode.SPECIFIC_SCOPES};
-        }
-    }
-
-    @Widget(title = "Scopes", description = "The list of scopes to request for the access token.")
-    @Layout(ScopesSection.class)
-    @Effect(signals = ScopeSelectionIsSpecificScopes.class, type = EffectType.SHOW)
-    @ArrayWidget
-    @Persist(customPersistor = ScopeArrayPersistor.class)
-    Scope[] m_scopes = new Scope[0];
-
-    static final class Scope implements DefaultNodeSettings {
-        @ChoicesWidget(choices = ScopeChoicesProvider.class)
-        String m_scopeName;
-
-        Scope() {
-        }
-
-        Scope(final String scopeName) {
-            m_scopeName = scopeName;
-        }
-
-        static class ScopeChoicesProvider implements ChoicesProvider {
-            @Override
-            public String[] choices(final DefaultNodeSettingsContext context) {
-                return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes() //
-                    .stream() //
-                    .map(KnimeGoogleAuthScope::getAuthScopeName) //
-                    .toArray(String[]::new);
-            }
-        }
-    }
-
-    private static final class ScopeArrayPersistor extends NodeSettingsPersistorWithConfigKey<Scope[]> {
-
-        @Override
-        public Scope[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            if (settings.containsKey(getConfigKey())) {
-                return Arrays.stream(settings.getStringArray(getConfigKey()))//
-                    .map(Scope::new)//
-                    .toArray(Scope[]::new);
-            } else {
-                return new Scope[0];
-            }
-        }
-
-        @Override
-        public void save(final Scope[] obj, final NodeSettingsWO settings) {
-            var stringArray = Arrays.stream(obj).map(s -> s.m_scopeName).toArray(String[]::new);
-            settings.addStringArray(getConfigKey(), stringArray);
-        }
-    }
+    ScopeSettings m_scopeSettings = new ScopeSettings();
 
     @ButtonWidget(actionHandler = LoginActionHandler.class, //
         updateHandler = LoginUpdateHandler.class, //
@@ -226,16 +156,16 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             }
 
             try {
-                var holder = GenericTokenHolder.store(fetchAccessToken(settings.getSelectedScopes()));
+                var holder = GenericTokenHolder.store(fetchAccessToken(settings));
                 return holder.getCacheKey();
             } catch (Exception e) {//NOSONAR
                 throw new WidgetHandlerException(e.getMessage());
             }
         }
 
-        private static Credential fetchAccessToken(final List<KnimeGoogleAuthScope> scopes) throws IOException {
+        private static Credential fetchAccessToken(final GoogleAuthenticatorSettings settings) throws IOException {
             return GoogleAuthentication.getCredential(GoogleAuthLocationType.MEMORY, null,
-                scopes, null);
+                settings.m_scopeSettings.getScopes(), settings.getClientIdFile());
         }
 
         @Override
@@ -257,22 +187,22 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
     }
 
-    @JsonIgnore
-    List<KnimeGoogleAuthScope> getSelectedScopes() {
-        if (m_scopesSelectionMode == ScopesSelectionMode.ALL_SCOPES) {
-            return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes();
-        } else {
-            return getSpecificScopes();
-        }
+    @Widget(title = "Use custom client ID", description = "Enable the option to use custom client ID.", advanced = true)
+    @Layout(ClientIdSection.class)
+    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @Signal(id = UseCustomClientIdSignal.class, condition = TrueCondition.class)
+    boolean m_useCustomClientId;
+
+    interface UseCustomClientIdSignal {
     }
 
-    private List<KnimeGoogleAuthScope> getSpecificScopes() {
-        var scopeByName = KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes().stream()
-            .collect(Collectors.toMap(KnimeGoogleAuthScope::getAuthScopeName, s -> s));
-        return Stream.of(m_scopes) //
-            .map(s -> scopeByName.get(s.m_scopeName)) //
-            .collect(Collectors.toList());
-    }
+    @Widget(title = "Custom client ID file (JSON format)",//
+            description = "The path to a JSON file with the custom client ID.",//
+            advanced = true)
+    @Layout(ClientIdSection.class)
+    @Effect(signals = {UseCustomClientIdSignal.class, AuthTypeIsInteractive.class}, operation = And.class,
+        type = EffectType.SHOW)
+    String m_customClientIdFile;
 
     /**
      * Validates the settings.
@@ -284,9 +214,14 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             m_apiKeySettings.validate();
         }
 
-        if (m_scopesSelectionMode == ScopesSelectionMode.SPECIFIC_SCOPES
-            && (m_scopes == null || m_scopes.length == 0)) {
-            throw new InvalidSettingsException("Please specify at least one scope");
+        m_scopeSettings.validate();
+    }
+
+    private String getClientIdFile() {
+        if (m_useCustomClientId) {
+            return m_customClientIdFile;
+        } else {
+            return null;
         }
     }
 }
