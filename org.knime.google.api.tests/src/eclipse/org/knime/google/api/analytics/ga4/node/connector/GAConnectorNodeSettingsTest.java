@@ -59,6 +59,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsPropertiesProvider;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.data.GoogleApiConnection;
@@ -83,6 +84,8 @@ class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
         mockedPropertiesProviderConstruction =
             Mockito.mockConstruction(AnalyticsPropertiesProvider.class, (mock, context) -> {
                 when(mock.choices(ArgumentMatchers.any())).thenReturn(new String[]{"choice1", "choice2"});
+                when(mock.choicesWithIdAndText(ArgumentMatchers.any()))
+                    .thenReturn(new IdAndText[]{IdAndText.fromId("choice1"), IdAndText.fromId("choice2")});
             });
     }
 
