@@ -85,7 +85,7 @@ class CloudStorageSeekableByteChannel extends TempFileSeekableByteChannel<CloudS
     @SuppressWarnings("resource")
     @Override
     public void copyToRemote(final CloudStoragePath remoteFile, final Path tempFile) throws IOException {
-        remoteFile.getFileSystem().getClient().insertObject(remoteFile.getBucketName(), remoteFile.getBlobName(),
+        remoteFile.getFileSystem().getClient().insertBlob(remoteFile.getBucketName(), remoteFile.getBlobName(),
                 tempFile);
     }
 

@@ -61,11 +61,11 @@ import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.util.SecurityUtils;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 
 /**
  * Google Cloud Storage helper to sign URLs using the V4 signing process.
@@ -92,17 +92,18 @@ public final class GoogleCSUrlSignature {
      * @return signed URL
      * @throws Exception
      */
-    public static String getSigningURL(final GoogleCredential creds, final long expirationSeconds, final String bucketName,
+    public static String getSigningURL(final Credentials creds, final long expirationSeconds, final String bucketName,
         final String objectName) throws Exception {
 
-        if (creds == null || StringUtils.isBlank(creds.getServiceAccountId()) || creds.getServiceAccountPrivateKey() == null) {
-            throw new InvalidSettingsException("API credentials with service account and priuvate key required.");
+        if (!(creds instanceof ServiceAccountCredentials)) {
+            throw new InvalidSettingsException("API credentials with service account and private key required.");
         }
 
         if (expirationSeconds > SEVEN_DAYS_SECONDS) {
             throw new InvalidSettingsException("Expiration Time can't be longer than 604800 seconds (7 days).");
         }
 
+        final ServiceAccountCredentials credentials = (ServiceAccountCredentials) creds;
         final Date now = new Date();
         final SimpleDateFormat yearMonthDayFormat = new SimpleDateFormat("yyyyMMdd");
         final SimpleDateFormat exactDateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
@@ -111,9 +112,9 @@ public final class GoogleCSUrlSignature {
         final String yearMonthDay = yearMonthDayFormat.format(now);
         final String exactDate = exactDateFormat.format(now);
 
-        final String serviceEmail = creds.getServiceAccountId();
+        final String serviceEmail = credentials.getClientEmail();
         final String credentialScope = URLEncoder.encode(serviceEmail + "/" + yearMonthDay + SCOPE, "UTF-8");
-        final PrivateKey privateKey = creds.getServiceAccountPrivateKey();
+        final PrivateKey privateKey = credentials.getPrivateKey();
         final String canonicalUri = "/" + bucketName + "/" + objectName;
         final String canonicalQuery = constructV4CanonicalQueryString(credentialScope, exactDate, expirationSeconds);
         final String canonicalReqHash = constructV4CanonicalRequestHash(canonicalUri, canonicalQuery);

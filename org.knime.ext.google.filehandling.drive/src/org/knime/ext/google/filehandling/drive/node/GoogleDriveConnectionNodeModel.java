@@ -104,7 +104,7 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0]).getGoogleApiConnection();
 
-        CheckUtils.checkArgumentNotNull(apiConnection.getCredential(),
+        CheckUtils.checkArgumentNotNull(apiConnection.getCredentials(),
                 "No valid Google credentials found. Please re-execute preceding authentication node.");
 
         m_fsConnection = new GoogleDriveFSConnection(m_settings.toFSConnectionConfig(apiConnection));

@@ -48,30 +48,38 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.fs;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.google.api.data.GoogleApiConnection;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.AbstractInputStreamContent;
-import com.google.api.client.http.FileContent;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.Storage.Objects.Rewrite;
-import com.google.api.services.storage.model.Bucket;
-import com.google.api.services.storage.model.Buckets;
-import com.google.api.services.storage.model.Objects;
-import com.google.api.services.storage.model.RewriteResponse;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.api.gax.paging.Page;
+import com.google.cloud.http.HttpTransportOptions;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.BucketInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobGetOption;
+import com.google.cloud.storage.Storage.BlobListOption;
+import com.google.cloud.storage.Storage.BucketListOption;
+import com.google.cloud.storage.Storage.CopyRequest;
+import com.google.cloud.storage.StorageException;
+import com.google.cloud.storage.StorageOptions;
 
 /**
  * Class for keeping {@link Storage} instance alongside with project id. Wraps
@@ -82,9 +90,9 @@ import com.google.api.services.storage.model.StorageObject;
 public class CloudStorageClient {
     @SuppressWarnings("unused")
     private static final NodeLogger LOGGER = NodeLogger.getLogger(CloudStorageClient.class);
-    private static final String APP_NAME = "KNIME-Google-Cloud-Storage-Connector";
 
-    private final String m_projectId;
+    private static final int BUFFER_SIZE = 1024 * 1024 * 5; // 5 MiB
+
     private final Storage m_storage;
 
     /**
@@ -95,150 +103,110 @@ public class CloudStorageClient {
      *            Connection configuration
      */
     public CloudStorageClient(final CloudStorageConnectionConfig config) {
-        this.m_projectId = config.getProjectId();
-        m_storage = new Storage.Builder(GoogleApiConnection.getHttpTransport(), //
-                GoogleApiConnection.getJsonFactory(), //
-                withTimeouts( //
-                        config.getApiConnection().getCredential(), //
-                        Math.toIntExact(config.getConnectionTimeOut().toSeconds()), //
-                        Math.toIntExact(config.getReadTimeOut().toSeconds()))) //
-                                .setApplicationName(APP_NAME) //
-                                .build();
-    }
+        final var transportOptions = HttpTransportOptions.newBuilder()//
+                .setHttpTransportFactory(GoogleApiConnection::getHttpTransport)
+                .setConnectTimeout((int) config.getConnectionTimeOut().toMillis())
+                .setReadTimeout((int) config.getReadTimeOut().toMillis()).build();
 
-    /**
-     * Appends connection and read timeouts to a given
-     * {@link HttpRequestInitializer}.
-     *
-     * @param initializer
-     *            Base initializer.
-     * @param connectionTimeout
-     *            Connection timeout in seconds
-     * @param readTimeout
-     *            Read timeout in seconds
-     * @return New initializer.
-     */
-    private static HttpRequestInitializer withTimeouts(final HttpRequestInitializer initializer,
-            final int connectionTimeout, final int readTimeout) {
-        return new HttpRequestInitializer() {
-
-            @Override
-            public void initialize(final HttpRequest request) throws IOException {
-                initializer.initialize(request);
-                request.setConnectTimeout(connectionTimeout * 1000);
-                request.setReadTimeout(readTimeout * 1000);
-            }
-        };
+        m_storage = StorageOptions.newBuilder()
+                .setProjectId(config.getProjectId())
+                .setTransportOptions(transportOptions)
+                .setCredentials(config.getApiConnection().getCredentials())
+                .build().getService();
     }
 
     /**
      * @param pageToken
      *            continuation token.
-     * @return list of buckets
+     * @return page of buckets
      * @throws IOException
      */
-    public Buckets listBuckets(final String pageToken) throws IOException {
-        Storage.Buckets.List req = m_storage.buckets().list(m_projectId);
-        if (pageToken != null) {
-            req.setPageToken(pageToken);
+    public Page<Bucket> listBuckets(final String pageToken) throws IOException {
+        final var options = new ArrayList<BucketListOption>();
+        if (StringUtils.isNotBlank(pageToken)) {
+            options.add(BucketListOption.pageToken(pageToken));
         }
-        try {
-            return req.execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+        return handleAccessDenied(() -> m_storage.list(options.toArray(BucketListOption[]::new)));
     }
 
     /**
-     * Returns list of objects and prefixes for a given bucket and a given prefix.
+     * Returns list of blobs and prefixes for a given bucket and a given prefix.
      * Only items that are 'direct children' of the given directory (represented by
      * the prefix or the bucket name if prefix is null).
      *
      * @param bucket
      *            bucket name.
      * @param prefix
-     *            (Optional) Separator-terminated object name prefix
+     *            (Optional) Separator-terminated blob name prefix
      * @param pageToken
      *            (Optional) Continuation token
-     * @return {@link Objects} instance.
+     * @return Page of {@link Blob} instance.
      * @throws IOException
      */
-    public Objects listObjects(final String bucket, final String prefix, final String pageToken) throws IOException {
-        Storage.Objects.List req = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR);
-
-        if (prefix != null && !prefix.isEmpty()) {
-            req.setPrefix(prefix);
+    public Page<Blob> listBlobs(final String bucket, final String prefix, final String pageToken) throws IOException {
+        final var options = new ArrayList<BlobListOption>();
+        options.add(BlobListOption.delimiter(CloudStorageFileSystem.PATH_SEPARATOR));
+        if (StringUtils.isNotBlank(prefix)) {
+            options.add(BlobListOption.prefix(prefix));
         }
-
-        if (pageToken != null) {
-            req.setPageToken(pageToken);
+        if (StringUtils.isNotBlank(pageToken)) {
+            options.add(BlobListOption.pageToken(pageToken));
         }
-
-        try {
-            return req.execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+        return handleAccessDenied(() -> m_storage.list(bucket, options.toArray(BlobListOption[]::new)));
     }
 
     /**
-     * List all objects in the given bucket whose name is starts with a given
-     * prefix. Separator is not used, meaning all the nested object will be
-     * returned.
+     * List all blobs in the given bucket whose name is starts with a given prefix.
+     * Separator is not used, meaning all the nested blobs will be returned.
      *
      * @param bucket
      *            the bucket name.
      * @param prefix
-     *            (Optional) Separator-terminated object name prefix
-     * @return list of objects
+     *            (Optional) Separator-terminated blob name prefix
+     * @return list of blobs
      * @throws IOException
      */
-    public List<StorageObject> listAllObjects(final String bucket, final String prefix) throws IOException {
-        try {
-            Storage.Objects.List req = m_storage.objects().list(bucket);
-            if (prefix != null && !prefix.isEmpty()) {
-                req.setPrefix(prefix);
-            }
-
-            Objects resp = req.execute();
-            List<StorageObject> result = resp.getItems();
-
-            while (resp.getNextPageToken() != null) {
-                resp = req.setPageToken(resp.getNextPageToken()).execute();
-                result.addAll(resp.getItems());
-            }
-
-            return result;
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
+    public List<Blob> listAllBlobs(final String bucket, final String prefix) throws IOException {
+        final var options = new ArrayList<BlobListOption>();
+        if (StringUtils.isNotBlank(prefix)) {
+            options.add(BlobListOption.prefix(prefix));
         }
+        return handleAccessDenied(() -> {
+            var resp = m_storage.list(bucket, options.toArray(BlobListOption[]::new));
+            return resp.streamAll().collect(Collectors.toList());
+        });
     }
 
     /**
-     * Checks if the given bucket exists and if the object with a given prefix
-     * exists (when provided).
+     * Checks if the given bucket exists and if the blob with a given prefix exists
+     * (when provided).
      *
      * @param bucket
      *            The bucket name.
      * @param prefix
-     *            (Optional) Separator-terminated object name prefix
-     * @return true when the given buckets exists and object with the given prefix
+     *            (Optional) Separator-terminated blob name prefix
+     * @return true when the given buckets exists and blob with the given prefix
      *         exists or no prefix provided.
      * @throws IOException
      */
     public boolean exists(final String bucket, final String prefix) throws IOException {
         try {
-            Objects objects = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR)
-                    .setPrefix(prefix).setMaxResults(1L).execute();
-
-            return prefix == null || (objects.getItems() != null && !objects.getItems().isEmpty())
-                    || (objects.getPrefixes() != null && !objects.getPrefixes().isEmpty());
-        } catch (GoogleJsonResponseException e) {
-            if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+            final var options = new ArrayList<BlobListOption>();
+            options.add(BlobListOption.delimiter(CloudStorageFileSystem.PATH_SEPARATOR));
+            options.add(BlobListOption.pageSize(1));
+            if (StringUtils.isNotBlank(prefix)) {
+                options.add(BlobListOption.prefix(prefix));
+            }
+            return handleAccessDenied(() -> {
+                final var result = m_storage.list(bucket, options.toArray(BlobListOption[]::new));
+                return StringUtils.isBlank(prefix) || (result.getValues().iterator().hasNext());
+            });
+        } catch (StorageException e) {
+            if (e.getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
                 // bucket does not exists
                 return false;
             }
-            throw wrap(e);
+            throw e;
         }
     }
 
@@ -254,75 +222,70 @@ public class CloudStorageClient {
      */
     public boolean isNotEmpty(final String bucket, final String prefix) throws IOException {
         try {
-            Objects objects = m_storage.objects().list(bucket).setDelimiter(CloudStorageFileSystem.PATH_SEPARATOR)
-                    .setPrefix(prefix).setMaxResults(2L).execute();
-
-            if (objects.getPrefixes() != null && !objects.getPrefixes().isEmpty()) {
-                return true;
+            final var options = new ArrayList<BlobListOption>();
+            options.add(BlobListOption.delimiter(CloudStorageFileSystem.PATH_SEPARATOR));
+            options.add(BlobListOption.pageSize(2));
+            if (StringUtils.isNotBlank(prefix)) {
+                options.add(BlobListOption.prefix(prefix));
             }
 
-            if (objects.getItems() != null) {
-                return objects.getItems().stream().anyMatch(o -> !o.getName().equals(prefix));
-            }
-
-        } catch (GoogleJsonResponseException e) {
-            if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND && prefix == null) {
+            return handleAccessDenied(() -> {
+                final var result = m_storage.list(bucket, options.toArray(BlobListOption[]::new));
+                return result.streamValues().anyMatch(b -> !b.getName().equals(prefix));
+            });
+        } catch (StorageException e) {
+            if (e.getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND && StringUtils.isBlank(prefix)) {
                 return false;
             }
-            throw wrap(e);
+            throw e;
         }
-        return false;
     }
 
     /**
      * @param bucket
      *            the bucket name
-     * @return the {@link Bucket} object.
+     * @return the {@link Bucket} blob.
      * @throws IOException
      */
     public Bucket getBucket(final String bucket) throws IOException {
-        try {
-            return m_storage.buckets().get(bucket).execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+        return handleAccessDenied(() -> m_storage.get(bucket));
     }
 
     /**
      * @param bucket
      *            the bucket name.
-     * @param object
-     *            the object name.
-     * @return the {@link StorageObject}.
+     * @param blobName
+     *            the blob name.
+     * @return the {@link Blob}.
      * @throws IOException
      */
-    public StorageObject getObject(final String bucket, final String object) throws IOException {
+    public Blob getBlob(final String bucket, final String blobName) throws IOException {
         try {
-            return m_storage.objects().get(bucket, object).execute();
-        } catch (GoogleJsonResponseException ex) {
-            if (ex.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+            return handleAccessDenied(() -> m_storage.get(bucket, blobName));
+        } catch (StorageException ex) {
+            if (ex.getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
                 return null;
             }
-            throw wrap(ex);
+            throw ex;
         }
     }
 
     /**
-     * Returns the {@link InputStream} for a given object data.
+     * Returns the {@link InputStream} for a given blob data.
      *
      * @param bucket
      *            Bucket name.
-     * @param object
-     *            Object name.
+     * @param blobName
+     *            Blob name.
      * @return Input stream.
      * @throws IOException
      */
-    public InputStream getObjectStream(final String bucket, final String object) throws IOException {
-        try {
-            return m_storage.objects().get(bucket, object).setAlt("media").executeAsInputStream();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+    @SuppressWarnings("resource")
+    public InputStream getInputStream(final String bucket, final String blobName) throws IOException {
+        return handleAccessDenied(() -> {
+            final var blob = m_storage.get(bucket, blobName, BlobGetOption.shouldReturnRawInputStream(true));
+            return Channels.newInputStream(blob.reader());
+        });
     }
 
     /**
@@ -333,12 +296,7 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public void insertBucket(final String bucket) throws IOException {
-        Bucket b = new Bucket().setName(bucket);
-        try {
-            m_storage.buckets().insert(m_projectId, b).execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+        handleAccessDenied(() -> m_storage.create(BucketInfo.of(bucket)));
     }
 
     /**
@@ -346,39 +304,51 @@ public class CloudStorageClient {
      *
      * @param bucket
      *            Target bucket name.
-     * @param object
-     *            Target object name.
+     * @param blobName
+     *            Target blob name.
      * @param file
      *            File to upload.
      * @throws IOException
      */
-    public void insertObject(final String bucket, final String object, final Path file) throws IOException {
-        insertObject(bucket, object, new FileContent(null, file.toFile()));
+    public void insertBlob(final String bucket, final String blobName, final Path file) throws IOException {
+        final var blobInfo = buildBlobInfo(bucket, blobName);
+        handleAccessDenied(() -> {
+            insertBlob(blobInfo, file.toFile());
+            return true;
+        });
+    }
+
+    private static BlobInfo buildBlobInfo(final String bucket, final String blobName) {
+        final var blobId = BlobId.of(bucket, blobName);
+        return BlobInfo.newBuilder(blobId).build();
+    }
+
+    private void insertBlob(final BlobInfo blobInfo, final File file) throws IOException {
+        try (final var out = m_storage.writer(blobInfo);
+                final var in = new FileInputStream(file).getChannel()) {
+            final var buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+            while (in.read(buffer) > 0) {
+                buffer.flip();
+                out.write(buffer);
+                buffer.clear();
+            }
+        }
     }
 
     /**
-     * Creates an object with the provided content.
+     * Creates an blob with the provided content.
      *
      * @param bucket
      *            Target bucket name.
-     * @param object
-     *            Target object name.
+     * @param blobName
+     *            Target blob name.
      * @param content
-     *            Target object content.
+     *            Target blob content.
      * @throws IOException
      */
-    public void insertObject(final String bucket, final String object, final String content) throws IOException {
-        insertObject(bucket, object, new InputStreamContent(null, new ByteArrayInputStream(content.getBytes())));
-    }
-
-    private void insertObject(final String bucket, final String object, final AbstractInputStreamContent content)
-            throws IOException {
-        StorageObject obj = new StorageObject().setName(object);
-        try {
-            m_storage.objects().insert(bucket, obj, content).execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+    public void insertBlob(final String bucket, final String blobName, final String content) throws IOException {
+        final var blobInfo = buildBlobInfo(bucket, blobName);
+        handleAccessDenied(() -> m_storage.create(blobInfo, content.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**
@@ -389,87 +359,63 @@ public class CloudStorageClient {
      * @throws IOException
      */
     public void deleteBucket(final String bucket) throws IOException {
-        try {
-            m_storage.buckets().delete(bucket).execute();
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
-        }
+        handleAccessDenied(() -> m_storage.delete(bucket));
     }
 
     /**
-     * Deletes the given object.
+     * Deletes the given blob.
      *
      * @param bucket
      *            The bucket name.
-     * @param object
-     *            The object name.
+     * @param blobName
+     *            The blob name.
      * @throws IOException
      */
-    public void deleteObject(final String bucket, final String object) throws IOException {
-        try {
-            m_storage.objects().delete(bucket, object).execute();
-        } catch (GoogleJsonResponseException ex) {
-            wrap(ex);
-        }
+    public void deleteBlob(final String bucket, final String blobName) throws IOException {
+        handleAccessDenied(() -> m_storage.delete(bucket, blobName));
     }
 
     /**
-     * Performs a copy from a source object to a destination object.
+     * Performs a copy from a source blob to a destination blob.
      *
      * @param srcBucket
      *            Source bucket name.
-     * @param srcObject
-     *            Source object name.
+     * @param srcBlobName
+     *            Source blob name.
      * @param dstBucket
      *            Destination bucket name.
-     * @param dstObject
-     *            Destination object name.
+     * @param dstBlobName
+     *            Destination blob name.
      * @throws IOException
      */
-    public void rewriteObject(final String srcBucket, final String srcObject, final String dstBucket,
-            final String dstObject) throws IOException {
-        Rewrite rewrite = m_storage.objects().rewrite(srcBucket, srcObject, dstBucket, dstObject, new StorageObject());
+    public void copyBlob(final String srcBucket, final String srcBlobName, final String dstBucket,
+            final String dstBlobName) throws IOException {
+        final var sourceBlobId = BlobId.of(srcBucket, srcBlobName);
+        final var destBlobId = BlobId.of(dstBucket, dstBlobName);
+        final var request = CopyRequest.newBuilder().setSource(sourceBlobId).setTarget(destBlobId).build();
+        handleAccessDenied(() -> {
+            final var copyWriter = m_storage.copy(request);
+            while (!copyWriter.isDone()) {
+                copyWriter.copyChunk();
+            }
+            return true;
+        });
+    }
+
+    private static <T> T handleAccessDenied(final IOSupplier<T> r) throws IOException {
         try {
-            RewriteResponse response = rewrite.execute();
-            while (!Boolean.TRUE.equals(response.getDone())) {
-                response = rewrite.setRewriteToken(response.getRewriteToken()).execute();
+            return r.getWithException();
+        } catch (StorageException ex) {
+            if (ex.getCode() == HttpStatusCodes.STATUS_CODE_FORBIDDEN) {
+                final var ade = new AccessDeniedException(ex.getMessage());
+                ade.initCause(ex);
+                throw ade;
             }
-        } catch (GoogleJsonResponseException ex) {
-            throw wrap(ex);
+            throw ex;
         }
     }
 
-    private static GoogleJsonResponseException wrap(final GoogleJsonResponseException ex) throws IOException {
-        GoogleException wrapped = new GoogleException(ex);
-        wrapped.initCause(ex);
-        if (wrapped.getStatusCode() == HttpStatusCodes.STATUS_CODE_FORBIDDEN) {
-            AccessDeniedException ade = new AccessDeniedException(wrapped.getMessage());
-            ade.initCause(wrapped);
-            throw ade;
-        }
-        return wrapped;
-    }
-
-    private static class GoogleException extends GoogleJsonResponseException {
-        private static final long serialVersionUID = 1L;
-
-        /**
-         * @param ex
-         *            Source exception.
-         */
-        public GoogleException(final GoogleJsonResponseException ex) {
-            super(new Builder(ex.getStatusCode(), ex.getStatusMessage(), ex.getHeaders()), ex.getDetails());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getMessage() {
-            if (getDetails() != null) {
-                return getDetails().getMessage();
-            }
-            return super.getMessage();
-        }
+    private interface IOSupplier<T> {
+        abstract T getWithException() throws IOException;
     }
 }

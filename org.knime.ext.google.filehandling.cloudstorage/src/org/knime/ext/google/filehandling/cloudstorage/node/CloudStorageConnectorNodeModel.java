@@ -51,6 +51,7 @@ package org.knime.ext.google.filehandling.cloudstorage.node;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -69,8 +70,7 @@ import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
 import org.knime.google.api.data.GoogleApiConnectionPortObject;
 
-import com.google.api.client.auth.oauth2.TokenResponseException;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.cloud.storage.StorageException;
 
 /**
  * Node model for Google Cloud Storage Connector node. Takes
@@ -105,12 +105,10 @@ class CloudStorageConnectorNodeModel extends NodeModel {
 
         try {
             ((CloudStorageFileSystem) m_fsConnection.getFileSystem()).getClient().listBuckets(null);
-        } catch (TokenResponseException e) {
-            throw new InvalidSettingsException(e.getDetails().getErrorDescription(), e);
-        } catch (GoogleJsonResponseException e) {
-            throw new InvalidSettingsException(e.getDetails().getMessage(), e);
+        } catch (StorageException e) {
+            final var message = e.getMessage() + " " + StringUtils.trimToEmpty(e.getReason());
+            throw new InvalidSettingsException(message, e);
         }
-
         return new PortObject[] { new FileSystemPortObject(createSpec()) };
     }
 

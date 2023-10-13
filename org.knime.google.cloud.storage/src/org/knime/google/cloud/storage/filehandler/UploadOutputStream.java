@@ -49,13 +49,16 @@
 package org.knime.google.cloud.storage.filehandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 
-import com.google.api.client.http.FileContent;
-import com.google.api.services.storage.Storage;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 
 /**
  * Wrapper around a temporary file that gets uploaded on close.
@@ -63,6 +66,9 @@ import com.google.api.services.storage.Storage;
  * @author Sascha Wolke, KNIME GmbH
  */
 class UploadOutputStream extends FileOutputStream {
+
+    private static final int BUFFER_SIZE = 1024 * 1024 * 5; // 5 MiB
+
     private final File m_tmpFile;
     private final Storage m_client;
     private final String m_bucketName;
@@ -84,14 +90,20 @@ class UploadOutputStream extends FileOutputStream {
         m_tmpFile = tmpFile;
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void close() throws IOException {
         super.close();
-        try {
-            m_client.objects()
-                .insert(m_bucketName, null, new FileContent(null, m_tmpFile))
-                .setName(m_objectName)
-                .execute();
+        final var blobId = BlobId.of(m_bucketName, m_objectName);
+        final var blobInfo = BlobInfo.newBuilder(blobId).build();
+        try (final var out = m_client.writer(blobInfo);
+                final var in = new FileInputStream(m_tmpFile).getChannel()) {
+            final var buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+            while (in.read(buffer) > 0) {
+                buffer.flip();
+                out.write(buffer);
+                buffer.clear();
+            }
         } catch (final Exception e) {
             throw new IOException(e);
         } finally {

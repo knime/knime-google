@@ -66,7 +66,7 @@ import org.knime.filehandling.core.testing.DefaultFSTestInitializer;
 import org.knime.filehandling.core.util.IOESupplier;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.cloud.storage.Blob;
 
 /**
  * Cloud storage test initializer.
@@ -116,13 +116,13 @@ class CloudStorageTestInitializer
             }
 
             futures.add(execAndRetry(() -> {
-                m_client.insertObject(path.getBucketName(), key.toString(), "");
+                m_client.insertBlob(path.getBucketName(), key.toString(), "");
                 return null;
             }));
         }
 
         futures.add(execAndRetry(() -> {
-            m_client.insertObject(path.getBucketName(), path.subpath(1, path.getNameCount()).toString(), content);
+            m_client.insertBlob(path.getBucketName(), path.subpath(1, path.getNameCount()).toString(), content);
             return null;
         }));
 
@@ -148,7 +148,7 @@ class CloudStorageTestInitializer
         final CloudStoragePath scratchDir = getTestCaseScratchDir().toDirectoryPath();
 
         awaitFutures(Collections.singletonList(execAndRetry(() -> {
-            m_client.insertObject(scratchDir.getBucketName(), scratchDir.getBlobName(), "");
+            m_client.insertBlob(scratchDir.getBucketName(), scratchDir.getBlobName(), "");
             return null;
         })));
 
@@ -160,14 +160,12 @@ class CloudStorageTestInitializer
 
         final List<Future<Void>> futures = new LinkedList<>();
 
-        List<StorageObject> objects = m_client.listAllObjects(scratchDir.getBucketName(), scratchDir.getBlobName());
-        if (objects != null) {
-            for (StorageObject o : objects) {
-                futures.add(execAndRetry(() -> {
-                    m_client.deleteObject(scratchDir.getBucketName(), o.getName());
-                    return null;
-                }));
-            }
+        List<Blob> objects = m_client.listAllBlobs(scratchDir.getBucketName(), scratchDir.getBlobName());
+        for (Blob o : objects) {
+            futures.add(execAndRetry(() -> {
+                m_client.deleteBlob(scratchDir.getBucketName(), o.getName());
+                return null;
+            }));
         }
 
         awaitFutures(futures);

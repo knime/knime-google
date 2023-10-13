@@ -46,15 +46,16 @@
 package org.knime.google.cloud.storage.filehandler;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.base.filehandling.remote.files.ConnectionMonitor;
@@ -65,17 +66,16 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
 
-import com.google.api.client.googleapis.batch.BatchRequest;
-import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
-import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.ByteArrayContent;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.model.Bucket;
-import com.google.api.services.storage.model.Buckets;
-import com.google.api.services.storage.model.Objects;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.cloud.BatchResult;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.BucketInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobField;
+import com.google.cloud.storage.Storage.BlobGetOption;
+import com.google.cloud.storage.Storage.BlobListOption;
+import com.google.cloud.storage.StorageException;
 
 /**
  * Implementation of {@link CloudRemoteFile} for Google Cloud Storage.
@@ -103,7 +103,7 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
     }
 
     /**
-     * Default constructor with cache initialized from given {@link StorageObject}.
+     * Default constructor with cache initialized from given {@link Blob}.
      *
      * @param uri URI of the storage object
      * @param connectionInformation connection informations to use
@@ -111,15 +111,17 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
      * @param object storage object to initialize cache
      */
     public GoogleCSRemoteFile(final URI uri, final GoogleCloudStorageConnectionInformation connectionInformation,
-        final ConnectionMonitor<GoogleCSConnection> connectionMonitor, final StorageObject object) {
+        final ConnectionMonitor<GoogleCSConnection> connectionMonitor, final Blob object) {
         super(uri, connectionInformation, connectionMonitor);
         CheckUtils.checkArgumentNotNull(connectionInformation, "Connection Information mus not be null");
         if (object != null) {
             m_exists = true;
             m_containerName = object.getBucket();
             m_blobName = object.getName();
-            m_lastModified = object.getUpdated().getValue();
-            m_size = object.getSize().longValue();
+            if (object.getUpdateTimeOffsetDateTime() != null) {
+                m_lastModified = object.getUpdateTimeOffsetDateTime().toInstant().toEpochMilli();
+            }
+            m_size = object.getSize();
         }
     }
 
@@ -139,11 +141,11 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
     @Override
     protected boolean doesContainerExist(final String bucketName) throws Exception {
         try {
-            return getClient().buckets().get(bucketName).execute() != null;
-        } catch (final GoogleJsonResponseException ex) {
-            if (ex.getStatusCode() == 404) {
+            return getClient().get(bucketName) != null;
+        } catch (final StorageException ex) {
+            if (ex.getCode() == 404) {
                 return false;
-            } else if (ex.getStatusCode() == 403) {
+            } else if (ex.getCode() == 403) {
                 throw new RemoteFile.AccessControlException(ex);
             } else {
                 throw ex;
@@ -155,22 +157,20 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
     protected boolean doestBlobExist(final String bucketName, final String objectName) throws Exception {
         try {
             if (objectName.endsWith(DELIMITER)) {
-                final Objects objects = getClient().objects()
-                    .list(bucketName)
-                    .setDelimiter(DELIMITER)
-                    .setPrefix(objectName)
-                    .setFields("kind,items(name),prefixes")
-                    .setMaxResults(1l)
-                    .execute();
-                return (objects.getPrefixes() != null && !objects.getPrefixes().isEmpty())
-                    || (objects.getItems() != null && !objects.getItems().isEmpty());
+                final var options = new ArrayList<BlobListOption>();
+                options.add(BlobListOption.delimiter(DELIMITER));
+                options.add(BlobListOption.prefix(objectName));
+                options.add(BlobListOption.fields(BlobField.NAME));
+                options.add(BlobListOption.pageSize(1));
+                final var result = getClient().list(bucketName, options.toArray(BlobListOption[]::new));
+                return result.getValues().iterator().hasNext();
             } else {
-                return getClient().objects().get(bucketName, objectName).setFields("kind,name").execute() != null;
+                return getClient().get(bucketName, objectName, BlobGetOption.fields(BlobField.NAME)) != null;
             }
-        } catch (final GoogleJsonResponseException ex) {
-            if (ex.getStatusCode() == 404) {
+        } catch (final StorageException ex) {
+            if (ex.getCode() == 404) {
                 return false;
-            } else if (ex.getStatusCode() == 403) {
+            } else if (ex.getCode() == 403) {
                 throw new RemoteFile.AccessControlException(ex);
             } else {
                 throw ex;
@@ -181,23 +181,23 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
     @Override
     protected GoogleCSRemoteFile[] listRootFiles() throws Exception {
         final ArrayList<GoogleCSRemoteFile> files = new ArrayList<>();
-        final com.google.api.services.storage.Storage.Buckets.List req =
-            getClient().buckets().list(getProjectId()).setFields("kind,items(name),nextPageToken");
+        final var options = new ArrayList<BlobListOption>();
+        options.add(BlobListOption.fields(BlobField.NAME));
 
-        Buckets buckets = req.execute();
-        for (int page = 1; page < MAX_PAGES; page++) {
-            if (buckets.getItems() != null) { // files
-                for (final Bucket bucket : buckets.getItems()) {
-                    files.add(getRemoteFile(bucket.getName(), null, null));
-                }
+        var result = getClient().list(getProjectId(), options.toArray(BlobListOption[]::new));
+        for (var page = 1; page < MAX_PAGES; page++) {
+            for (final var blob : result.getValues()) {
+                files.add(getRemoteFile(blob.getName(), null, null));
             }
-
             if (page + 1 == MAX_PAGES) {
                 LOGGER.warn("Max pages count (" + MAX_PAGES + ") in bucket listing reached, ignoring other pages.");
             }
 
-            if (!StringUtils.isBlank(buckets.getNextPageToken())) {
-                buckets = req.setPageToken(buckets.getNextPageToken()).execute();
+            if (StringUtils.isNotBlank(result.getNextPageToken())) {
+                options.clear();
+                options.add(BlobListOption.fields(BlobField.NAME));
+                options.add(BlobListOption.pageToken(result.getNextPageToken()));
+                result = getClient().list(getProjectId(), options.toArray(BlobListOption[]::new));
             } else {
                 break;
             }
@@ -206,7 +206,7 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
         return files.toArray(new GoogleCSRemoteFile[0]);
     }
 
-    private GoogleCSRemoteFile getRemoteFile(final String bucketName, final String objectName, final StorageObject obj)
+    private GoogleCSRemoteFile getRemoteFile(final String bucketName, final String objectName, final Blob obj)
         throws URISyntaxException {
         final String path = createContainerPath(bucketName) + (objectName != null ? objectName : "");
         final URI uri = new URI(getURI().getScheme(), getURI().getUserInfo(), getURI().getHost(), -1, path, null, null);
@@ -218,42 +218,46 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
     protected GoogleCSRemoteFile[] listDirectoryFiles() throws Exception {
         final String bucketName = getContainerName();
         final ArrayList<GoogleCSRemoteFile> files = new ArrayList<>();
-        final String prefix = StringUtils.isBlank(getBlobName()) ? "" : getBlobName();
-        final com.google.api.services.storage.Storage.Objects.List req = getClient().objects().list(bucketName)
-            .setDelimiter(DELIMITER)
-            .setPrefix(prefix)
-            .setFields("kind,items(bucket,name,size,updated),prefixes,nextPageToken");
+        final var prefix = getBlobName();
 
-        Objects objects = req.execute();
-        for (int page = 1; page < MAX_PAGES; page++) {
-            if (objects.getPrefixes() != null) { // directories
-                for (final String name : objects.getPrefixes()) {
-                    if (!name.equals(prefix)) {
+        final Function<String, BlobListOption[]> optionsProvider = nextPageToken -> { //NOSONAR
+            final var options = new ArrayList<BlobListOption>();
+            options.add(BlobListOption.delimiter(DELIMITER));
+            options.add(BlobListOption.fields(BlobField.BUCKET, BlobField.NAME,
+                BlobField.SIZE, BlobField.UPDATED));
+            if (StringUtils.isNotBlank(prefix)) {
+                options.add(BlobListOption.prefix(prefix));
+            }
+            if (StringUtils.isNotBlank(nextPageToken)) {
+                options.add(BlobListOption.pageToken(nextPageToken));
+            }
+            return options.toArray(BlobListOption[]::new);
+        };
+
+        var result = getClient().list(bucketName, optionsProvider.apply(null));
+
+        for (var page = 1; page < MAX_PAGES; page++) {
+            for (final var blob : result.getValues()) {
+                final var name = blob.getName();
+                if (!name.equals(prefix)) {
+                    if (name.endsWith(DELIMITER)) {
                         files.add(getRemoteFile(bucketName, name, null));
+                    } else {
+                        files.add(getRemoteFile(bucketName, name, blob));
                     }
                 }
             }
-
-            if (objects.getItems() != null) { // files
-                for (final StorageObject obj : objects.getItems()) {
-                    if (!obj.getName().equals(prefix)) {
-                        files.add(getRemoteFile(bucketName, obj.getName(), obj));
-                    }
-                }
-            }
-
             if (page + 1 == MAX_PAGES) {
                 LOGGER.warn(
                     "Max pages count (" + MAX_PAGES + ") in directory files listing reached, ignoring other pages.");
             }
 
-            if (!StringUtils.isBlank(objects.getNextPageToken())) {
-                objects = req.setPageToken(objects.getNextPageToken()).execute();
+            if (!StringUtils.isBlank(result.getNextPageToken())) {
+                result = getClient().list(bucketName, optionsProvider.apply(result.getNextPageToken()));
             } else {
                 break;
             }
         }
-
         return files.toArray(new GoogleCSRemoteFile[0]);
     }
 
@@ -262,17 +266,22 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
      */
     private void fetchMetaData() throws Exception {
         try {
-            final StorageObject obj = getClient().objects().get(getContainerName(), getBlobName())
-                .setFields("kind,items(bucket,name,size,updated)").execute();
-            m_size = obj.getSize().longValue();
-            m_lastModified = obj.getUpdated().getValue();
+            final var options = new ArrayList<BlobGetOption>();
+            options.add(BlobGetOption.fields(BlobField.BUCKET, BlobField.NAME,
+                BlobField.SIZE, BlobField.UPDATED));
+
+            final var blob = getClient().get(getContainerName(), getBlobName(), options.toArray(BlobGetOption[]::new));
+            m_size = blob.getSize();
+            if (blob.getUpdateTimeOffsetDateTime() != null) {
+                m_lastModified = blob.getUpdateTimeOffsetDateTime().toInstant().toEpochMilli();
+            }
             m_exists = true;
 
-        } catch (final GoogleJsonResponseException ex) {
+        } catch (final StorageException ex) {
             m_size = m_lastModified = null;
-            if (ex.getStatusCode() == 404) {
+            if (ex.getCode() == 404) {
                 m_exists = false;
-            } else if (ex.getStatusCode() == 403) {
+            } else if (ex.getCode() == 403) {
                 m_exists = null;
                 throw new RemoteFile.AccessControlException(ex);
             } else {
@@ -300,74 +309,63 @@ public class GoogleCSRemoteFile extends CloudRemoteFile<GoogleCSConnection> {
 
     @Override
     protected boolean deleteContainer() throws Exception {
-        getClient().buckets().delete(getContainerName()).execute();
+        getClient().delete(getContainerName());
         return true;
     }
 
     @Override
     protected boolean deleteDirectory() throws Exception {
-        final String bucket = getContainerName();
-        final BatchRequest batch = getClient().batch();
-        final JsonBatchCallback<Void> batchHandler = createDeleteBatchHandler();
-        final LinkedBlockingQueue<GoogleCSRemoteFile> queue = new LinkedBlockingQueue<>();
+        final var bucket = getContainerName();
+        final var batch = getClient().batch();
+        final var queue = new LinkedBlockingQueue<GoogleCSRemoteFile>();
         queue.add(this);
         while (!queue.isEmpty()) {
             final GoogleCSRemoteFile file = queue.poll();
             if (file.isDirectory()) {
                 queue.addAll(Arrays.asList(file.listDirectoryFiles()));
             }
+            batch.delete(bucket, file.getBlobName()).notify(new BatchResult.Callback<Boolean, StorageException>() {
 
-            getClient().objects().delete(bucket, file.getBlobName()).queue(batch, batchHandler);
-            if (batch.size() >= MAX_BATCH_SIZE) {
-                batch.execute();
-            }
+                @Override
+                public void success(final Boolean result) {
+                    // nothing to do
+                }
+
+                @Override
+                public void error(final StorageException e) {
+                    LOGGER.warn("Failure in batch delete: " + e.getMessage());
+                }
+            });
         }
-
-        if (batch.size() > 0) {
-            batch.execute();
-        }
-
+        batch.submit();
         return true;
-    }
-
-    private static JsonBatchCallback<Void> createDeleteBatchHandler() {
-        return new JsonBatchCallback<Void>() {
-            @Override
-            public void onSuccess(final Void t, final HttpHeaders responseHeaders) throws IOException {
-                // nothing to do
-            }
-
-            @Override
-            public void onFailure(final GoogleJsonError e, final HttpHeaders responseHeaders) throws IOException {
-                LOGGER.warn("Failure in batch delete: " + e.getMessage());
-            }
-        };
     }
 
     @Override
     protected boolean deleteBlob() throws Exception {
-        getClient().objects().delete(getContainerName(), getBlobName()).execute();
+        getClient().delete(getContainerName(), getBlobName());
         return true;
     }
 
     @Override
     protected boolean createContainer() throws Exception {
-        final Bucket bucket = new Bucket();
-        bucket.setName(getContainerName());
-        getClient().buckets().insert(getProjectId(), bucket).execute();
+        getClient().create(BucketInfo.of(getContainerName()));
         return true;
     }
 
     @Override
     protected boolean createDirectory(final String dirName) throws Exception {
-        final ByteArrayContent emptyContent = new ByteArrayContent("", new byte[0]);
-        getClient().objects().insert(getContainerName(), null, emptyContent).setName(getBlobName()).execute();
+        final var blobId = BlobId.of(getContainerName(), getBlobName());
+        final var blobInfo = BlobInfo.newBuilder(blobId).build();
+        getClient().create(blobInfo, new byte[0]);
         return true;
     }
 
     @Override
     public InputStream openInputStream() throws Exception {
-        return getClient().objects().get(getContainerName(), getBlobName()).executeMediaAsInputStream();
+        final var blob = getClient().get(getContainerName(), getBlobName(),
+            BlobGetOption.shouldReturnRawInputStream(true));
+        return Channels.newInputStream(blob.reader());
     }
 
     /**

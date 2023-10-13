@@ -48,7 +48,6 @@
  */
 package org.knime.google.api.nodes.authenticator;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +55,7 @@ import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.nio.file.InvalidPathException;
 import java.security.GeneralSecurityException;
-import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -74,14 +73,12 @@ import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.GenericTokenHolder;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
 import org.knime.credentials.base.oauth.api.AccessTokenCredential;
+import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 
-import com.google.api.client.auth.oauth2.RefreshTokenRequest;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 
 /**
  * The Google Authenticator node. Performs OAuth authentication to selected Google services and produces
@@ -96,9 +93,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
 
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-    private static final JsonFactory JSON_FACTORY = new GsonFactory();
-
-    private GenericTokenHolder<com.google.api.client.auth.oauth2.Credential> m_tokenHolder;
+    private GenericTokenHolder<GoogleCredentials> m_tokenHolder;
 
     /**
      * @param configuration The node configuration.
@@ -116,7 +111,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
             if (settings.m_tokenCacheKey == null) {
                 throw new InvalidSettingsException(LOGIN_FIRST_ERROR);
             } else {
-                m_tokenHolder = CredentialCache.<GenericTokenHolder<com.google.api.client.auth.oauth2.Credential>> get(
+                m_tokenHolder = CredentialCache.<GenericTokenHolder<GoogleCredentials>> get(
                     settings.m_tokenCacheKey)//
                     .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
             }
@@ -142,10 +137,10 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         }
     }
 
-    private Credential fromGoogleToken(final com.google.api.client.auth.oauth2.Credential token) {
-        var accessToken = token.getAccessToken();
-        var expiresAfter = Optional.ofNullable(token.getExpiresInSeconds())//
-            .map(secs -> Instant.now().plusSeconds(secs))//
+    private static Credential fromGoogleToken(final GoogleCredentials token) {
+        var accessToken = token.getAccessToken().getTokenValue();
+        var expiresAfter = Optional.ofNullable(token.getAccessToken().getExpirationTime())//
+            .map(Date::toInstant)//
             .orElse(null);
         var tokenType = "Bearer";
 
@@ -153,44 +148,28 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
             expiresAfter, //
             tokenType, //
             createTokenRefresher(token));
-
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Credential> Supplier<T>
-        createTokenRefresher(final com.google.api.client.auth.oauth2.Credential token) {
-        var refreshToken = token.getRefreshToken();
-        var transport = token.getTransport();
-        var jsonFactory = token.getJsonFactory();
-        var tokenServerEncodedUrl = token.getTokenServerEncodedUrl();
-        var clientAuthentication = token.getClientAuthentication();
-        var requestInitializer = token.getRequestInitializer();
-        var accessMethod = token.getMethod();
-
-        return () -> {//NOSONAR
-            var request =
-                new RefreshTokenRequest(transport, jsonFactory, new GenericUrl(tokenServerEncodedUrl), refreshToken)
-                    .setClientAuthentication(clientAuthentication) //
-                    .setRequestInitializer(requestInitializer);
-
+    private static <T extends Credential> Supplier<T> createTokenRefresher(final GoogleCredentials token) {
+        return () -> {
             try {
-                var response = request.execute();
-                var googleToken = new com.google.api.client.auth.oauth2.Credential(accessMethod);
-                googleToken.setFromTokenResponse(response);
-                return (T)fromGoogleToken(googleToken);
+                token.refresh();
+                final var newToken = token.toBuilder().setAccessToken(token.getAccessToken()).build();
+                return (T)fromGoogleToken(newToken);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         };
     }
 
-    private static com.google.api.client.auth.oauth2.Credential
-        getTokenUsingAPIKey(final GoogleAuthenticatorSettings settings) throws InvalidSettingsException {
+    private static GoogleCredentials getTokenUsingAPIKey(final GoogleAuthenticatorSettings settings)
+            throws InvalidSettingsException {
 
         final var apiKeysettings = settings.m_apiKeySettings;
         final var scopes = settings.m_scopeSettings.getScopes();
 
-        com.google.api.client.auth.oauth2.Credential credential;
+        GoogleCredentials credential;
 
         if (apiKeysettings.m_apiKeyFormat == APIKeySettings.APIKeyType.JSON) {
             final var path = resolveKeyFilePath(apiKeysettings.m_jsonFile);
@@ -201,7 +180,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         }
         try {
             // get access token by refreshing token
-            credential.refreshToken();
+            credential.refresh();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -230,23 +209,26 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         return result;
     }
 
-    @SuppressWarnings("deprecation")
-    private static com.google.api.client.auth.oauth2.Credential getTokenUsingP12Key(final String serviceAccountEmail,
+    private static GoogleCredentials getTokenUsingP12Key(final String serviceAccountEmail,
         final String filePath, final List<String> scopes) throws InvalidSettingsException {
         try {
-            return new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
-                    .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(scopes)
-                    .setServiceAccountPrivateKeyFromP12File(new File(filePath)).build();
+            final var privateKey = GoogleAuthentication.loadPrivateKeyFromP12(filePath);
+            return ServiceAccountCredentials.newBuilder()
+                    .setHttpTransportFactory(() -> HTTP_TRANSPORT)
+                    .setClientEmail(serviceAccountEmail)
+                    .setPrivateKey(privateKey)
+                    .setScopes(scopes)
+                    .build();
         } catch (GeneralSecurityException | IOException e) {
             throw new InvalidSettingsException(e);
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static com.google.api.client.auth.oauth2.Credential getTokenlUsingJSONKey(final String filePath,
+    private static GoogleCredentials getTokenlUsingJSONKey(final String filePath,
         final List<String> scopes) throws InvalidSettingsException {
         try (final var inputStream = new FileInputStream(filePath)) {
-            return GoogleCredential.fromStream(inputStream, HTTP_TRANSPORT, JSON_FACTORY).createScoped(scopes);
+            return GoogleCredentials.fromStream(inputStream, () -> HTTP_TRANSPORT)
+                    .createScoped(scopes);
         } catch (IOException e) {
             throw new InvalidSettingsException(e);
         }

@@ -58,8 +58,6 @@ import org.knime.filehandling.core.connections.base.BlobStorePath;
 import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-
 /**
  * {@link Path} implementation for {@link CloudStorageFileSystem}.
  *
@@ -154,7 +152,7 @@ public class CloudStoragePath extends BlobStorePath {
 
         String signedUrl;
         try {
-            signedUrl = GoogleCSUrlSignature.getSigningURL((GoogleCredential) googleApiConnection.getCredential(),
+            signedUrl = GoogleCSUrlSignature.getSigningURL(googleApiConnection.getCredentials(),
                     expirationDuration.getSeconds(), getBucketName(), getBlobName());
             return new URL(signedUrl);
         } catch (Exception ex) {

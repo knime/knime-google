@@ -50,8 +50,9 @@ import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.services.storage.Storage;
+import com.google.cloud.http.HttpTransportOptions;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 
 /**
  * Google Cloud Storage connection.
@@ -79,8 +80,14 @@ public class GoogleCSConnection extends Connection {
 	@Override
 	public void open() throws Exception {
 		if (!isOpen()) {
-		    m_client = new Storage.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                    m_connectionInformation.getGoogleApiConnection().getCredential()).setApplicationName(APP_NAME).build();
+		    final var transportOptions = HttpTransportOptions.newBuilder()//
+	                .setHttpTransportFactory(GoogleApiConnection::getHttpTransport)
+	                .build();
+
+		    m_client = StorageOptions.newBuilder()
+	                .setTransportOptions(transportOptions)
+	                .setCredentials(m_connectionInformation.getGoogleApiConnection().getCredentials())
+	                .build().getService();
 		}
 	}
 
@@ -111,9 +118,7 @@ public class GoogleCSConnection extends Connection {
      * @throws Exception
      */
     protected String getSigningURL(final long expirationSeconds, final String bucketName, final String objectName) throws Exception {
-        final GoogleCredential creds =
-            (GoogleCredential)m_connectionInformation.getGoogleApiConnection().getCredential();
-
+        final var creds = m_connectionInformation.getGoogleApiConnection().getCredentials();
         return GoogleCSUrlSignature.getSigningURL(creds, expirationSeconds, bucketName, objectName);
     }
 }

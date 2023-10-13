@@ -48,9 +48,8 @@ package org.knime.google.api.nodes.authconnector.util.scope;
 import java.util.Arrays;
 import java.util.List;
 
+import org.knime.google.api.data.GoogleApiStorageScopes;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
-
-import com.google.api.services.storage.StorageScopes;
 
 /**
  * Scope for the Google Cloud Storage nodes.
@@ -64,7 +63,7 @@ public class KnimeCloudStorageReadAuthScope implements KnimeGoogleAuthScope {
     private static final String SCOPE_NAME = "Google Cloud Storage (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        StorageScopes.DEVSTORAGE_READ_ONLY);
+        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY);
 
     private static final String DESC = "Scopes required for the Google Cloud Storage nodes.";
 

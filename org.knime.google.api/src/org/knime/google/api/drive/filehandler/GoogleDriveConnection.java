@@ -54,6 +54,7 @@ import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.drive.util.GoogleDriveConnectionInformation;
 
 import com.google.api.services.drive.Drive;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
  * Google Drive Connection
@@ -88,7 +89,8 @@ public class GoogleDriveConnection extends Connection {
         m_connectionInformation.getGoogleConnection();
         m_driveService = new Drive.Builder(GoogleApiConnection.getHttpTransport(),
             GoogleApiConnection.getJsonFactory(),
-            m_connectionInformation.getGoogleConnection().getCredential()).setApplicationName(APP_NAME).build();
+            new HttpCredentialsAdapter(m_connectionInformation.getGoogleConnection().getCredentials())
+            ).setApplicationName(APP_NAME).build();
     }
 
     /**

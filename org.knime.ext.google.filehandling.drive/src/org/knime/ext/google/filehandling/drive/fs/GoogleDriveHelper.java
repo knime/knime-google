@@ -67,6 +67,7 @@ import com.google.api.services.drive.model.Drive;
 import com.google.api.services.drive.model.DriveList;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
  * Helper for work with native Google Drive API library.
@@ -112,7 +113,7 @@ public class GoogleDriveHelper {
 
     private static void initializeRequest(final HttpRequest req, final GoogleDriveFSConnectionConfig config)
             throws IOException {
-        config.getApiConnection().getCredential().initialize(req);
+        new HttpCredentialsAdapter(config.getApiConnection().getCredentials()).initialize(req);
 
         req.setConnectTimeout((int) config.getConnectionTimeOut().toMillis());
         req.setReadTimeout((int) config.getReadTimeOut().toMillis());

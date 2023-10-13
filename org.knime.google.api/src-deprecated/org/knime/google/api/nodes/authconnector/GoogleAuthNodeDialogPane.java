@@ -100,7 +100,7 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
-import com.google.api.client.auth.oauth2.Credential;
+import com.google.auth.Credentials;
 
 /**
  * Dialog for the Google Authentication node.
@@ -209,11 +209,11 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
      */
     private final void onAuthButtonPressed() {
 
-        SwingWorkerWithContext<Credential, Void> openBrowserSwingWorker =
-            new SwingWorkerWithContext<Credential, Void>() {
+        SwingWorkerWithContext<Credentials, Void> openBrowserSwingWorker =
+            new SwingWorkerWithContext<Credentials, Void>() {
 
                 @Override
-                protected Credential doInBackgroundWithContext() throws Exception {
+                protected Credentials doInBackgroundWithContext() throws Exception {
                     if (m_scopeChanged) {
                         clearCredentials();
                         m_scopeChanged = false;
@@ -223,7 +223,9 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                         m_settings.getCredentialLocation(),
                         KnimeGoogleAuthScopeRegistry.getAuthScopes(m_settings.getRelevantKnimeAuthScopes()),
                         m_settings.getClientIdFile());
-                    m_settings.setAccessTokenHash(credential.getAccessToken().hashCode());
+                    if (credential != null) {
+                        m_settings.setAccessTokenHash(credential.getAccessToken().getTokenValue().hashCode());
+                    }
                     return credential;
                 }
 

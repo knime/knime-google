@@ -73,7 +73,7 @@ import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
 import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 
-import com.google.api.client.auth.oauth2.Credential;
+import com.google.auth.oauth2.GoogleCredentials;
 
 /**
  * Node settings for the Google Authenticator node.
@@ -163,7 +163,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             }
         }
 
-        private static Credential fetchAccessToken(final GoogleAuthenticatorSettings settings) throws IOException {
+        private static GoogleCredentials fetchAccessToken(final GoogleAuthenticatorSettings settings) throws IOException {
             return GoogleAuthentication.getCredential(GoogleAuthLocationType.MEMORY, null,
                 settings.m_scopeSettings.getScopes(), settings.getClientIdFile());
         }

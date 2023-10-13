@@ -87,6 +87,7 @@ import com.google.api.services.analyticsdata.v1beta.AnalyticsData;
 import com.google.api.services.analyticsdata.v1beta.model.Metadata;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportRequest;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportResponse;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
  * The {@link GAConnection} provides request methods against the
@@ -362,8 +363,9 @@ public final class GAConnection {
 
     private static HttpRequestInitializer configureRequestInitializer(final GoogleApiConnection connection,
             final Duration connectTimeout, final Duration readTimeout, final Duration retryIOMaxElapsedTime) {
-        HttpRequestInitializer init = CheckUtils.checkNotNull(connection.getCredential(),
+        CheckUtils.checkNotNull(connection.getCredentials(),
                 "Google API credentials missing. Re-execute Google Authenticator node.");
+        HttpRequestInitializer init = new HttpCredentialsAdapter(connection.getCredentials());
         init = wrap(init, request -> {
             request.setConnectTimeout((int)connectTimeout.toMillis());
             request.setReadTimeout((int)readTimeout.toMillis());

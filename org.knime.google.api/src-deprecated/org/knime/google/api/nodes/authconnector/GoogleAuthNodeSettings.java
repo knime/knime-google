@@ -76,7 +76,7 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
-import com.google.api.client.auth.oauth2.Credential;
+import com.google.auth.oauth2.UserCredentials;
 
 /**
  * Settings for the GoogleAuthModel
@@ -403,14 +403,15 @@ final class GoogleAuthNodeSettings {
                 credentialLocation = GoogleAuthentication.getTempCredentialPath(m_storedCredential);
             }
             if (!isDuringExecute) {
-                Credential noAuthCredential = GoogleAuthentication.getNoAuthCredential(getCredentialLocationType(),
-                    getCredentialLocation(), getRelevantKnimeAuthScopes(), getClientIdFile());
+                UserCredentials noAuthCredential = GoogleAuthentication.getNoAuthCredential(
+                    getCredentialLocationType(), getCredentialLocation(),
+                    getRelevantKnimeAuthScopes(), getClientIdFile());
                 if (noAuthCredential == null) {
                     throw new InvalidSettingsException("No valid credentials found. Please authenticate using the node dialog.");
                 }
                 // If the accessTokenHash changes it means that the credentials got overwritten or exchanged,
                 // so they should be verified using the node dialog.
-                if (noAuthCredential.getAccessToken().hashCode() != m_accessTokenHash) {
+                if (noAuthCredential.getAccessToken().getTokenValue().hashCode() != m_accessTokenHash) {
                     throw new InvalidSettingsException("Credentials changed. Please authenticate using the node dialog.");
                 }
                 return Optional.empty();

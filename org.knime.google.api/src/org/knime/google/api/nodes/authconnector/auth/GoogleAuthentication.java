@@ -49,6 +49,7 @@
 package org.knime.google.api.nodes.authconnector.auth;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +57,11 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 import org.knime.core.util.FileUtil;
@@ -74,9 +79,12 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.SecurityUtils;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.UserCredentials;
 
 /**
  * Class that handles the authentication with Google Services.
@@ -143,7 +151,7 @@ public class GoogleAuthentication {
      * @return The authenticated credentials
      * @throws IOException
      */
-    public static synchronized Credential getCredential(final GoogleAuthLocationType type, final String credentialPath,
+    public static synchronized UserCredentials getCredential(final GoogleAuthLocationType type, final String credentialPath,
         final List<String> scopes, final String clientIdFile) throws IOException {
         var credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
         final GoogleAuthorizationCodeFlow flow =
@@ -153,7 +161,7 @@ public class GoogleAuthentication {
             credential =
                 new CustomAuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(DEFAULT_KNIME_USER);
         }
-        return credential;
+        return getCredentials(credential, clientIdFile, scopes);
     }
 
     /**
@@ -161,20 +169,41 @@ public class GoogleAuthentication {
      *
      * @param type The {@link GoogleAuthLocationType}
      * @param credentialPath The credentials path
-     * @param scopes The scopes that should be used with the credentials
+     * @param knimeScopes The scopes that should be used with the credentials
      * @param clientIdFile The path for a OAuth Client ID json file. When it is <code>null</code> the default client
      *            secret is used.
      * @return authorized credentials if they are available
      * @throws IOException
      */
-    public static synchronized Credential getNoAuthCredential(final GoogleAuthLocationType type,
-        final String credentialPath, final List<KnimeGoogleAuthScope> scopes, final String clientIdFile)
+    public static synchronized UserCredentials getNoAuthCredential(final GoogleAuthLocationType type,
+        final String credentialPath, final List<KnimeGoogleAuthScope> knimeScopes, final String clientIdFile)
         throws IOException {
         var credentialDataStoreFactory = getCredentialDataStoreFactory(type, credentialPath);
+        final var scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(knimeScopes);
         final GoogleAuthorizationCodeFlow flow =
-            getAuthorizationCodeFlow(credentialDataStoreFactory, KnimeGoogleAuthScopeRegistry.getAuthScopes(scopes),
-                clientIdFile);
-        return flow.loadCredential(DEFAULT_KNIME_USER);
+            getAuthorizationCodeFlow(credentialDataStoreFactory, scopes, clientIdFile);
+        final var credential = flow.loadCredential(DEFAULT_KNIME_USER);
+        return getCredentials(credential, clientIdFile, scopes);
+    }
+
+    private static UserCredentials getCredentials(final Credential credential,
+        final String clientIdFile, final List<String> scopes) throws IOException {
+        if (credential == null) {
+            return null;
+        }
+        final var clientSecrets = loadClientSecrets(clientIdFile);
+        final var clientId = clientSecrets.getDetails().getClientId();
+        final var clientSecret = clientSecrets.getDetails().getClientSecret();
+        final var expirationTime = Date.from(Instant.ofEpochMilli(credential.getExpirationTimeMilliseconds()));
+
+        final var accessToken = AccessToken.newBuilder().setTokenValue(credential.getAccessToken())
+                .setScopes(scopes).setExpirationTime(expirationTime).build();
+
+        return UserCredentials.newBuilder().setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setHttpTransportFactory(credential::getTransport)
+                .setAccessToken(accessToken)
+                .setRefreshToken(credential.getRefreshToken()).build();
     }
 
     /**
@@ -293,4 +322,23 @@ public class GoogleAuthentication {
         }
     }
 
+    /**
+     * Loads Google private key from P12 file.
+     *
+     * @param keyFileLocation key location
+     * @return private key
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public static PrivateKey loadPrivateKeyFromP12(final String keyFileLocation)
+            throws IOException, GeneralSecurityException {
+        try (final var stream = new FileInputStream(keyFileLocation)) {
+            return SecurityUtils.loadPrivateKeyFromKeyStore(
+                SecurityUtils.getPkcs12KeyStore(),
+                stream,
+                "notasecret",
+                "privatekey",
+                "notasecret");
+        }
+    }
 }

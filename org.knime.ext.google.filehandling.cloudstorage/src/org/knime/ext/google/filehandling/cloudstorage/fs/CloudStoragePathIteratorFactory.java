@@ -55,14 +55,15 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.filehandling.core.connections.base.PagedPathIterator;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 
-import com.google.api.services.storage.model.Bucket;
-import com.google.api.services.storage.model.Buckets;
-import com.google.api.services.storage.model.Objects;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
 
 /**
  * Class to iterate through the files and folders in the path
@@ -107,17 +108,18 @@ final class CloudStoragePathIteratorFactory {
 
         @Override
         protected boolean hasNextPage() {
-            return m_nextPageToken != null;
+            return StringUtils.isNotBlank(m_nextPageToken);
         }
 
         @Override
         protected Iterator<CloudStoragePath> loadNextPage() throws IOException {
             @SuppressWarnings("resource")
-            final Buckets buckets = m_path.getFileSystem().getClient().listBuckets(m_nextPageToken);
-            m_nextPageToken = buckets.getNextPageToken();
+            final Page<Bucket> page = m_path.getFileSystem().getClient().listBuckets(m_nextPageToken);
+            m_nextPageToken = page.getNextPageToken();
+            final var hasElements = page.getValues().iterator().hasNext();
 
-            if (buckets.getItems() != null) {
-                return buckets.getItems().stream().map(this::createPath).iterator();
+            if (hasElements) {
+                return page.streamValues().map(this::createPath).iterator();
             } else {
                 return null;
             }
@@ -128,10 +130,14 @@ final class CloudStoragePathIteratorFactory {
             final CloudStorageFileSystem fs = m_path.getFileSystem();
 
             final CloudStoragePath path = fs.getPath(fs.getSeparator() + bucket.getName(), fs.getSeparator());
-
-            final FileTime createdAt = FileTime.fromMillis(bucket.getTimeCreated().getValue());
-            final FileTime modifiedAt = FileTime.fromMillis(bucket.getUpdated().getValue());
-
+            var createdAt = FileTime.fromMillis(0);
+            var modifiedAt = createdAt;
+            if (bucket.getCreateTimeOffsetDateTime() != null) {
+                createdAt = FileTime.from(bucket.getCreateTimeOffsetDateTime().toInstant());
+            }
+            if (bucket.getUpdateTimeOffsetDateTime() != null) {
+                modifiedAt = FileTime.from(bucket.getUpdateTimeOffsetDateTime().toInstant());
+            }
             final BaseFileAttributes attrs = new BaseFileAttributes(false, //
                     path, //
                     modifiedAt, //
@@ -158,7 +164,7 @@ final class CloudStoragePathIteratorFactory {
 
         @Override
         protected boolean hasNextPage() {
-            return m_nextPageToken != null;
+            return StringUtils.isNotBlank(m_nextPageToken);
         }
 
         @SuppressWarnings("resource")
@@ -167,43 +173,33 @@ final class CloudStoragePathIteratorFactory {
             final CloudStorageFileSystem fs = m_path.getFileSystem();
             final String prefix = m_path.getBlobName();
 
-            Objects objects = fs.getClient().listObjects(m_path.getBucketName(), prefix, m_nextPageToken);
-
+            Page<Blob> blobs = fs.getClient().listBlobs(m_path.getBucketName(), prefix, m_nextPageToken);
             final List<CloudStoragePath> paths = new ArrayList<>();
 
-            if (objects.getPrefixes() != null) {
-                objects.getPrefixes().stream() //
-                        .map(this::createPathFromPrefix) //
-                        .forEach(paths::add); // NOSONAR we want a mutable list
-            }
+            blobs.streamValues() //
+                    .filter(obj -> !Objects.equals(prefix, obj.getName())) //
+                    .map(this::createPath) //
+                    .forEach(paths::add); // NOSONAR we want a mutable list
 
-            if (objects.getItems() != null) {
-                objects.getItems().stream() //
-                        .filter(obj -> !java.util.Objects.equals(prefix, obj.getName())) //
-                        .map(this::createPath) //
-                        .forEach(paths::add); // NOSONAR we want a mutable list
-            }
-
-            m_nextPageToken = objects.getNextPageToken();
+            m_nextPageToken = blobs.getNextPageToken();
 
             return paths.iterator();
         }
 
         @SuppressWarnings("resource")
-        private CloudStoragePath createPathFromPrefix(final String prefix) {
-            return new CloudStoragePath(m_path.getFileSystem(), m_path.getBucketName(), prefix);
-        }
-
-        @SuppressWarnings("resource")
-        private CloudStoragePath createPath(final StorageObject object) {
+        private CloudStoragePath createPath(final Blob blob) {
             final CloudStorageFileSystem fs = m_path.getFileSystem();
-            CloudStoragePath path = new CloudStoragePath(fs, m_path.getBucketName(), object.getName());
-
-            FileTime createdAt = FileTime.fromMillis(object.getTimeCreated().getValue());
-            FileTime modifiedAt = FileTime.fromMillis(object.getUpdated().getValue());
-
+            CloudStoragePath path = new CloudStoragePath(fs, m_path.getBucketName(), blob.getName());
+            var createdAt = FileTime.fromMillis(0);
+            var modifiedAt = createdAt;
+            if (blob.getCreateTimeOffsetDateTime() != null) {
+                createdAt = FileTime.from(blob.getCreateTimeOffsetDateTime().toInstant());
+            }
+            if (blob.getUpdateTimeOffsetDateTime() != null) {
+                modifiedAt = FileTime.from(blob.getUpdateTimeOffsetDateTime().toInstant());
+            }
             BaseFileAttributes attrs = new BaseFileAttributes(!path.isDirectory(), path, modifiedAt, modifiedAt,
-                    createdAt, object.getSize().longValue(), false, false, null);
+                    createdAt, blob.getSize(), false, false, null);
             fs.addToAttributeCache(path, attrs);
 
             return path;

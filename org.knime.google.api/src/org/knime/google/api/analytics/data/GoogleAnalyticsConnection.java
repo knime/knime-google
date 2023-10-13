@@ -63,7 +63,6 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorConfiguration;
 import org.knime.google.api.data.GoogleApiConnection;
 
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.services.analytics.Analytics;
@@ -73,6 +72,7 @@ import com.google.api.services.analytics.model.Profile;
 import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
 import com.google.api.services.analytics.model.Webproperty;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
  * A connection to the Google Analytics API.
@@ -121,9 +121,9 @@ public final class GoogleAnalyticsConnection {
                 new TreeMap<String, Map<String, Map<String, String>>>();
         Map<String, String> accountIdToName = new HashMap<String, String>();
         Map<String, String> webpropertyIdToName = new HashMap<String, String>();
-        Credential credential = connection.getCredential();
+        final var credAdapter = new HttpCredentialsAdapter(connection.getCredentials());
         Analytics analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-            GoogleApiConnection.getJsonFactory(), setHttpTimeout(credential, connectTimeout, readTimeout))
+            GoogleApiConnection.getJsonFactory(), setHttpTimeout(credAdapter, connectTimeout, readTimeout))
                 .setApplicationName("KNIME-Profiles-Scan").build();
         Accounts accounts = analytics.management().accounts().list().execute();
         Webproperties webproperties = analytics.management().webproperties().list(ALL_WILDCARD).execute();
@@ -158,9 +158,10 @@ public final class GoogleAnalyticsConnection {
         m_applicationName = applicationName;
         m_connectTimeout = connectTimeout;
         m_readTimeout = readTimeout;
-        HttpRequestInitializer credential = setHttpTimeout(m_connection.getCredential(), m_connectTimeout, m_readTimeout);
+        final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
+        HttpRequestInitializer credentials = setHttpTimeout(credAdapter, m_connectTimeout, m_readTimeout);
         m_analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-            GoogleApiConnection.getJsonFactory(), credential)
+            GoogleApiConnection.getJsonFactory(), credentials)
                 .setApplicationName(m_applicationName).build();
     }
 
@@ -179,9 +180,9 @@ public final class GoogleAnalyticsConnection {
                 (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT.getSeconds()));
             m_readTimeout = Duration.ofSeconds(model.getInt(CFG_READ_TIMEOUT,
                 (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT.getSeconds()));
-            Credential credential = m_connection.getCredential();
+            final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
             m_analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-                GoogleApiConnection.getJsonFactory(), setHttpTimeout(credential, m_connectTimeout, m_readTimeout))
+                GoogleApiConnection.getJsonFactory(), setHttpTimeout(credAdapter, m_connectTimeout, m_readTimeout))
                     .setApplicationName(m_applicationName).build();
         } catch (GeneralSecurityException | IOException e) {
             throw new InvalidSettingsException(e);

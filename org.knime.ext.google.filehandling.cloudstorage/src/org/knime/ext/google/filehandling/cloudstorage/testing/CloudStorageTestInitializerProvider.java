@@ -62,8 +62,7 @@ import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.data.GoogleApiConnection;
-
-import com.google.api.services.storage.StorageScopes;
+import org.knime.google.api.data.GoogleApiStorageScopes;
 
 /**
  * Initializer provider for cloud storage.
@@ -81,7 +80,7 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
         final GoogleApiConnection apiConnection;
         try {
             apiConnection = new GoogleApiConnection(configuration.get("email"), configuration.get("keyFilePath"),
-                    StorageScopes.DEVSTORAGE_FULL_CONTROL);
+                    GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
         } catch (GeneralSecurityException e) {
             throw new IOException(e);
         }

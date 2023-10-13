@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -71,10 +72,8 @@ import java.util.Set;
 import org.knime.filehandling.core.connections.base.BaseFileSystemProvider;
 import org.knime.filehandling.core.connections.base.attributes.BaseFileAttributes;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.services.storage.model.Bucket;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.cloud.storage.StorageException;
 
 /**
  * File system provider for {@link CloudStorageFileSystem}.
@@ -89,9 +88,9 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
     protected InputStream newInputStreamInternal(final CloudStoragePath path, final OpenOption... options)
             throws IOException {
         try {
-            return getFileSystemInternal().getClient().getObjectStream(path.getBucketName(), path.getBlobName());
-        } catch (GoogleJsonResponseException e) {
-            if (e.getStatusCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+            return getFileSystemInternal().getClient().getInputStream(path.getBucketName(), path.getBlobName());
+        } catch (StorageException e) {
+            if (e.getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
                 throw new NoSuchFileException(path.toString());
             }
             throw new IOException(e);
@@ -124,7 +123,7 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
         boolean exists = false;
 
         if (path.getBlobName() != null) {// check if exact object exists
-            exists = client.getObject(path.getBucketName(), path.getBlobName()) != null;
+            exists = client.getBlob(path.getBucketName(), path.getBlobName()) != null;
         }
 
         if (!exists) {// check if prefix and bucket exists
@@ -147,20 +146,27 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
 
         if (path.getBucketName() != null) {
             @SuppressWarnings("resource")
-            CloudStorageClient client = getFileSystemInternal().getClient();
-
+            final var client = getFileSystemInternal().getClient();
+            OffsetDateTime createTimeOffsetDateTime = null;
+            OffsetDateTime updateTimeOffsetDateTime = null;
             if (path.getBlobName() == null) {
-                Bucket bucket = client.getBucket(path.getBucketName());
-                createdAt = FileTime.fromMillis(bucket.getTimeCreated().getValue());
-                modifiedAt = FileTime.fromMillis(bucket.getUpdated().getValue());
+                final var bucket = client.getBucket(path.getBucketName());
+                createTimeOffsetDateTime = bucket.getCreateTimeOffsetDateTime();
+                updateTimeOffsetDateTime = bucket.getUpdateTimeOffsetDateTime();
             } else {
-                StorageObject object = client.getObject(path.getBucketName(), path.getBlobName());
-                if (object != null) {
-                    createdAt = FileTime.fromMillis(object.getTimeCreated().getValue());
-                    modifiedAt = FileTime.fromMillis(object.getUpdated().getValue());
-                    size = object.getSize().longValue();
+                final var blob = client.getBlob(path.getBucketName(), path.getBlobName());
+                if (blob != null) {
+                    createTimeOffsetDateTime = blob.getCreateTimeOffsetDateTime();
+                    updateTimeOffsetDateTime = blob.getUpdateTimeOffsetDateTime();
+                    size = blob.getSize();
                     objectExists = true;
                 }
+            }
+            if (createTimeOffsetDateTime != null) {
+                createdAt = FileTime.from(createTimeOffsetDateTime.toInstant());
+            }
+            if (updateTimeOffsetDateTime != null) {
+                modifiedAt = FileTime.from(updateTimeOffsetDateTime.toInstant());
             }
         }
         return new BaseFileAttributes(!path.isDirectory() && objectExists, path, modifiedAt, modifiedAt, createdAt,
@@ -182,7 +188,7 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
         }
 
         if (path.getBlobName() != null) {
-            client.deleteObject(path.getBucketName(), blobName);
+            client.deleteBlob(path.getBucketName(), blobName);
         } else {
             client.deleteBucket(path.getBucketName());
         }
@@ -200,7 +206,7 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
         CloudStorageClient client = getFileSystemInternal().getClient();
 
         if (!isDirectory(source)) {
-            client.rewriteObject(source.getBucketName(), source.getBlobName(), target.getBucketName(),
+            client.copyBlob(source.getBucketName(), source.getBlobName(), target.getBucketName(),
                     target.getBlobName());
         } else {
 
@@ -226,7 +232,7 @@ class CloudStorageFileSystemProvider extends BaseFileSystemProvider<CloudStorage
 
         final CloudStoragePath dirPath = path.toDirectoryPath();
         if (path.getBlobName() != null) {
-            client.insertObject(dirPath.getBucketName(), dirPath.getBlobName(), "");
+            client.insertBlob(dirPath.getBucketName(), dirPath.getBlobName(), "");
         } else {
             client.insertBucket(dirPath.getBucketName());
         }

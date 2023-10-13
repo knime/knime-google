@@ -64,6 +64,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
 import com.google.api.services.analytics.Analytics;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
  * A connection to the Google Sheets API.
@@ -192,8 +193,9 @@ public final class GoogleSheetsConnection {
                 m_sheets = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthSheetService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
+                final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
                 m_sheets = new Sheets.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                    m_connection.getCredential()).setApplicationName(APP_NAME).build();
+                    credAdapter).setApplicationName(APP_NAME).build();
             }
         }
         return m_sheets;
@@ -211,8 +213,9 @@ public final class GoogleSheetsConnection {
                 m_drive = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthDriveService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
+                final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
                 m_drive = new Drive.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
-                    m_connection.getCredential()).setApplicationName(APP_NAME).build();
+                    credAdapter).setApplicationName(APP_NAME).build();
             }
         }
         return m_drive;

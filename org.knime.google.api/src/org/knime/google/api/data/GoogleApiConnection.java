@@ -70,18 +70,19 @@ import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
 import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 
 /**
  * Object that represents a connection to the Google API.
  *
- * Use the {@link GoogleCredential} object returned by {@link #getCredential()} to build objects for a specific Google
+ * Use the {@link GoogleCredentials} object returned by {@link #getCredentials()} to build objects for a specific Google
  * API.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
@@ -367,7 +368,7 @@ public final class GoogleApiConnection {
         return GoogleAuthentication.getDefaultOAuthClient();
     }
 
-    private final Credential m_credential;
+    private final Credentials m_credentials;
 
     private final String m_serviceAccountEmail;
 
@@ -403,13 +404,15 @@ public final class GoogleApiConnection {
         m_serviceAccountEmail = serviceAccountEmail;
         m_keyFileLocation = keyFileLocation;
         m_scopes = scopes;
-        final GoogleCredential credential =
-            new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
-                .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
-                .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
-        m_credential = credential;
+        final var privateKey = GoogleAuthentication.loadPrivateKeyFromP12(keyFileLocation);
+        m_credentials = ServiceAccountCredentials.newBuilder()
+                .setHttpTransportFactory(() -> HTTP_TRANSPORT)
+                .setClientEmail(serviceAccountEmail)
+                .setPrivateKey(privateKey)
+                .setScopes(Arrays.asList(scopes))
+                .build();
         m_credentialLocationType = null;
-        m_oAuthCredentials = Optional.of(new ServiceAccountOAuthCredentials(credential.getServiceAccountPrivateKey(),
+        m_oAuthCredentials = Optional.of(new ServiceAccountOAuthCredentials(privateKey,
             keyFileLocation, CredentialsFileType.P12, serviceAccountEmail));
         m_credentialLocation = null;
         m_storedCredential = null;
@@ -437,10 +440,12 @@ public final class GoogleApiConnection {
             ? GoogleAuthentication.getByteStringFromFile(credentialLocation) : null;
         m_knimeGoogleScopes = knimeGoogleScopes;
         m_clientIdFile = clientIdFile;
-        m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
-            m_knimeGoogleScopes, m_clientIdFile);
-        m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
-            .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
+        final var credentials = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType,
+            m_credentialLocation, m_knimeGoogleScopes, m_clientIdFile);
+        m_credentials = credentials;
+        m_oAuthCredentials = credentials == null ? Optional.empty() : Optional
+            .of(new UserAccountOAuthCredentials(credentials.getAccessToken().getTokenValue(),
+                credentials.getRefreshToken()));
         m_keyFileLocation = null;
         m_serviceAccountEmail = null;
     }
@@ -469,14 +474,16 @@ public final class GoogleApiConnection {
         m_knimeGoogleScopes = knimeAuthScopes;
         m_clientIdFile = clientIdFile;
         if (locationType == null) {
-            final GoogleCredential credential =
-                new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
-                    .setServiceAccountId(serviceAccountEmail).setServiceAccountScopes(Arrays.asList(scopes))
-                    .setServiceAccountPrivateKeyFromP12File(new File(keyFileLocation)).build();
-            m_credential = credential;
+            final var privateKey = GoogleAuthentication.loadPrivateKeyFromP12(keyFileLocation);
+            m_credentials = ServiceAccountCredentials.newBuilder()
+                    .setHttpTransportFactory(() -> HTTP_TRANSPORT)
+                    .setClientEmail(serviceAccountEmail)
+                    .setPrivateKey(privateKey)
+                    .setScopes(Arrays.asList(scopes))
+                    .build();
             m_credentialLocation = credentialLocation;
             m_oAuthCredentials =
-                Optional.of(new ServiceAccountOAuthCredentials(credential.getServiceAccountPrivateKey(),
+                Optional.of(new ServiceAccountOAuthCredentials(privateKey,
                     keyFileLocation, CredentialsFileType.P12, serviceAccountEmail));
         } else {
             if (m_credentialLocationType.equals(GoogleAuthLocationType.NODE)
@@ -485,10 +492,12 @@ public final class GoogleApiConnection {
             } else {
                 m_credentialLocation = credentialLocation;
             }
-            m_credential = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType, m_credentialLocation,
-                m_knimeGoogleScopes, m_clientIdFile);
-            m_oAuthCredentials = m_credential == null ? Optional.empty() : Optional
-                .of(new UserAccountOAuthCredentials(m_credential.getAccessToken(), m_credential.getRefreshToken()));
+            final var credentials = GoogleAuthentication.getNoAuthCredential(m_credentialLocationType,
+                m_credentialLocation, m_knimeGoogleScopes, m_clientIdFile);
+            m_credentials = credentials;
+            m_oAuthCredentials = credentials == null ? Optional.empty() : Optional
+                .of(new UserAccountOAuthCredentials(credentials.getAccessToken().getTokenValue(),
+                    credentials.getRefreshToken()));
         }
     }
 
@@ -527,10 +536,10 @@ public final class GoogleApiConnection {
     }
 
     /**
-     * @return The {@link GoogleCredential} object used to build specific Google API objects
+     * @return The {@link GoogleCredentials} object used to build specific Google API objects
      */
-    public Credential getCredential() {
-        return m_credential;
+    public Credentials getCredentials() {
+        return m_credentials;
     }
 
     /**
