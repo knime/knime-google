@@ -14,7 +14,6 @@ Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-ClassPath: .,
  libs/api-common-2.16.0.jar,
  libs/auto-value-annotations-1.10.1.jar,
- libs/conscrypt-openjdk-uber-2.5.2.jar,
  libs/gapic-google-cloud-storage-v2-2.27.0-alpha.jar,
  libs/gax-2.33.0.jar,
  libs/gax-grpc-2.33.0.jar,

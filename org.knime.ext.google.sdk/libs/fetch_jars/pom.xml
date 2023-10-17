@@ -149,7 +149,7 @@
 							<includeScope>compile</includeScope>
 							<outputDirectory>../</outputDirectory>
 							<excludeGroupIds>
-								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework
+								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt
 							</excludeGroupIds>
 						</configuration>
 						<phase>
@@ -166,7 +166,7 @@
 							<outputDirectory>../</outputDirectory>
 							<classifier>sources</classifier>
 							<excludeGroupIds>
-								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework
+								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt
 							</excludeGroupIds>
 						</configuration>
 						<phase>
