@@ -729,6 +729,7 @@ propagated with or for interoperation with KNIME.
    
    <requires>
       <import feature="org.knime.features.cloud.core.deprecated"/>
+	  <import feature="org.knime.features.google.api"/>
    </requires>
 
    <plugin

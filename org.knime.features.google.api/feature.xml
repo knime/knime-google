@@ -751,5 +751,14 @@ propagated with or for interoperation with KNIME.
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-
+         
+    <!-- This is a fragment that needs to be installed together with
+    the arrow dependencies of bigquery. --> 
+	<plugin
+         id="org.apache.arrow.memory-unsafe"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
 </feature>

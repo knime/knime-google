@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="libs/auto-value-1.10.1.jar" sourcepath="libs/auto-value-1.10.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/flatbuffers-java-1.12.0.jar" sourcepath="libs/flatbuffers-java-1.12.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-services-bigquery-v2-rev20230520-2.0.0.jar" sourcepath="libs/google-api-services-bigquery-v2-rev20230520-2.0.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquery-2.27.0.jar" sourcepath="libs/google-cloud-bigquery-2.27.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquerystorage-2.37.2.jar" sourcepath="libs/google-cloud-bigquerystorage-2.37.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-core-1.56.1.jar" sourcepath="libs/grpc-core-1.56.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-netty-shaded-1.56.1.jar" sourcepath="libs/grpc-netty-shaded-1.56.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/json-20230227.jar" sourcepath="libs/json-20230227-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/threeten-extra-1.7.2.jar" sourcepath="libs/threeten-extra-1.7.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/api-common-2.16.0.jar" sourcepath="libs/api-common-2.16.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/auto-value-annotations-1.10.1.jar" sourcepath="libs/auto-value-annotations-1.10.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/conscrypt-openjdk-uber-2.5.2.jar" sourcepath="libs/conscrypt-openjdk-uber-2.5.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gapic-google-cloud-storage-v2-2.27.0-alpha.jar" sourcepath="libs/gapic-google-cloud-storage-v2-2.27.0-alpha-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gax-2.33.0.jar" sourcepath="libs/gax-2.33.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gax-grpc-2.33.0.jar" sourcepath="libs/gax-grpc-2.33.0-sources.jar"/>
