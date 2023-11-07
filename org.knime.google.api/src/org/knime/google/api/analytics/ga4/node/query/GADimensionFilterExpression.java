@@ -87,7 +87,7 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, LayoutGr
 
     @Signal(condition = HasMultipleItemsCondition.class)
     @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Filter criterion")
-    @Widget
+    @Widget(title = "Dimension filter")
     GADimensionFilterCriterion[] m_filters = new GADimensionFilterCriterion[0];
 
     GADimensionFilterExpression() {
