@@ -61,8 +61,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.api.drive.util.GoogleDriveConnectionInformation;
 import org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObject;
 import org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjectSpec;
@@ -73,11 +74,10 @@ import org.knime.google.api.drive.util.GoogleDriveConnectionInformationPortObjec
  */
 final class GoogleDriveConnectionNodeModel extends NodeModel {
 
-    /**
-     *
-     */
+    private static final int CREDENTIAL_INPUT_PORT = 0;
+
     GoogleDriveConnectionNodeModel() {
-        super(new PortType[]{GoogleApiConnectionPortObject.TYPE},
+        super(new PortType[]{CredentialPortObject.TYPE},
             new PortType[]{GoogleDriveConnectionInformationPortObject.G_TYPE});
     }
 
@@ -86,7 +86,8 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleDriveConnectionInformationPortObject(createSpec(inObjects[0].getSpec()))};
+        return new PortObject[]{
+            new GoogleDriveConnectionInformationPortObject(createSpec(inObjects[CREDENTIAL_INPUT_PORT].getSpec()))};
     }
 
     /**
@@ -94,7 +95,7 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec(inSpecs[0])};
+        return new PortObjectSpec[]{createSpec(inSpecs[CREDENTIAL_INPUT_PORT])};
     }
 
     @Override
@@ -129,13 +130,14 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      * @return ConnectionInformationPortObjectSpec
      * @throws InvalidSettingsException ...
      */
-    private static GoogleDriveConnectionInformationPortObjectSpec createSpec(final PortObjectSpec connection)
+    private GoogleDriveConnectionInformationPortObjectSpec createSpec(final PortObjectSpec portObjectSpec)
         throws InvalidSettingsException {
 
-        final GoogleDriveConnectionInformation connectionInformation =
-                new GoogleDriveConnectionInformation(((GoogleApiConnectionPortObjectSpec)connection).getGoogleApiConnection());
-
+        final var connectionInformation = new GoogleDriveConnectionInformation(getCredentialRef(portObjectSpec));
         return new GoogleDriveConnectionInformationPortObjectSpec(connectionInformation);
     }
 
+    static CredentialRef getCredentialRef(final PortObjectSpec portObjectSpec) {
+        return ((CredentialPortObjectSpec) portObjectSpec).toRef();
+    }
 }

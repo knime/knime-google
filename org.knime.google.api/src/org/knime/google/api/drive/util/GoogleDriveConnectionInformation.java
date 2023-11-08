@@ -48,8 +48,7 @@
  */
 package org.knime.google.api.drive.util;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.util.Objects;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -57,9 +56,13 @@ import org.knime.cloud.core.util.port.CloudConnectionInformation;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.google.api.credential.CredentialRefSerializer;
+import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler;
+
+import com.google.auth.Credentials;
 
 /**
  * Extended {@link CloudConnectionInformation} for the Google Drive Connection.
@@ -70,14 +73,13 @@ public class GoogleDriveConnectionInformation extends CloudConnectionInformation
 
     private static final long serialVersionUID = 1L;
 
-    private final GoogleApiConnection m_connection;
+    private CredentialRef m_credentialRef;
 
     /**
-     * @param connection non-null connection object.
-     *
+     * @param credentials Google Credentials
      */
-    public GoogleDriveConnectionInformation(final GoogleApiConnection connection) {
-        m_connection = CheckUtils.checkArgumentNotNull(connection);
+    public GoogleDriveConnectionInformation(final CredentialRef credentialRef) {
+        m_credentialRef = Objects.requireNonNull(credentialRef);
         setProtocol(GoogleDriveRemoteFileHandler.PROTOCOL.getName());
         setHost("google-drive-api");
         setUser("user");
@@ -86,33 +88,25 @@ public class GoogleDriveConnectionInformation extends CloudConnectionInformation
     /**
      * @param model
      * @throws InvalidSettingsException
-     * @throws IOException
-     * @throws GeneralSecurityException
      */
-    public GoogleDriveConnectionInformation(final ModelContentRO model) throws InvalidSettingsException, GeneralSecurityException, IOException {
+    public GoogleDriveConnectionInformation(final ModelContentRO model)
+            throws InvalidSettingsException {
         super(model);
-        m_connection = new GoogleApiConnection(model);
+        m_credentialRef = CredentialRefSerializer.loadRefWithLegacySupport(model);
     }
 
     @Override
     public void save(final ModelContentWO model) {
         super.save(model);
-        m_connection.save(model);
-    }
-
-    public static GoogleDriveConnectionInformation load(final ModelContentRO model) throws InvalidSettingsException {
-        try {
-            return new GoogleDriveConnectionInformation(model);
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e.getLocalizedMessage(), e);
-        }
+        CredentialRefSerializer.saveRef(m_credentialRef, model);
     }
 
     /**
-     * @return the connection
+     * @return the credentials
+     * @throws CredentialNotFoundException
      */
-    public GoogleApiConnection getGoogleConnection() {
-        return m_connection;
+    public Credentials getCredentials() throws CredentialNotFoundException {
+        return m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
     }
 
     @Override
@@ -127,13 +121,15 @@ public class GoogleDriveConnectionInformation extends CloudConnectionInformation
             return false;
         }
         final GoogleDriveConnectionInformation rhs = (GoogleDriveConnectionInformation)obj;
-
-        return new EqualsBuilder().appendSuper(super.equals(obj)).append(m_connection, rhs.m_connection).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(obj))
+                .append(m_credentialRef, rhs.m_credentialRef).isEquals();
     }
 
     @Override
     public int hashCode() {
-        final HashCodeBuilder hashBuilder = new HashCodeBuilder();
-        return hashBuilder.appendSuper(super.hashCode()).append(m_connection).toHashCode();
+        final var builder = new HashCodeBuilder();
+        return builder.appendSuper(super.hashCode())//
+            .append(m_credentialRef)//
+            .toHashCode();
     }
 }

@@ -57,7 +57,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
-import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.auth.Credentials;
 
 /**
  * Settings for the Google Drive Connector.
@@ -185,11 +186,11 @@ class GoogleDriveConnectionSettingsModel {
 
     /**
      *
-     * @param con
+     * @param credentials
      * @return The FSConnectionConfig for Google Drive
      */
-    public GoogleDriveFSConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
-        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(getWorkingDirectory(), con);
+    public GoogleDriveFSConnectionConfig toFSConnectionConfig(final Credentials credentials) {
+        final var config = new GoogleDriveFSConnectionConfig(getWorkingDirectory(), credentials);
         config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
         config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
         return config;

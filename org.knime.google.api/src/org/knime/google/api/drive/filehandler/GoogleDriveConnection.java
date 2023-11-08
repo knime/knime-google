@@ -50,8 +50,8 @@ package org.knime.google.api.drive.filehandler;
 
 import org.knime.base.filehandling.remote.files.Connection;
 import org.knime.core.node.NodeLogger;
-import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.api.drive.util.GoogleDriveConnectionInformation;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.services.drive.Drive;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -85,11 +85,9 @@ public class GoogleDriveConnection extends Connection {
     @Override
     public void open() throws Exception {
         LOGGER.debug("Creating new Google Drive service");
-        m_connectionInformation.getGoogleConnection();
-        m_connectionInformation.getGoogleConnection();
-        m_driveService = new Drive.Builder(GoogleApiConnection.getHttpTransport(),
-            GoogleApiConnection.getJsonFactory(),
-            new HttpCredentialsAdapter(m_connectionInformation.getGoogleConnection().getCredentials())
+        m_driveService = new Drive.Builder(GoogleApiUtil.getHttpTransport(),
+            GoogleApiUtil.getJsonFactory(),
+            new HttpCredentialsAdapter(m_connectionInformation.getCredentials()) // NOSONAR
             ).setApplicationName(APP_NAME).build();
     }
 

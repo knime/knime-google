@@ -50,6 +50,7 @@ package org.knime.google.api.drive.util;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.cloud.core.util.port.CloudConnectionInformation;
 import org.knime.cloud.core.util.port.CloudConnectionInformationPortObjectSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -83,11 +84,10 @@ public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnect
     /**
      * Create specs that contain connection information.
      *
-     *
+     * @param cacheId The cache id
      * @param connectionInformation The content of this port object
      */
-    public GoogleDriveConnectionInformationPortObjectSpec(
-        final GoogleDriveConnectionInformation connectionInformation) {
+    public GoogleDriveConnectionInformationPortObjectSpec(final GoogleDriveConnectionInformation connectionInformation) {
         m_connectionInformation = CheckUtils.checkArgumentNotNull(connectionInformation);
     }
 
@@ -117,7 +117,8 @@ public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnect
 
     @Override
     public int hashCode() {
-        return m_connectionInformation == null ? 0 : m_connectionInformation.hashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode())
+                .append(m_connectionInformation).hashCode();
     }
 
     @Override
@@ -127,7 +128,6 @@ public class GoogleDriveConnectionInformationPortObjectSpec extends CloudConnect
 
     @Override
     protected void load(final ModelContentRO model) throws InvalidSettingsException {
-        m_connectionInformation = GoogleDriveConnectionInformation.load(model);
+        m_connectionInformation = new GoogleDriveConnectionInformation(model);
     }
-
 }

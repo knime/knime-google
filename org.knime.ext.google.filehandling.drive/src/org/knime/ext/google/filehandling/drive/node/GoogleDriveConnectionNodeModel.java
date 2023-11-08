@@ -64,7 +64,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvider;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystemProvider;
@@ -72,9 +73,9 @@ import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.connections.FSPath;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
+
+import com.google.auth.Credentials;
 
 /**
  * Google Drive Connection node.
@@ -95,19 +96,16 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      * Creates new instance.
      */
     protected GoogleDriveConnectionNodeModel() {
-        super(new PortType[] { GoogleApiConnectionPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
+        super(new PortType[] { CredentialPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
 
         m_settings = new GoogleDriveConnectionSettingsModel();
     }
 
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObject) inObjects[0]).getGoogleApiConnection();
+        final var credentials = getCredentials(inObjects[0].getSpec());
 
-        CheckUtils.checkArgumentNotNull(apiConnection.getCredentials(),
-                "No valid Google credentials found. Please re-execute preceding authentication node.");
-
-        m_fsConnection = new GoogleDriveFSConnection(m_settings.toFSConnectionConfig(apiConnection));
+        m_fsConnection = new GoogleDriveFSConnection(m_settings.toFSConnectionConfig(credentials));
         testConnection(m_fsConnection);
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
@@ -116,11 +114,7 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        GoogleApiConnection connection = getGoogleApiConnection(inSpecs);
-        if (connection == null) {
-            throw new InvalidSettingsException("Not authenticated");
-        }
-
+        getCredentials(inSpecs[0]);
         m_fsId = FSConnectionRegistry.getInstance().getKey();
         return new PortObjectSpec[] { createSpec() };
     }
@@ -139,13 +133,13 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
         }
     }
 
-    /**
-     * @param inSpecs
-     *            port input specification.
-     * @return Google API connection.
-     */
-    private static GoogleApiConnection getGoogleApiConnection(final PortObjectSpec[] inSpecs) {
-        return ((GoogleApiConnectionPortObjectSpec) inSpecs[0]).getGoogleApiConnection();
+    private static Credentials getCredentials(final PortObjectSpec inSpec) throws InvalidSettingsException {
+        final var googleSpec = ((CredentialPortObjectSpec) inSpec);
+        final var credentialsOpt = googleSpec.getCredential(GoogleCredential.class);
+        if (credentialsOpt.isEmpty()) {
+            throw new InvalidSettingsException(GoogleCredential.NO_AUTH_ERROR);
+        }
+        return credentialsOpt.get().getCredentials();
     }
 
     private FileSystemPortObjectSpec createSpec() {
@@ -158,10 +152,11 @@ final class GoogleDriveConnectionNodeModel extends NodeModel {
      * @param inputSpec
      *            port object input specification.
      * @return file system connection.
+     * @throws InvalidSettingsException
      */
     public static GoogleDriveFSConnection createConnection(final GoogleDriveConnectionSettingsModel settings,
-            final PortObjectSpec[] inputSpec) {
-        return new GoogleDriveFSConnection(settings.toFSConnectionConfig(getGoogleApiConnection(inputSpec)));
+            final PortObjectSpec[] inputSpec) throws InvalidSettingsException {
+        return new GoogleDriveFSConnection(settings.toFSConnectionConfig(getCredentials(inputSpec[0])));
     }
 
     @Override

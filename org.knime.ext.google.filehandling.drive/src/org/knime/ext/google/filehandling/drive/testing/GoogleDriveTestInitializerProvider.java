@@ -49,19 +49,18 @@
 package org.knime.ext.google.filehandling.drive.testing;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSDescriptorProvider;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveHelper;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
-import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
+import org.knime.google.api.scopes.GoogleApiStorageScopes;
 
 /**
  * Initializer provider for Google Drive.
@@ -72,23 +71,18 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
 
     @SuppressWarnings("resource")
     @Override
-    public GoogleDriveTestInitializer setup(final Map<String, String> configuration) throws IOException {
-        validateConfiguration(configuration);
+    public GoogleDriveTestInitializer setup(final Map<String, String> config) throws IOException {
+        validateConfiguration(config);
 
-        final GoogleApiConnection apiConnection;
-        try {
-            apiConnection = new GoogleApiConnection(configuration.get("email"), //
-                    configuration.get("keyFilePath"), //
-                    GoogleDriveHelper.DRIVE_AUTH_SCOPE);
-        } catch (GeneralSecurityException e) {
-            throw ExceptionUtil.wrapAsIOException(e);
-        }
+        final var keyFilePath = Paths.get(config.get("keyFilePath"));
+        final var creds = ServiceAccountCredentialsUtil.loadFromP12(config.get("email"), keyFilePath)//
+                .createScoped(GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
 
-        final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"), "/");
+        final String workingDir = generateRandomizedWorkingDir(config.get("workingDirPrefix"), "/");
 
-        GoogleDriveFSConnectionConfig config = new GoogleDriveFSConnectionConfig(workingDir, apiConnection);
+        final var fsConfig = new GoogleDriveFSConnectionConfig(workingDir, creds);
 
-        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(config));
+        return new GoogleDriveTestInitializer(new GoogleDriveFSConnection(fsConfig));
     }
 
     private static void validateConfiguration(final Map<String, String> configuration) {

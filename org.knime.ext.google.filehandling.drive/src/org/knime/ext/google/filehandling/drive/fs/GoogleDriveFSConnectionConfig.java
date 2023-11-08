@@ -51,7 +51,8 @@ package org.knime.ext.google.filehandling.drive.fs;
 import java.time.Duration;
 
 import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig;
-import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.auth.Credentials;
 
 /**
  * Google Drive connection configuration implementation.
@@ -80,17 +81,17 @@ public class GoogleDriveFSConnectionConfig extends BaseFSConnectionConfig {
     private Duration m_readTimeOut = Duration
             .ofSeconds(DEFAULT_READ_TIMEOUT_SECONDS);
 
-    private final GoogleApiConnection m_apiConnection;
+    private final Credentials m_credentials;
 
 
     /**
      *
      * @param workingDirectory
-     * @param apiConnection
+     * @param credentials
      */
-    public GoogleDriveFSConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
+    public GoogleDriveFSConnectionConfig(final String workingDirectory, final Credentials credentials) {
         super(workingDirectory, true);
-        m_apiConnection = apiConnection;
+        m_credentials = credentials;
     }
 
     /**
@@ -124,10 +125,9 @@ public class GoogleDriveFSConnectionConfig extends BaseFSConnectionConfig {
     }
 
     /**
-     * @return the apiConnection
+     * @return the credentials
      */
-    public GoogleApiConnection getApiConnection() {
-        return m_apiConnection;
+    public Credentials getCredentials() {
+        return m_credentials;
     }
-
 }
