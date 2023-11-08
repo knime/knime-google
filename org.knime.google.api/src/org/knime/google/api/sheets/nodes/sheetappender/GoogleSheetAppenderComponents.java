@@ -51,7 +51,6 @@ package org.knime.google.api.sheets.nodes.sheetappender;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -116,20 +115,15 @@ final class GoogleSheetAppenderComponents extends AbstractGoogleSheetWriterCompo
 
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+
         super.loadSettingsFrom(settings, specs);
-        m_spreadsheetChoser.loadSettingsFrom(settings, specs);
 
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google Sheets Connection");
         }
+
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
-        try {
-            m_spreadsheetChoser.loadSettingsFrom(settings, specs,
-                connectionSpec.getGoogleSheetsConnection().getDriveService(),
-                connectionSpec.getGoogleSheetsConnection().getSheetsService());
-        } catch (IOException e) {
-            throw new NotConfigurableException("Invalid Google Sheets Connection");
-        }
+        m_spreadsheetChoser.loadSettingsFrom(settings, specs, connectionSpec.getGoogleSheetsConnection());
         m_sheetName.loadSettingsFrom(settings, specs);
         m_createUniqueSheetName.loadSettingsFrom(settings, specs);
     }

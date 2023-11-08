@@ -72,6 +72,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.SwingWorkerWithContext;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 
 import com.google.api.services.sheets.v4.model.Sheet;
 
@@ -204,9 +205,10 @@ final public class DialogComponentGoogleSpreadsheetAndSheetChooser extends Dialo
      *
      * @return A list of available spreadsheet names and the corresponding spreadsheet id
      * @throws IOException If the spreadsheets cannot be listed
+     * @throws CredentialNotFoundException
      */
-    private List<String> getSheets(final String spreadsheetId) throws IOException {
-        List<Sheet> sheets = getSheetService().spreadsheets().get(spreadsheetId).execute().getSheets();
+    private List<String> getSheets(final String spreadsheetId) throws IOException, CredentialNotFoundException {
+        List<Sheet> sheets = getConnection().getSheetsService().spreadsheets().get(spreadsheetId).execute().getSheets();
         List<String> sheetNames = new ArrayList<String>();
         sheets.forEach((sheet) -> sheetNames.add(sheet.getProperties().getTitle()));
         return sheetNames;

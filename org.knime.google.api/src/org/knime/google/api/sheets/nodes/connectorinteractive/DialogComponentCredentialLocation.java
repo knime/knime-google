@@ -46,7 +46,7 @@
  * History
  *   Sep 27, 2017 (oole): created
  */
-package org.knime.google.api.util;
+package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -76,8 +76,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
-import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
+import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 /**
  * Dialog component for Google Authentication nodes.
@@ -91,7 +90,7 @@ import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocat
  * @author Ole Ostergaard, KNIME GmbH
  */
 @Deprecated
-public class DialogComponentCredentialLocation extends DialogComponent implements ActionListener {
+class DialogComponentCredentialLocation extends DialogComponent implements ActionListener {
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);
 
@@ -144,7 +143,7 @@ public class DialogComponentCredentialLocation extends DialogComponent implement
      * @param removeInstanceAction The action that performs removal of instance credentials (the ones that are stored in
      *            the node
      */
-    public DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID,
+    DialogComponentCredentialLocation(final SettingsModelCredentialLocation model, final String historyID,
         final Action removeInstanceAction) {
         super(model);
         m_userIdField = new JTextField(20);

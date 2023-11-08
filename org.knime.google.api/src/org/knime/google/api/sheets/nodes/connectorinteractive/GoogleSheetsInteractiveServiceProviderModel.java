@@ -123,8 +123,7 @@ final class GoogleSheetsInteractiveServiceProviderModel extends NodeModel {
             throw new InvalidSettingsException("Not authenticated. Authenticate in the node dialog.");
         }
         try {
-            return new GoogleSheetsConnectionPortObjectSpec(
-                new GoogleSheetsConnection( m_settings.getCredentialLocation(),
+            return new GoogleSheetsConnectionPortObjectSpec(new GoogleSheetsConnection(m_settings.getCredentialLocation(),
                     m_settings.getUserString(), m_settings.getLocationType()));
         } catch (IOException e) {
             throw new InvalidSettingsException("(Re-)Authenticate using the settings dialog.\n");

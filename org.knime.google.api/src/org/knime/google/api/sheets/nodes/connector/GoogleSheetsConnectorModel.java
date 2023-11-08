@@ -60,8 +60,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
 
@@ -72,13 +74,13 @@ import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
  */
 public class GoogleSheetsConnectorModel extends NodeModel {
 
-    private GoogleSheetsConnectorConfiguration m_config = new GoogleSheetsConnectorConfiguration();
+    private static final int CREDENTIAL_INPUT_PORT = 0;
 
     /**
      * Constructor of the node model.
      */
     protected GoogleSheetsConnectorModel() {
-        super(new PortType[]{GoogleApiConnectionPortObject.TYPE},
+        super(new PortType[]{CredentialPortObject.TYPE},
                 new PortType[]{GoogleSheetsConnectionPortObject.TYPE});
     }
 
@@ -87,7 +89,7 @@ public class GoogleSheetsConnectorModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec(inObjects[0].getSpec()))};
+        return new PortObject[]{new GoogleSheetsConnectionPortObject(createSpec(inObjects[CREDENTIAL_INPUT_PORT].getSpec()))};
     }
 
     /**
@@ -95,7 +97,7 @@ public class GoogleSheetsConnectorModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec(inSpecs[0])};
+        return new PortObjectSpec[]{createSpec(inSpecs[CREDENTIAL_INPUT_PORT])};
     }
 
     /**
@@ -135,8 +137,6 @@ public class GoogleSheetsConnectorModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        GoogleSheetsConnectorConfiguration config = new GoogleSheetsConnectorConfiguration();
-        m_config = config;
     }
 
     /**
@@ -144,18 +144,19 @@ public class GoogleSheetsConnectorModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // not used
+        // nothing to do
     }
 
     /**
      * @return The spec of this node, containing the GoogleApiConnection for the current configuration
      * @throws InvalidSettingsException If the current configuration is not valid
      */
-    private GoogleSheetsConnectionPortObjectSpec createSpec(final PortObjectSpec inSpec)
-            throws InvalidSettingsException {
-        return new GoogleSheetsConnectionPortObjectSpec(
-                m_config.createGoogleSheetsConnection(((GoogleApiConnectionPortObjectSpec)inSpec)
-                        .getGoogleApiConnection()));
+    private static GoogleSheetsConnectionPortObjectSpec createSpec(final PortObjectSpec inSpec) {
+        final var credentialRef = getCredentialRef(inSpec);
+        return new GoogleSheetsConnectionPortObjectSpec(new GoogleSheetsConnection(credentialRef));
     }
 
+    static CredentialRef getCredentialRef(final PortObjectSpec portObjectSpec) {
+        return ((CredentialPortObjectSpec) portObjectSpec).toRef();
+    }
 }

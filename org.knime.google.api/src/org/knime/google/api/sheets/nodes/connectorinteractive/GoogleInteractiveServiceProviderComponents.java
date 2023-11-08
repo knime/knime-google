@@ -79,9 +79,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
-import org.knime.google.api.util.DialogComponentCredentialLocation;
-import org.knime.google.api.util.SettingsModelCredentialLocation;
-import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
+import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.services.sheets.v4.Sheets;
 

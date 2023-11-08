@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.util.DesktopUtil;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.util.ValueInputOption;
@@ -159,9 +160,10 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * @param sheetName The sheet name
      * @return The spreadsheet id of the created spreadsheet.
      * @throws IOException If the spreadsheet could not be created
+     * @throws CredentialNotFoundException
      */
     private static String createSpreadsheet(final GoogleSheetsConnection sheetConnection, final String spreadsheetName,
-        final String sheetName) throws IOException {
+        final String sheetName) throws IOException, CredentialNotFoundException {
         Spreadsheet spreadsheet = new Spreadsheet();
         SpreadsheetProperties spreadsheetProperties = new SpreadsheetProperties();
         spreadsheetProperties.setTitle(spreadsheetName);
@@ -196,11 +198,12 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * @param exec The nodes execution monitor
      * @throws IOException If the spreadsheet cannot be written
      * @throws CanceledExecutionException If execution is canceled
+     * @throws CredentialNotFoundException
      */
     public static void writeSpreadsheet(final GoogleSheetsConnection sheetConnection, final BufferedDataTable dataTable,
         final boolean writeRaw, final String spreadsheetId, final String sheetName,final boolean addRowHeader,
         final boolean addColumnHeader, final boolean handleMissingValues, final String missingValuePattern,
-        final ExecutionContext exec) throws IOException, CanceledExecutionException {
+        final ExecutionContext exec) throws IOException, CanceledExecutionException, CredentialNotFoundException {
         final String valueInputOption = writeRaw ? ValueInputOption.RAW.name() : ValueInputOption.USER_ENTERED.name();
 
         ValueRange body =

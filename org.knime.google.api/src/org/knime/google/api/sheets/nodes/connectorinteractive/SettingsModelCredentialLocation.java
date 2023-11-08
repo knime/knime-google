@@ -46,7 +46,7 @@
  * History
  *   Sep 27, 2017 (oole): created
  */
-package org.knime.google.api.util;
+package org.knime.google.api.sheets.nodes.connectorinteractive;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -88,7 +88,7 @@ public class SettingsModelCredentialLocation extends SettingsModelString {
      * @param configName The identifier the values are stored in in the {@link NodeSettings} object.
      * @param defaultLocation The default location for the custom credential storage
      */
-    public SettingsModelCredentialLocation(final String configName, final String defaultLocation) {
+    SettingsModelCredentialLocation(final String configName, final String defaultLocation) {
         super(configName, defaultLocation);
         m_userId = "sheetUser";
         m_type = CredentialLocationType.MEMORY;

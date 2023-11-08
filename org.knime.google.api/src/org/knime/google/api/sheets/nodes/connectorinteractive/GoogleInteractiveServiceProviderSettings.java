@@ -62,8 +62,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.FileUtil;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
-import org.knime.google.api.util.SettingsModelCredentialLocation;
-import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
+import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 /**
  * Settings for the {@link GoogleSheetsInteractiveServiceProviderModel}.

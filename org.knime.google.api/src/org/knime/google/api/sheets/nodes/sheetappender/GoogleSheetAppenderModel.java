@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
@@ -138,9 +139,10 @@ public class GoogleSheetAppenderModel extends NodeModel {
      * @param spreadsheetName The spreadsheet name
      * @param sheetName The sheet name
      * @throws IOException If the spreadsheet could not be created
+     * @throws CredentialNotFoundException
      */
     private static String createSheet(final GoogleSheetsConnection sheetConnection, final String spreadsheetId,
-        final String sheetName, final boolean createUniqueSheetName) throws IOException {
+        final String sheetName, final boolean createUniqueSheetName) throws IOException, CredentialNotFoundException {
         Spreadsheet spreadsheet = sheetConnection.getSheetsService().spreadsheets().get(spreadsheetId).execute();
 
         List<Sheet> existingSheets = spreadsheet.getSheets();

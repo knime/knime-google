@@ -50,7 +50,6 @@ package org.knime.google.api.sheets.data;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -58,8 +57,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.google.api.credential.CredentialRefSerializer;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
+import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.services.analytics.Analytics;
 import com.google.api.services.drive.Drive;
@@ -90,7 +93,7 @@ public final class GoogleSheetsConnection {
 
     private static final String CFG_CREDENTIAL_LOCATION_TYPE = "credentialLocationType";
 
-    private GoogleApiConnection m_connection;
+    private CredentialRef m_credentialRef;
 
     private Sheets m_sheets;
 
@@ -108,13 +111,13 @@ public final class GoogleSheetsConnection {
 
 
     /**
-     * Creates a new {@link GoogleSheetsConnection} using the given {@link GoogleApiConnection}.
+     * Creates a new {@link GoogleSheetsConnection} using the given {@link CredentialRef}.
      *
-     * @param connection The used GoogleApiConnection (not null)
+     * @param credentialRef The {@link CredentialRef} to obtain the credential from.
      */
-    public GoogleSheetsConnection(final GoogleApiConnection connection) {
-        m_connection = CheckUtils.checkArgumentNotNull(connection);
+    public GoogleSheetsConnection(final CredentialRef credentialRef) {
         m_interactiveAuth = false;
+        m_credentialRef = CheckUtils.checkArgumentNotNull(credentialRef);
     }
 
     /**
@@ -128,17 +131,9 @@ public final class GoogleSheetsConnection {
      */
     public GoogleSheetsConnection(final String credentialPath, final String user,
         final CredentialLocationType credentialLocationType) throws IOException{
-        this(null, user, credentialLocationType, true, credentialPath);
-        if (m_credentialLocationType.equals(CredentialLocationType.DEFAULT)) {
-            m_storedCredentials = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(credentialPath);
-        }
-    }
 
-    private GoogleSheetsConnection(final GoogleApiConnection connection, final String user,
-        final CredentialLocationType credentialLocationType, final boolean interactiveAuth,
-        final String credentialPath) throws IOException{
+        m_interactiveAuth = true;
         m_user = user;
-        m_interactiveAuth = interactiveAuth;
         m_credentialLocationType = credentialLocationType;
         if (m_credentialLocationType.equals(CredentialLocationType.DEFAULT)) {
             m_storedCredentials = GoogleSheetsInteractiveAuthentication.getByteStringFromFile(credentialPath);
@@ -153,31 +148,31 @@ public final class GoogleSheetsConnection {
      * @throws InvalidSettingsException If the model was invalid
      */
     public GoogleSheetsConnection(final ModelContentRO model) throws InvalidSettingsException {
-        try {
-            m_interactiveAuth = model.getBoolean(CFG_INTERACTIVE);
-            if (m_interactiveAuth) {
+        m_interactiveAuth = model.getBoolean(CFG_INTERACTIVE);
+        if (m_interactiveAuth) {
+            try {
                 m_credentialPath = model.getString(CFG_CREDENTIALPATH);
                 m_user = model.getString(CFG_USER);
                 m_storedCredentials = model.getString(CFG_STORED_CREDENTIAL);
                 if (model.containsKey(CFG_IN_NODE_CREDENTIAL)) {
                     boolean inNodeCredentials = model.getBoolean(CFG_IN_NODE_CREDENTIAL);
                     m_credentialLocationType =
-                            inNodeCredentials ? CredentialLocationType.DEFAULT : CredentialLocationType.CUSTOM;
+                        inNodeCredentials ? CredentialLocationType.DEFAULT : CredentialLocationType.CUSTOM;
 
                 } else {
                     m_credentialLocationType =
-                            CredentialLocationType.valueOf(model.getString(CFG_CREDENTIAL_LOCATION_TYPE));
+                        CredentialLocationType.valueOf(model.getString(CFG_CREDENTIAL_LOCATION_TYPE));
                 }
 
                 if (m_credentialLocationType.equals(CredentialLocationType.DEFAULT)
-                        && !((new File(m_credentialPath)).exists())) {
+                    && !((new File(m_credentialPath)).exists())) {
                     m_credentialPath = GoogleSheetsInteractiveAuthentication.getTempCredentialPath(m_storedCredentials);
                 }
-            } else {
-                m_connection = new GoogleApiConnection(model);
+            } catch (IOException e) {
+                throw new InvalidSettingsException(e);
             }
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e);
+        } else {
+            m_credentialRef = CredentialRefSerializer.loadRefWithLegacySupport(model);
         }
     }
 
@@ -186,15 +181,17 @@ public final class GoogleSheetsConnection {
      *
      * @return The {@link Sheets} object used to communicate with the Google Sheets API
      * @throws IOException If the credentials cannot be read
+     * @throws CredentialNotFoundException
      */
-    public Sheets getSheetsService() throws IOException {
+    public Sheets getSheetsService() throws IOException, CredentialNotFoundException {
         if (m_sheets == null) {
             if (m_interactiveAuth) {
                 m_sheets = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthSheetService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
-                m_sheets = new Sheets.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
+                final var creds = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+                final var credAdapter = new HttpCredentialsAdapter(creds);
+                m_sheets = new Sheets.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
                     credAdapter).setApplicationName(APP_NAME).build();
             }
         }
@@ -206,15 +203,17 @@ public final class GoogleSheetsConnection {
      *
      * @return The Google Drive service associated with this Google Sheet connection
      * @throws IOException If the credentials cannot be read
+     * @throws CredentialNotFoundException
      */
-    public Drive getDriveService() throws IOException {
+    public Drive getDriveService() throws IOException, CredentialNotFoundException {
         if (m_drive == null) {
             if (m_interactiveAuth) {
                 m_drive = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthDriveService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
-                m_drive = new Drive.Builder(GoogleApiConnection.getHttpTransport(), GoogleApiConnection.getJsonFactory(),
+                final var creds = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+                final var credAdapter = new HttpCredentialsAdapter(creds);
+                m_drive = new Drive.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
                     credAdapter).setApplicationName(APP_NAME).build();
             }
         }
@@ -228,7 +227,7 @@ public final class GoogleSheetsConnection {
     public void save(final ModelContentWO model) {
         model.addBoolean(CFG_INTERACTIVE, m_interactiveAuth);
         if (!m_interactiveAuth) {
-            m_connection.save(model);
+            CredentialRefSerializer.saveRef(m_credentialRef, model);
         } else {
             model.addString(CFG_USER, m_user);
             model.addString(CFG_CREDENTIALPATH, m_credentialPath);
@@ -250,7 +249,7 @@ public final class GoogleSheetsConnection {
         }
         GoogleSheetsConnection con = (GoogleSheetsConnection)obj;
         EqualsBuilder eb = new EqualsBuilder();
-        eb.append(m_connection, con.m_connection);
+        eb.append(m_credentialRef, con.m_credentialRef);
         return eb.isEquals();
     }
 
@@ -260,7 +259,7 @@ public final class GoogleSheetsConnection {
     @Override
     public int hashCode() {
         HashCodeBuilder hcb = new HashCodeBuilder();
-        hcb.append(m_connection);
+        hcb.append(m_credentialRef);
         return hcb.hashCode();
     }
 
@@ -270,9 +269,7 @@ public final class GoogleSheetsConnection {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (!m_interactiveAuth) {
-            sb.append(m_connection.toString() + "\n");
-        } else {
+        if (m_interactiveAuth) {
             sb.append("Interactive Authentication\n");
             sb.append("\n");
             sb.append("Application name:\n" + APP_NAME + "\n");

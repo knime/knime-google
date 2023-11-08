@@ -51,7 +51,6 @@ package org.knime.google.api.sheets.nodes.reader;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
 
 import javax.swing.JPanel;
 
@@ -122,17 +121,13 @@ final class GoogleSheetsReaderComponents {
 
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
+
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google Sheets Connection");
         }
+
         GoogleSheetsConnectionPortObjectSpec connectionSpec = (GoogleSheetsConnectionPortObjectSpec)specs[0];
-        try {
-            m_spreadsheetChooser.loadSettingsFrom(settings, specs,
-                connectionSpec.getGoogleSheetsConnection().getDriveService(),
-                connectionSpec.getGoogleSheetsConnection().getSheetsService());
-        } catch (IOException e) {
-            throw new NotConfigurableException("Invalid Google Sheets Connection");
-        }
+        m_spreadsheetChooser.loadSettingsFrom(settings, specs, connectionSpec.getGoogleSheetsConnection());
 
         m_hasColumnHeaderComponent.loadSettingsFrom(settings, specs);
         m_hasRowHeaderComponent.loadSettingsFrom(settings, specs);

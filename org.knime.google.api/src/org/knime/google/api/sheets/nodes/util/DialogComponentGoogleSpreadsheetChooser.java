@@ -86,11 +86,11 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.DesktopUtil;
 import org.knime.core.util.SwingWorkerWithContext;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 
-import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import com.google.api.services.sheets.v4.Sheets;
 
 /**
  * A {@link DialogComponent} that allows to choose from existing Google spreadsheets.
@@ -107,12 +107,12 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
 
     private JButton m_openSpreadsheetInBrowserButton;
 
-    private Drive m_driveService;
-    private Sheets m_sheetsService;
+    private GoogleSheetsConnection m_sheetsConnection;
 
     private String m_spreadsheetId = "";
 
     private final JPanel m_panelWithSelectOrProgressBar = new JPanel(new GridBagLayout());
+
 
     private JTextField createTextField() {
         final JTextField textField = new JTextField(20);
@@ -243,25 +243,14 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
      *
      * @param settings The settings to load from
      * @param specs The specs to load from
-     * @param driveService The drive service
-     * @param sheetService The sheet service
+     * @param sheetsConnection The {@link GoogleSheetsConnection} to use.
      * @throws NotConfigurableException If the settings are invalid
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs, final Drive driveService, final Sheets sheetService) throws NotConfigurableException {
-        setServices(driveService, sheetService);
-        super.loadSettingsFrom(settings, specs);
-    }
+    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs,
+        final GoogleSheetsConnection sheetsConnection) throws NotConfigurableException {
 
-    /**
-     * Set the Google Drive and Google Sheet service that should be used in the dialog component.
-     * This function should be called during leadSettings in the node dialog.
-     *
-     * @param driveService The Google Drive service that should be used for the dialog component
-     * @param sheetService The Google Sheet service that should be used for the dialog component
-     */
-    private void setServices(final Drive driveService, final Sheets sheetService) {
-        m_driveService = driveService;
-        m_sheetsService = sheetService;
+        m_sheetsConnection = sheetsConnection;
+        super.loadSettingsFrom(settings, specs);
     }
 
     @Override
@@ -331,8 +320,9 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
 
             @Override
             protected URL doInBackgroundWithContext() throws Exception {
+
                 String spreadsheetUrl =
-                    m_sheetsService.spreadsheets().get(m_spreadsheetId).execute().getSpreadsheetUrl();
+                        m_sheetsConnection.getSheetsService().spreadsheets().get(m_spreadsheetId).execute().getSpreadsheetUrl();
                 return new URL(spreadsheetUrl);
             }
 
@@ -448,12 +438,13 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
      *
      * @return A list of available spreadsheet names and the corresponding spreadsheet id
      * @throws IOException If the spreadsheets cannot be listed
+     * @throws CredentialNotFoundException
      */
-    private File[] getSpreadsheets() throws IOException {
+    private File[] getSpreadsheets() throws IOException, CredentialNotFoundException {
 
         final List<File> spreadsheets = new ArrayList<File>();
         final com.google.api.services.drive.Drive.Files.List request =
-                m_driveService.files().list()
+                m_sheetsConnection.getDriveService().files().list()
                 .setQ("mimeType='application/vnd.google-apps.spreadsheet'");
 
         do {
@@ -533,8 +524,8 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
      *
      * @return The sheet service used in the dialog component
      */
-    protected Sheets getSheetService() {
-        return m_sheetsService;
+    protected GoogleSheetsConnection getConnection() {
+        return m_sheetsConnection;
     }
 
     /**

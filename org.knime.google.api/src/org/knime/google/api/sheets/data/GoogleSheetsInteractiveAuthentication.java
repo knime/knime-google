@@ -50,8 +50,6 @@ package org.knime.google.api.sheets.data;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -60,19 +58,15 @@ import java.util.List;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
 import org.knime.core.util.FileUtil;
-import org.knime.google.api.nodes.authconnector.auth.CustomAuthorizationCodeInstalledApp;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
+import org.knime.google.api.clientsecrets.ClientSecrets;
+import org.knime.google.api.nodes.authenticator.CustomAuthorizationCodeInstalledApp;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
-import org.knime.google.api.util.SettingsModelCredentialLocation.CredentialLocationType;
+import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
@@ -89,15 +83,6 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  */
 @Deprecated
 public class GoogleSheetsInteractiveAuthentication {
-
-    /** The name of the client secret JSON file **/
-    private static final String CLIENT_SECRET = "knime_client_secret_deprecated.json";
-
-    /** Global instance of the JSON factory. */
-    private static final JsonFactory JSON_FACTORY = new GsonFactory();
-
-    /** Global instance of the HTTP transport. */
-    private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     /** The name of the credentials file created by the google API */
     public static final String STORAGE_CREDENTIAL = "StoredCredential";
@@ -138,7 +123,7 @@ public class GoogleSheetsInteractiveAuthentication {
         final String credentialPath, final String user) throws IOException {
         DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
         Credential credential = getAuthorizationCodeFlow(credentialDataStoreFactory).loadCredential(user);
-        Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+        Drive service = new Drive.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(), credential)
                 .setApplicationName(GoogleSheetsConnection.APP_NAME)
                 .build();
         return service;
@@ -186,7 +171,7 @@ public class GoogleSheetsInteractiveAuthentication {
     }
 
     private static Sheets getSheetService(final Credential credential) {
-        return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+        return new Sheets.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(), credential)
                 .setApplicationName(GoogleSheetsConnection.APP_NAME).build();
     }
 
@@ -210,15 +195,12 @@ public class GoogleSheetsInteractiveAuthentication {
             return service;
     }
 
-    private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(final DataStoreFactory credentialDataStoreFactory) throws IOException {
-        // Load client secrets.
-        try (final InputStream in = GoogleAuthentication.class.getResourceAsStream(CLIENT_SECRET)) {
-            final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-            return new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                    .setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
-        } catch (IOException e) {
-            throw e;
-        }
+    private static GoogleAuthorizationCodeFlow
+        getAuthorizationCodeFlow(final DataStoreFactory credentialDataStoreFactory) throws IOException {
+
+        final var clientSecrets = ClientSecrets.loadDeprecatedDefaultClientSecrets();
+        return new GoogleAuthorizationCodeFlow.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
+            clientSecrets, SCOPES).setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
     }
 
     /**
