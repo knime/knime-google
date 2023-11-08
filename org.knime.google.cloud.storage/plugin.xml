@@ -29,4 +29,23 @@
       </portType>
    </extension>
    
+   <extension
+         point="org.knime.google.api.knimeGoogleAuthScope">
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageFullAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadAuthScope">
+      </KnimeGoogleAuthScope>
+      <KnimeGoogleAuthScope
+            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadWriteAuthScope">
+      </KnimeGoogleAuthScope>
+   </extension>
+   
 </plugin>

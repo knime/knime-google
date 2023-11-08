@@ -43,12 +43,11 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.cloud.storage.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
 /**
@@ -56,27 +55,25 @@ import org.knime.google.api.scopes.KnimeGoogleAuthScope;
  *
  * @author Sascha Wolke, KNIME GmbH
  */
-public class KnimeCloudStorageFullAuthScope implements KnimeGoogleAuthScope {
+public class KnimeCloudStorageReadAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "CloudStorageFull";
+    private static final String SCOPE_ID = "CloudStorageRead";
 
-    private static final String SCOPE_NAME = "Google Cloud Storage (full)";
+    private static final String SCOPE_NAME = "Google Cloud Storage (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_WRITE);
+        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY);
 
     private static final String DESC = "Scopes required for the Google Cloud Storage nodes.";
 
-    private static final KnimeCloudStorageFullAuthScope INSTANCE = new KnimeCloudStorageFullAuthScope();
+    private static final KnimeCloudStorageReadAuthScope INSTANCE = new KnimeCloudStorageReadAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeCloudStorageFullAuthScope getInstance() {
+    public static KnimeCloudStorageReadAuthScope getInstance() {
         return INSTANCE;
     }
 

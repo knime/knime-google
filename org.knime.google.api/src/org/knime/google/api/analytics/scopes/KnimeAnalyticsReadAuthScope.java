@@ -44,43 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 2, 2018 (oole): created
+ *   Oct 10, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.analytics.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
-import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.analytics.AnalyticsScopes;
 
 /**
- * Scope for the Google Sheets nodes.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeSheetReadWriteAuthScope implements KnimeGoogleAuthScope {
+public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleSheetsReadWrite";
+    private static final String SCOPE_ID = "GoogleAnalyticsRead";
 
-    private static final String SCOPE_NAME = "Google Sheets Connection (Read/Write)";
+    private static final String SCOPE_NAME = "Google Analytics Connection (Read)";
 
-    private static final List<String> SCOPE_LIST = Arrays.asList(
-        SheetsScopes.SPREADSHEETS,
-        DriveScopes.DRIVE_READONLY);
+    private static final List<String> SCOPE_LIST = Arrays.asList(AnalyticsScopes.ANALYTICS_READONLY);
 
-    private static final String DESC = "Scopes required for the Google Sheets nodes.";
+    private static final String DESC = "Scopes required for the Google Analytics Connection.";
 
-    private static final KnimeSheetReadWriteAuthScope INSTANCE = new KnimeSheetReadWriteAuthScope();
+    private static final KnimeAnalyticsReadAuthScope INSTANCE = new KnimeAnalyticsReadAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeSheetReadWriteAuthScope getInstance() {
+    public static KnimeAnalyticsReadAuthScope getInstance() {
         return INSTANCE;
     }
 

@@ -60,7 +60,6 @@ import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
 
 /**
  * Initializer provider for Google Drive.
@@ -69,6 +68,8 @@ import org.knime.google.api.scopes.GoogleApiStorageScopes;
  */
 public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializerProvider {
 
+    private static final String DEVSTORAGE_FULL_CONTROL = "https://www.googleapis.com/auth/devstorage.full_control";
+
     @SuppressWarnings("resource")
     @Override
     public GoogleDriveTestInitializer setup(final Map<String, String> config) throws IOException {
@@ -76,7 +77,7 @@ public class GoogleDriveTestInitializerProvider extends DefaultFSTestInitializer
 
         final var keyFilePath = Paths.get(config.get("keyFilePath"));
         final var creds = ServiceAccountCredentialsUtil.loadFromP12(config.get("email"), keyFilePath)//
-                .createScoped(GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
+                .createScoped(DEVSTORAGE_FULL_CONTROL);
 
         final String workingDir = generateRandomizedWorkingDir(config.get("workingDirPrefix"), "/");
 

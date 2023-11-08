@@ -44,40 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2018 (oole): created
+ *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.drive.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
-import com.google.api.services.analytics.AnalyticsScopes;
+import com.google.api.services.drive.DriveScopes;
 
 /**
+ * Scope for the Google Drive Connection.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
+public class KnimeDriveReadAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleAnalyticsRead";
+    private static final String SCOPE_ID = "GoogleDriveRead";
 
-    private static final String SCOPE_NAME = "Google Analytics Connection (Read)";
+    private static final String SCOPE_NAME = "Google Drive connection (Read)";
 
-    private static final List<String> SCOPE_LIST = Arrays.asList(AnalyticsScopes.ANALYTICS_READONLY);
+    private static final List<String> SCOPE_LIST = Arrays.asList(
+        DriveScopes.DRIVE_READONLY);
 
-    private static final String DESC = "Scopes required for the Google Analytics Connection.";
+    private static final String DESC = "Scopes required for the Google Drive Connection.";
 
-    private static final KnimeAnalyticsReadAuthScope INSTANCE = new KnimeAnalyticsReadAuthScope();
+    private static volatile KnimeDriveReadAuthScope instance = new KnimeDriveReadAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeAnalyticsReadAuthScope getInstance() {
-        return INSTANCE;
+    public static KnimeDriveReadAuthScope getInstance() {
+        return instance;
     }
 
     /**
@@ -103,6 +105,7 @@ public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
     public List<String> getAuthScopes() {
         return SCOPE_LIST;
     }
+
 
     /**
      * {@inheritDoc}

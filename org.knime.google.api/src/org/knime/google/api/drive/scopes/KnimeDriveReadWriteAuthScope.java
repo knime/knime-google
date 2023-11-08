@@ -46,7 +46,7 @@
  * History
  *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.drive.scope;
+package org.knime.google.api.drive.scopes;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,25 +60,25 @@ import com.google.api.services.drive.DriveScopes;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeDriveReadAuthScope implements KnimeGoogleAuthScope {
+public class KnimeDriveReadWriteAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleDriveRead";
+    private static final String SCOPE_ID = "GoogleDriveReadWrite";
 
-    private static final String SCOPE_NAME = "Google Drive connection (Read)";
+    private static final String SCOPE_NAME = "Google Drive connection (Read/Write)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        DriveScopes.DRIVE_READONLY);
+        DriveScopes.DRIVE);
 
     private static final String DESC = "Scopes required for the Google Drive Connection.";
 
-    private static volatile KnimeDriveReadAuthScope instance = new KnimeDriveReadAuthScope();
+    private static volatile KnimeDriveReadWriteAuthScope instance = new KnimeDriveReadWriteAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeDriveReadAuthScope getInstance() {
+    public static KnimeDriveReadWriteAuthScope getInstance() {
         return instance;
     }
 
@@ -89,6 +89,7 @@ public class KnimeDriveReadAuthScope implements KnimeGoogleAuthScope {
     public String getScopeID() {
         return SCOPE_ID;
     }
+
 
     /**
      * {@inheritDoc}

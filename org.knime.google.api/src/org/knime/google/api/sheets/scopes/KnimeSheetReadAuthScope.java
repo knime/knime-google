@@ -42,39 +42,45 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.sheets.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
+import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.sheets.v4.SheetsScopes;
+
 /**
- * Scope for the Google Cloud nodes.
+ * Scope for the Google Sheets nodes.
  *
- * @author Sascha Wolke, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeCloudPlatformAuthScope implements KnimeGoogleAuthScope {
+public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "CloudPlatform";
+    private static final String SCOPE_ID = "GoogleSheetsRead";
 
-    private static final String SCOPE_NAME = "Google Cloud Platform";
+    private static final String SCOPE_NAME = "Google Sheets Connection (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        GoogleApiStorageScopes.CLOUD_PLATFORM);
+        SheetsScopes.SPREADSHEETS_READONLY,
+        DriveScopes.DRIVE_READONLY);
 
-    private static final String DESC = "Scopes required for the Google Cloud nodes.";
+    private static final String DESC = "Scopes required for the Google Sheets nodes.";
 
-    private static final KnimeCloudPlatformAuthScope INSTANCE = new KnimeCloudPlatformAuthScope();
+    private static final KnimeSheetReadAuthScope INSTANCE = new KnimeSheetReadAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeCloudPlatformAuthScope getInstance() {
+    public static KnimeSheetReadAuthScope getInstance() {
         return INSTANCE;
     }
 
@@ -110,8 +116,4 @@ public class KnimeCloudPlatformAuthScope implements KnimeGoogleAuthScope {
         return DESC;
     }
 
-    @Override
-    public boolean isEnabledForOAuth() {
-        return false;
-    }
 }

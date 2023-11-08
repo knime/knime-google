@@ -42,49 +42,40 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Oct 10, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.cloud.storage.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
-import com.google.api.services.analytics.AnalyticsScopes;
-
 /**
+ * Scope for the Google Cloud nodes.
  *
- * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Sascha Wolke, KNIME GmbH
  */
-public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
+public class KnimeCloudPlatformAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleAnalyticsFull";
+    private static final String SCOPE_ID = "CloudPlatform";
 
-    private static final String SCOPE_NAME = "Google Analytics Connection (Full)";
+    private static final String SCOPE_NAME = "Google Cloud Platform";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        AnalyticsScopes.ANALYTICS,
-        AnalyticsScopes.ANALYTICS_READONLY,
-        AnalyticsScopes.ANALYTICS_EDIT,
-        AnalyticsScopes.ANALYTICS_MANAGE_USERS);
+        GoogleApiStorageScopes.CLOUD_PLATFORM);
 
-    private static final String DESC = "Scopes required for the Google Analytics Connection.";
+    private static final String DESC = "Scopes required for the Google Cloud nodes.";
 
-    private static final KnimeAnalyticsFullAuthScope INSTANCE = new KnimeAnalyticsFullAuthScope();
-
+    private static final KnimeCloudPlatformAuthScope INSTANCE = new KnimeCloudPlatformAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeAnalyticsFullAuthScope getInstance() {
+    public static KnimeCloudPlatformAuthScope getInstance() {
         return INSTANCE;
     }
-
 
     /**
      * {@inheritDoc}
@@ -120,11 +111,6 @@ public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
 
     @Override
     public boolean isEnabledForOAuth() {
-        /*
-         * We do not need the Analytics.Full scope for the Google Analytics node set.
-         * Also we are not verified by Google to use the Analytics.Full scope,
-         * so we should not prompt authentication requests with it.
-         */
         return false;
     }
 }

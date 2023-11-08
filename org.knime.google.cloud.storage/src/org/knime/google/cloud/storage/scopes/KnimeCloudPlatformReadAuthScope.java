@@ -42,44 +42,39 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.drive.scope;
+package org.knime.google.cloud.storage.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
-import com.google.api.services.drive.DriveScopes;
-
 /**
- * Scope for the Google Drive Connection.
+ * Scope for the Google Sheets nodes.
  *
- * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Sascha Wolke, KNIME GmbH
  */
-public class KnimeDriveReadWriteAuthScope implements KnimeGoogleAuthScope {
+public class KnimeCloudPlatformReadAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleDriveReadWrite";
+    private static final String SCOPE_ID = "CloudPlatformRead";
 
-    private static final String SCOPE_NAME = "Google Drive connection (Read/Write)";
+    private static final String SCOPE_NAME = "Google Cloud Platform (Read)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        DriveScopes.DRIVE);
+        GoogleApiStorageScopes.CLOUD_PLATFORM_READ_ONLY);
 
-    private static final String DESC = "Scopes required for the Google Drive Connection.";
+    private static final String DESC = "Scopes required for the Google Cloud nodes.";
 
-    private static volatile KnimeDriveReadWriteAuthScope instance = new KnimeDriveReadWriteAuthScope();
+    private static final KnimeCloudPlatformReadAuthScope INSTANCE = new KnimeCloudPlatformReadAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeDriveReadWriteAuthScope getInstance() {
-        return instance;
+    public static KnimeCloudPlatformReadAuthScope getInstance() {
+        return INSTANCE;
     }
 
     /**
@@ -89,7 +84,6 @@ public class KnimeDriveReadWriteAuthScope implements KnimeGoogleAuthScope {
     public String getScopeID() {
         return SCOPE_ID;
     }
-
 
     /**
      * {@inheritDoc}
@@ -107,13 +101,17 @@ public class KnimeDriveReadWriteAuthScope implements KnimeGoogleAuthScope {
         return SCOPE_LIST;
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
         return DESC;
+    }
+
+    @Override
+    public boolean isEnabledForOAuth() {
+        return false;
     }
 
 }

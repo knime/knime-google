@@ -43,38 +43,39 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.cloud.storage.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
 /**
- * Scope for the Google Sheets nodes.
+ * Scope for the Google Cloud Storage nodes.
  *
  * @author Sascha Wolke, KNIME GmbH
  */
-public class KnimeCloudPlatformReadAuthScope implements KnimeGoogleAuthScope {
+public class KnimeCloudStorageFullAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "CloudPlatformRead";
+    private static final String SCOPE_ID = "CloudStorageFull";
 
-    private static final String SCOPE_NAME = "Google Cloud Platform (Read)";
+    private static final String SCOPE_NAME = "Google Cloud Storage (full)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        GoogleApiStorageScopes.CLOUD_PLATFORM_READ_ONLY);
+        GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL,
+        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY,
+        GoogleApiStorageScopes.DEVSTORAGE_READ_WRITE);
 
-    private static final String DESC = "Scopes required for the Google Cloud nodes.";
+    private static final String DESC = "Scopes required for the Google Cloud Storage nodes.";
 
-    private static final KnimeCloudPlatformReadAuthScope INSTANCE = new KnimeCloudPlatformReadAuthScope();
+    private static final KnimeCloudStorageFullAuthScope INSTANCE = new KnimeCloudStorageFullAuthScope();
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeCloudPlatformReadAuthScope getInstance() {
+    public static KnimeCloudStorageFullAuthScope getInstance() {
         return INSTANCE;
     }
 
@@ -114,5 +115,4 @@ public class KnimeCloudPlatformReadAuthScope implements KnimeGoogleAuthScope {
     public boolean isEnabledForOAuth() {
         return false;
     }
-
 }

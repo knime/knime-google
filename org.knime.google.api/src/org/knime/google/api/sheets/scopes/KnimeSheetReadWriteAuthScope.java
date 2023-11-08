@@ -44,33 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 20, 2023 (Zkriya Rakhimberdiyev, Redfield SE): created
+ *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.scopes;
+package org.knime.google.api.sheets.scopes;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.knime.google.api.scopes.KnimeGoogleAuthScope;
+
+import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.sheets.v4.SheetsScopes;
 
 /**
- * String constants for google Storage Scopes https://cloud.google.com/storage/docs/authentication#oauth-scopes
+ * Scope for the Google Sheets nodes.
  *
- * @author Zkriya Rakhimberdiyev, Redfield SE
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public final class GoogleApiStorageScopes {
+public class KnimeSheetReadWriteAuthScope implements KnimeGoogleAuthScope {
 
-    private GoogleApiStorageScopes() {
+    private static final String SCOPE_ID = "GoogleSheetsReadWrite";
+
+    private static final String SCOPE_NAME = "Google Sheets Connection (Read/Write)";
+
+    private static final List<String> SCOPE_LIST = Arrays.asList(
+        SheetsScopes.SPREADSHEETS,
+        DriveScopes.DRIVE_READONLY);
+
+    private static final String DESC = "Scopes required for the Google Sheets nodes.";
+
+    private static final KnimeSheetReadWriteAuthScope INSTANCE = new KnimeSheetReadWriteAuthScope();
+
+    /**
+     * Returns the only instance of this class.
+     *
+     * @return the only instance
+     */
+    public static KnimeSheetReadWriteAuthScope getInstance() {
+        return INSTANCE;
     }
 
-    /** View and manage data across all Google Cloud services. */
-    public static final String CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getScopeID() {
+        return SCOPE_ID;
+    }
 
-    /** View your data across Google Cloud Platform services. */
-    public static final String CLOUD_PLATFORM_READ_ONLY = "https://www.googleapis.com/auth/cloud-platform.read-only";
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAuthScopeName() {
+        return SCOPE_NAME;
+    }
 
-    /** Manage your data and permissions in Google Cloud Storage. */
-    public static final String DEVSTORAGE_FULL_CONTROL = "https://www.googleapis.com/auth/devstorage.full_control";
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getAuthScopes() {
+        return SCOPE_LIST;
+    }
 
-    /** View your data in Google Cloud Storage. */
-    public static final String DEVSTORAGE_READ_ONLY = "https://www.googleapis.com/auth/devstorage.read_only";
-
-    /** Manage your data in Google Cloud Storage. */
-    public static final String DEVSTORAGE_READ_WRITE = "https://www.googleapis.com/auth/devstorage.read_write";
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return DESC;
+    }
 
 }

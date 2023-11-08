@@ -62,7 +62,6 @@ import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
 import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
 
 /**
  * Initializer provider for cloud storage.
@@ -70,6 +69,8 @@ import org.knime.google.api.scopes.GoogleApiStorageScopes;
  * @author Alexander Bondaletov
  */
 public class CloudStorageTestInitializerProvider extends DefaultFSTestInitializerProvider {
+
+    private static final String DEVSTORAGE_FULL_CONTROL = "https://www.googleapis.com/auth/devstorage.full_control";
 
     @SuppressWarnings("resource")
     @Override
@@ -79,7 +80,7 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
 
         final var keyFilePath = Paths.get(config.get("keyFilePath"));
         final var creds = ServiceAccountCredentialsUtil.loadFromP12(config.get("email"), keyFilePath)//
-                .createScoped(GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
+                .createScoped(DEVSTORAGE_FULL_CONTROL);
 
         final String workingDir = generateRandomizedWorkingDir(config.get("workingDirPrefix"),
                 CloudStorageFileSystem.PATH_SEPARATOR);

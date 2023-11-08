@@ -44,45 +44,47 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 2, 2018 (oole): created
+ *   Oct 10, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.analytics.scopes;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
-import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.analytics.AnalyticsScopes;
 
 /**
- * Scope for the Google Sheets nodes.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
+public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "GoogleSheetsRead";
+    private static final String SCOPE_ID = "GoogleAnalyticsFull";
 
-    private static final String SCOPE_NAME = "Google Sheets Connection (Read)";
+    private static final String SCOPE_NAME = "Google Analytics Connection (Full)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
-        SheetsScopes.SPREADSHEETS_READONLY,
-        DriveScopes.DRIVE_READONLY);
+        AnalyticsScopes.ANALYTICS,
+        AnalyticsScopes.ANALYTICS_READONLY,
+        AnalyticsScopes.ANALYTICS_EDIT,
+        AnalyticsScopes.ANALYTICS_MANAGE_USERS);
 
-    private static final String DESC = "Scopes required for the Google Sheets nodes.";
+    private static final String DESC = "Scopes required for the Google Analytics Connection.";
 
-    private static final KnimeSheetReadAuthScope INSTANCE = new KnimeSheetReadAuthScope();
+    private static final KnimeAnalyticsFullAuthScope INSTANCE = new KnimeAnalyticsFullAuthScope();
+
 
     /**
      * Returns the only instance of this class.
      *
      * @return the only instance
      */
-    public static KnimeSheetReadAuthScope getInstance() {
+    public static KnimeAnalyticsFullAuthScope getInstance() {
         return INSTANCE;
     }
+
 
     /**
      * {@inheritDoc}
@@ -116,4 +118,13 @@ public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
         return DESC;
     }
 
+    @Override
+    public boolean isEnabledForOAuth() {
+        /*
+         * We do not need the Analytics.Full scope for the Google Analytics node set.
+         * Also we are not verified by Google to use the Analytics.Full scope,
+         * so we should not prompt authentication requests with it.
+         */
+        return false;
+    }
 }

@@ -140,37 +140,22 @@
    <extension
          point="org.knime.google.api.knimeGoogleAuthScope">
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsFullAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.analytics.scopes.KnimeAnalyticsFullAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeAnalyticsReadAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.analytics.scopes.KnimeAnalyticsReadAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.sheets.scopes.KnimeSheetReadAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformReadAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.sheets.scopes.KnimeSheetReadWriteAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageFullAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scopes.KnimeDriveReadAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadAuthScope">
-      </KnimeGoogleAuthScope>
-      <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadWriteAuthScope">
-      </KnimeGoogleAuthScope>
-      <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadAuthScope">
-      </KnimeGoogleAuthScope>
-      <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeSheetReadWriteAuthScope">
-      </KnimeGoogleAuthScope>
-      <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadAuthScope">
-      </KnimeGoogleAuthScope>
-      <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.drive.scope.KnimeDriveReadWriteAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.api.drive.scopes.KnimeDriveReadWriteAuthScope">
       </KnimeGoogleAuthScope>
    </extension>
    <extension
