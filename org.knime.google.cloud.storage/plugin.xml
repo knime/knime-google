@@ -32,19 +32,19 @@
    <extension
          point="org.knime.google.api.knimeGoogleAuthScope">
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.cloud.storage.scopes.KnimeCloudPlatformAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudPlatformReadAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.cloud.storage.scopes.KnimeCloudPlatformReadAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageFullAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.cloud.storage.scopes.KnimeCloudStorageFullAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.cloud.storage.scopes.KnimeCloudStorageReadAuthScope">
       </KnimeGoogleAuthScope>
       <KnimeGoogleAuthScope
-            KnimeGoogleAuthScope="org.knime.google.api.nodes.authconnector.util.scope.KnimeCloudStorageReadWriteAuthScope">
+            KnimeGoogleAuthScope="org.knime.google.cloud.storage.scopes.KnimeCloudStorageReadWriteAuthScope">
       </KnimeGoogleAuthScope>
    </extension>
    
