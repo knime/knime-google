@@ -46,7 +46,7 @@
  * History
  *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util;
+package org.knime.google.api.scopes;
 
 import java.util.ArrayList;
 import java.util.List;

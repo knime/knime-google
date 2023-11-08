@@ -44,70 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 2, 2018 (oole): created
+ *   Sep 20, 2023 (Zkriya Rakhimberdiyev, Redfield SE): created
  */
-package org.knime.google.api.nodes.authconnector.util;
-
-import java.util.List;
+package org.knime.google.api.scopes;
 
 /**
- * Interface that must be implemented for an {@link KnimeGoogleAuthScopeRegistry} extension.
+ * String constants for google Storage Scopes https://cloud.google.com/storage/docs/authentication#oauth-scopes
  *
- * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Zkriya Rakhimberdiyev, Redfield SE
  */
-public interface KnimeGoogleAuthScope {
+public final class GoogleApiStorageScopes {
 
-     /**
-      * Returns the {@link KnimeGoogleAuthScope}'s ID.
-      *
-      * @return The {@link KnimeGoogleAuthScope}'s ID
-      */
-     public String getScopeID();
-
-    /**
-     * Returns the name of this KnimeGoogleAuthScope.
-     *
-     * @return The name of` this KnimeGoogleAuthScope
-     */
-    public String getAuthScopeName();
-
-    /**
-     * Returns a list of scopes needed for this KnimeGoogleAuthScope.
-     * (e.g. {@code com.google.api.services.analytics.AnalyticsScopes.ANALYTICS})
-     *
-     * @return A list of scopes for this KnimeGoogleAuthScope
-     */
-    public List<String> getAuthScopes();
-
-    /**
-     * Returns the description of this KnimeGoogleAuthScope.
-     *
-     * @return The description of this KnimeGoogleAuthScope
-     */
-    public String getDescription();
-
-    /**
-     * Returns whether this scope is enabled for OAuth authentication.
-     *
-     * @return Whether this scope is enabled for OAuth authentication
-     */
-    public default boolean isEnabledForOAuth() {
-        return true;
+    private GoogleApiStorageScopes() {
     }
 
-    /**
-     * Returns whether this scope is enabled for Service Account authentication.
-     *
-     * @return Whether this scope is enabled for Service Account authentication
-     */
-    public default boolean isEnabledForServiceAccount() {
-        return true;
-    }
+    /** View and manage data across all Google Cloud services. */
+    public static final String CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
 
-    /**
-     * @return Whether this scope requires providing custom OAuth Client ID
-     */
-    public default boolean isCustomClientIdRequired() {
-        return false;
-    }
+    /** View your data across Google Cloud Platform services. */
+    public static final String CLOUD_PLATFORM_READ_ONLY = "https://www.googleapis.com/auth/cloud-platform.read-only";
+
+    /** Manage your data and permissions in Google Cloud Storage. */
+    public static final String DEVSTORAGE_FULL_CONTROL = "https://www.googleapis.com/auth/devstorage.full_control";
+
+    /** View your data in Google Cloud Storage. */
+    public static final String DEVSTORAGE_READ_ONLY = "https://www.googleapis.com/auth/devstorage.read_only";
+
+    /** Manage your data in Google Cloud Storage. */
+    public static final String DEVSTORAGE_READ_WRITE = "https://www.googleapis.com/auth/devstorage.read_write";
+
 }

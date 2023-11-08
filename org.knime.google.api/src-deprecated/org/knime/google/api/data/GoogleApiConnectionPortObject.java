@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -41,79 +40,67 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   Mar 19, 2014 ("Patrick Winter"): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.data;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
-import org.knime.google.api.scopes.KnimeGoogleAuthScope;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.credentials.base.Credential;
+import org.knime.credentials.base.CredentialPortObject;
 
 /**
- * Scope for the Google Cloud Storage nodes.
+ * Legacy port object containing a {@link Credential} for the Google API.
  *
- * @author Sascha Wolke, KNIME GmbH
+ * <p>
+ * NOTE: This class only exists for backwards compatibility reasons. It is there so we can load partially executed
+ * worflows that were created prior to AP 5.2. In those AP versions, this class was not a {@link CredentialPortObject},
+ * instead it saved a GoogleApiConnection that contained the node settings of the authenticator node.
+ * </p>
+ *
+ * @author Bjoern Lohrmann, KNIME GmbH
+ * @deprecated Since 5.2. Use {@link CredentialPortObject} instead.
  */
-public class KnimeCloudStorageFullAuthScope implements KnimeGoogleAuthScope {
-
-    private static final String SCOPE_ID = "CloudStorageFull";
-
-    private static final String SCOPE_NAME = "Google Cloud Storage (full)";
-
-    private static final List<String> SCOPE_LIST = Arrays.asList(
-        GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_WRITE);
-
-    private static final String DESC = "Scopes required for the Google Cloud Storage nodes.";
-
-    private static final KnimeCloudStorageFullAuthScope INSTANCE = new KnimeCloudStorageFullAuthScope();
+@Deprecated(since = "5.2")
+public final class GoogleApiConnectionPortObject extends CredentialPortObject {
 
     /**
-     * Returns the only instance of this class.
-     *
-     * @return the only instance
+     * Port type.
      */
-    public static KnimeCloudStorageFullAuthScope getInstance() {
-        return INSTANCE;
+    @SuppressWarnings("hiding")
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class);
+
+    /**
+     * Optional port type.
+     */
+    @SuppressWarnings("hiding")
+    public static final PortType TYPE_OPTIONAL =
+        PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class, true);
+
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<GoogleApiConnectionPortObject> {}
+
+    /**
+     * Constructor used by the framework.
+     */
+    public GoogleApiConnectionPortObject() {
+        // used by the framework
     }
 
     /**
-     * {@inheritDoc}
+     * @param spec The specification of this port object.
      */
-    @Override
-    public String getScopeID() {
-        return SCOPE_ID;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getAuthScopeName() {
-        return SCOPE_NAME;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<String> getAuthScopes() {
-        return SCOPE_LIST;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return DESC;
+    public GoogleApiConnectionPortObject(final GoogleApiConnectionPortObjectSpec spec) {
+        super(spec);
     }
 
     @Override
-    public boolean isEnabledForOAuth() {
-        return false;
+    public GoogleApiConnectionPortObjectSpec getSpec() {
+        return (GoogleApiConnectionPortObjectSpec) super.getSpec();
     }
 }

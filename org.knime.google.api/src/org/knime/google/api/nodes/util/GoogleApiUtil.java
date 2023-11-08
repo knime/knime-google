@@ -44,48 +44,40 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2017 (oole): created
+ *   Oct 30, 2023 (bjoern): created
  */
-package org.knime.google.api.nodes.authconnector.auth;
+package org.knime.google.api.nodes.util;
 
-import java.awt.Desktop;
-import java.io.IOException;
-
-import org.knime.core.util.DesktopUtil;
-
-import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
-import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.java6.auth.oauth2.VerificationCodeReceiver;
-import com.google.api.client.util.Preconditions;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 
 /**
- * Custom {@link AuthorizationCodeInstalledApp} to fix GTK3/2 problems. Uses {@link DesktopUtil#browse(java.net.URL)}
- * instead of {@link Desktop#isDesktopSupported()} which crashes when launched without the GTK version being set to 2.
+ * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
  *
- * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Bjoern Lohrmann, KNIME GmbH
  */
-public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
+public final class GoogleApiUtil {
 
-    /**
-     * Constructor.
-     *
-     * @param flow authorization code flow
-     * @param receiver verification code receiver
-     */
-    public CustomAuthorizationCodeInstalledApp(final AuthorizationCodeFlow flow,
-        final VerificationCodeReceiver receiver) {
-        super(flow, receiver);
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+
+    private static final JsonFactory JSON_FACTORY = new GsonFactory();
+
+    private GoogleApiUtil() {
     }
 
     /**
-     * {@inheritDoc}
+     * @return the {@link HttpTransport} instance that should be used by all nodes.
      */
-    @Override
-    protected void onAuthorization(final AuthorizationCodeRequestUrl authorizationUrl) throws IOException {
-        Preconditions.checkNotNull(authorizationUrl);
-        // Attempt to open it in the browser
-        DesktopUtil.browse(authorizationUrl.toURL());
+    public static HttpTransport getHttpTransport() {
+        return HTTP_TRANSPORT;
     }
 
+    /**
+     * @return the {@link JsonFactory} instance that should be used by all nodes.
+     */
+    public static JsonFactory getJsonFactory() {
+        return JSON_FACTORY;
+    }
 }

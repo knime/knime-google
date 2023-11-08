@@ -47,108 +47,61 @@
  */
 package org.knime.google.api.data;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import java.util.UUID;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.port.AbstractSimplePortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.core.node.util.ViewUtils;
+import org.knime.credentials.base.CredentialCache;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
 
 /**
- * Port object containing a {@link GoogleApiConnection}.
+ * Specification for the {@link GoogleApiConnectionPortObject}.
+ *
+ * <p>
+ * NOTE: This class only exists for backwards compatibility reasons. It is there so we can load partially executed
+ * worflows that were created prior to AP 5.2. In those AP versions, this class was not a {@link CredentialPortObject},
+ * instead it saved a GoogleApiConnection that contained the node settings of the authenticator node.
+ * </p>
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated Since 5.2. Use {@link CredentialPortObject} instead.
  */
-public final class GoogleApiConnectionPortObject extends AbstractSimplePortObject {
-    public static final class Serializer extends AbstractSimplePortObjectSerializer<GoogleApiConnectionPortObject> {}
-
-    private GoogleApiConnectionPortObjectSpec m_spec;
+@Deprecated(since = "5.2")
+public final class GoogleApiConnectionPortObjectSpec extends CredentialPortObjectSpec {
 
     /**
-     * The type of this port.
+     * @noreference This class is not intended to be referenced by clients.
      */
-    public static final PortType TYPE =
-        PortTypeRegistry.getInstance().getPortType(GoogleApiConnectionPortObject.class);
+    public static final class Serializer
+        extends AbstractSimplePortObjectSpecSerializer<GoogleApiConnectionPortObjectSpec> { }
 
     /**
-     * Constructor used by the framework.
+     * Don't use, framework constructor.
      */
-    public GoogleApiConnectionPortObject() {
-        // used by the framework
+    public GoogleApiConnectionPortObjectSpec() {
+        this(null);
     }
 
     /**
-     * @param spec The specification of this port object.
+     * Creates a new instance.
+     *
+     * @param cacheId The cache id. May be null, if currently unknown.
      */
-    public GoogleApiConnectionPortObject(final GoogleApiConnectionPortObjectSpec spec) {
-        m_spec = spec;
+    public GoogleApiConnectionPortObjectSpec(final UUID cacheId) {
+        super(GoogleCredential.TYPE, cacheId);
     }
 
-    /**
-     * @return The contained GoogleApiConnection object
-     */
-    public GoogleApiConnection getGoogleApiConnection() {
-        return m_spec.getGoogleApiConnection();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String getSummary() {
-        return m_spec.getGoogleApiConnection().toString();
-    }
+    public void load(final ModelContentRO model) throws InvalidSettingsException {
+        super.load(model);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObjectSpec getSpec() {
-        return m_spec;
+        LegacyGoogleApiConnectionLoader.restoreAsCredential(model)//
+            .map(CredentialCache::store)//
+            .ifPresent(uuid -> {
+                setCacheId(uuid);
+                setCredentialType(GoogleCredential.TYPE);
+            });
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void save(final ModelContentWO model, final ExecutionMonitor exec) throws CanceledExecutionException {
-        // nothing to do
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void load(final ModelContentRO model, final PortObjectSpec spec, final ExecutionMonitor exec)
-            throws InvalidSettingsException, CanceledExecutionException {
-        m_spec = (GoogleApiConnectionPortObjectSpec)spec;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JComponent[] getViews() {
-        String text;
-        if (getGoogleApiConnection() != null) {
-            text = "<html>" + getGoogleApiConnection().toString().replace("\n", "<br>") + "</html>";
-        } else {
-            text = "No connection available";
-        }
-        JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
-        f.setName("Connection");
-        final JScrollPane scrollPane = new JScrollPane(f);
-        scrollPane.setName("Connection");
-        return new JComponent[]{scrollPane};
-    }
-
 }

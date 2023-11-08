@@ -42,78 +42,72 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 2, 2018 (oole): created
  */
-package org.knime.google.api.nodes.authconnector.util.scope;
+package org.knime.google.api.scopes;
 
-import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.scopes.GoogleApiStorageScopes;
-import org.knime.google.api.scopes.KnimeGoogleAuthScope;
-
 /**
- * Scope for the Google Cloud Storage nodes.
+ * Interface that must be implemented for an {@link KnimeGoogleAuthScopeRegistry} extension.
  *
- * @author Sascha Wolke, KNIME GmbH
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class KnimeCloudStorageFullAuthScope implements KnimeGoogleAuthScope {
+public interface KnimeGoogleAuthScope {
 
-    private static final String SCOPE_ID = "CloudStorageFull";
-
-    private static final String SCOPE_NAME = "Google Cloud Storage (full)";
-
-    private static final List<String> SCOPE_LIST = Arrays.asList(
-        GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_ONLY,
-        GoogleApiStorageScopes.DEVSTORAGE_READ_WRITE);
-
-    private static final String DESC = "Scopes required for the Google Cloud Storage nodes.";
-
-    private static final KnimeCloudStorageFullAuthScope INSTANCE = new KnimeCloudStorageFullAuthScope();
+     /**
+      * Returns the {@link KnimeGoogleAuthScope}'s ID.
+      *
+      * @return The {@link KnimeGoogleAuthScope}'s ID
+      */
+     public String getScopeID();
 
     /**
-     * Returns the only instance of this class.
+     * Returns the name of this KnimeGoogleAuthScope.
      *
-     * @return the only instance
+     * @return The name of` this KnimeGoogleAuthScope
      */
-    public static KnimeCloudStorageFullAuthScope getInstance() {
-        return INSTANCE;
+    public String getAuthScopeName();
+
+    /**
+     * Returns a list of scopes needed for this KnimeGoogleAuthScope.
+     * (e.g. {@code com.google.api.services.analytics.AnalyticsScopes.ANALYTICS})
+     *
+     * @return A list of scopes for this KnimeGoogleAuthScope
+     */
+    public List<String> getAuthScopes();
+
+    /**
+     * Returns the description of this KnimeGoogleAuthScope.
+     *
+     * @return The description of this KnimeGoogleAuthScope
+     */
+    public String getDescription();
+
+    /**
+     * Returns whether this scope is enabled for OAuth authentication.
+     *
+     * @return Whether this scope is enabled for OAuth authentication
+     */
+    public default boolean isEnabledForOAuth() {
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns whether this scope is enabled for Service Account authentication.
+     *
+     * @return Whether this scope is enabled for Service Account authentication
      */
-    @Override
-    public String getScopeID() {
-        return SCOPE_ID;
+    public default boolean isEnabledForServiceAccount() {
+        return true;
     }
 
     /**
-     * {@inheritDoc}
+     * @return Whether this scope requires providing custom OAuth Client ID
      */
-    @Override
-    public String getAuthScopeName() {
-        return SCOPE_NAME;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<String> getAuthScopes() {
-        return SCOPE_LIST;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return DESC;
-    }
-
-    @Override
-    public boolean isEnabledForOAuth() {
+    public default boolean isCustomClientIdRequired() {
         return false;
     }
 }

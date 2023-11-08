@@ -112,7 +112,7 @@
       <portType
             color="#4386f7"
             hidden="true"
-            name="Google API"
+            name="Credential (Google)"
             objectClass="org.knime.google.api.data.GoogleApiConnectionPortObject"
             objectSerializer="org.knime.google.api.data.GoogleApiConnectionPortObject$Serializer"
             specClass="org.knime.google.api.data.GoogleApiConnectionPortObjectSpec"
@@ -177,5 +177,13 @@
       <RemoteFileHandler
             RemoteFileHandler="org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler">
       </RemoteFileHandler>
+   </extension>
+   <extension point="org.knime.credentials.base.CredentialType">
+      <credentialType
+            credentialClass="org.knime.google.api.credential.GoogleCredential"
+            credentialSerializerClass="org.knime.google.api.credential.GoogleCredential$Serializer"
+            id="knime.GoogleCredential"
+            name="Google">
+      </credentialType>
    </extension>
 </plugin>

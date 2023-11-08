@@ -48,8 +48,8 @@ package org.knime.google.api.nodes.authconnector.util.scope;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.google.api.data.GoogleApiStorageScopes;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
+import org.knime.google.api.scopes.GoogleApiStorageScopes;
+import org.knime.google.api.scopes.KnimeGoogleAuthScope;
 
 /**
  * Scope for the Google Sheets nodes.

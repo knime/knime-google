@@ -44,75 +44,65 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 8, 2018 (oole): created
+ *   Nov 7, 2023 (bjoern): created
  */
-package org.knime.google.api.nodes.authconnector.auth;
+package org.knime.google.api.nodes.util;
 
-import org.knime.core.node.util.ButtonGroupEnumInterface;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.util.Objects;
+
+import org.apache.commons.lang3.text.StrSubstitutor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.util.FileUtil;
 
 /**
- * Enum describing the location of credentials for the Google authentication.
+ * Utility class for use in the Google nodes. It provides a method to resolve a location (file path, knime:// URL or
+ * otherwise) to a local file path. It also supports substitution of Java system properties.
  *
- * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Bjoern Lohrmann, KNIME GmbH
  */
-public enum GoogleAuthLocationType implements ButtonGroupEnumInterface {
-        /** Memory credential location, the default **/
-        MEMORY("Memory (authentication key kept in memory)",
-            "The authentication credentials will be kept in memory; they are discarded when exiting KNIME."),
-        /** In-Memory credential location, is not actually default anymore **/
-        NODE("Node (authentication key saved as part of node instance)",
-            "The authentication credentials will be stored in the node settings."),
-        /** Custom **/
-        FILESYSTEM("Custom (authentication saved in separate file)", "Specify a credential location");
+public final class PathUtil {
 
-    private String m_toolTip;
-
-    private String m_text;
-
-    private GoogleAuthLocationType(final String text, final String toolTip) {
-        m_text = text;
-        m_toolTip = toolTip;
+    private PathUtil() {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return m_text;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getActionCommand() {
-        return name();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTip() {
-        return m_toolTip;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDefault() {
-        return this.equals(MEMORY);
-    }
-
-    /**
-     * Returns the {@link GoogleAuthLocationType} for the action command.
+     * Resolves a "location", i.e. a file path, knime:// URL, or otherwise) to a local file path. It also supports
+     * substitution of Java system properties.
      *
-     * @param actionCommand the action command
-     * @return the @link {@link GoogleAuthLocationType} for the action command
+     * @param location The location to resolve.
+     * @return the resolved local path.
+     * @throws InvalidSettingsException when the location does not resolve to a local path, e.g. a http:// URL or a
+     *             non-local knime:// URL was provided.
+     *
      */
-    public static GoogleAuthLocationType get(final String actionCommand) {
-        return valueOf(actionCommand);
+    public static Path resolveToLocalPath(final String location) throws InvalidSettingsException {
+        @SuppressWarnings("deprecation")
+        final var withSubstitutions = StrSubstitutor.replaceSystemProperties(location);
+
+        final var errorMessageBuilder = new StringBuilder()//
+            .append("Cannot access location: ")//
+            .append(withSubstitutions);
+
+        if (!Objects.equals(location, withSubstitutions)) {
+            errorMessageBuilder.append(" (substituted from ")//
+                .append(location);
+        }
+
+        final Path resolvedLocalPath;
+        try {
+            resolvedLocalPath = FileUtil.resolveToPath(FileUtil.toURL(withSubstitutions));
+        } catch (InvalidPathException | IOException | URISyntaxException e) {
+            throw new InvalidSettingsException(errorMessageBuilder.toString(), e);
+        }
+
+        if (resolvedLocalPath == null) {
+            throw new InvalidSettingsException(errorMessageBuilder.toString());
+        } else {
+            return resolvedLocalPath;
+        }
     }
 }

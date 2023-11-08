@@ -44,33 +44,44 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 20, 2023 (Zkriya Rakhimberdiyev, Redfield SE): created
+ *   Aug 31, 2017 (oole): created
  */
-package org.knime.google.api.data;
+package org.knime.google.api.nodes.authenticator;
+
+import java.awt.Desktop;
+import java.io.IOException;
+
+import org.knime.core.util.DesktopUtil;
+
+import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
+import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.java6.auth.oauth2.VerificationCodeReceiver;
+import com.google.api.client.util.Preconditions;
 
 /**
- * Google Storage Scopes https://cloud.google.com/storage/docs/authentication#oauth-scopes
+ * Custom {@link AuthorizationCodeInstalledApp} to fix GTK3/2 problems. Uses {@link DesktopUtil#browse(java.net.URL)}
+ * instead of {@link Desktop#isDesktopSupported()} which crashes when launched without the GTK version being set to 2.
  *
- * @author Zkriya Rakhimberdiyev, Redfield SE
+ * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public final class GoogleApiStorageScopes {
+public class CustomAuthorizationCodeInstalledApp extends AuthorizationCodeInstalledApp {
 
-    private GoogleApiStorageScopes() {
+    /**
+     * Constructor.
+     *
+     * @param flow authorization code flow
+     * @param receiver verification code receiver
+     */
+    public CustomAuthorizationCodeInstalledApp(final AuthorizationCodeFlow flow,
+        final VerificationCodeReceiver receiver) {
+        super(flow, receiver);
     }
 
-    /** View and manage data across all Google Cloud services. */
-    public static final String CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
-
-    /** View your data across Google Cloud Platform services. */
-    public static final String CLOUD_PLATFORM_READ_ONLY = "https://www.googleapis.com/auth/cloud-platform.read-only";
-
-    /** Manage your data and permissions in Google Cloud Storage. */
-    public static final String DEVSTORAGE_FULL_CONTROL = "https://www.googleapis.com/auth/devstorage.full_control";
-
-    /** View your data in Google Cloud Storage. */
-    public static final String DEVSTORAGE_READ_ONLY = "https://www.googleapis.com/auth/devstorage.read_only";
-
-    /** Manage your data in Google Cloud Storage. */
-    public static final String DEVSTORAGE_READ_WRITE = "https://www.googleapis.com/auth/devstorage.read_write";
-
+    @Override
+    protected void onAuthorization(final AuthorizationCodeRequestUrl authorizationUrl) throws IOException {
+        Preconditions.checkNotNull(authorizationUrl);
+        // Attempt to open it in the browser
+        DesktopUtil.browse(authorizationUrl.toURL());
+    }
 }
