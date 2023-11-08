@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,37 +41,55 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Mar 20, 2014 ("Patrick Winter"): created
+ *   Nov 3, 2023 (bjoern): created
  */
-package org.knime.google.api.nodes.connector;
+package org.knime.google.api.nodes.authconnector.stores;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
+import org.knime.google.api.nodes.authenticator.AbstractUserCredentialStore;
+
+import com.google.api.client.auth.oauth2.StoredCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.util.store.DataStore;
+import com.google.api.client.util.store.DataStoreFactory;
+import com.google.api.client.util.store.MemoryDataStoreFactory;
 
 /**
- * Contains a map of all known scopes.
+ * {@link AbstractUserCredentialStore} implementation that persists/restores to/from a global JVM wide in-memory
+ * {@link DataStore}.
  *
- * @author Patrick Winter, KNIME AG, Zurich, Switzerland
- * @see KnimeGoogleAuthScopeRegistry
+ * @author Bjoern Lohrmann, KNIME GmbH
+ * @since 5.2
+ * @deprecated
  */
-public class GoogleApiKnownScopes {
+@Deprecated(since = "5.2")
+public class MemoryUserCredentialsStore extends AbstractUserCredentialStore {
 
     /**
-     * The map containing the name (key) shown in the configuration dialog and the scopes identifier (value).
+     * @param clientSecrets
+     * @param scopes
      */
-    public static final Map<String, List<String>> MAP = new TreeMap<String, List<String>>();
-
-    static {
-        final List<KnimeGoogleAuthScope> scopes =
-            KnimeGoogleAuthScopeRegistry.getInstance().getServiceAccountEnabledKnimeGoogleAuthScopes();
-        scopes.stream().forEach(s -> MAP.put(s.getAuthScopeName(), s.getAuthScopes()));
+    public MemoryUserCredentialsStore(final GoogleClientSecrets clientSecrets, final List<String> scopes) {
+        super(clientSecrets, scopes);
     }
 
+    @Override
+    public void clear() {
+        try {
+            MemoryDataStoreFactory.getDefaultInstance().getDataStore(StoredCredential.DEFAULT_DATA_STORE_ID)
+                .delete(DEFAULT_KNIME_USER);
+        } catch (IOException e) { // NOSONAR never happens, because no IO happens in-memory
+            // ignored
+        }
+    }
+
+    @Override
+    protected DataStoreFactory createDataStoreFactory() {
+        return MemoryDataStoreFactory.getDefaultInstance();
+    }
 }

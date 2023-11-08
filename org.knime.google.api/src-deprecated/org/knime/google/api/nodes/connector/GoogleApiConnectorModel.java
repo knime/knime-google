@@ -49,7 +49,7 @@ package org.knime.google.api.nodes.connector;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.UUID;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -61,8 +61,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.credentials.base.CredentialCache;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.PathUtil;
+import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
 
 /**
  * The model of the GoogleApiConnector node.
@@ -73,68 +77,57 @@ public class GoogleApiConnectorModel extends NodeModel {
 
     private GoogleApiConnectorConfiguration m_config = new GoogleApiConnectorConfiguration();
 
+    private UUID m_credentialCacheKey;
+
     /**
      * Constructor of the node model.
      */
     protected GoogleApiConnectorModel() {
-        super(new PortType[0], new PortType[]{GoogleApiConnectionPortObject.TYPE});
+        super(new PortType[0], new PortType[]{CredentialPortObject.TYPE});
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return createSpec(true).map(c -> new PortObject[] {new GoogleApiConnectionPortObject(c)})
-                .orElseThrow(() -> new IllegalStateException("Optional expected to be set here"));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return createSpec(false).map(c -> new PortObjectSpec[] {c}).orElse(null);
+        m_config.validateOnConfigure();
+        return new PortObjectSpec[]{ new CredentialPortObjectSpec(GoogleCredential.TYPE, null)};
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+
+        final var keyFilePath = PathUtil.resolveToLocalPath(m_config.getKeyFileLocation());
+        final var serviceCreds =
+            ServiceAccountCredentialsUtil.loadFromP12(m_config.getServiceAccountEmail(), keyFilePath)//
+                .createScoped(m_config.getScopes());
+        m_credentialCacheKey = CredentialCache.store(new GoogleCredential(serviceCreds));
+
+        return new PortObject[]{
+            new CredentialPortObject(new CredentialPortObjectSpec(GoogleCredential.TYPE, m_credentialCacheKey))};
+    }
+
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // not used
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // not used
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_config.save(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         GoogleApiConnectorConfiguration config = new GoogleApiConnectorConfiguration();
         config.loadInModel(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         GoogleApiConnectorConfiguration config = new GoogleApiConnectorConfiguration();
@@ -142,21 +135,16 @@ public class GoogleApiConnectorModel extends NodeModel {
         m_config = config;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    protected void onDispose() {
+        reset();
+    }
+
     @Override
     protected void reset() {
-        // not used
+        if (m_credentialCacheKey != null) {
+            CredentialCache.delete(m_credentialCacheKey);
+            m_credentialCacheKey = null;
+        }
     }
-
-    /**
-     * Creates the port object spec, if possible. For details see
-     * {@link GoogleApiConnectorConfiguration#createGoogleApiConnection(boolean)}
-     */
-    private Optional<GoogleApiConnectionPortObjectSpec> createSpec(final boolean isDuringExecute)
-            throws InvalidSettingsException {
-        return m_config.createGoogleApiConnection(isDuringExecute).map(c -> new GoogleApiConnectionPortObjectSpec(c));
-    }
-
 }

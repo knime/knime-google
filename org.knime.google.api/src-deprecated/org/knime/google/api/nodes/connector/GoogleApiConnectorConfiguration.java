@@ -47,25 +47,12 @@
  */
 package org.knime.google.api.nodes.connector;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.util.Optional;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.util.FileUtil;
-import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Configuration of the GoogleApiConnector node.
@@ -156,45 +143,12 @@ public class GoogleApiConnectorConfiguration {
         m_scopes = settings.getStringArray(CFG_SCOPES, new String[0]);
     }
 
-    /**
-     * Creates the API connection object, if possible. It will create an empty Optional if the key file lives on a
-     * remote server (either KNIME server or http/ftp/scp) and the argument flag is false (use case: during node
-     * configuration we shouldn't do expensive I/O).
-     *
-     * @param isDuringExecute The flag as describe above.
-     * @return The spec of this node, containing the GoogleApiConnection for the current configuration, if possible
-     * @throws InvalidSettingsException If the current configuration is not valid
-     */
-    public Optional<GoogleApiConnection> createGoogleApiConnection(final boolean isDuringExecute)
-            throws InvalidSettingsException {
-        CheckUtils.checkSetting(StringUtils.isNotEmpty(m_serviceAccountEmail), "The service account email is missing");
-        CheckUtils.checkSetting(StringUtils.isNotEmpty(m_keyFileLocation), "The key file location is missing");
-        String keyFileLocation = m_keyFileLocation;
-        try {
-            URL keyFileURL = FileUtil.toURL(keyFileLocation);
-            Path path = FileUtil.resolveToPath(keyFileURL);
-            if (path != null) {
-                keyFileLocation = path.toString();
-            } else {
-                if (!isDuringExecute) {
-                    return Optional.empty();
-                }
-                String simpleFileBaseName = FilenameUtils.getBaseName(keyFileURL.getFile()); // /foo/bar.key -> 'bar'
-                String fileExtension = FilenameUtils.getExtension(keyFileURL.getFile());     // /foo/bar.key -> 'key'
-                File keyFileTemp = FileUtil.createTempFile(simpleFileBaseName, fileExtension);
-                try (InputStream in = FileUtil.openStreamWithTimeout(keyFileURL)) {
-                    FileUtils.copyInputStreamToFile(in, keyFileTemp);
-                }
-                keyFileLocation = keyFileTemp.getAbsolutePath();
-            }
-        } catch (URISyntaxException | InvalidPathException | IOException e) {
-            throw new InvalidSettingsException(e);
-        }
-        try {
-            return Optional.of(new GoogleApiConnection(m_serviceAccountEmail, keyFileLocation, m_scopes));
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e);
-        }
+    public void validateOnConfigure() throws InvalidSettingsException {
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_serviceAccountEmail),
+            "Please provide a service account email.");
+        CheckUtils.checkSetting(StringUtils.isNotBlank(m_keyFileLocation),
+                "Please provide a P12 key file location.");
+        CheckUtils.checkSetting(ArrayUtils.isNotEmpty(m_scopes) ,
+                "Please provide at least one scope.");
     }
-
 }

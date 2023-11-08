@@ -56,11 +56,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.AbstractButton;
@@ -95,12 +95,11 @@ import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.google.api.GooglePlugInActivator;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
+import org.knime.google.api.nodes.authconnector.stores.StringSerializedCredentialStore;
+import org.knime.google.api.scopes.KnimeGoogleAuthScope;
+import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
-import com.google.auth.Credentials;
+import com.google.auth.oauth2.UserCredentials;
 
 /**
  * Dialog for the Google Authentication node.
@@ -151,7 +150,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
     private boolean m_scopeChanged = false;
 
     private final DialogComponentFileChooser m_credentialFileLocation =
-        new DialogComponentFileChooser(m_settings.getCredentialFileLocationModel(),
+        new DialogComponentFileChooser(m_settings.getCredentialFilesystemLocationModel(),
             GoogleAuthNodeDialogPane.class.getCanonicalName(), JFileChooser.OPEN_DIALOG, true, "");
 
     private final DialogComponentBoolean m_useCustomClientId =
@@ -207,42 +206,44 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
      * Opens auth window and waits for it to close, has the ability to be canceled by the user. Also will show some nice
      * progress bar while doing what it does.
      */
-    private final void onAuthButtonPressed() {
+    private void onAuthButtonPressed() {
 
-        SwingWorkerWithContext<Credentials, Void> openBrowserSwingWorker =
-            new SwingWorkerWithContext<Credentials, Void>() {
+        SwingWorkerWithContext<UserCredentials, Void> openBrowserSwingWorker =
+            new SwingWorkerWithContext<UserCredentials, Void>() {
 
                 @Override
-                protected Credentials doInBackgroundWithContext() throws Exception {
+                protected UserCredentials doInBackgroundWithContext() throws Exception {
+                    m_settings.validate();
+
+                    final var userCredentialsStore = m_settings.createUserCredentialsStore();
+
                     if (m_scopeChanged) {
                         clearCredentials();
                         m_scopeChanged = false;
                     }
-                    m_settings.validate();
-                    var credential = GoogleAuthentication.getCredential(m_settings.getCredentialLocationType(),
-                        m_settings.getCredentialLocation(),
-                        KnimeGoogleAuthScopeRegistry.getAuthScopes(m_settings.getRelevantKnimeAuthScopes()),
-                        m_settings.getClientIdFile());
-                    if (credential != null) {
-                        m_settings.setAccessTokenHash(credential.getAccessToken().getTokenValue().hashCode());
-                    }
-                    return credential;
+
+                    return userCredentialsStore.loginInteractively();
                 }
 
                 @Override
                 protected void doneWithContext() {
                     try {
-                        if (isCancelled()) {
-                            m_authenticationState.setText("Cancelled");
-                            return;
-                        }
                         // Credential not used here.
-                        get();
-                        m_settings.setByteString();
+                        var userCredentials = get();
+
+                        m_settings.setAccessTokenHash(userCredentials.getAccessToken().getTokenValue().hashCode());
                         m_isAuthenticated = true;
-                    } catch (InterruptedException e) { // NOSONAR
-                        m_authenticationState.setText("Unknown");
-                    } catch (IOException | URISyntaxException | ExecutionException e) {
+
+                        if (m_settings.getCredentialLocationType() == GoogleAuthLocationType.NODE) {
+                            m_settings.setSerializedCredential(
+                                StringSerializedCredentialStore.toSerializedString(userCredentials));
+                        } else {
+                            m_settings.clearSerializedCredential();
+                        }
+
+                    } catch (InterruptedException | CancellationException e) { // NOSONAR
+                        m_authenticationState.setText("Cancelled");
+                    } catch (ExecutionException e) {
                         m_authenticationState.setText("Not Authenticated");
                         JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(m_authenticateButton),
                             "Authentication failed: " + ExceptionUtils.getRootCauseMessage(e));
@@ -253,6 +254,7 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
                 }
             };
         openBrowserSwingWorker.execute();
+
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
@@ -396,16 +398,17 @@ final class GoogleAuthNodeDialogPane extends NodeDialogPane {
 
     private void clearCredentials() {
         try {
+            m_settings.createUserCredentialsStore().clear();
+
             if (m_settings.getCredentialLocationType() == GoogleAuthLocationType.NODE) {
-                m_settings.removeInNodeCredentials();
-            } else {
-                GoogleAuthentication.removeCredential(m_settings.getCredentialLocationType(),
-                    m_settings.getCredentialLocation());
+                m_settings.clearSerializedCredential();
             }
+
             m_isAuthenticated = false;
             m_settings.setAccessTokenHash("".hashCode());
             setAuthenticationStatus();
-        } catch (IOException | InvalidSettingsException e) { // NOSONAR Ignore: During credential clearing, this can mean that maybe the file got deleted manually.
+        } catch (IOException | InvalidSettingsException e) { // NOSONAR Ignore: During credential clearing,
+            // this can mean that maybe the file got deleted manually.
         }
     }
 

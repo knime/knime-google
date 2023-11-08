@@ -49,7 +49,7 @@ package org.knime.google.api.nodes.authconnector;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.UUID;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -61,8 +61,10 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.credentials.base.CredentialCache;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
 
 /**
  * The model to the GoogleSheetsConnector node.
@@ -71,102 +73,71 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
  */
 final class GoogleAuthNodeModel extends NodeModel {
 
-    private final GoogleAuthNodeSettings m_settings = getSettings();
+    private final GoogleAuthNodeSettings m_settings = new GoogleAuthNodeSettings();
 
-    /**
-     * Returns the settings for this node for this node.
-     *
-     * @return The settings for this node
-     */
-    protected static GoogleAuthNodeSettings getSettings() {
-        return new GoogleAuthNodeSettings();
-    }
+    private UUID m_credentialCacheKey;
 
     /**
      * Constructor of the node model.
      */
     protected GoogleAuthNodeModel() {
-        super(new PortType[]{}, new PortType[]{GoogleApiConnectionPortObject.TYPE});
+        super(new PortType[]{}, new PortType[]{CredentialPortObject.TYPE});
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return createSpec(true).map(c -> new PortObject[]{new GoogleApiConnectionPortObject(c)})
-            .orElseThrow(() -> new IllegalStateException("Optional expected to be set here"));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (!m_settings.isAuthenticated()) {
-            throw new InvalidSettingsException("Please authenticate using the node dialog.");
-        }
-
-        m_settings.validate();
-        return createSpec(false).map(c -> new PortObjectSpec[]{c}).orElse(null);
+        m_settings.validateOnConfigure();
+        return new PortObjectSpec[]{ new CredentialPortObjectSpec(GoogleCredential.TYPE, null)};
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        m_settings.validateOnExecute();
+
+        final var userCreds = m_settings.getUserCredentials();
+        m_credentialCacheKey = CredentialCache.store(new GoogleCredential(userCreds));
+
+        return new PortObject[]{
+            new CredentialPortObject(new CredentialPortObjectSpec(GoogleCredential.TYPE, m_credentialCacheKey))};
+    }
+
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // not used
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // not used
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_settings.saveSettingsTo(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings.validateSettings(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings.loadSettingsFrom(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    protected void onDispose() {
+        reset();
+    }
+
     @Override
     protected void reset() {
-        // not used
+        if (m_credentialCacheKey != null) {
+            CredentialCache.delete(m_credentialCacheKey);
+            m_credentialCacheKey = null;
+        }
     }
-
-    /**
-     * Creates the port object spec, if possible.
-     */
-    private Optional<GoogleApiConnectionPortObjectSpec> createSpec(final boolean isDuringExecute)
-        throws InvalidSettingsException {
-        return m_settings.createGoogleApiConnection(isDuringExecute).map(c -> new GoogleApiConnectionPortObjectSpec(c));
-    }
-
 }

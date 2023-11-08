@@ -19,8 +19,9 @@
             category-path="/toolintegration/googleanalytics" 
             factory-class="org.knime.google.api.analytics.ga4.node.query.GAQueryFactory">
       </node>
-      <node 
-            category-path="/io/connectors/googleservices" 
+      <node
+            category-path="/io/connectors/googleservices"
+            deprecated="true"
             factory-class="org.knime.google.api.nodes.connector.GoogleApiConnectorFactory">
       </node>
       <node

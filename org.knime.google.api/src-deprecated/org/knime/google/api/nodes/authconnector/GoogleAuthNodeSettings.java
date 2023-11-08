@@ -48,33 +48,30 @@
  */
 package org.knime.google.api.nodes.authconnector;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.util.FileUtil;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScope;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.google.api.clientsecrets.ClientSecrets;
+import org.knime.google.api.nodes.authconnector.stores.FileUserCredentialsStore;
+import org.knime.google.api.nodes.authconnector.stores.MemoryUserCredentialsStore;
+import org.knime.google.api.nodes.authconnector.stores.StringSerializedCredentialStore;
+import org.knime.google.api.nodes.authenticator.AbstractUserCredentialStore;
+import org.knime.google.api.nodes.util.PathUtil;
+import org.knime.google.api.scopes.KnimeGoogleAuthScope;
+import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
 import com.google.auth.oauth2.UserCredentials;
 
@@ -87,11 +84,11 @@ final class GoogleAuthNodeSettings {
 
     private static final String CONFIG_NAME = "googleAuthentication";
 
-    private static final String CREDENTIAL_LOCATION = "credentialLocation";
-
-    private static final String CREDENTIAL_BYTE_FILE = "credentialByteFile";
-
     private static final String CREDENTIAL_LOCATION_TYPE = "credentialLocationType";
+
+    private static final String CREDENTIAL_FILE_LOCATION = "credentialLocation";
+
+    private static final String CREDENTIAL_IN_NODE = "credentialByteFile";
 
     private static final String KNIME_SCOPES = "knimeScopes";
 
@@ -105,7 +102,7 @@ final class GoogleAuthNodeSettings {
 
     private static final String CUSTOM_CLIENT_ID_FILE = "customClientIdFile";
 
-    private final SettingsModelString m_credentialFileLocation;
+    private final SettingsModelString m_credentialFilesystemLocation;
 
     private GoogleAuthLocationType m_type = GoogleAuthLocationType.MEMORY;
 
@@ -113,9 +110,10 @@ final class GoogleAuthNodeSettings {
 
     private boolean m_useAllscopes = false;
 
-    private String m_credentialTempFolder;
-
-    private String m_storedCredential;
+    /**
+     * If {@link #m_type} is {@link GoogleAuthLocationType#NODE} then this holds a serialized
+     */
+    private String m_serializedCredential;
 
     private boolean m_isAuthenticated;
 
@@ -129,7 +127,7 @@ final class GoogleAuthNodeSettings {
      *
      */
     GoogleAuthNodeSettings() {
-        m_credentialFileLocation = new SettingsModelString(CREDENTIAL_LOCATION, "${user.home}/knime");
+        m_credentialFilesystemLocation = new SettingsModelString(CREDENTIAL_FILE_LOCATION, "${user.home}/knime");
         m_useCustomClientId = new SettingsModelBoolean(USE_CUSTOM_CLIENT_ID, false);
         m_customClientIdFile = new SettingsModelString(CUSTOM_CLIENT_ID_FILE, "");
         // see AP-13792 -- Google Analytics needs to be disabled by default.
@@ -137,82 +135,33 @@ final class GoogleAuthNodeSettings {
             .filter(s -> StringUtils.containsAny(s.getAuthScopeName().toLowerCase(), "sheets", "drive"))
             .collect(Collectors.toList());
 
-        m_useCustomClientId.addChangeListener(e -> m_customClientIdFile.setEnabled(m_useCustomClientId.getBooleanValue()));
+        m_useCustomClientId
+            .addChangeListener(e -> m_customClientIdFile.setEnabled(m_useCustomClientId.getBooleanValue()));
     }
 
     /**
-     * @return The {@link SettingsModelString} for the credential location
+     * @return The {@link SettingsModelString} for the credential filesystem location
      */
-    SettingsModelString getCredentialFileLocationModel() {
-        return m_credentialFileLocation;
+    SettingsModelString getCredentialFilesystemLocationModel() {
+        return m_credentialFilesystemLocation;
     }
 
-    /**
-     * Returns the credential location.
-     *
-     * @return The credential location
-     * @throws InvalidSettingsException
-     */
-    String getCredentialLocation() throws InvalidSettingsException {
-        String path = null;
-        switch (getCredentialLocationType()) {
-            case NODE:
-                File credentialFolder = null;
-                try {
-                    credentialFolder = FileUtil.createTempDir("sheets");
-                    m_credentialTempFolder = credentialFolder.getPath();
-
-                    // if there area alreay in-node credentials, restore them now.
-                    if (m_storedCredential != null) {
-                        GoogleAuthentication.createTempFromByteFile(credentialFolder, m_storedCredential);
-                    }
-                    path = credentialFolder.getPath();
-                } catch (IOException e) {
-                    throw new InvalidSettingsException("Could not create temporary Credentials file");
-                }
-                break;
-            case FILESYSTEM:
-                path = m_credentialFileLocation.getStringValue();
-                String resolvedPropertiesValue = StrSubstitutor.replaceSystemProperties(path);
-
-                // Check the path
-                StringBuilder errorMessageBuilder = new StringBuilder();
-                errorMessageBuilder.append("Not a valid path: \"").append(resolvedPropertiesValue).append("\"");
-                if (!Objects.equals(path, resolvedPropertiesValue)) {
-                    errorMessageBuilder.append(" (substituted from \"").append(path).append("\")");
-                }
-                String errorMessage = errorMessageBuilder.toString();
-                Path realPath;
-                try {
-                    realPath = FileUtil.resolveToPath(FileUtil.toURL(resolvedPropertiesValue));
-                    if (realPath == null) {
-                        throw new InvalidSettingsException(errorMessage);
-                    }
-                } catch (IOException | URISyntaxException e) {
-                    throw new InvalidSettingsException(errorMessage, e);
-                }
-
-                path = resolvedPropertiesValue;
-            case MEMORY:
-                break;
-            default:
-                break;
-
-        }
-        return path;
+    String getCredentialFilesystemLocation() {
+        return m_credentialFilesystemLocation.getStringValue();
     }
 
-    void removeInNodeCredentials() {
-        m_storedCredential = null;
+    void clearSerializedCredential() {
+        m_serializedCredential = null;
     }
 
     void saveSettingsTo(final NodeSettingsWO settings) {
         // save authentication
-        if (!getCredentialLocationType().equals(GoogleAuthLocationType.NODE)) {
-            removeInNodeCredentials();
+        if (getCredentialLocationType() != GoogleAuthLocationType.NODE) {
+            clearSerializedCredential();
         }
+
         Config config = settings.addConfig(CONFIG_NAME);
-        config.addString(CREDENTIAL_BYTE_FILE, m_storedCredential);
+        config.addString(CREDENTIAL_IN_NODE, m_serializedCredential);
         config.addString(CREDENTIAL_LOCATION_TYPE, m_type.name());
         KnimeGoogleAuthScopeRegistry.getInstance();
         config.addStringArray(KNIME_SCOPES,
@@ -221,7 +170,7 @@ final class GoogleAuthNodeSettings {
         config.addBoolean(IS_AUTHENTICATED, m_isAuthenticated);
         config.addInt(ACCESS_TOKEN_HASH, m_accessTokenHash);
 
-        m_credentialFileLocation.saveSettingsTo(settings);
+        m_credentialFilesystemLocation.saveSettingsTo(settings);
         m_useCustomClientId.saveSettingsTo(settings);
         m_customClientIdFile.saveSettingsTo(settings);
 
@@ -230,13 +179,13 @@ final class GoogleAuthNodeSettings {
     void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(CONFIG_NAME);
 
-        config.getString(CREDENTIAL_BYTE_FILE);
+        config.getString(CREDENTIAL_IN_NODE);
         config.getString(CREDENTIAL_LOCATION_TYPE);
         config.getStringArray(KNIME_SCOPES);
         config.getBoolean(ALL_SCOPES);
         config.getBoolean(IS_AUTHENTICATED);
         config.getInt(ACCESS_TOKEN_HASH);
-        m_credentialFileLocation.validateSettings(settings);
+        m_credentialFilesystemLocation.validateSettings(settings);
 
         if (settings.containsKey(USE_CUSTOM_CLIENT_ID)) {
             m_useCustomClientId.validateSettings(settings);
@@ -244,17 +193,16 @@ final class GoogleAuthNodeSettings {
         }
     }
 
-
     void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         Config config = settings.getConfig(CONFIG_NAME);
-        m_storedCredential = config.getString(CREDENTIAL_BYTE_FILE);
+        m_serializedCredential = config.getString(CREDENTIAL_IN_NODE);
         m_type = GoogleAuthLocationType.get(config.getString(CREDENTIAL_LOCATION_TYPE));
         m_knimeGoogleAuthScopes = KnimeGoogleAuthScopeRegistry.getInstance()
             .getScopesFromString(Arrays.asList(config.getStringArray(KNIME_SCOPES)));
         m_useAllscopes = config.getBoolean(ALL_SCOPES);
         m_isAuthenticated = config.getBoolean(IS_AUTHENTICATED);
         m_accessTokenHash = config.getInt(ACCESS_TOKEN_HASH);
-        m_credentialFileLocation.loadSettingsFrom(settings);
+        m_credentialFilesystemLocation.loadSettingsFrom(settings);
 
         if (settings.containsKey(USE_CUSTOM_CLIENT_ID)) {
             m_useCustomClientId.loadSettingsFrom(settings);
@@ -263,35 +211,6 @@ final class GoogleAuthNodeSettings {
             m_useCustomClientId.setBooleanValue(false);
             m_customClientIdFile.setStringValue("");
         }
-    }
-
-    /**
-     * Validates the current settings
-     *
-     * @throws InvalidSettingsException
-     */
-    public void validate() throws InvalidSettingsException {
-        if (m_useCustomClientId.getBooleanValue()) {
-            String path = m_customClientIdFile.getStringValue();
-
-            if (StringUtils.isAllBlank(path)) {
-                throw new InvalidSettingsException("Client ID file is not specified");
-            }
-
-            if (!Files.exists(Paths.get(path))) {
-                throw new InvalidSettingsException("Client ID file does not exist: " + path);
-            }
-
-        } else {
-            final Optional<KnimeGoogleAuthScope> scope = getRelevantKnimeAuthScopes().stream() //
-                    .filter(KnimeGoogleAuthScope::isCustomClientIdRequired) //
-                    .findFirst();
-
-            if (scope.isPresent()) {
-                throw new InvalidSettingsException("Custom Client ID is required by the scope: " + scope.get().getAuthScopeName());
-            }
-        }
-
     }
 
     GoogleAuthLocationType getCredentialLocationType() {
@@ -319,24 +238,21 @@ final class GoogleAuthNodeSettings {
     }
 
     /**
-     * Returns the StoredCredential file as a byte string.
+     * Returns the credential be stored in the node.
      *
-     * @return The stored credential as a byte string
+     * @return The stored credential as a string of base64-encoded bytes
      */
-    String getEncodedStoredCredential() {
-        return m_storedCredential;
+    String getSerializedCredential() {
+        return m_serializedCredential;
     }
 
     /**
-     * @throws IOException
-     * @throws URISyntaxException
+     * Sets the credential be stored in the node.
+     *
+     * @param serializedCredential The credential as a string of base64-encoded bytes.
      */
-    void setByteString() throws IOException, URISyntaxException {
-        if (m_type.equals(GoogleAuthLocationType.NODE)) {
-            m_storedCredential = GoogleAuthentication.getByteStringFromFile(m_credentialTempFolder);
-        } else {
-            removeInNodeCredentials();
-        }
+    void setSerializedCredential(final String serializedCredential) {
+        m_serializedCredential = serializedCredential;
     }
 
     void setAccessTokenHash(final int credentialHash) {
@@ -369,58 +285,92 @@ final class GoogleAuthNodeSettings {
     /**
      * @return the customClientIdFile model
      */
-    public SettingsModelString getCustomClientIdFileModel() {
+    SettingsModelString getCustomClientIdFileModel() {
         return m_customClientIdFile;
     }
 
-    /**
-     * @return the custom client id file path if the option to use it is enabled, or <code>null</code> otherwise.
-     *
-     */
-    public String getClientIdFile() {
-        if (m_useCustomClientId.getBooleanValue()) {
-            return m_customClientIdFile.getStringValue();
-        } else {
-            return null;
-        }
+    String getCustomClientIdLocation() {
+        return m_customClientIdFile.getStringValue();
     }
 
     /**
-     * Creates the API connection object, if possible. It will create an empty Optional if the key file lives on a
-     * remote server (either KNIME server or http/ftp/scp) and the argument flag is false (use case: during node
-     * configuration we shouldn't do expensive I/O).
+     * Validates the current settings.
      *
-     * @param isDuringExecute The flag as describe above.
-     * @return The spec of this node, containing the GoogleApiConnection for the current configuration, if possible
-     * @throws InvalidSettingsException If the current configuration is not valid
+     * @throws InvalidSettingsException
      */
-    Optional<GoogleApiConnection> createGoogleApiConnection(final boolean isDuringExecute)
-        throws InvalidSettingsException {
-        try {
-            String credentialLocation = getCredentialLocation();
-            if (getCredentialLocationType() == GoogleAuthLocationType.NODE
-                && !(new File(credentialLocation).exists())) {
-                credentialLocation = GoogleAuthentication.getTempCredentialPath(m_storedCredential);
+    void validate() throws InvalidSettingsException {
+        if (m_useCustomClientId.getBooleanValue()) {
+            if (StringUtils.isBlank(m_customClientIdFile.getStringValue())) {
+                throw new InvalidSettingsException("Client ID file is not specified");
             }
-            if (!isDuringExecute) {
-                UserCredentials noAuthCredential = GoogleAuthentication.getNoAuthCredential(
-                    getCredentialLocationType(), getCredentialLocation(),
-                    getRelevantKnimeAuthScopes(), getClientIdFile());
-                if (noAuthCredential == null) {
-                    throw new InvalidSettingsException("No valid credentials found. Please authenticate using the node dialog.");
-                }
-                // If the accessTokenHash changes it means that the credentials got overwritten or exchanged,
-                // so they should be verified using the node dialog.
-                if (noAuthCredential.getAccessToken().getTokenValue().hashCode() != m_accessTokenHash) {
-                    throw new InvalidSettingsException("Credentials changed. Please authenticate using the node dialog.");
-                }
-                return Optional.empty();
-            }
+        } else {
+            final Optional<KnimeGoogleAuthScope> scope = getRelevantKnimeAuthScopes().stream() //
+                .filter(KnimeGoogleAuthScope::isCustomClientIdRequired) //
+                .findFirst();
 
-            return Optional.of(new GoogleApiConnection(getCredentialLocationType(), credentialLocation,
-                getRelevantKnimeAuthScopes(), getClientIdFile()));
-        } catch (IOException e) {
-            throw new InvalidSettingsException(e);
+            if (scope.isPresent()) {
+                throw new InvalidSettingsException(
+                    "Custom Client ID is required by the scope: " + scope.get().getAuthScopeName());
+            }
         }
+    }
+
+
+    void validateOnConfigure() throws InvalidSettingsException {
+        validate();
+
+        if (!isAuthenticated()) {
+            throw new InvalidSettingsException("Please authenticate using the node dialog.");
+        }
+    }
+
+    void validateOnExecute() throws Exception { // NOSONAR
+        // validate the credential storage location (if chosen)
+        if (getCredentialLocationType() == GoogleAuthLocationType.FILESYSTEM) {
+            final var localPath = PathUtil.resolveToLocalPath(getCredentialFilesystemLocation());
+            if (!Files.isDirectory(localPath)) {
+                throw new IOException("Cannot access folder with stored credentials: " + getCustomClientIdLocation());
+            }
+        }
+
+        // validate the client secrets file (if chosen)
+        if (m_useCustomClientId.getBooleanValue()) {
+            final var localPath = PathUtil.resolveToLocalPath(getCustomClientIdLocation());
+            if (!Files.isRegularFile(localPath)) {
+                throw new IOException("Cannot access client secrets file: " + getCustomClientIdLocation());
+            }
+        }
+    }
+
+    UserCredentials getUserCredentials() throws Exception { // NOSONAR
+
+        final var credentials = createUserCredentialsStore()//
+            .tryLoadExistingCredentials()//
+            .orElseThrow(
+                () -> new IOException("Failed to retrieve credential. Please authenticate using the node dialog."));
+
+        CheckUtils.checkSetting(credentials.getAccessToken().getTokenValue().hashCode() == m_accessTokenHash, //
+            "Credentials changed. Please authenticate using the node dialog.");
+
+        return credentials;
+    }
+
+    AbstractUserCredentialStore createUserCredentialsStore() throws IOException, InvalidSettingsException {
+
+        final var clientSecrets = m_useCustomClientId.getBooleanValue() //
+            ? ClientSecrets.loadClientSecrets(PathUtil.resolveToLocalPath(getCustomClientIdLocation()))//
+            : ClientSecrets.loadDefaultClientSecrets();
+
+        final var scopes = KnimeGoogleAuthScopeRegistry.getAuthScopes(getRelevantKnimeAuthScopes());
+
+        return switch (m_type) {
+            case MEMORY -> new MemoryUserCredentialsStore(clientSecrets, scopes);
+            case FILESYSTEM -> new FileUserCredentialsStore(//
+                PathUtil.resolveToLocalPath(getCredentialFilesystemLocation()),//
+                clientSecrets,//
+                scopes);
+            case NODE -> new StringSerializedCredentialStore(m_serializedCredential, clientSecrets, scopes);
+            default -> throw new IllegalStateException();
+        };
     }
 }
