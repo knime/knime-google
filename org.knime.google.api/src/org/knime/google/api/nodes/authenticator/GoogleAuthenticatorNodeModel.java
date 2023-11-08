@@ -48,37 +48,22 @@
  */
 package org.knime.google.api.nodes.authenticator;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URISyntaxException;
-import java.nio.file.InvalidPathException;
-import java.security.GeneralSecurityException;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.util.FileUtil;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
-import org.knime.credentials.base.Credential;
-import org.knime.credentials.base.CredentialCache;
-import org.knime.credentials.base.GenericTokenHolder;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
 import org.knime.credentials.base.oauth.api.AccessTokenCredential;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.PathUtil;
+import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
 
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 
 /**
  * The Google Authenticator node. Performs OAuth authentication to selected Google services and produces
@@ -91,9 +76,12 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
 
     private static final String LOGIN_FIRST_ERROR = "Please use the configuration dialog to log in first.";
 
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-
-    private GenericTokenHolder<GoogleCredentials> m_tokenHolder;
+    /**
+     * This references a {@link GoogleCredential} that was acquired interactively in the node dialog.
+     * It is disposed when the workflow is closed, or when the authentication scheme is switched to
+     * non-interactive. However, it is NOT disposed during reset().
+     */
+    private CredentialRef m_interactiveCredentialRef;
 
     /**
      * @param configuration The node configuration.
@@ -108,63 +96,32 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         settings.validate();
 
         if (settings.m_authType == GoogleAuthenticatorSettings.AuthType.INTERACTIVE) {
-            if (settings.m_tokenCacheKey == null) {
+            m_interactiveCredentialRef = Optional.ofNullable(settings.m_loginCredentialRef)//
+                .map(CredentialRef::new)//
+                .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
+
+            if (!m_interactiveCredentialRef.isPresent()) {
                 throw new InvalidSettingsException(LOGIN_FIRST_ERROR);
-            } else {
-                m_tokenHolder = CredentialCache.<GenericTokenHolder<GoogleCredentials>> get(
-                    settings.m_tokenCacheKey)//
-                    .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
             }
         } else {
-            // we have an access token from a previous interactive login -> remove it
-            if (m_tokenHolder != null) {
-                CredentialCache.delete(m_tokenHolder.getCacheKey());
-                m_tokenHolder = null;
-            }
+            disposeInteractiveCredential();
         }
     }
 
     @Override
-    protected Credential createCredential(final PortObject[] inObjects, final ExecutionContext exec,
+    protected GoogleCredential createCredential(final PortObject[] inObjects, final ExecutionContext exec,
         final GoogleAuthenticatorSettings settings) throws Exception {
-        switch (settings.m_authType) {
-            case INTERACTIVE:
-                return fromGoogleToken(m_tokenHolder.getToken());
-            case API_KEY:
-                return fromGoogleToken(getTokenUsingAPIKey(settings));
-            default:
-                throw new IllegalArgumentException("Usupported auth type: " + settings.m_authType);
-        }
-    }
 
-    private static Credential fromGoogleToken(final GoogleCredentials token) {
-        var accessToken = token.getAccessToken().getTokenValue();
-        var expiresAfter = Optional.ofNullable(token.getAccessToken().getExpirationTime())//
-            .map(Date::toInstant)//
-            .orElse(null);
-        var tokenType = "Bearer";
-
-        return new AccessTokenCredential(accessToken, //
-            expiresAfter, //
-            tokenType, //
-            createTokenRefresher(token));
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Credential> Supplier<T> createTokenRefresher(final GoogleCredentials token) {
-        return () -> {
-            try {
-                token.refresh();
-                final var newToken = token.toBuilder().setAccessToken(token.getAccessToken()).build();
-                return (T)fromGoogleToken(newToken);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+        return switch (settings.m_authType) {
+            case INTERACTIVE -> m_interactiveCredentialRef.getCredential(GoogleCredential.class)//
+                    .orElseThrow(() -> new InvalidSettingsException(LOGIN_FIRST_ERROR));
+            case API_KEY -> new GoogleCredential(loadFromAPIKey(settings));
+            default -> throw new IllegalArgumentException("Usupported auth type: " + settings.m_authType);
         };
     }
 
-    private static GoogleCredentials getTokenUsingAPIKey(final GoogleAuthenticatorSettings settings)
-            throws InvalidSettingsException {
+    private static GoogleCredentials loadFromAPIKey(final GoogleAuthenticatorSettings settings)
+            throws IOException, InvalidSettingsException {
 
         final var apiKeysettings = settings.m_apiKeySettings;
         final var scopes = settings.m_scopeSettings.getScopes();
@@ -172,75 +129,29 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         GoogleCredentials credential;
 
         if (apiKeysettings.m_apiKeyFormat == APIKeySettings.APIKeyType.JSON) {
-            final var path = resolveKeyFilePath(apiKeysettings.m_jsonFile);
-            credential = getTokenlUsingJSONKey(path, scopes);
+            final var keyFilePath = PathUtil.resolveToLocalPath(apiKeysettings.m_jsonFile);
+            credential = ServiceAccountCredentialsUtil.loadFromJson(keyFilePath).createScoped(scopes);
         } else {
-            final var path = resolveKeyFilePath(apiKeysettings.m_p12File);
-            credential = getTokenUsingP12Key(apiKeysettings.m_serviceAccountEmail, path, scopes);
+            final var keyFilePath = PathUtil.resolveToLocalPath(apiKeysettings.m_p12File);
+            credential = ServiceAccountCredentialsUtil
+                .loadFromP12(apiKeysettings.m_serviceAccountEmail, keyFilePath).createScoped(scopes);
         }
-        try {
-            // get access token by refreshing token
-            credential.refresh();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+
+        // get access token by refreshing token
+        credential.refresh();
+
         return credential;
     }
 
-    private static String resolveKeyFilePath(final String keyFilePath) throws InvalidSettingsException {
-        String result = keyFilePath;
-        try {
-            final var keyFileURL = FileUtil.toURL(result);
-            final var path = FileUtil.resolveToPath(keyFileURL);
-            if (path != null) {
-                result = path.toString();
-            } else {
-                String simpleFileBaseName = FilenameUtils.getBaseName(keyFileURL.getFile()); // /foo/bar.key -> 'bar'
-                String fileExtension = FilenameUtils.getExtension(keyFileURL.getFile());     // /foo/bar.key -> 'key'
-                final var keyFileTemp = FileUtil.createTempFile(simpleFileBaseName, fileExtension);
-                try (InputStream in = FileUtil.openStreamWithTimeout(keyFileURL)) {
-                    FileUtils.copyInputStreamToFile(in, keyFileTemp);
-                }
-                result = keyFileTemp.getAbsolutePath();
-            }
-        } catch (URISyntaxException | InvalidPathException | IOException e) {
-            throw new InvalidSettingsException(e);
-        }
-        return result;
-    }
-
-    private static GoogleCredentials getTokenUsingP12Key(final String serviceAccountEmail,
-        final String filePath, final List<String> scopes) throws InvalidSettingsException {
-        try {
-            final var privateKey = GoogleAuthentication.loadPrivateKeyFromP12(filePath);
-            return ServiceAccountCredentials.newBuilder()
-                    .setHttpTransportFactory(() -> HTTP_TRANSPORT)
-                    .setClientEmail(serviceAccountEmail)
-                    .setPrivateKey(privateKey)
-                    .setScopes(scopes)
-                    .build();
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e);
-        }
-    }
-
-    private static GoogleCredentials getTokenlUsingJSONKey(final String filePath,
-        final List<String> scopes) throws InvalidSettingsException {
-        try (final var inputStream = new FileInputStream(filePath)) {
-            return GoogleCredentials.fromStream(inputStream, () -> HTTP_TRANSPORT)
-                    .createScoped(scopes);
-        } catch (IOException e) {
-            throw new InvalidSettingsException(e);
+    private void disposeInteractiveCredential() {
+        if (m_interactiveCredentialRef != null) {
+            m_interactiveCredentialRef.dispose();
+            m_interactiveCredentialRef = null;
         }
     }
 
     @Override
     protected void onDisposeInternal() {
-        // dispose of the google token that was retrieved interactively in the node
-        // dialog
-        if (m_tokenHolder != null) {
-            CredentialCache.delete(m_tokenHolder.getCacheKey());
-            m_tokenHolder = null;
-        }
+        disposeInteractiveCredential();
     }
 }

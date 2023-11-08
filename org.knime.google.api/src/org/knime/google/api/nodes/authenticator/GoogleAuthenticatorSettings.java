@@ -68,12 +68,13 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
-import org.knime.credentials.base.GenericTokenHolder;
+import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthLocationType;
-import org.knime.google.api.nodes.authconnector.auth.GoogleAuthentication;
+import org.knime.google.api.clientsecrets.ClientSecrets;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.PathUtil;
 
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.UserCredentials;
 
 /**
  * Node settings for the Google Authenticator node.
@@ -111,16 +112,15 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     }
 
     enum AuthType {
-        @Label("Interactive")
-        INTERACTIVE,
-        @Label("API Key")
-        API_KEY;
+            @Label("Interactive")
+            INTERACTIVE, @Label("API Key")
+            API_KEY;
     }
 
     static class AuthTypeIsInteractive extends OneOfEnumCondition<AuthType> {
         @Override
         public AuthType[] oneOf() {
-            return new AuthType[] { AuthType.INTERACTIVE };
+            return new AuthType[]{AuthType.INTERACTIVE};
         }
     }
 
@@ -142,13 +142,14 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     @Persist(optional = true, hidden = true, customPersistor = TokenCacheKeyPersistor.class)
     @Layout(AuthenticationSection.class)
     @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
-    UUID m_tokenCacheKey;
+    UUID m_loginCredentialRef;
 
     static class LoginActionHandler extends CancelableActionHandler<UUID, GoogleAuthenticatorSettings> {
 
         @Override
-        protected UUID invoke(final GoogleAuthenticatorSettings settings, final DefaultNodeSettingsContext context)
-            throws WidgetHandlerException {
+        protected UUID invoke(final GoogleAuthenticatorSettings settings,
+            final DefaultNodeSettingsContext context) throws WidgetHandlerException {
+
             try {
                 settings.validate();
             } catch (InvalidSettingsException e) { // NOSONAR
@@ -156,35 +157,37 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             }
 
             try {
-                var holder = GenericTokenHolder.store(fetchAccessToken(settings));
-                return holder.getCacheKey();
+                var userCreds = loginInteractively(settings);
+                return CredentialCache.store(new GoogleCredential(userCreds));
             } catch (Exception e) {//NOSONAR
                 throw new WidgetHandlerException(e.getMessage());
             }
         }
 
-        private static GoogleCredentials fetchAccessToken(final GoogleAuthenticatorSettings settings) throws IOException {
-            return GoogleAuthentication.getCredential(GoogleAuthLocationType.MEMORY, null,
-                settings.m_scopeSettings.getScopes(), settings.getClientIdFile());
+        private static UserCredentials loginInteractively(final GoogleAuthenticatorSettings settings)
+            throws IOException, InvalidSettingsException {
+            final var clientSecrets = settings.m_useCustomClientId//
+                ? ClientSecrets.loadClientSecrets(PathUtil.resolveToLocalPath(settings.m_customClientIdFile))//
+                : ClientSecrets.loadDefaultClientSecrets();
+
+            final var scopes = settings.m_scopeSettings.getScopes();
+
+            return new TmpMemoryUserCredentialsStore(clientSecrets, scopes).loginInteractively();
         }
 
         @Override
         protected String getButtonText(final States state) {
-            switch (state) {
-                case READY:
-                    return "Login";
-                case CANCEL:
-                    return "Cancel login";
-                case DONE:
-                    return "Login again";
-                default:
-                    return null;
-            }
+            return switch (state) {
+                case READY -> "Login";
+                case CANCEL -> "Cancel login";
+                case DONE -> "Login again";
+                default -> null;
+            };
         }
-
     }
 
-    static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
+    static class LoginUpdateHandler
+        extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
     }
 
     @Widget(title = "Use custom client ID", description = "Enable the option to use custom client ID.", advanced = true)
@@ -196,9 +199,9 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     interface UseCustomClientIdSignal {
     }
 
-    @Widget(title = "Custom client ID file (JSON format)",//
-            description = "The path to a JSON file with the custom client ID.",//
-            advanced = true)
+    @Widget(title = "Custom client ID file (JSON format)", //
+        description = "The path to a JSON file with the custom client ID.", //
+        advanced = true)
     @Layout(ClientIdSection.class)
     @Effect(signals = {UseCustomClientIdSignal.class, AuthTypeIsInteractive.class}, operation = And.class,
         type = EffectType.SHOW)
@@ -215,13 +218,5 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         }
 
         m_scopeSettings.validate();
-    }
-
-    private String getClientIdFile() {
-        if (m_useCustomClientId) {
-            return m_customClientIdFile;
-        } else {
-            return null;
-        }
     }
 }

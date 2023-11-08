@@ -72,8 +72,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
-import org.knime.google.api.nodes.authconnector.util.KnimeGoogleAuthScopeRegistry;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
+import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
