@@ -56,16 +56,17 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
-import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * Google Analytics connector node model for use with
@@ -76,7 +77,7 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 @SuppressWarnings("restriction")
 final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings> {
 
-    private static final int GOOGLE_API_CONNECTION_PORT = 0;
+    private static final int CREDENTIAL_INPUT_PORT = 0;
 
     /**
      * @param configuration
@@ -98,12 +99,12 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final GAConnectorNodeSettings modelSettings)
             throws InvalidSettingsException {
-        final var connSpec = GAConnectionPortObjectSpec
-                .getGoogleApiConnectionPortObjectSpec(inSpecs, GOOGLE_API_CONNECTION_PORT)
-                .orElseThrow(() -> new InvalidSettingsException("Google API connection is missing."));
+
+        final var credentialRef = getCredentialRef(inSpecs);
+        
         CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId, "Google Analytics Property ID is missing.");
 
-        final var conn = new GAConnection(connSpec.getGoogleApiConnection(), modelSettings.m_connTimeoutSec,
+        final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec, //NOSONAR
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
 
         return new PortObjectSpec[] {new GAConnectionPortObjectSpec(conn, modelSettings.m_analyticsPropertyId)};
@@ -112,11 +113,12 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
             final GAConnectorNodeSettings modelSettings) throws Exception {
-        final var apiConnPO = GAConnectionPortObject
-                .getGoogleApiConnectionPortObject(inObjects, GOOGLE_API_CONNECTION_PORT)
-                .orElseThrow(() -> KNIMEException.of(Message.fromSummary("Google API connection is missing")));
-        final var conn = new GAConnection(apiConnPO.getGoogleApiConnection(), modelSettings.m_connTimeoutSec,
+
+        final var credentialRef = getCredentialRef(inObjects);
+
+        final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec,
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
+
         final var props = conn.accountSummaries().stream()
                 .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
                     .map(p -> p.getProperty().replace("properties/", ""))).count();
@@ -125,13 +127,16 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
                 .withSummary("None of the available accounts contains a Google Analytics 4 property.")
                 .build().orElseThrow());
         }
+
         final var spec = new GAConnectionPortObjectSpec(conn, modelSettings.m_analyticsPropertyId);
         return new PortObject[] { new GAConnectionPortObject(spec) };
     }
 
-    public static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
-            final PortObjectSpec[] pos) {
-        return GAConnectionPortObjectSpec.getGoogleApiConnectionPortObjectSpec(pos, GOOGLE_API_CONNECTION_PORT);
+    static CredentialRef getCredentialRef(final PortObject[] portObjects) {
+        return ((CredentialPortObject) portObjects[CREDENTIAL_INPUT_PORT]).toRef();
     }
 
+    static CredentialRef getCredentialRef(final PortObjectSpec[] portObjectSpecs) {
+        return ((CredentialPortObjectSpec) portObjectSpecs[CREDENTIAL_INPUT_PORT]).toRef();
+    }
 }

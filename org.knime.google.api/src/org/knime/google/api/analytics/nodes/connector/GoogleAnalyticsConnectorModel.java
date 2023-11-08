@@ -60,10 +60,11 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * The model of the GoogleAnalyticsConnector node.
@@ -72,13 +73,15 @@ import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
  */
 public class GoogleAnalyticsConnectorModel extends NodeModel {
 
+    private static final int CREDENTIAL_INPUT_PORT = 0;
+
     private GoogleAnalyticsConnectorConfiguration m_config = new GoogleAnalyticsConnectorConfiguration();
 
     /**
      * Constructor of the node model.
      */
     protected GoogleAnalyticsConnectorModel() {
-        super(new PortType[]{GoogleApiConnectionPortObject.TYPE},
+        super(new PortType[]{CredentialPortObject.TYPE},
                 new PortType[]{GoogleAnalyticsConnectionPortObject.TYPE});
     }
 
@@ -87,7 +90,7 @@ public class GoogleAnalyticsConnectorModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleAnalyticsConnectionPortObject(createSpec(inObjects[0].getSpec()))};
+        return new PortObject[]{new GoogleAnalyticsConnectionPortObject(createSpec(inObjects[CREDENTIAL_INPUT_PORT].getSpec()))};
     }
 
     /**
@@ -95,7 +98,7 @@ public class GoogleAnalyticsConnectorModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec(inSpecs[0])};
+        return new PortObjectSpec[]{createSpec(inSpecs[CREDENTIAL_INPUT_PORT])};
     }
 
     /**
@@ -143,9 +146,6 @@ public class GoogleAnalyticsConnectorModel extends NodeModel {
         m_config = config;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void reset() {
         // not used
@@ -157,9 +157,13 @@ public class GoogleAnalyticsConnectorModel extends NodeModel {
      */
     private GoogleAnalyticsConnectionPortObjectSpec createSpec(final PortObjectSpec inSpec)
             throws InvalidSettingsException {
-        return new GoogleAnalyticsConnectionPortObjectSpec(
-                m_config.createGoogleAnalyticsConnection(((GoogleApiConnectionPortObjectSpec)inSpec)
-                        .getGoogleApiConnection()));
+
+        final var credentialRef = getCredentialRef(inSpec);
+
+        return new GoogleAnalyticsConnectionPortObjectSpec(m_config.createGoogleAnalyticsConnection(credentialRef));
     }
 
+    static CredentialRef getCredentialRef(final PortObjectSpec portObjectSpec) {
+        return ((CredentialPortObjectSpec) portObjectSpec).toRef();
+    }
 }

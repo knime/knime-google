@@ -53,8 +53,8 @@ import java.util.Optional;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
-import org.knime.google.api.data.GoogleApiConnection;
 
 /**
  * Configuration of the GoogleAnalyticsConnector node.
@@ -133,18 +133,19 @@ public class GoogleAnalyticsConnectorConfiguration {
 
     /**
      * Create a new {@link GoogleAnalyticsConnection} that uses the timeouts specified in this configuration.
-     * @param googleApiConnection The GoogleApiConnection to use
+     * @param credentialRef The {@link CredentialRef} to use.
      * @return GoogleAnalyticsConnection based on this configuration
      * @throws InvalidSettingsException If the current configuration is not valid
      */
-    public GoogleAnalyticsConnection createGoogleAnalyticsConnection(final GoogleApiConnection googleApiConnection)
+    public GoogleAnalyticsConnection createGoogleAnalyticsConnection(final CredentialRef credentialRef)
             throws InvalidSettingsException {
+
         if (m_profileId.isEmpty()) {
             throw new InvalidSettingsException("No profile ID selected");
         }
         Duration connectTimeout = m_connectTimeout.orElse(DEFAULT_CONNECT_TIMEOUT);
         Duration readTimeout = m_readTimeout.orElse(DEFAULT_READ_TIMEOUT);
-        return new GoogleAnalyticsConnection(googleApiConnection, "KNIME-Google-Analytics-Connector", m_profileId,
+        return new GoogleAnalyticsConnection(credentialRef, "KNIME-Google-Analytics-Connector", m_profileId,
             connectTimeout, readTimeout);
     }
 

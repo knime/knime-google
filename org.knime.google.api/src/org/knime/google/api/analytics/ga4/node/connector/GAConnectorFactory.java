@@ -50,9 +50,9 @@ package org.knime.google.api.analytics.ga4.node.connector;
 
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
+import org.knime.credentials.base.CredentialPortObject;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
 
 /**
  * Factory for the Google Analytics Connector node.
@@ -82,7 +82,7 @@ public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeMo
                     """.formatted(ExternalLinks.API_ADMIN, ExternalLinks.API_DATA, ExternalLinks.EXPLAIN_MIGRATION)
                 )//
             .modelSettingsClass(GAConnectorNodeSettings.class)//
-            .addInputPort("Google Service Connection", GoogleApiConnectionPortObject.TYPE,
+            .addInputPort("Google Service Connection", CredentialPortObject.TYPE,
                 "The Google Service connection to use.")
             .addOutputPort("Google Analytics Connection", GAConnectionPortObject.TYPE,
                 "A connection to a Google Analytics 4 property.")

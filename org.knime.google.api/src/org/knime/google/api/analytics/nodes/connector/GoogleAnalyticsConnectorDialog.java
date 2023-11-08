@@ -75,8 +75,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
 
 /**
  * The dialog to the GoogleAnalyticsConnector node.
@@ -127,7 +128,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
             public void actionPerformed(final ActionEvent e) {
                 if (!m_map.isEmpty() && m_accountsModel.getSize() > 0 && isValidSelection(m_accounts)) {
                     m_webpropertiesModel.removeAllElements();
-                    Set<String> webproperties = m_map.get((String)m_accounts.getSelectedItem()).keySet();
+                    Set<String> webproperties = m_map.get(m_accounts.getSelectedItem()).keySet();
                     for (String webproperty : webproperties) {
                         m_webpropertiesModel.addElement(webproperty);
                     }
@@ -144,8 +145,8 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
                         && isValidSelection(m_webproperties)) {
                     m_profilesModel.removeAllElements();
                     Set<String> profiles =
-                            m_map.get((String)m_accounts.getSelectedItem())
-                                    .get((String)m_webproperties.getSelectedItem()).keySet();
+                            m_map.get(m_accounts.getSelectedItem())
+                                    .get(m_webproperties.getSelectedItem()).keySet();
                     for (String profile : profiles) {
                         m_profilesModel.addElement(profile);
                     }
@@ -242,8 +243,8 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
 
     private String getSelectedProfileId() {
         try {
-            return m_map.get((String)m_accounts.getSelectedItem()).get((String)m_webproperties.getSelectedItem())
-                    .get((String)m_profiles.getSelectedItem());
+            return m_map.get(m_accounts.getSelectedItem()).get(m_webproperties.getSelectedItem())
+                    .get(m_profiles.getSelectedItem());
         } catch (Throwable e) {
             return null;
         }
@@ -273,10 +274,11 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google API Connection");
         }
-        GoogleApiConnectionPortObjectSpec connectionSpec = (GoogleApiConnectionPortObjectSpec)specs[0];
-        if (connectionSpec.getGoogleApiConnection() == null) {
-            throw new NotConfigurableException("Missing Google API Connection");
-        }
+        final var optCredential =
+            GoogleAnalyticsConnectorModel.getCredentialRef(specs[0]).getCredential(GoogleCredential.class);
+        CheckUtils.check(optCredential.isPresent(),
+            NotConfigurableException::new, () -> GoogleCredential.NO_AUTH_ERROR);
+
         GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
         config.loadInDialog(settings);
         Duration connectTimeout = config.getConnectTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT);
@@ -287,7 +289,7 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
             if (m_map.isEmpty()) {
                 m_map =
                         GoogleAnalyticsConnection.getAccountsWebpropertiesProfilesMap(
-                                connectionSpec.getGoogleApiConnection(),
+                                optCredential.get().getCredentials(), // NOSONAR
                                 connectTimeout, readTimeout
                         );
                 m_warning.setVisible(false);

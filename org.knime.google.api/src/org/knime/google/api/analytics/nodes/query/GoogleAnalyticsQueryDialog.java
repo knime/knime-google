@@ -94,6 +94,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec;
 
@@ -700,7 +701,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
             }
             m_columnSelectionPanel.setVisible(m_columnSelection.getModel().getSize() > 0);
             m_warning.setVisible(false);
-        } catch (IOException e) {
+        } catch (IOException | CredentialNotFoundException e) {
             m_columnSelectionPanel.setVisible(false);
         }
         if(segmentIsPredefined) {
@@ -734,7 +735,7 @@ public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
      * @return The current etag for the Google Analytics Metadata
      * @throws IOException If an IO error occurs during execution
      */
-    private String getEtag(final GoogleAnalyticsConnection connection) throws IOException {
+    private String getEtag(final GoogleAnalyticsConnection connection) throws IOException, CredentialNotFoundException {
         com.google.api.services.analytics.Analytics.Metadata.Columns.List query =
                 connection.getAnalytics().metadata().columns().list("ga");
         // Only get etag nothing else

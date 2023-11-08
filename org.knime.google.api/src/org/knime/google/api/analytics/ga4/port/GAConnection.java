@@ -50,7 +50,6 @@ package org.knime.google.api.analytics.ga4.port;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -66,9 +65,12 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.message.Message;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.credential.CredentialRefSerializer;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient;
@@ -87,7 +89,9 @@ import com.google.api.services.analyticsdata.v1beta.AnalyticsData;
 import com.google.api.services.analyticsdata.v1beta.model.Metadata;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportRequest;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportResponse;
+import com.google.auth.Credentials;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
 
 /**
  * The {@link GAConnection} provides request methods against the
@@ -105,10 +109,14 @@ import com.google.auth.http.HttpCredentialsAdapter;
  */
 public final class GAConnection {
 
-    private final GoogleApiConnection m_connection;
+    /**
+     * A {@link CredentialRef} through which the credential to use can be resolved. Resolving may fail, after a
+     * partially executed workflow has been loaded.
+     */
+    private CredentialRef m_credentialRef;
 
     /** Timeout for connecting to the remote endpoint. */
-    private final Duration m_connectTimeout;
+    private Duration m_connectTimeout;
     /** Default timeout for connecting to the remote endpoint. */
     // 30 seconds since the default of 20 before seemed to be not enough often (see "outdated" PR comment in AP-15929)
     public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(30);
@@ -116,7 +124,7 @@ public final class GAConnection {
     public static final String KEY_CONNECT_TIMEOUT = "connectTimeout";
 
     /** Timeout for reading from an already established connection. */
-    private final Duration m_readTimeout;
+    private Duration m_readTimeout;
     /** Default timeout for reading from an established connection. */
     // Default increased from 20s to 30s (see reason above).
     public static final Duration DEFAULT_READ_TIMEOUT = Duration.ofSeconds(30);
@@ -124,7 +132,7 @@ public final class GAConnection {
     public static final String KEY_READ_TIMEOUT = "readTimeout";
 
     /** Maximum elapsed time to spend on retries on server errors. */
-    private final Duration m_serverErrorRetryMaxElapsedTime;
+    private Duration m_serverErrorRetryMaxElapsedTime;
     /** Default maximum time to spend on server error retries. */
     public static final Duration DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME = Duration.ofSeconds(60);
     /** Key for storing the maximum time to spend on server error retries. */
@@ -132,41 +140,34 @@ public final class GAConnection {
 
 
     /**
-     * Creates a Google Analytics 4 (GA4) connection to the given GA4 property, using the given
-     * {@link GoogleApiConnection Google API connection}.
+     * Creates a Google Analytics 4 (GA4) connection using the given {@link GoogleCredentials}.
      *
-     * @param connection connection to Google API to use
+     * @param credentialRef The {@link CredentialRef} to use.
      * @param connectTimeout timeout for connecting to remote endpoint
      * @param readTimeout timeout for reading from remote connection
      * @param retryMaxElapsedTime maximum time to spend on retrying the same request
      */
-    public GAConnection(final GoogleApiConnection connection,
-            final Duration connectTimeout, final Duration readTimeout, final Duration retryMaxElapsedTime) {
+    public GAConnection(final CredentialRef credentialRef, final Duration connectTimeout,
+        final Duration readTimeout, final Duration retryMaxElapsedTime) {
+
+        m_credentialRef = Objects.requireNonNull(credentialRef);
         m_connectTimeout = Objects.requireNonNull(connectTimeout);
         m_readTimeout = Objects.requireNonNull(readTimeout);
-        m_connection = Objects.requireNonNull(connection);
         m_serverErrorRetryMaxElapsedTime = retryMaxElapsedTime;
     }
-
 
     /**
      * Restores a {@link GAConnection} from a saved model (used by the framework).
      *
      * @param model model containing connection information
-     * @return the Google Analytics connection
-     * @throws InvalidSettingsException if the model did not contain the required settings, there was a problem with
-     *          the key file, or the key file was not accessible
+     * @throws InvalidSettingsException
      */
-    static GAConnection loadFrom(final ModelContentRO model) throws InvalidSettingsException {
-        final var ct = getDurationFromSettings(model, KEY_CONNECT_TIMEOUT, DEFAULT_CONNECT_TIMEOUT);
-        final var rt = getDurationFromSettings(model, KEY_READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
-        final var retryTime = getDurationFromSettings(model, KEY_ERR_RETRY_MAX_ELAPSED_TIME,
+    public GAConnection(final ModelContentRO model) throws InvalidSettingsException {
+        m_connectTimeout = getDurationFromSettings(model, KEY_CONNECT_TIMEOUT, DEFAULT_CONNECT_TIMEOUT);
+        m_readTimeout = getDurationFromSettings(model, KEY_READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
+        m_serverErrorRetryMaxElapsedTime = getDurationFromSettings(model, KEY_ERR_RETRY_MAX_ELAPSED_TIME,
             DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
-        try {
-            return new GAConnection(new GoogleApiConnection(model), ct, rt, retryTime);
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException("Unable to load Google Analytics 4 (GA4) connection.", e);
-        }
+        m_credentialRef = CredentialRefSerializer.loadRefWithLegacySupport(model);
     }
 
     /**
@@ -175,10 +176,10 @@ public final class GAConnection {
      * @param model model to save into
      */
     void saveTo(final ModelContentWO model) {
+        CredentialRefSerializer.saveRef(m_credentialRef, model);
         addDurationToSettings(model, KEY_CONNECT_TIMEOUT, m_connectTimeout);
         addDurationToSettings(model, KEY_READ_TIMEOUT, m_readTimeout);
         addDurationToSettings(model, KEY_ERR_RETRY_MAX_ELAPSED_TIME, m_serverErrorRetryMaxElapsedTime);
-        m_connection.save(model);
     }
 
     private static Duration getDurationFromSettings(final ConfigRO cfg, final String keyDuration,
@@ -193,7 +194,7 @@ public final class GAConnection {
 
     @Override
     public String toString() {
-        final var sb = new StringBuilder(m_connection.toString());
+        final var sb = new StringBuilder();
         sb.append("Connection timeout: %ds%n".formatted(m_connectTimeout.toSeconds()));
         sb.append("Read timeout: %ds%n".formatted(m_readTimeout.toSeconds()));
         sb.append("Retry maximum elapsed time: %ds%n".formatted(m_serverErrorRetryMaxElapsedTime.toSeconds()));
@@ -203,7 +204,7 @@ public final class GAConnection {
     /**
      * Get available account summaries from the connection.
      *
-     * @param connection Google API connection to use
+     * @param credentials Google credentials
      * @param connectTimeout connection timeout
      * @param readTimeout read timeout
      * @param retryMaxElapsedTime maximum elapsed time after the first request for retries
@@ -211,11 +212,19 @@ public final class GAConnection {
      * @throws IOException exception thrown from underlying API requests
      */
     private static final List<GoogleAnalyticsAdminV1betaAccountSummary> accountSummaries(
-            final GoogleApiConnection connection, final Duration connectTimeout, final Duration readTimeout,
+            final Credentials credentials, final Duration connectTimeout, final Duration readTimeout,
             final Duration retryMaxElapsedTime) throws IOException {
-        final var result = withAdminAPI(connection, connectTimeout, readTimeout, retryMaxElapsedTime,
+        final var result = withAdminAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime,
             admin -> admin.accountSummaries().list().execute().getAccountSummaries());
         return result != null ? result : Collections.emptyList();
+    }
+
+    private Credentials resolveCredentials() throws KNIMEException {
+        try {
+            return  m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+        } catch (CredentialNotFoundException e) {
+            throw new KNIMEException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -225,8 +234,10 @@ public final class GAConnection {
      * @throws KNIMEException exception throw from underlying API requests
      */
     public List<GoogleAnalyticsAdminV1betaAccountSummary> accountSummaries() throws KNIMEException {
-        return exceptionsWrapped(
-            () -> accountSummaries(m_connection, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
+        final var creds = resolveCredentials();
+
+        return exceptionsWrapped(() -> accountSummaries(creds,
+            m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
     }
 
     /**
@@ -235,17 +246,17 @@ public final class GAConnection {
      * for a given property, such as dimensions and metrics.
      *
      * @param property Google Analytics 4 property
-     * @param connection Google API connection to use
+     * @param credentials Google credentials
      * @param connectTimeout connection timeout
      * @param readTimeout read timeout
      * @param retryMaxElapsedTime maximum elapsed time after the first request for retries
      * @return available metadata for the property
      * @throws IOException exception thrown from underlying API requests
      */
-    public static final Metadata metadata(final GAProperty property,
-        final GoogleApiConnection connection, final Duration connectTimeout, final Duration readTimeout,
+    private static final Metadata metadata(final GAProperty property,
+        final Credentials credentials, final Duration connectTimeout, final Duration readTimeout,
         final Duration retryMaxElapsedTime) throws IOException {
-        return withDataAPI(connection, connectTimeout, readTimeout, retryMaxElapsedTime,
+        return withDataAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime,
             data -> data.properties().getMetadata("properties/%s/metadata".formatted(property.m_propertyId())).execute()
             );
     }
@@ -257,8 +268,10 @@ public final class GAConnection {
      * @throws KNIMEException exception throw from underlying API requests
      */
     public Metadata metadata(final GAProperty property) throws KNIMEException {
+        final var creds = resolveCredentials();
+
         return exceptionsWrapped(
-            () -> metadata(property, m_connection, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
+            () -> metadata(property, creds, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
     }
 
     /**
@@ -270,8 +283,11 @@ public final class GAConnection {
      * @throws KNIMEException exception throw from underlying API requests
      */
     public RunReportResponse runReport(final GAProperty property, final RunReportRequest req) throws KNIMEException {
+
+        final var creds = resolveCredentials();
+
         return exceptionsWrapped(() -> //
-            withDataAPI(m_connection, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime, //
+            withDataAPI(creds, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime, //
                 data -> data.properties().runReport("properties/" + property.m_propertyId(), req).execute()));
     }
 
@@ -294,7 +310,7 @@ public final class GAConnection {
     /**
      * Make a request against the Admin API.
      * @param <R> type of the value returned from the request
-     * @param connection underlying Google API connection to use
+     * @param credentials Google credentials
      * @param connectTimeout timeout to establish a connection
      * @param readTimeout timeout to read from an established connection
      * @param retryMax maximum elapsed time to spend on retrying the same request from the point in time when the
@@ -303,17 +319,17 @@ public final class GAConnection {
      * @return a user defined value extracted from the Admin API
      * @throws IOException
      */
-    private static final <R> R withAdminAPI(final GoogleApiConnection connection, final Duration connectTimeout,
+    private static final <R> R withAdminAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final FailableFunction<GoogleAnalyticsAdmin, R, IOException> callable) throws IOException {
-        return withAPI(connection, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Connector",
+        return withAPI(credentials, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Connector",
             GoogleAnalyticsAdmin.Builder::new, callable);
     }
 
     /**
      * Make a request against the Data API.
      * @param <R> type of the value returned from the request
-     * @param connection underlying Google API connection to use
+     * @param credentials Google credentials
      * @param connectTimeout timeout to establish a connection
      * @param readTimeout timeout to read from an established connection
      * @param retryMax maximum elapsed time to spend on retrying the same request from the point in time when the
@@ -322,23 +338,23 @@ public final class GAConnection {
      * @return a user defined value extracted from the Data API
      * @throws IOException
      */
-    private static final <R> R withDataAPI(final GoogleApiConnection connection, final Duration connectTimeout,
+    private static final <R> R withDataAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final FailableFunction<AnalyticsData, R, IOException> callable) throws IOException {
-        return withAPI(connection, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Query",
+        return withAPI(credentials, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Query",
             AnalyticsData.Builder::new, callable);
     }
 
     private static final <R, C extends AbstractGoogleJsonClient> R
-        withAPI(final GoogleApiConnection connection, final Duration connectTimeout,
+        withAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final String appName,
             final ToClientBuilder<C.Builder> builder,
             final FailableFunction<C, R, IOException> callable) throws IOException {
         @SuppressWarnings("unchecked")
-        final var client = (C) builder.build(GoogleApiConnection.getHttpTransport(),
-                GoogleApiConnection.getJsonFactory(),
-                configureRequestInitializer(connection, connectTimeout, readTimeout, retryMax))
+        final var client = (C) builder.build(GoogleApiUtil.getHttpTransport(),
+            GoogleApiUtil.getJsonFactory(),
+                configureRequestInitializer(credentials, connectTimeout, readTimeout, retryMax))
                 .setApplicationName(appName).build();
         return callable.apply(client);
     }
@@ -361,11 +377,9 @@ public final class GAConnection {
         };
     }
 
-    private static HttpRequestInitializer configureRequestInitializer(final GoogleApiConnection connection,
+    private static HttpRequestInitializer configureRequestInitializer(final Credentials credentials,
             final Duration connectTimeout, final Duration readTimeout, final Duration retryIOMaxElapsedTime) {
-        CheckUtils.checkNotNull(connection.getCredentials(),
-                "Google API credentials missing. Re-execute Google Authenticator node.");
-        HttpRequestInitializer init = new HttpCredentialsAdapter(connection.getCredentials());
+        HttpRequestInitializer init = new HttpCredentialsAdapter(credentials);
         init = wrap(init, request -> {
             request.setConnectTimeout((int)connectTimeout.toMillis());
             request.setReadTimeout((int)readTimeout.toMillis());

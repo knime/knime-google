@@ -49,10 +49,10 @@
 package org.knime.google.api.analytics.data;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -60,8 +60,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorConfiguration;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.credential.CredentialRefSerializer;
+import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -72,6 +76,7 @@ import com.google.api.services.analytics.model.Profile;
 import com.google.api.services.analytics.model.Profiles;
 import com.google.api.services.analytics.model.Webproperties;
 import com.google.api.services.analytics.model.Webproperty;
+import com.google.auth.Credentials;
 import com.google.auth.http.HttpCredentialsAdapter;
 
 /**
@@ -93,38 +98,74 @@ public final class GoogleAnalyticsConnection {
 
     private static final String CFG_READ_TIMEOUT = "readTimeout";
 
+    private final CredentialRef m_credentialRef;
+
     private final Duration m_connectTimeout;
 
     private final Duration m_readTimeout;
 
-    private GoogleApiConnection m_connection;
+    private final String m_profileId;
 
-    private String m_profileId;
-
-    private String m_applicationName;
+    private final String m_applicationName;
 
     private Analytics m_analytics;
 
     /**
+     * Creates a new {@link GoogleAnalyticsConnection} using the given {@link CredentialRef}.
+     *
+     * @param credentialRef A {@link CredentialRef} to obtain a Google credential.
+     * @param applicationName Name of this application as it is shown to the Google API
+     * @param profileId ID of the profile that will be used
+     * @param connectTimeout The connection timeout to use when communicating with the API.
+     * @param readTimeout The read timeout to use when communicating with the API.
+     */
+    public GoogleAnalyticsConnection(final CredentialRef credentialRef, final String applicationName,
+        final String profileId, final Duration connectTimeout, final Duration readTimeout) {
+
+        m_credentialRef = credentialRef;
+        m_profileId = profileId;
+        m_applicationName = applicationName;
+        m_connectTimeout = connectTimeout;
+        m_readTimeout = readTimeout;
+    }
+
+    /**
+     * Restores a {@link GoogleAnalyticsConnection} from a saved model (used by the framework).
+     *
+     * @param model The model containing the connection information
+     * @throws InvalidSettingsException If the model was invalid
+     */
+    public GoogleAnalyticsConnection(final ModelContentRO model) throws InvalidSettingsException {
+        m_credentialRef = CredentialRefSerializer.loadRefWithLegacySupport(model);
+        m_profileId = model.getString(CFG_PROFILE_ID);
+        m_applicationName = model.getString(CFG_APPLICATION_NAME);
+        m_connectTimeout = Duration.ofSeconds(model.getInt(CFG_CONNECT_TIMEOUT,
+            (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT.getSeconds()));
+        m_readTimeout = Duration.ofSeconds(model.getInt(CFG_READ_TIMEOUT,
+            (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT.getSeconds()));
+    }
+
+
+    /**
      * Retrieves all accounts with their web properties and their profiles from Google Analytics.
      *
-     * @param connection Connection to the Google API
+     * @param credentials Google credentials
      * @param connectTimeout The connection timeout to use when communicating with the API.
      * @param readTimeout The read timeout to use when communicating with the API.
      * @return Map containing the hierarchical structure of accounts, web properties and profiles
      * @throws IOException If an error occurs while retrieving the data
      */
     public static Map<String, Map<String, Map<String, String>>> getAccountsWebpropertiesProfilesMap(
-        final GoogleApiConnection connection, final Duration connectTimeout, final Duration readTimeout)
+        final Credentials credentials, final Duration connectTimeout, final Duration readTimeout)
         throws IOException {
+
         Map<String, Map<String, Map<String, String>>> accountsMap =
                 new TreeMap<String, Map<String, Map<String, String>>>();
         Map<String, String> accountIdToName = new HashMap<String, String>();
         Map<String, String> webpropertyIdToName = new HashMap<String, String>();
-        final var credAdapter = new HttpCredentialsAdapter(connection.getCredentials());
-        Analytics analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-            GoogleApiConnection.getJsonFactory(), setHttpTimeout(credAdapter, connectTimeout, readTimeout))
-                .setApplicationName("KNIME-Profiles-Scan").build();
+
+        final var analytics = buildAnalytics(credentials, "KNIME-Profiles-Scan", connectTimeout, readTimeout);
+
         Accounts accounts = analytics.management().accounts().list().execute();
         Webproperties webproperties = analytics.management().webproperties().list(ALL_WILDCARD).execute();
         Profiles profiles = analytics.management().profiles().list(ALL_WILDCARD, ALL_WILDCARD).execute();
@@ -140,53 +181,6 @@ public final class GoogleAnalyticsConnection {
             accountsMap.get(accountIdToName.get(profile.getAccountId())).get(webpropertyIdToName.get(profile.getWebPropertyId())).put(profile.getName(), profile.getId());
         }
         return accountsMap;
-    }
-
-    /**
-     * Creates a new {@link GoogleAnalyticsConnection} using the given {@link GoogleApiConnection}.
-     *
-     * @param connection The used GoogleApiConnection
-     * @param applicationName Name of this application as it is shown to the Google API
-     * @param profileId ID of the profile that will be used
-     * @param connectTimeout The connection timeout to use when communicating with the API.
-     * @param readTimeout The read timeout to use when communicating with the API.
-     */
-    public GoogleAnalyticsConnection(final GoogleApiConnection connection, final String applicationName,
-        final String profileId, final Duration connectTimeout, final Duration readTimeout) {
-        m_connection = connection;
-        m_profileId = profileId;
-        m_applicationName = applicationName;
-        m_connectTimeout = connectTimeout;
-        m_readTimeout = readTimeout;
-        final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
-        HttpRequestInitializer credentials = setHttpTimeout(credAdapter, m_connectTimeout, m_readTimeout);
-        m_analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-            GoogleApiConnection.getJsonFactory(), credentials)
-                .setApplicationName(m_applicationName).build();
-    }
-
-    /**
-     * Restores a {@link GoogleAnalyticsConnection} from a saved model (used by the framework).
-     *
-     * @param model The model containing the connection information
-     * @throws InvalidSettingsException If the model was invalid
-     */
-    public GoogleAnalyticsConnection(final ModelContentRO model) throws InvalidSettingsException {
-        try {
-            m_connection = new GoogleApiConnection(model);
-            m_profileId = model.getString(CFG_PROFILE_ID);
-            m_applicationName = model.getString(CFG_APPLICATION_NAME);
-            m_connectTimeout = Duration.ofSeconds(model.getInt(CFG_CONNECT_TIMEOUT,
-                (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT.getSeconds()));
-            m_readTimeout = Duration.ofSeconds(model.getInt(CFG_READ_TIMEOUT,
-                (int)GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT.getSeconds()));
-            final var credAdapter = new HttpCredentialsAdapter(m_connection.getCredentials());
-            m_analytics = new Analytics.Builder(GoogleApiConnection.getHttpTransport(),
-                GoogleApiConnection.getJsonFactory(), setHttpTimeout(credAdapter, m_connectTimeout, m_readTimeout))
-                    .setApplicationName(m_applicationName).build();
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidSettingsException(e);
-        }
     }
 
     /**
@@ -210,9 +204,27 @@ public final class GoogleAnalyticsConnection {
 
     /**
      * @return The {@link Analytics} object used to communicate with the Google Analytics API
+     * @throws CredentialNotFoundException If the credentials are not available anymore.
      */
-    public Analytics getAnalytics() {
+    public synchronized Analytics getAnalytics() throws CredentialNotFoundException {
+        if (m_analytics == null) {
+            final var credential = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+
+            m_analytics = buildAnalytics(credential, m_applicationName, m_connectTimeout, m_readTimeout);
+        }
+
         return m_analytics;
+    }
+
+    private static Analytics buildAnalytics(final Credentials credentials, final String applicationName,
+        final Duration connectTimeout, final Duration readTimeout) {
+
+        final var credAdapter = new HttpCredentialsAdapter(Objects.requireNonNull(credentials));
+        final var reqInitializer = setHttpTimeout(credAdapter, connectTimeout, readTimeout);
+
+        return new Analytics.Builder(GoogleApiUtil.getHttpTransport(),
+            GoogleApiUtil.getJsonFactory(), reqInitializer)
+            .setApplicationName(applicationName).build();
     }
 
     /**
@@ -226,7 +238,7 @@ public final class GoogleAnalyticsConnection {
      * @param model The model to save the current configuration in
      */
     public void save(final ModelContentWO model) {
-        m_connection.save(model);
+        CredentialRefSerializer.saveRef(m_credentialRef, model);
         model.addString(CFG_PROFILE_ID, m_profileId);
         model.addString(CFG_APPLICATION_NAME, m_applicationName);
         model.addInt(CFG_CONNECT_TIMEOUT, (int)m_connectTimeout.getSeconds());
@@ -245,8 +257,8 @@ public final class GoogleAnalyticsConnection {
             return false;
         }
         GoogleAnalyticsConnection con = (GoogleAnalyticsConnection)obj;
-        EqualsBuilder eb = new EqualsBuilder();
-        eb.append(m_connection, con.m_connection);
+        final var eb = new EqualsBuilder();
+        eb.append(m_analytics, con.m_analytics); // NOSONAR
         eb.append(m_profileId, con.m_profileId);
         eb.append(m_applicationName, con.m_applicationName);
         return eb.isEquals();
@@ -257,8 +269,8 @@ public final class GoogleAnalyticsConnection {
      */
     @Override
     public int hashCode() {
-        HashCodeBuilder hcb = new HashCodeBuilder();
-        hcb.append(m_connection);
+        final var hcb = new HashCodeBuilder();
+        hcb.append(m_analytics);
         hcb.append(m_profileId);
         hcb.append(m_applicationName);
         return hcb.hashCode();
@@ -270,10 +282,8 @@ public final class GoogleAnalyticsConnection {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(m_connection.toString() + "\n");
         sb.append("Profile ID:\n" + m_profileId + "\n\n");
         sb.append("Application name:\n" + m_applicationName + "\n");
         return sb.toString();
     }
-
 }

@@ -151,21 +151,19 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
 
         @Override
         public String[] choices(final DefaultNodeSettingsContext ctx) {
-            final var connSpec = GAConnectorNodeModel.getGoogleApiConnectionPortObjectSpec(ctx.getPortObjectSpecs());
-            if (connSpec.isPresent()) {
-                try {
-                    final var d = Duration.ofSeconds(6);
-                    // We intentionally use a very short duration since the user likely does not see
-                    // what is currently going on (and we don't have access here to the user-provided values).
-                    return new GAConnection(connSpec.get().getGoogleApiConnection(), d, d, d).accountSummaries()
-                            .stream()
-                            .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
-                                .map(p -> p.getProperty().replace("properties/", "")))
-                            .collect(Collectors.toList())
-                            .toArray(String[]::new);
-                } catch (KNIMEException e) {
-                    LOGGER.error("Failed to retrieve Google Analytics 4 Properties from Google Analytics API.", e);
-                }
+            final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
+            try {
+                final var d = Duration.ofSeconds(6);
+                // We intentionally use a very short duration since the user likely does not see
+                // what is currently going on (and we don't have access here to the user-provided values).
+                return new GAConnection(credentialRef, d, d, d).accountSummaries()
+                        .stream()
+                        .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
+                            .map(p -> p.getProperty().replace("properties/", "")))
+                        .collect(Collectors.toList())
+                        .toArray(String[]::new);
+            } catch (KNIMEException e) {
+                LOGGER.error("Failed to retrieve Google Analytics 4 Properties from Google Analytics API.", e);
             }
             return new String[0];
         }

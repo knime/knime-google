@@ -60,9 +60,10 @@ import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.credentials.base.CredentialCache;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsPropertiesProvider;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 import org.knime.testing.node.dialog.DefaultNodeSettingsSnapshotTest;
 import org.mockito.ArgumentMatchers;
@@ -109,9 +110,8 @@ class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
         } catch (KNIMEException e) {
             fail("Failed to set up mock connection.", e);
         }
-
-        final var connMock = Mockito.mock(GoogleApiConnection.class);
-
-        return new GoogleApiConnectionPortObjectSpec(connMock);
+        final var credentials = Mockito.mock(GoogleCredential.class);
+        final var cacheId = CredentialCache.store(credentials);
+        return new GoogleApiConnectionPortObjectSpec(cacheId);
     }
 }

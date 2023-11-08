@@ -63,7 +63,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
 
 /**
  * Specification for the {@link GAConnectionPortObject}.
@@ -96,7 +95,9 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
      * @param connection connection to use or {@code null} if no connection is present
      * @param property Google Analytics property to connect to or {@code null} if no property is present
      */
-    public GAConnectionPortObjectSpec(final GAConnection connection, final GAProperty property) {
+    public GAConnectionPortObjectSpec(final GAConnection connection,
+        final GAProperty property) {
+
         m_connection = Objects.requireNonNull(connection);
         m_property = Objects.requireNonNull(property);
     }
@@ -140,7 +141,7 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
 
     @Override
     protected void load(final ModelContentRO model) throws InvalidSettingsException {
-        m_connection = GAConnection.loadFrom(model);
+        m_connection = new GAConnection(model);
         m_property = GAProperty.loadSettings(model, KEY_GA_PROPERTY);
     }
 
@@ -160,7 +161,8 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
             return true;
         }
         if (other instanceof GAConnectionPortObjectSpec otherSpec) {
-            return m_connection != null
+            return super.equals(otherSpec)
+                    && m_connection != null
                     && m_property != null
                     && otherSpec.m_connection != null
                     && otherSpec.m_property != null
@@ -171,7 +173,8 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(m_connection).append(m_property).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode())
+                .append(m_connection).append(m_property).toHashCode();
     }
 
     /**
@@ -198,30 +201,4 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
             GAConnectionPortObjectSpec.class, IllegalArgumentException::new,
             "Input Port Object Spec is not a Google Analytics Connection."));
     }
-
-    /**
-     * Convenience method to obtain a Google API connection port object spec from the input specs at the given
-     * offset.
-     *
-     * If the index is not occupied by any port object spec (possibly since the array is null or empty, or there is a
-     * null value at the specified index) and empty optional is returned.
-     *
-     * If the existing port object spec is not of type {@link GoogleApiConnectionPortObjectSpec}, an exception is thrown.
-     *
-     * @param inSpecs input port object specs, possibly null or empty
-     * @param portIdx index to look at
-     * @return a Google API connection port object spec, or empty optional if no spec is available
-     * @throws IllegalArgumentException if the existing port object spec is not of type
-     *             {@link GoogleApiConnectionPortObjectSpec}
-     */
-    public static Optional<GoogleApiConnectionPortObjectSpec> getGoogleApiConnectionPortObjectSpec(
-            final PortObjectSpec[] inSpecs, final int portIdx) {
-        if (inSpecs == null || inSpecs.length == 0 || inSpecs[portIdx] == null) {
-            return Optional.empty();
-        }
-        return Optional.of(CheckUtils.checkCast(inSpecs[portIdx],
-            GoogleApiConnectionPortObjectSpec.class, IllegalArgumentException::new,
-            "Input Port Object Spec is not a Google API Connection."));
-    }
-
 }

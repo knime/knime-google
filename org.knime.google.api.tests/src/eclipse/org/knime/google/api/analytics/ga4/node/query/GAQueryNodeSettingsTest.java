@@ -121,5 +121,4 @@ class GAQueryNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
         }
         return new GAConnectionPortObjectSpec(connMock, prop);
     }
-
 }

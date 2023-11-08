@@ -58,6 +58,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
 
 import com.google.api.services.analytics.Analytics.Data.Ga.Get;
@@ -332,8 +333,9 @@ public class GoogleAnalyticsQueryConfiguration {
      * @param connection The connection to use
      * @return A get request for the currently configured query
      * @throws IOException If an IO error occurs
+     * @throws CredentialNotFoundException
      */
-    public Get createGetRequest(final GoogleAnalyticsConnection connection) throws IOException {
+    public Get createGetRequest(final GoogleAnalyticsConnection connection) throws IOException, CredentialNotFoundException {
         String[] metrics = new String[m_metrics.length];
         for (int i = 0; i < metrics.length; i++) {
             metrics[i] = prependPrefix(m_metrics[i]);
