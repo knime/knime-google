@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.NodeLogger;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.gax.paging.Page;
@@ -104,14 +104,14 @@ public class CloudStorageClient {
      */
     public CloudStorageClient(final CloudStorageConnectionConfig config) {
         final var transportOptions = HttpTransportOptions.newBuilder()//
-                .setHttpTransportFactory(GoogleApiConnection::getHttpTransport)
+                .setHttpTransportFactory(GoogleApiUtil::getHttpTransport)
                 .setConnectTimeout((int) config.getConnectionTimeOut().toMillis())
                 .setReadTimeout((int) config.getReadTimeOut().toMillis()).build();
 
         m_storage = StorageOptions.newBuilder()
                 .setProjectId(config.getProjectId())
                 .setTransportOptions(transportOptions)
-                .setCredentials(config.getApiConnection().getCredentials())
+                .setCredentials(config.getCredentials())
                 .build().getService();
     }
 

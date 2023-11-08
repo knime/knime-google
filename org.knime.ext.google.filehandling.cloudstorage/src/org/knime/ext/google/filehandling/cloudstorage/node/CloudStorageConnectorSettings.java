@@ -58,7 +58,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageConnectionConfig;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
-import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.auth.Credentials;
 
 /**
  * Node settings for for Google Cloud Storage Connector node.
@@ -226,11 +227,11 @@ public class CloudStorageConnectorSettings {
 
     /**
      *
-     * @param con
+     * @param credentials
      * @return The FSConnectionConfig for Cloud Storage
      */
-    public CloudStorageConnectionConfig toFSConnectionConfig(final GoogleApiConnection con) {
-        CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(getWorkingDirectory(), con);
+    public CloudStorageConnectionConfig toFSConnectionConfig(final Credentials credentials) {
+        final var config = new CloudStorageConnectionConfig(getWorkingDirectory(), credentials);
         config.setConnectionTimeOut(Duration.ofSeconds(getConnectionTimeout()));
         config.setReadTimeOut(Duration.ofSeconds(getReadTimeout()));
         config.setNormalizePaths(getNormalizePaths());

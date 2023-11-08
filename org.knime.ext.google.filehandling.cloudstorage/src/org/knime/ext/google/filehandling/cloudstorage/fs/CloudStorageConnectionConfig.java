@@ -51,7 +51,8 @@ package org.knime.ext.google.filehandling.cloudstorage.fs;
 import java.time.Duration;
 
 import org.knime.filehandling.core.connections.meta.base.BaseFSConnectionConfig;
-import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.auth.Credentials;
 
 /**
  * Google Cloud Storage connection configuration implementation.
@@ -70,16 +71,16 @@ public class CloudStorageConnectionConfig extends BaseFSConnectionConfig {
     private Duration m_connectionTimeOut;
     private Duration m_readTimeOut;
 
-    private final GoogleApiConnection m_apiConnection;
+    private final Credentials m_credentials;
 
     /**
      *
      * @param workingDirectory
-     * @param apiConnection
+     * @param credentials
      */
-    public CloudStorageConnectionConfig(final String workingDirectory, final GoogleApiConnection apiConnection) {
+    public CloudStorageConnectionConfig(final String workingDirectory, final Credentials credentials) {
         super(workingDirectory, true);
-        m_apiConnection = apiConnection;
+        m_credentials = credentials;
     }
 
     /**
@@ -143,10 +144,9 @@ public class CloudStorageConnectionConfig extends BaseFSConnectionConfig {
     }
 
     /**
-     * @return the apiConnection
+     * @return the credentials
      */
-    public GoogleApiConnection getApiConnection() {
-        return m_apiConnection;
+    public Credentials getCredentials() {
+        return m_credentials;
     }
-
 }

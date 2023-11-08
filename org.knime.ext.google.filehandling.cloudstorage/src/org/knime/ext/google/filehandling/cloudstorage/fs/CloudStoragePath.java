@@ -55,7 +55,6 @@ import java.time.Duration;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.filehandling.core.connections.base.BlobStorePath;
-import org.knime.google.api.data.GoogleApiConnection;
 import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
 
 /**
@@ -148,12 +147,12 @@ public class CloudStoragePath extends BlobStorePath {
      *             Throws exception which encompasses multiple inner exceptions
      */
     public URL getPreSignedUrl(final Duration expirationDuration) throws URISyntaxException {
-        final GoogleApiConnection googleApiConnection = ((CloudStorageFileSystem) m_fileSystem).getApiConnection();
+        final var credentials = ((CloudStorageFileSystem) m_fileSystem).getCredentials();
 
         String signedUrl;
         try {
-            signedUrl = GoogleCSUrlSignature.getSigningURL(googleApiConnection.getCredentials(),
-                    expirationDuration.getSeconds(), getBucketName(), getBlobName());
+            signedUrl = GoogleCSUrlSignature.getSigningURL(credentials, expirationDuration.getSeconds(),
+                    getBucketName(), getBlobName());
             return new URL(signedUrl);
         } catch (Exception ex) {
             LOGGER.error(ex);

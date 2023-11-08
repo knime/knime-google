@@ -49,7 +49,7 @@
 package org.knime.ext.google.filehandling.cloudstorage.testing;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
 
@@ -61,8 +61,8 @@ import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.filehandling.core.connections.FSLocationSpec;
 import org.knime.filehandling.core.connections.meta.FSType;
 import org.knime.filehandling.core.testing.DefaultFSTestInitializerProvider;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.data.GoogleApiStorageScopes;
+import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
+import org.knime.google.api.scopes.GoogleApiStorageScopes;
 
 /**
  * Initializer provider for cloud storage.
@@ -73,28 +73,24 @@ public class CloudStorageTestInitializerProvider extends DefaultFSTestInitialize
 
     @SuppressWarnings("resource")
     @Override
-    public CloudStorageTestInitializer setup(final Map<String, String> configuration) throws IOException {
+    public CloudStorageTestInitializer setup(final Map<String, String> config) throws IOException {
 
-        validateConfiguration(configuration);
+        validateConfiguration(config);
 
-        final GoogleApiConnection apiConnection;
-        try {
-            apiConnection = new GoogleApiConnection(configuration.get("email"), configuration.get("keyFilePath"),
-                    GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
-        } catch (GeneralSecurityException e) {
-            throw new IOException(e);
-        }
+        final var keyFilePath = Paths.get(config.get("keyFilePath"));
+        final var creds = ServiceAccountCredentialsUtil.loadFromP12(config.get("email"), keyFilePath)//
+                .createScoped(GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL);
 
-        final String workingDir = generateRandomizedWorkingDir(configuration.get("workingDirPrefix"),
+        final String workingDir = generateRandomizedWorkingDir(config.get("workingDirPrefix"),
                 CloudStorageFileSystem.PATH_SEPARATOR);
 
-        final CloudStorageConnectionConfig config = new CloudStorageConnectionConfig(workingDir, apiConnection);
-        config.setProjectId(configuration.get("projectId"));
-        config.setNormalizePaths(true);
-        config.setConnectionTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
-        config.setReadTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
+        final var fsConfig = new CloudStorageConnectionConfig(workingDir, creds);
+        fsConfig.setProjectId(config.get("projectId"));
+        fsConfig.setNormalizePaths(true);
+        fsConfig.setConnectionTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
+        fsConfig.setReadTimeOut(Duration.ofSeconds(CloudStorageConnectionConfig.DEFAULT_TIMEOUT_SECONDS));
 
-        final CloudStorageFSConnection fsConnection = new CloudStorageFSConnection(config);
+        final var fsConnection = new CloudStorageFSConnection(fsConfig);
 
         return new CloudStorageTestInitializer(fsConnection);
     }

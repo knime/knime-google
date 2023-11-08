@@ -70,11 +70,13 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.google.api.credential.GoogleCredential;
+
+import com.google.auth.Credentials;
 
 /**
  * Google Cloud Storage Connection node dialog.
@@ -88,7 +90,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
     private final WorkingDirectoryChooser m_workingDirChooser = new WorkingDirectoryChooser("cloud-storage.workingDir",
             this::createFSConnection);
 
-    private GoogleApiConnection m_connection;
+    private Credentials m_credentials;
 
     /**
      * Creates new instance.
@@ -181,7 +183,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
     }
 
     private FSConnection createFSConnection() {
-        return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(m_connection));
+        return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(m_credentials));
     }
 
     /**
@@ -210,8 +212,12 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
             // ignore
         }
 
-        m_connection = ((GoogleApiConnectionPortObjectSpec) specs[0]).getGoogleApiConnection();
-
+        final var credentialsOpt = ((CredentialPortObjectSpec) specs[0]) //
+                .getCredential(GoogleCredential.class);
+        if (credentialsOpt.isEmpty()) {
+            throw new NotConfigurableException(GoogleCredential.NO_AUTH_ERROR);
+        }
+        m_credentials = credentialsOpt.get().getCredentials(); // NOSONAR
         settingsLoaded();
     }
 

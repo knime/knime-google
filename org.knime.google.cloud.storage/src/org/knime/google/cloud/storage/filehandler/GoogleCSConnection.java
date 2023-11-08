@@ -46,7 +46,7 @@
 package org.knime.google.cloud.storage.filehandler;
 
 import org.knime.base.filehandling.remote.files.Connection;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 import org.knime.google.cloud.storage.signedurl.GoogleCSUrlSignature;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
 
@@ -81,12 +81,12 @@ public class GoogleCSConnection extends Connection {
 	public void open() throws Exception {
 		if (!isOpen()) {
 		    final var transportOptions = HttpTransportOptions.newBuilder()//
-	                .setHttpTransportFactory(GoogleApiConnection::getHttpTransport)
+	                .setHttpTransportFactory(GoogleApiUtil::getHttpTransport)//
 	                .build();
 
 		    m_client = StorageOptions.newBuilder()
 	                .setTransportOptions(transportOptions)
-	                .setCredentials(m_connectionInformation.getGoogleApiConnection().getCredentials())
+	                .setCredentials(m_connectionInformation.getCredentials())
 	                .build().getService();
 		}
 	}
@@ -118,7 +118,7 @@ public class GoogleCSConnection extends Connection {
      * @throws Exception
      */
     protected String getSigningURL(final long expirationSeconds, final String bucketName, final String objectName) throws Exception {
-        final var creds = m_connectionInformation.getGoogleApiConnection().getCredentials();
-        return GoogleCSUrlSignature.getSigningURL(creds, expirationSeconds, bucketName, objectName);
+        return GoogleCSUrlSignature.getSigningURL(m_connectionInformation.getCredentials(),
+            expirationSeconds, bucketName, objectName);
     }
 }

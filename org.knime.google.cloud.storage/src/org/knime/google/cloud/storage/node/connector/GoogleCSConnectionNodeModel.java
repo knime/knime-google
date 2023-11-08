@@ -58,9 +58,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.google.api.data.GoogleApiConnection;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
-import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformationPortObject;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformationPortObjectSpec;
 
@@ -71,21 +71,23 @@ import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformati
  */
 public class GoogleCSConnectionNodeModel extends NodeModel {
 
-	private final GoogleCSConnectionNodeSettings m_settings = new GoogleCSConnectionNodeSettings();
+    private static final int CREDENTIAL_INPUT_PORT = 0;
+
+    private final GoogleCSConnectionNodeSettings m_settings = new GoogleCSConnectionNodeSettings();
 
     GoogleCSConnectionNodeModel() {
-        super(new PortType[]{GoogleApiConnectionPortObject.TYPE},
+        super(new PortType[]{CredentialPortObject.TYPE},
             new PortType[]{GoogleCloudStorageConnectionInformationPortObject.TYPE});
     }
 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createSpec(inSpecs[0])};
+        return new PortObjectSpec[]{createSpec(inSpecs[CREDENTIAL_INPUT_PORT])};
     }
 
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        return new PortObject[]{new GoogleCloudStorageConnectionInformationPortObject(createSpec(inObjects[0].getSpec()))};
+        return new PortObject[]{new GoogleCloudStorageConnectionInformationPortObject(createSpec(inObjects[CREDENTIAL_INPUT_PORT].getSpec()))};
     }
 
 	@Override
@@ -125,9 +127,11 @@ public class GoogleCSConnectionNodeModel extends NodeModel {
 	 */
 	private GoogleCloudStorageConnectionInformationPortObjectSpec createSpec(final PortObjectSpec inSpec) throws InvalidSettingsException {
 		m_settings.validateDeeper();
-
-        final GoogleApiConnection apiConnection = ((GoogleApiConnectionPortObjectSpec)inSpec).getGoogleApiConnection();
-        return new GoogleCloudStorageConnectionInformationPortObjectSpec(
-            m_settings.createConnectionInformations(apiConnection));
+		final var connectionInformation = m_settings.createConnectionInformations(getCredentialRef(inSpec));
+        return new GoogleCloudStorageConnectionInformationPortObjectSpec(connectionInformation);
 	}
+
+    static CredentialRef getCredentialRef(final PortObjectSpec portObjectSpec) {
+        return ((CredentialPortObjectSpec) portObjectSpec).toRef();
+    }
 }

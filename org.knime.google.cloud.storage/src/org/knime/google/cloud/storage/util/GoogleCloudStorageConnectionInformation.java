@@ -45,15 +45,19 @@
  */
 package org.knime.google.cloud.storage.util;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.cloud.core.util.port.CloudConnectionInformation;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.google.api.credential.CredentialRefSerializer;
+import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.cloud.storage.filehandler.GoogleCSRemoteFileHandler;
+
+import com.google.auth.Credentials;
 
 /**
  * Google cloud connection informations with API connection and project identifier.
@@ -66,7 +70,7 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
 
     private static final String SERVICE_NAME = "Google Cloud Storage";
 
-    private GoogleApiConnection m_googleApiConnection;
+    private CredentialRef m_credentialRef;
 
     private static final String CFG_PROJECT = "googleCloudProjectId";
     private String m_project;
@@ -74,32 +78,29 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
     /**
      * Default constructor.
      *
-     * @param apiConnection Goolge API connection with credentials
+     * @param credentialRef Goolge API connection with credentials
      * @param project Unique Google Cloud project identifier
      */
-    public GoogleCloudStorageConnectionInformation(final GoogleApiConnection apiConnection, final String project) {
-        m_googleApiConnection = apiConnection;
+    public GoogleCloudStorageConnectionInformation(final CredentialRef credentialRef, final String project) {
+        m_credentialRef = credentialRef;
         m_project = project;
         setProtocol(GoogleCSRemoteFileHandler.PROTOCOL.getName());
         setHost(m_project);
     }
 
     GoogleCloudStorageConnectionInformation(final ModelContentRO model) throws InvalidSettingsException {
-        try {
-            m_googleApiConnection = new GoogleApiConnection(model);
-            m_project = model.getString(CFG_PROJECT, "");
-            setProtocol(GoogleCSRemoteFileHandler.PROTOCOL.getName());
-            setHost(m_project);
-        } catch (GeneralSecurityException | IOException ex) {
-            throw new InvalidSettingsException("Unable to load google api connection: " + ex.getMessage(), ex);
-        }
+        m_credentialRef = CredentialRefSerializer.loadRefWithLegacySupport(model);
+        m_project = model.getString(CFG_PROJECT, "");
+        setProtocol(GoogleCSRemoteFileHandler.PROTOCOL.getName());
+        setHost(m_project);
     }
 
     /**
-     * @return Goolge API connection with credentials
+     * @return the credentials
+     * @throws CredentialNotFoundException
      */
-    public GoogleApiConnection getGoogleApiConnection() {
-        return m_googleApiConnection;
+    public Credentials getCredentials() throws CredentialNotFoundException {
+        return m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
     }
 
     /**
@@ -111,7 +112,7 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
 
     @Override
     public void save(final ModelContentWO model) {
-        m_googleApiConnection.save(model);
+        CredentialRefSerializer.saveRef(m_credentialRef, model);
         model.addString(CFG_PROJECT, m_project);
     }
 
@@ -129,11 +130,11 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((m_googleApiConnection == null) ? 0 : m_googleApiConnection.hashCode());
-        result = prime * result + ((m_project == null) ? 0 : m_project.hashCode());
-        return result;
+        final var builder = new HashCodeBuilder();
+        return builder.appendSuper(super.hashCode())//
+            .append(m_credentialRef)//
+            .append(m_project)//
+            .toHashCode();
     }
 
     @Override
@@ -148,20 +149,10 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
             return false;
         }
         GoogleCloudStorageConnectionInformation other = (GoogleCloudStorageConnectionInformation)obj;
-        if (m_googleApiConnection == null) {
-            if (other.m_googleApiConnection != null) {
-                return false;
-            }
-        } else if (!m_googleApiConnection.equals(other.m_googleApiConnection)) {
-            return false;
-        }
-        if (m_project == null) {
-            if (other.m_project != null) {
-                return false;
-            }
-        } else if (!m_project.equals(other.m_project)) {
-            return false;
-        }
-        return true;
+
+        return new EqualsBuilder().appendSuper(super.equals(obj))//
+                .append(m_credentialRef, other.m_credentialRef)//
+                .append(m_project, other.m_project)//
+                .isEquals();
     }
 }

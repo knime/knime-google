@@ -62,20 +62,20 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.credentials.base.CredentialPortObject;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSDescriptorProvider;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
-import org.knime.google.api.data.GoogleApiConnectionPortObject;
+import org.knime.google.api.credential.GoogleCredential;
 
 import com.google.cloud.storage.StorageException;
 
 /**
  * Node model for Google Cloud Storage Connector node. Takes
- * {@link GoogleApiConnectionPortObject} and creates
- * {@link FileSystemPortObject}.
+ * {@link CredentialPortObject} and creates {@link FileSystemPortObject}.
  *
  * @author Alexander Bondaletov
  */
@@ -92,15 +92,20 @@ class CloudStorageConnectorNodeModel extends NodeModel {
      * Creates new instance.
      */
     protected CloudStorageConnectorNodeModel() {
-        super(new PortType[] { GoogleApiConnectionPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
+        super(new PortType[] { CredentialPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
     }
 
     @SuppressWarnings("resource")
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        GoogleApiConnectionPortObject apiConnection = (GoogleApiConnectionPortObject) inObjects[0];
+        CredentialPortObject inObject = (CredentialPortObject) inObjects[0];
+
+        final var credentialsOpt = inObject.getCredential(GoogleCredential.class);
+        if (credentialsOpt.isEmpty()) {
+            throw new InvalidSettingsException(GoogleCredential.NO_AUTH_ERROR);
+        }
         m_fsConnection = new CloudStorageFSConnection(
-                m_settings.toFSConnectionConfig(apiConnection.getGoogleApiConnection()));
+                m_settings.toFSConnectionConfig(credentialsOpt.get().getCredentials()));
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {

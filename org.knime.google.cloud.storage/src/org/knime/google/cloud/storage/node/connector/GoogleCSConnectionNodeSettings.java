@@ -50,7 +50,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.google.api.data.GoogleApiConnection;
+import org.knime.credentials.base.CredentialRef;
 import org.knime.google.cloud.storage.filehandler.GoogleCSRemoteFileHandler;
 import org.knime.google.cloud.storage.util.GoogleCloudStorageConnectionInformation;
 
@@ -112,8 +112,8 @@ public class GoogleCSConnectionNodeSettings {
         m_projectId.loadSettingsFrom(settings);
     }
 
-    GoogleCloudStorageConnectionInformation createConnectionInformations(final GoogleApiConnection apiConnection) {
-        final GoogleCloudStorageConnectionInformation infos = new GoogleCloudStorageConnectionInformation(apiConnection, m_projectId.getStringValue());
+    GoogleCloudStorageConnectionInformation createConnectionInformations(final CredentialRef credentialRef) {
+        final GoogleCloudStorageConnectionInformation infos = new GoogleCloudStorageConnectionInformation(credentialRef, m_projectId.getStringValue());
         infos.setProtocol(GoogleCSRemoteFileHandler.PROTOCOL.getName());
         infos.setHost(m_projectId.getStringValue());
         return infos;

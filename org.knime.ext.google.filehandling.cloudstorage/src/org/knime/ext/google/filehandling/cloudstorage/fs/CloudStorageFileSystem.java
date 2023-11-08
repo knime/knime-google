@@ -53,7 +53,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
-import org.knime.google.api.data.GoogleApiConnection;
+
+import com.google.auth.Credentials;
 
 /**
  * Google Cloud Storage implementation of the {@link FileSystem} interface.
@@ -71,7 +72,7 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
 
     private final boolean m_normalizePaths;
 
-    private final GoogleApiConnection m_apiConnection;
+    private final Credentials m_credentials;
 
     /**
      * Constructs {@link CloudStorageFileSystem} for a given URI.
@@ -90,7 +91,7 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
                         : config.getWorkingDirectory(), //
                 CloudStorageFSDescriptorProvider.FS_LOCATION_SPEC);
 
-        m_apiConnection = config.getApiConnection();
+        m_credentials = config.getCredentials();
         m_client = new CloudStorageClient(config);
         m_normalizePaths = config.isNormalizePaths();
     }
@@ -130,11 +131,9 @@ public class CloudStorageFileSystem extends BaseFileSystem<CloudStoragePath> {
     }
 
     /**
-     * Returns an instance of the google api connection
-     *
-     * @return GoogleApiConnection
+     * @return the credentials
      */
-    public GoogleApiConnection getApiConnection() {
-        return m_apiConnection;
+    public Credentials getCredentials() {
+        return m_credentials;
     }
 }
