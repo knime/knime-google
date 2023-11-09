@@ -51,6 +51,7 @@ package org.knime.google.api.analytics.ga4.node.query;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 
 import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;
@@ -61,7 +62,7 @@ import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class MetricsChoicesProvider implements ChoicesProvider {
+final class MetricsChoicesProvider implements ChoicesProvider, AsyncChoicesProvider {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MetricsChoicesProvider.class);
 

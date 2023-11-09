@@ -75,8 +75,8 @@
                 "default" : "AND"
               },
               "filters" : {
+                "title" : "Dimension filter",
                 "default" : [ ],
-                "title": "Dimension filter",
                 "type" : "array",
                 "items" : {
                   "type" : "object",
@@ -222,13 +222,7 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "possibleValues" : [ {
-                "id" : "testMetric1",
-                "text" : "testMetric1"
-              }, {
-                "id" : "testMetric2",
-                "text" : "testMetric2"
-              } ],
+              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.MetricsChoicesProvider",
               "format" : "dropDown",
               "showNoneColumn" : false,
               "showRowKeys" : false,
@@ -251,13 +245,7 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "possibleValues" : [ {
-                "id" : "testDim1",
-                "text" : "testDim1"
-              }, {
-                "id" : "testDim2",
-                "text" : "testDim2"
-              } ],
+              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
               "format" : "dropDown",
               "showNoneColumn" : false,
               "showRowKeys" : false,
@@ -334,13 +322,7 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "possibleValues" : [ {
-                "id" : "testDim1",
-                "text" : "testDim1"
-              }, {
-                "id" : "testDim2",
-                "text" : "testDim2"
-              } ],
+              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
               "format" : "dropDown",
               "showNoneColumn" : false,
               "showRowKeys" : false,

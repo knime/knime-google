@@ -54,13 +54,7 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
-        "possibleValues" : [ {
-          "id" : "choice1",
-          "text" : "choice1"
-        }, {
-          "id" : "choice2",
-          "text" : "choice2"
-        } ],
+        "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsPropertiesProvider",
         "format" : "dropDown",
         "showNoneColumn" : false,
         "showRowKeys" : false,
