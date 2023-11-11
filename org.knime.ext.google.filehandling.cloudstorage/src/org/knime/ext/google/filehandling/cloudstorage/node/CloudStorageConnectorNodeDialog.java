@@ -52,6 +52,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -71,12 +72,13 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
-import org.knime.google.api.credential.GoogleCredential;
-
-import com.google.auth.Credentials;
+import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
+import org.knime.google.api.credential.CredentialUtil;
 
 /**
  * Google Cloud Storage Connection node dialog.
@@ -90,7 +92,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
     private final WorkingDirectoryChooser m_workingDirChooser = new WorkingDirectoryChooser("cloud-storage.workingDir",
             this::createFSConnection);
 
-    private Credentials m_credentials;
+    private CredentialRef m_credentialRef;
 
     /**
      * Creates new instance.
@@ -182,13 +184,15 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         return panel;
     }
 
-    private FSConnection createFSConnection() {
-        return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(m_credentials));
+    private FSConnection createFSConnection() throws IOException {
+        try {
+            final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
+            return new CloudStorageFSConnection(m_settings.toFSConnectionConfig(creds));
+        } catch (NoSuchCredentialException ex) {
+            throw ExceptionUtil.wrapAsIOException(ex);
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         validateBeforeSaving();
@@ -200,9 +204,6 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
         m_workingDirChooser.addCurrentSelectionToHistory();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
@@ -212,12 +213,7 @@ class CloudStorageConnectorNodeDialog extends NodeDialogPane {
             // ignore
         }
 
-        final var credentialsOpt = ((CredentialPortObjectSpec) specs[0]) //
-                .getCredential(GoogleCredential.class);
-        if (credentialsOpt.isEmpty()) {
-            throw new NotConfigurableException(GoogleCredential.NO_AUTH_ERROR);
-        }
-        m_credentials = credentialsOpt.get().getCredentials(); // NOSONAR
+        m_credentialRef = ((CredentialPortObjectSpec) specs[0]).toRef();
         settingsLoaded();
     }
 

@@ -58,9 +58,9 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.credentials.base.CredentialRef;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.credential.CredentialRefSerializer;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.api.nodes.util.GoogleApiUtil;
 import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
@@ -181,15 +181,15 @@ public final class GoogleSheetsConnection {
      *
      * @return The {@link Sheets} object used to communicate with the Google Sheets API
      * @throws IOException If the credentials cannot be read
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
      */
-    public Sheets getSheetsService() throws IOException, CredentialNotFoundException {
+    public Sheets getSheetsService() throws IOException, NoSuchCredentialException {
         if (m_sheets == null) {
             if (m_interactiveAuth) {
                 m_sheets = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthSheetService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                final var creds = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+                final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
                 final var credAdapter = new HttpCredentialsAdapter(creds);
                 m_sheets = new Sheets.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
                     credAdapter).setApplicationName(APP_NAME).build();
@@ -203,15 +203,15 @@ public final class GoogleSheetsConnection {
      *
      * @return The Google Drive service associated with this Google Sheet connection
      * @throws IOException If the credentials cannot be read
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
      */
-    public Drive getDriveService() throws IOException, CredentialNotFoundException {
+    public Drive getDriveService() throws IOException, NoSuchCredentialException {
         if (m_drive == null) {
             if (m_interactiveAuth) {
                 m_drive = GoogleSheetsInteractiveAuthentication.
                         getExistingAuthDriveService(m_credentialLocationType, m_credentialPath, m_user);
             } else {
-                final var creds = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+                final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
                 final var credAdapter = new HttpCredentialsAdapter(creds);
                 m_drive = new Drive.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
                     credAdapter).setApplicationName(APP_NAME).build();

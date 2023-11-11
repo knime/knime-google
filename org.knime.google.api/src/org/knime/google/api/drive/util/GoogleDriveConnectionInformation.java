@@ -48,6 +48,7 @@
  */
 package org.knime.google.api.drive.util;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -57,9 +58,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.credentials.base.CredentialRef;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.credential.CredentialRefSerializer;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.api.drive.filehandler.GoogleDriveRemoteFileHandler;
 
 import com.google.auth.Credentials;
@@ -103,10 +104,11 @@ public class GoogleDriveConnectionInformation extends CloudConnectionInformation
 
     /**
      * @return the credentials
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
+     * @throws IOException
      */
-    public Credentials getCredentials() throws CredentialNotFoundException {
-        return m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+    public Credentials getCredentials() throws NoSuchCredentialException, IOException {
+        return CredentialUtil.toOAuth2Credentials(m_credentialRef);
     }
 
     @Override

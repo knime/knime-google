@@ -63,13 +63,14 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSDescriptorProvider;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFileSystem;
 import org.knime.filehandling.core.connections.FSConnectionRegistry;
 import org.knime.filehandling.core.port.FileSystemPortObject;
 import org.knime.filehandling.core.port.FileSystemPortObjectSpec;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 
 import com.google.cloud.storage.StorageException;
 
@@ -98,14 +99,11 @@ class CloudStorageConnectorNodeModel extends NodeModel {
     @SuppressWarnings("resource")
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        CredentialPortObject inObject = (CredentialPortObject) inObjects[0];
+        final var inSpec = (CredentialPortObjectSpec) inObjects[0].getSpec();
 
-        final var credentialsOpt = inObject.getCredential(GoogleCredential.class);
-        if (credentialsOpt.isEmpty()) {
-            throw new InvalidSettingsException(GoogleCredential.NO_AUTH_ERROR);
-        }
-        m_fsConnection = new CloudStorageFSConnection(
-                m_settings.toFSConnectionConfig(credentialsOpt.get().getCredentials()));
+        final var creds = CredentialUtil.toOAuth2Credentials(inSpec);
+
+        m_fsConnection = new CloudStorageFSConnection(m_settings.toFSConnectionConfig(creds));
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {

@@ -51,10 +51,13 @@ package org.knime.google.api.credential;
 import static org.knime.credentials.base.CredentialPortViewUtil.obfuscate;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.credentials.base.Credential;
@@ -63,20 +66,23 @@ import org.knime.credentials.base.CredentialPortViewData.Section;
 import org.knime.credentials.base.CredentialType;
 import org.knime.credentials.base.CredentialTypeRegistry;
 import org.knime.credentials.base.NoOpCredentialSerializer;
+import org.knime.credentials.base.oauth.api.AccessTokenAccessor;
 import org.knime.credentials.base.oauth.api.HttpAuthorizationHeaderCredentialValue;
 
 import com.google.auth.oauth2.AccessToken;
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.auth.oauth2.UserCredentials;
 
-
 /**
- * {@link Credential} implementation for Google.
+ * {@link Credential} implementation that wraps a {@link OAuth2Credentials} instance from the Google Auth library.
  *
  * @author Zkriya Rakhimberdiyev, Redfield SE
  */
-public class GoogleCredential implements Credential, HttpAuthorizationHeaderCredentialValue {
+public class GoogleCredential
+    implements Credential, AccessTokenAccessor, HttpAuthorizationHeaderCredentialValue {
+
+    private static final String TOKEN_TYPE_BEARER = "Bearer";
 
     /**
      * The serializer class
@@ -85,15 +91,15 @@ public class GoogleCredential implements Credential, HttpAuthorizationHeaderCred
     }
 
     /** Error message if credentials are missing */
-    public static final String NO_AUTH_ERROR = "No valid Google credentials found. "
-            + "Please re-execute preceding authentication node.";
+    public static final String NO_AUTH_ERROR =
+        "No valid Google credentials found. " + "Please re-execute preceding authentication node.";
 
     /**
      * Credential type.
      */
     public static final CredentialType TYPE = CredentialTypeRegistry.getCredentialType("knime.GoogleCredential");
 
-    private GoogleCredentials m_credentials;
+    private OAuth2Credentials m_credentials;
 
     /**
      * Default constructor for ser(de).
@@ -102,33 +108,53 @@ public class GoogleCredential implements Credential, HttpAuthorizationHeaderCred
     }
 
     /**
-     * Constructor that wraps a given {@link GoogleCredentials} instance.
+     * Constructor that wraps a given {@link OAuth2Credentials} instance.
      *
      * @param creds
      */
-    public GoogleCredential(final GoogleCredentials creds) {
+    public GoogleCredential(final OAuth2Credentials creds) {
         m_credentials = creds;
     }
 
-    private String getAccessTokenValue() throws IOException {
-        return getAccessToken().getTokenValue();
+    /**
+     * @return the underlying {@link OAuth2Credentials}.
+     */
+    public OAuth2Credentials getOAuth2Credentials() {
+        return m_credentials;
     }
 
-    private AccessToken getAccessToken() throws IOException {
+    @Override
+    public String getAccessToken() throws IOException {
         m_credentials.refreshIfExpired();
-        return m_credentials.getAccessToken();
+        return m_credentials.getAccessToken().getTokenValue();
+    }
+
+    @Override
+    public Optional<Instant> getExpiresAfter() {
+        return Optional.ofNullable(m_credentials.getAccessToken())//
+            .map(AccessToken::getExpirationTime)//
+            .map(Date::toInstant);
+    }
+
+    @Override
+    public String getTokenType() {
+        return TOKEN_TYPE_BEARER;
+    }
+
+    private String getAccessTokenValue() throws IOException {
+        return getAccessToken();
     }
 
     /**
-     * @return {@link GoogleCredentials} credentials.
+     * @return Google {@link OAuth2Credentials}.
      */
-    public GoogleCredentials getCredentials() {
+    public OAuth2Credentials getCredentials() {
         return m_credentials;
     }
 
     @Override
     public String getAuthScheme() {
-        return "Bearer";
+        return getTokenType();
     }
 
     @Override
@@ -151,36 +177,41 @@ public class GoogleCredential implements Credential, HttpAuthorizationHeaderCred
                 sections.addAll(describeUserCredentials());
             }
         } catch (IOException ex) {// NOSONAR error message is attached to description
-            sections.add(new Section("Error", new String[][] { { "message", ex.getMessage() } }));
+            sections.add(new Section("Error", new String[][]{{"message", ex.getMessage()}}));
         }
         return new CredentialPortViewData(sections);
     }
 
     private List<Section> describeServiceCredentials() throws IOException {
-        final var credentials = (ServiceAccountCredentials) m_credentials;
-        return List.of(new Section("Google Service Account Credentials", new String[][] {
-            { "Token", obfuscate(getAccessTokenValue()) },
-            { "Project ID", StringUtils.trimToEmpty(credentials.getProjectId()) },
-            { "Private Key ID", StringUtils.trimToEmpty(credentials.getPrivateKeyId()) },
-            { "Client ID", StringUtils.trimToEmpty(credentials.getClientId()) },
-            { "Client Email", credentials.getClientEmail() },
-            { "Expires after", getFormattedExpiresAfter() },
+        final var credentials = (ServiceAccountCredentials)m_credentials;
+        return List.of(new Section("Google Service Account Credentials", new String[][]{//
+            { "Property", "Value" },//
+            {"Token", obfuscate(getAccessTokenValue())}, //
+            {"Token type", getTokenType()}, //
+            {"Expires after", getFormattedExpiresAfter()}, //
+            {"Project ID", StringUtils.trimToEmpty(credentials.getProjectId())}, //
+            {"Client ID", StringUtils.trimToEmpty(credentials.getClientId())}, //
+            {"Client Email", credentials.getClientEmail()},//
+            { "Is refreshable", Boolean.toString(true)}, //
         }));
     }
 
     private List<Section> describeUserCredentials() throws IOException {
-        final var credentials = (UserCredentials) m_credentials;
-        return List.of(new Section("Google User Credentials", new String[][] {
-            { "Token", obfuscate(getAccessTokenValue()) },
-            { "Refresh Token", obfuscate(credentials.getRefreshToken()) },
-            { "Client ID", credentials.getClientId() },
-            { "Client Secret", obfuscate(credentials.getClientSecret()) },
-            { "Expires after", getFormattedExpiresAfter() },
+        final var credentials = (UserCredentials)m_credentials;
+        return List.of(new Section("Google User Credentials",
+            new String[][]{//
+                { "Property", "Value" },//
+                {"Token", obfuscate(getAccessTokenValue())},//
+                {"Token type", getTokenType() }, //
+                {"Expires after", getFormattedExpiresAfter()},//
+                {"Client ID", credentials.getClientId()},//
+                { "Is refreshable", Boolean.toString(credentials.getRefreshToken() != null)}, //
         }));
     }
 
-    private String getFormattedExpiresAfter() throws IOException {
-        final var expiresAfter = getAccessToken().getExpirationTime().toInstant();
-        return expiresAfter.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.RFC_1123_DATE_TIME);
+    private String getFormattedExpiresAfter() {
+        return getExpiresAfter()//
+                .map(inst -> inst.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.RFC_1123_DATE_TIME))//
+                .orElse("n/a");
     }
 }

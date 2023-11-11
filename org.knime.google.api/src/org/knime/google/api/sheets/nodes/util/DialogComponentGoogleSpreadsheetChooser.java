@@ -86,7 +86,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.DesktopUtil;
 import org.knime.core.util.SwingWorkerWithContext;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 
 import com.google.api.services.drive.model.File;
@@ -438,9 +438,9 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
      *
      * @return A list of available spreadsheet names and the corresponding spreadsheet id
      * @throws IOException If the spreadsheets cannot be listed
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
      */
-    private File[] getSpreadsheets() throws IOException, CredentialNotFoundException {
+    private File[] getSpreadsheets() throws IOException, NoSuchCredentialException {
 
         final List<File> spreadsheets = new ArrayList<File>();
         final com.google.api.services.drive.Drive.Files.List request =

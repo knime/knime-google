@@ -58,7 +58,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.credentials.base.CredentialRef;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
-import org.knime.credentials.base.oauth.api.AccessTokenCredential;
 import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.api.nodes.util.PathUtil;
 import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
@@ -67,7 +66,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 
 /**
  * The Google Authenticator node. Performs OAuth authentication to selected Google services and produces
- * {@link AccessTokenCredential}.
+ * {@link GoogleCredential}.
  *
  * @author Alexander Bondaletov, Redfield SE
  */

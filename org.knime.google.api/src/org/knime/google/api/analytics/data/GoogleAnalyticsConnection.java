@@ -61,10 +61,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.credentials.base.CredentialRef;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorConfiguration;
 import org.knime.google.api.credential.CredentialRefSerializer;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.client.http.HttpRequest;
@@ -204,12 +204,12 @@ public final class GoogleAnalyticsConnection {
 
     /**
      * @return The {@link Analytics} object used to communicate with the Google Analytics API
-     * @throws CredentialNotFoundException If the credentials are not available anymore.
+     * @throws NoSuchCredentialException If the credentials are not available anymore.
+     * @throws IOException
      */
-    public synchronized Analytics getAnalytics() throws CredentialNotFoundException {
+    public synchronized Analytics getAnalytics() throws NoSuchCredentialException, IOException {
         if (m_analytics == null) {
-            final var credential = m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
-
+            final var credential = CredentialUtil.toOAuth2Credentials(m_credentialRef);
             m_analytics = buildAnalytics(credential, m_applicationName, m_connectTimeout, m_readTimeout);
         }
 

@@ -66,10 +66,10 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.message.Message;
 import org.knime.credentials.base.CredentialRef;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.credential.CredentialRefSerializer;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.api.nodes.util.GoogleApiUtil;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -221,8 +221,8 @@ public final class GAConnection {
 
     private Credentials resolveCredentials() throws KNIMEException {
         try {
-            return  m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
-        } catch (CredentialNotFoundException e) {
+            return CredentialUtil.toOAuth2Credentials(m_credentialRef);
+        } catch (NoSuchCredentialException | IOException e) {
             throw new KNIMEException(e.getMessage(), e);
         }
     }

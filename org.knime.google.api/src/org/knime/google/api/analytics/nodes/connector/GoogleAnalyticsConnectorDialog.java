@@ -75,9 +75,11 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
+
+import com.google.auth.oauth2.OAuth2Credentials;
 
 /**
  * The dialog to the GoogleAnalyticsConnector node.
@@ -274,23 +276,27 @@ public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
         if (specs[0] == null) {
             throw new NotConfigurableException("Missing Google API Connection");
         }
-        final var optCredential =
-            GoogleAnalyticsConnectorModel.getCredentialRef(specs[0]).getCredential(GoogleCredential.class);
-        CheckUtils.check(optCredential.isPresent(),
-            NotConfigurableException::new, () -> GoogleCredential.NO_AUTH_ERROR);
+        final OAuth2Credentials creds;
+        try {
+            creds = CredentialUtil.toOAuth2Credentials(GoogleAnalyticsConnectorModel.getCredentialRef(specs[0]));
+        } catch (NoSuchCredentialException | IOException e) {
+            throw new NotConfigurableException(e.getMessage(), e);
+        }
 
         GoogleAnalyticsConnectorConfiguration config = new GoogleAnalyticsConnectorConfiguration();
         config.loadInDialog(settings);
-        Duration connectTimeout = config.getConnectTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT);
-        Duration readTimeout = config.getReadTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT);
+        Duration connectTimeout =
+            config.getConnectTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT);
+        Duration readTimeout =
+            config.getReadTimeout().orElse(GoogleAnalyticsConnectorConfiguration.DEFAULT_READ_TIMEOUT);
         m_connectionTimeoutPanel.setSelectedConnectionTimeout(connectTimeout);
         m_connectionTimeoutPanel.setSelectedReadTimeout(readTimeout);
         try {
             if (m_map.isEmpty()) {
                 m_map =
                         GoogleAnalyticsConnection.getAccountsWebpropertiesProfilesMap(
-                                optCredential.get().getCredentials(), // NOSONAR
-                                connectTimeout, readTimeout
+                            creds, //
+                            connectTimeout, readTimeout
                         );
                 m_warning.setVisible(false);
                 m_selectionsPanel.setVisible(true);

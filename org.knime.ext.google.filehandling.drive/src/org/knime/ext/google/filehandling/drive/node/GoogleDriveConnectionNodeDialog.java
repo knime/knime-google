@@ -71,9 +71,14 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.credentials.base.CredentialPortObjectSpec;
+import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.filehandling.core.connections.FSConnection;
 import org.knime.filehandling.core.connections.base.ui.WorkingDirectoryChooser;
+import org.knime.filehandling.core.defaultnodesettings.ExceptionUtil;
+import org.knime.google.api.credential.CredentialUtil;
 
 /**
  * Google Drive Connection node dialog.
@@ -85,7 +90,7 @@ final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
 
     private final GoogleDriveConnectionSettingsModel m_settings;
 
-    private PortObjectSpec[] m_portObjectSpecs;
+    private CredentialRef m_credentialRef;
 
     private final WorkingDirectoryChooser m_workingDirChooser = new WorkingDirectoryChooser(WORKING_DIR_HISTORY_ID,
             this::createFSConnection);
@@ -132,13 +137,14 @@ final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
     private FSConnection createFSConnection() throws IOException {
         try {
             m_settings.validate();
-            GoogleDriveFSConnection connection = GoogleDriveConnectionNodeModel.createConnection(m_settings,
-                    m_portObjectSpecs);
+
+            final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
+            final var connection = new GoogleDriveFSConnection(m_settings.toFSConnectionConfig(creds));
             GoogleDriveConnectionNodeModel.testConnection(connection);
+
             return connection;
-        } catch (InvalidSettingsException e) {
-            // wrap to I/O exception
-            throw new IOException("Failed to create node settings", e);
+        } catch (InvalidSettingsException | NoSuchCredentialException e) {
+            throw ExceptionUtil.wrapAsIOException(e);
         }
     }
 
@@ -200,7 +206,8 @@ final class GoogleDriveConnectionNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO input, final PortObjectSpec[] specs)
             throws NotConfigurableException {
-        m_portObjectSpecs = specs;
+
+        m_credentialRef = ((CredentialPortObjectSpec) specs[0]).toRef();
 
         try {
             m_settings.load(input);

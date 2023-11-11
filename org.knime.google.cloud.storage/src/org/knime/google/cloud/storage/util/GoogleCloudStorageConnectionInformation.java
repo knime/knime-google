@@ -45,6 +45,8 @@
  */
 package org.knime.google.cloud.storage.util;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.cloud.core.util.port.CloudConnectionInformation;
@@ -52,9 +54,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.credentials.base.CredentialRef;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.credential.CredentialRefSerializer;
-import org.knime.google.api.credential.GoogleCredential;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.cloud.storage.filehandler.GoogleCSRemoteFileHandler;
 
 import com.google.auth.Credentials;
@@ -97,10 +99,11 @@ public class GoogleCloudStorageConnectionInformation extends CloudConnectionInfo
 
     /**
      * @return the credentials
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
+     * @throws IOException
      */
-    public Credentials getCredentials() throws CredentialNotFoundException {
-        return m_credentialRef.resolveCredential(GoogleCredential.class).getCredentials();
+    public Credentials getCredentials() throws NoSuchCredentialException, IOException {
+        return CredentialUtil.toOAuth2Credentials(m_credentialRef);
     }
 
     /**

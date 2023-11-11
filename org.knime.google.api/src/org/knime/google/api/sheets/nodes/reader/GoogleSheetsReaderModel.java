@@ -76,7 +76,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 
@@ -176,16 +176,16 @@ public class GoogleSheetsReaderModel extends NodeModel {
      * @param sheetRange The range which should be retrieved
      * @return A get request for the currently configured query
      * @throws IOException If an IO error occurs
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
      */
     private Get createGetRequest(final GoogleSheetsConnection connection, final String spreadsheetId,
-        final String sheetRange) throws IOException, CredentialNotFoundException {
+        final String sheetRange) throws IOException, NoSuchCredentialException {
         Get get = connection.getSheetsService().spreadsheets().values().get(spreadsheetId, sheetRange);
         return get;
     }
 
     private String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId)
-            throws IOException, CredentialNotFoundException {
+            throws IOException, NoSuchCredentialException {
         LOGGER.debug("Fetching first sheet name for spreadsheet id: " + spreadsheetId);
         List<Sheet> sheets = connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSheets();
         return sheets.get(0).getProperties().getTitle();

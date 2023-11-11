@@ -110,8 +110,8 @@ class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
         } catch (KNIMEException e) {
             fail("Failed to set up mock connection.", e);
         }
-        final var credentials = Mockito.mock(GoogleCredential.class);
-        final var cacheId = CredentialCache.store(credentials);
+        final var credential = Mockito.mock(GoogleCredential.class);
+        final var cacheId = CredentialCache.store(credential);
         return new GoogleApiConnectionPortObjectSpec(cacheId);
     }
 }

@@ -116,7 +116,8 @@ public final class LegacyGoogleApiConnectionLoader {
      *         empty otherwise.
      * @throws InvalidSettingsException
      */
-    public static Optional<GoogleCredential> restoreAsCredential(final ConfigRO model) throws InvalidSettingsException {
+    public static Optional<GoogleCredential> restoreAsCredential(final ConfigRO model)
+        throws InvalidSettingsException {
 
         if (!canRestoreCredential(model)) {
             return Optional.empty();
@@ -144,7 +145,8 @@ public final class LegacyGoogleApiConnectionLoader {
         final var keyFilePath = PathUtil.resolveToLocalPath(config.getString(CFG_KEY_FILE_LOCATION));
         final var scopes = config.getStringArray(CFG_SCOPES);
 
-        return (ServiceAccountCredentials)ServiceAccountCredentialsUtil.loadFromP12(email, keyFilePath).createScoped(scopes);
+        return (ServiceAccountCredentials)ServiceAccountCredentialsUtil.loadFromP12(email, keyFilePath)
+            .createScoped(scopes);
 
     }
 

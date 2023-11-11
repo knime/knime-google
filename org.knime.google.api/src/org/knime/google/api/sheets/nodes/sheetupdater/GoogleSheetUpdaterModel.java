@@ -65,7 +65,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
-import org.knime.credentials.base.CredentialRef.CredentialNotFoundException;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
@@ -155,13 +155,13 @@ public class GoogleSheetUpdaterModel extends NodeModel {
      * @param exec The node execution context
      * @throws IOException If the spreadsheet cannot be written
      * @throws CanceledExecutionException If execution is canceled
-     * @throws CredentialNotFoundException
+     * @throws NoSuchCredentialException
      */
     private static void updateSpreadsheet(final GoogleSheetsConnection sheetConnection,
         final BufferedDataTable dataTable, final boolean writeRaw, final String spreadsheetId, final String sheetName,
         final boolean addRowHeader, final boolean addColumnHeader, final boolean handleMissingValues,
         final String missingValuePattern, final ExecutionContext exec)
-                throws IOException, CanceledExecutionException, CredentialNotFoundException {
+                throws IOException, CanceledExecutionException, NoSuchCredentialException {
 
 
         final String valueInputOption = writeRaw ? ValueInputOption.RAW.name() : ValueInputOption.USER_ENTERED.name();
