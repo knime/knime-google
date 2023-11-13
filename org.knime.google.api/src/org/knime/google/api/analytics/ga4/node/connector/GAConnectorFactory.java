@@ -71,8 +71,8 @@ public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeMo
                     <a href="%s">Google Analytics Admin API v1</a> and the
                     <a href="%s">Google Analytics Data API v1</a>.</p>
 
-                    <p>The Admin API is used to fetch compatible property IDs which are available from the connected
-                    account.</p>
+                    <p>The Admin API is used to fetch parent accounts and the respective properties which are
+                    available from the connected admin account.</p>
 
                     <p><b>Note:</b> This node can only be used to connect with Google Analytics 4 properties and is not
                     compatible with Universal Analytics.
@@ -89,16 +89,15 @@ public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeMo
             .sinceVersion(5, 1, 0)
             .build();
 
-        /**
-         * Constructor.
-         */
-        public GAConnectorFactory() {
-            super(CONFIG);
-        }
+    /**
+     * Constructor.
+     */
+    public GAConnectorFactory() {
+        super(CONFIG);
+    }
 
-        @Override
-        public GAConnectorNodeModel createNodeModel() {
-            return new GAConnectorNodeModel(CONFIG);
-        }
-
+    @Override
+    public GAConnectorNodeModel createNodeModel() {
+        return new GAConnectorNodeModel(CONFIG);
+    }
 }

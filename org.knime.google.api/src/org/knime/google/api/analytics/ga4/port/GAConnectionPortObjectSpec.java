@@ -121,9 +121,9 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
     String getSummary() {
         final var sb = new StringBuilder();
         if (m_property != null) {
-            sb.append("Google Analytics 4 Property: %s%n".formatted(m_property.getPropertyId()));
+            sb.append("Google Analytics 4 property: %s%n".formatted(m_property.getPropertyId()));
         } else {
-            sb.append("Google Analytics Property unavailable.");
+            sb.append("Google Analytics property unavailable.");
         }
         if (m_connection != null) {
             sb.append("Google Analytics Connection:\n").append(m_connection.toString());

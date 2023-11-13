@@ -78,6 +78,9 @@ public final class ExternalLinks {
     public static final String API_QUOTAS =
         "https://developers.google.com/analytics/devguides/reporting/data/v1/quotas?hl=en";
 
+    /** Explains how to create an analytics account. */
+    public static final String EXPLAIN_ACCOUNT = "https://support.google.com/analytics/answer/9304153?hl=en#account";
+
     /** Explains how to create a property. */
     public static final String EXPLAIN_PROPERTY = "https://support.google.com/analytics/answer/9304153?hl=en#property";
 

@@ -49,9 +49,6 @@
 package org.knime.google.api.analytics.ga4.node.connector;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
@@ -66,7 +63,11 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpdateHandler;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
+import org.knime.google.api.analytics.ga4.node.GAAccount;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 
@@ -80,28 +81,47 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
+    @Persist(customPersistor = GAAccount.Persistor.class, configKey = "ga4Account")
+    @Widget(title = "Google Analytics 4 account", description = """
+            <p>
+            Specify the Google Analytics 4
+            <a href="
+            """ + ExternalLinks.EXPLAIN_ACCOUNT + """
+            ">account</a> from which you want to fetch properties.
+            </p>
+            <p>
+            If no accounts are listed, check that at least one analytics account has been created with
+            the admin account.
+            </p>
+            <p><b>Note for setting via a flow variable:</b>
+            The account is identified by its <i>numeric</i> ID which is visible below the account&apos;s name on
+            <a href="https://analytics.google.com">analytics.google.com</a> under the
+            &quot;Analytics Accounts&quot; navigation section.
+            </p>
+            """)
+    @ChoicesWidget(choices = AnalyticsAccountsProvider.class)
+    GAAccount m_analyticsAccountId; // will implicitly be handled as string
+
     @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
-    @Widget(title = "Google Analytics 4 property",
-        description = """
-                <p>
-                Specify the Google Analytics 4
-                <a href="
-                """ + ExternalLinks.EXPLAIN_PROPERTY + """
-                ">property</a> from which you want to query data.
-                </p>
-                <p>
-                If no properties are listed, check that your account has access to at least one <i>Google Analytics 4
-                </i> property. Universal Analytics properties are not supported.
-                </p>
-                <p><b>Note for setting via a flow variable:</b>
-                The property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on
-                <a href="https://analytics.google.com">analytics.google.com</a> under the
-                &quot;Properties &amp; Apps &quot; navigation section.
-                </p>
-                """)
-    @ChoicesWidget(choices = AnalyticsPropertiesProvider.class)
-    // will implicitly be handled as string
-    GAProperty m_analyticsPropertyId;
+    @Widget(title = "Google Analytics 4 property", description = """
+            <p>
+            Specify the Google Analytics 4
+            <a href="
+            """ + ExternalLinks.EXPLAIN_PROPERTY + """
+            ">property</a> from which you want to query data.
+            </p>
+            <p>
+            If no properties are listed, check that your account has access to at least one <i>Google Analytics 4
+            </i> property. Universal Analytics properties are not supported.
+            </p>
+            <p><b>Note for setting via a flow variable:</b>
+            The property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on
+            <a href="https://analytics.google.com">analytics.google.com</a> under the
+            &quot;Properties &amp; Apps &quot; navigation section.
+            </p>
+            """)
+    @ChoicesWidget(choicesUpdateHandler = AnalyticsAccountUpdateHandler.class)
+    GAProperty m_analyticsPropertyId; // will implicitly be handled as string
 
     /* Advanced settings */
 
@@ -139,34 +159,88 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @param ctx context for auto-configuration
      */
-    GAConnectorNodeSettings(final DefaultNodeSettingsContext ctx) {
+    GAConnectorNodeSettings(final DefaultNodeSettingsContext ctx) { //NOSONAR
         //
     }
 
+    /** Signal that an account was chosen and update supplier for the {@link AnalyticsAccountUpdateHandler}. */
+    private interface AccountChoice {
+        /**
+         * Returns the chosen GA4 account ID. Magically connected to
+         * {@link GAConnectorNodeSettings#m_analyticsAccountId} through the JSON value serializer (Jackson).
+         *
+         * @return account ID as String
+         */
+        GAAccount getAnalyticsAccountId();
+    }
+
     /**
-     * Synchronously fetch Google Analytics Property IDs from the API.
-     *
-     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     * Implementation of the settings update supplier for the {@link AnalyticsAccountUpdateHandler}. An accessible
+     * constructor is needed for the conversion between JSON and Java objects.
      */
-    static final class AnalyticsPropertiesProvider implements ChoicesProvider, AsyncChoicesProvider {
+    private static final class AccountChoiceDependency implements AccountChoice {
+
+        GAAccount m_analyticsAccountId;
 
         @Override
-        public String[] choices(final DefaultNodeSettingsContext ctx) {
+        public GAAccount getAnalyticsAccountId() {
+            return m_analyticsAccountId;
+        }
+
+    }
+
+    /**
+     * Asynchronously fetches the Google Analytics account IDs and names from the API. Uses pagination to collect all
+     * accounts.
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+     */
+    static final class AnalyticsAccountsProvider implements ChoicesProvider, AsyncChoicesProvider {
+
+        @Override
+        public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext ctx) {
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             try {
                 final var d = Duration.ofSeconds(6);
-                // We intentionally use a very short duration since the user likely does not see
-                // what is currently going on (and we don't have access here to the user-provided values).
-                return new GAConnection(credentialRef, d, d, d).accountSummaries()
-                        .stream()
-                        .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
-                            .map(p -> p.getProperty().replace("properties/", "")))
-                        .collect(Collectors.toList())
-                        .toArray(String[]::new);
+                final var conn = new GAConnection(credentialRef, d, d, d);
+                return GAConnectorNodeModel.fetchAllAccountIdsAndNames(conn).stream()//
+                    .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
+                    .toArray(IdAndText[]::new);
             } catch (KNIMEException e) {
-                LOGGER.error("Failed to retrieve Google Analytics 4 Properties from Google Analytics API.", e);
+                LOGGER.error("Failed to retrieve Google Analytics 4 accounts from Google Analytics API.", e);
             }
-            return new String[0];
+            return new IdAndText[0];
+        }
+
+    }
+
+    /**
+     * After receiving the update of the chosen GA account ID, asynchronously fetches the Google Analytics property IDs
+     * and names from the API. Uses pagination to collect all properties.
+     *
+     * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+     */
+    private static final class AnalyticsAccountUpdateHandler implements ChoicesUpdateHandler<AccountChoiceDependency> {
+
+        @Override
+        public IdAndText[] update(final AccountChoiceDependency settings, final DefaultNodeSettingsContext ctx)
+            throws WidgetHandlerException {
+            if (settings == null || settings.getAnalyticsAccountId() == null) {
+                return new IdAndText[0];
+            }
+            final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
+            try {
+                final var d = Duration.ofSeconds(6);
+                final var conn = new GAConnection(credentialRef, d, d, d);
+                final var accountId = settings.getAnalyticsAccountId().getAccountId();
+                return GAConnectorNodeModel.fetchPropertiesForAccount(conn, accountId).stream()//
+                    .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
+                    .toArray(IdAndText[]::new);
+            } catch (KNIMEException e) {
+                LOGGER.error("Failed to retrieve Google Analytics 4 properties from Google Analytics API.", e);
+            }
+            return new IdAndText[0];
         }
 
     }

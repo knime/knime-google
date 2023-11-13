@@ -51,13 +51,14 @@ package org.knime.google.api.analytics.ga4.port;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.Functions.FailableCallable;
 import org.apache.commons.lang3.Functions.FailableFunction;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.ModelContentRO;
@@ -84,7 +85,12 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.analyticsadmin.v1beta.GoogleAnalyticsAdmin;
+import com.google.api.services.analyticsadmin.v1beta.GoogleAnalyticsAdmin.AccountSummaries;
+import com.google.api.services.analyticsadmin.v1beta.GoogleAnalyticsAdmin.Properties;
 import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaAccountSummary;
+import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaListAccountSummariesResponse;
+import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaListPropertiesResponse;
+import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV1betaProperty;
 import com.google.api.services.analyticsdata.v1beta.AnalyticsData;
 import com.google.api.services.analyticsdata.v1beta.model.Metadata;
 import com.google.api.services.analyticsdata.v1beta.model.RunReportRequest;
@@ -138,6 +144,15 @@ public final class GAConnection {
     /** Key for storing the maximum time to spend on server error retries. */
     public static final String KEY_ERR_RETRY_MAX_ELAPSED_TIME = "serverErrorRetryMaxElapsedTime";
 
+    /**
+     * Prefix all fetched GA account IDs have.
+     * We are only interested in the numerical value that comes after the prefix.
+     */
+    public static final String ACCOUNTS_PREFIX = "accounts/";
+    /**
+     * Prefix all fetched GA properties IDs have. Same as for accounts.
+     */
+    public static final String PROPERTIES_PREFIX = "properties/";
 
     /**
      * Creates a Google Analytics 4 (GA4) connection using the given {@link GoogleCredentials}.
@@ -211,12 +226,83 @@ public final class GAConnection {
      * @return available account summaries or empty list if there are no accounts
      * @throws IOException exception thrown from underlying API requests
      */
-    private static final List<GoogleAnalyticsAdminV1betaAccountSummary> accountSummaries(
+    private static List<GoogleAnalyticsAdminV1betaAccountSummary> accountSummaries(
             final Credentials credentials, final Duration connectTimeout, final Duration readTimeout,
             final Duration retryMaxElapsedTime) throws IOException {
-        final var result = withAdminAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime,
-            admin -> admin.accountSummaries().list().execute().getAccountSummaries());
-        return result != null ? result : Collections.emptyList();
+        /**
+         * Just a function that makes a request to the admin API for account summaries. Always uses the provided request
+         * parameters. Unfortunately, this code block is impossible to generify, `#getNextPageToken` and
+         * `#setNextPageToken` are not part of any interface.
+         */
+        final FailableFunction<
+            FailableFunction<
+                AccountSummaries.List,
+                GoogleAnalyticsAdminV1betaListAccountSummariesResponse,
+                IOException
+            >,
+            GoogleAnalyticsAdminV1betaListAccountSummariesResponse,
+            IOException
+        > makeRequest = query ->
+            withAdminAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime, admin ->
+                query.apply(admin.accountSummaries().list()));
+
+        final List<GoogleAnalyticsAdminV1betaAccountSummary> summaries = new LinkedList<>();
+        var result = makeRequest.apply(AccountSummaries.List::execute);
+        while (result != null && result.getAccountSummaries() != null) {
+            summaries.addAll(result.getAccountSummaries());
+            // paginating responses until no next page token is provided
+            final var nextToken = result.getNextPageToken();
+            if (StringUtils.isBlank(nextToken)) {
+                break;
+            }
+            result = makeRequest.apply(query -> query.setPageToken(nextToken).execute());
+        }
+        return summaries;
+    }
+
+    /**
+     * Get available properties from a given GA account, using the connection.
+     *
+     * @param credentials Google credentials
+     * @param accountId ID of the GA parent account, holding the properties
+     * @param connectTimeout connection timeout
+     * @param readTimeout read timeout
+     * @param retryMaxElapsedTime maximum elapsed time after the first request for retries
+     * @return available properties or empty list if there are no properties
+     * @throws IOException exception thrown from underlying API requests
+     */
+    private static List<GoogleAnalyticsAdminV1betaProperty> propertiesForAccount(final Credentials credentials,
+        final String accountId, final Duration connectTimeout, final Duration readTimeout,
+        final Duration retryMaxElapsedTime) throws IOException {
+        /**
+         * Just a function that makes a request to the admin API for properties. Always uses the provided request
+         * parameters. Unfortunately, this code block is impossible to generify, `#getNextPageToken` and
+         * `#setNextPageToken` are not part of any interface.
+         */
+        final FailableFunction<
+            FailableFunction<
+                Properties.List,
+                GoogleAnalyticsAdminV1betaListPropertiesResponse,
+                IOException
+            >,
+            GoogleAnalyticsAdminV1betaListPropertiesResponse,
+            IOException
+        > makeRequest = query ->
+            withAdminAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime, admin ->
+                query.apply(admin.properties().list().setFilter("parent:%s%s".formatted(ACCOUNTS_PREFIX, accountId))));
+
+        final List<GoogleAnalyticsAdminV1betaProperty> properties = new LinkedList<>();
+        var result = makeRequest.apply(Properties.List::execute);
+        while (result != null && result.getProperties() != null) {
+            properties.addAll(result.getProperties());
+            // paginating responses until no next page token is provided
+            final var nextToken = result.getNextPageToken();
+            if (StringUtils.isBlank(nextToken)) {
+                break;
+            }
+            result = makeRequest.apply(query -> query.setPageToken(nextToken).execute());
+        }
+        return properties;
     }
 
     private Credentials resolveCredentials() throws KNIMEException {
@@ -241,8 +327,39 @@ public final class GAConnection {
     }
 
     /**
+     * Get available properties for a given account from the connection.
+     *
+     * @param accountId ID of the GA parent account, holding the properties
+     * @return available properties
+     * @throws KNIMEException exception throw from underlying API requests
+     */
+    public List<GoogleAnalyticsAdminV1betaProperty> propertiesForAccount(final String accountId) throws KNIMEException {
+        final var creds = resolveCredentials();
+
+        return exceptionsWrapped(() -> propertiesForAccount(creds, accountId,
+            m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime));
+    }
+
+
+    /**
+     * Get the property object from the admin API for a given ID.
+     *
+     * @param propertyId ID of the GA property
+     * @return property object
+     * @throws KNIMEException exception throw from underlying API requests
+     */
+    public GoogleAnalyticsAdminV1betaProperty property(final String propertyId) throws KNIMEException {
+        final var creds = resolveCredentials();
+
+        return exceptionsWrapped(
+            () -> withAdminAPI(creds, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime,
+                admin -> admin.properties().get("%s%s".formatted(PROPERTIES_PREFIX, propertyId)).execute()));
+    }
+
+    /**
      * Get
-     * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/properties/getMetadata">metadata</a>
+     * <a href="https://developers.google.com/
+     *analytics/devguides/reporting/data/v1/rest/v1beta/properties/getMetadata">metadata</a>
      * for a given property, such as dimensions and metrics.
      *
      * @param property Google Analytics 4 property
@@ -253,7 +370,7 @@ public final class GAConnection {
      * @return available metadata for the property
      * @throws IOException exception thrown from underlying API requests
      */
-    private static final Metadata metadata(final GAProperty property,
+    private static Metadata metadata(final GAProperty property,
         final Credentials credentials, final Duration connectTimeout, final Duration readTimeout,
         final Duration retryMaxElapsedTime) throws IOException {
         return withDataAPI(credentials, connectTimeout, readTimeout, retryMaxElapsedTime,
@@ -288,7 +405,7 @@ public final class GAConnection {
 
         return exceptionsWrapped(() -> //
             withDataAPI(creds, m_connectTimeout, m_readTimeout, m_serverErrorRetryMaxElapsedTime, //
-                data -> data.properties().runReport("properties/" + property.m_propertyId(), req).execute()));
+                data -> data.properties().runReport(PROPERTIES_PREFIX + property.m_propertyId(), req).execute()));
     }
 
     /* Static utility methods (API requests, error handling, ...) */
@@ -299,9 +416,9 @@ public final class GAConnection {
         try {
             return callable.call();
         } catch (GoogleJsonResponseException ge) {
-                throw wrapGoogleJsonResponseException(ge);
+            throw wrapGoogleJsonResponseException(ge);
         } catch (UnknownHostException uh) {
-                throw wrapUnknownHostException(uh);
+            throw wrapUnknownHostException(uh);
         } catch (IOException io) {
             throw wrapGenericIOException(io);
         }
@@ -319,7 +436,7 @@ public final class GAConnection {
      * @return a user defined value extracted from the Admin API
      * @throws IOException
      */
-    private static final <R> R withAdminAPI(final Credentials credentials, final Duration connectTimeout,
+    private static <R> R withAdminAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final FailableFunction<GoogleAnalyticsAdmin, R, IOException> callable) throws IOException {
         return withAPI(credentials, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Connector",
@@ -338,14 +455,14 @@ public final class GAConnection {
      * @return a user defined value extracted from the Data API
      * @throws IOException
      */
-    private static final <R> R withDataAPI(final Credentials credentials, final Duration connectTimeout,
+    private static <R> R withDataAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final FailableFunction<AnalyticsData, R, IOException> callable) throws IOException {
         return withAPI(credentials, connectTimeout, readTimeout, retryMax, "KNIME-Google-Analytics-4-Query",
             AnalyticsData.Builder::new, callable);
     }
 
-    private static final <R, C extends AbstractGoogleJsonClient> R
+    private static <R, C extends AbstractGoogleJsonClient> R
         withAPI(final Credentials credentials, final Duration connectTimeout,
             final Duration readTimeout, final Duration retryMax,
             final String appName,

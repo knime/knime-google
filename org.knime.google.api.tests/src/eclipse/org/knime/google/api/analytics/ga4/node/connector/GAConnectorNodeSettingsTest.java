@@ -61,7 +61,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
 import org.knime.credentials.base.CredentialCache;
-import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsPropertiesProvider;
+import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountsProvider;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.api.data.GoogleApiConnectionPortObjectSpec;
@@ -78,12 +78,12 @@ import com.google.api.services.analyticsadmin.v1beta.model.GoogleAnalyticsAdminV
  */
 class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
-    MockedConstruction<AnalyticsPropertiesProvider> mockedPropertiesProviderConstruction;
+    MockedConstruction<AnalyticsAccountsProvider> mockedAccountsProviderConstruction;
 
     @BeforeEach
     void beforeTest() {
-        mockedPropertiesProviderConstruction =
-            Mockito.mockConstruction(AnalyticsPropertiesProvider.class, (mock, context) -> {
+        mockedAccountsProviderConstruction =
+            Mockito.mockConstruction(AnalyticsAccountsProvider.class, (mock, context) -> {
                 when(mock.choices(ArgumentMatchers.any())).thenReturn(new String[]{"choice1", "choice2"});
                 when(mock.choicesWithIdAndText(ArgumentMatchers.any()))
                     .thenReturn(new IdAndText[]{IdAndText.fromId("choice1"), IdAndText.fromId("choice2")});
@@ -92,7 +92,7 @@ class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
 
     @AfterEach
     void afterTest() {
-        mockedPropertiesProviderConstruction.close();
+        mockedAccountsProviderConstruction.close();
     }
 
     @SuppressWarnings("restriction")

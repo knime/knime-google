@@ -49,7 +49,6 @@
 package org.knime.google.api.analytics.ga4.node.connector;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -59,11 +58,13 @@ import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.Pair;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.credentials.base.CredentialRef;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObject;
 import org.knime.google.api.analytics.ga4.port.GAConnectionPortObjectSpec;
@@ -90,9 +91,9 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     protected void validateSettings(final GAConnectorNodeSettings settings) throws InvalidSettingsException {
         if (settings.m_analyticsPropertyId != null) {
             CheckUtils.checkSetting(StringUtils.isNotBlank(settings.m_analyticsPropertyId.m_propertyId()),
-                "Google Analytics Property identifier must not be blank.");
+                "Google Analytics property identifier must not be blank.");
             CheckUtils.checkSetting(NumberUtils.isDigits(settings.m_analyticsPropertyId.m_propertyId()),
-                "Google Analytics Property identifier must be numeric (i.e. contain only digits).");
+                "Google Analytics property identifier must be numeric (i.e. contain only digits).");
         }
     }
 
@@ -101,8 +102,11 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
             throws InvalidSettingsException {
 
         final var credentialRef = getCredentialRef(inSpecs);
-        
-        CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId, "Google Analytics Property ID is missing.");
+
+        // we do not require the analytics ID to be non-null
+        // only the property ID is needed for the output port object
+        CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId,
+            "Google Analytics property ID is missing.");
 
         final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec, //NOSONAR
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
@@ -119,12 +123,9 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
         final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec,
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
 
-        final var props = conn.accountSummaries().stream()
-                .flatMap(acc -> Optional.ofNullable(acc.getPropertySummaries()).orElse(List.of()).stream()
-                    .map(p -> p.getProperty().replace("properties/", ""))).count();
-        if (props == 0) {
-            throw KNIMEException.of(createMessageBuilder()
-                .withSummary("None of the available accounts contains a Google Analytics 4 property.")
+        if (!fetchPropertyValidity(conn, modelSettings.m_analyticsPropertyId.getPropertyId())) {
+            throw KNIMEException.of(createMessageBuilder()//
+                .withSummary("No Google Analytics property could be found for the selected property ID.")//
                 .build().orElseThrow());
         }
 
@@ -139,4 +140,30 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     static CredentialRef getCredentialRef(final PortObjectSpec[] portObjectSpecs) {
         return ((CredentialPortObjectSpec) portObjectSpecs[CREDENTIAL_INPUT_PORT]).toRef();
     }
+
+    static List<Pair<String, String>> fetchAllAccountIdsAndNames(final GAConnection connection) throws KNIMEException {
+        return connection.accountSummaries().stream()//
+            .map(acc -> Pair.create(acc.getAccount().replace(GAConnection.ACCOUNTS_PREFIX, ""), acc.getDisplayName()))//
+            .toList();
+    }
+
+    static List<Pair<String, String>> fetchPropertiesForAccount(final GAConnection connection, final String accountId)
+        throws KNIMEException {
+        return connection.propertiesForAccount(accountId).stream()//
+            .map(p -> Pair.create(p.getName().replace(GAConnection.PROPERTIES_PREFIX, ""), p.getDisplayName()))//
+            .toList();
+    }
+
+    static boolean fetchPropertyValidity(final GAConnection connection, final String propertyId) throws KNIMEException {
+        try {
+            return connection.property(propertyId) != null;
+        } catch (KNIMEException e) { // NOSONAR
+            if (e.getCause() instanceof NoSuchCredentialException) {
+                // message of no-such-credentials contains instructions for the user
+                throw e;
+            }
+            return false;
+        }
+    }
+
 }

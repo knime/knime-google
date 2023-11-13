@@ -12,6 +12,12 @@
       "model" : {
         "type" : "object",
         "properties" : {
+          "analyticsAccountId" : {
+            "type" : "object",
+            "title" : "Google Analytics 4 account",
+            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#account\">account</a> from which you want to fetch properties.\n</p>\n<p>\nIf no accounts are listed, check that at least one analytics account has been created with\nthe admin account.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe account is identified by its <i>numeric</i> ID which is visible below the account&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Analytics Accounts&quot; navigation section.\n</p>\n",
+            "configKeys" : [ "ga4Account" ]
+          },
           "analyticsPropertyId" : {
             "type" : "object",
             "title" : "Google Analytics 4 property",
@@ -52,14 +58,27 @@
   "ui_schema" : {
     "elements" : [ {
       "type" : "Control",
-      "scope" : "#/properties/model/properties/analyticsPropertyId",
+      "scope" : "#/properties/model/properties/analyticsAccountId",
       "options" : {
-        "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsPropertiesProvider",
+        "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountsProvider",
         "format" : "dropDown",
         "showNoneColumn" : false,
         "showRowKeys" : false,
         "showSearch" : true,
         "showMode" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/analyticsPropertyId",
+      "options" : {
+        "possibleValues" : [ ],
+        "format" : "dropDown",
+        "showNoneColumn" : false,
+        "showRowKeys" : false,
+        "showSearch" : true,
+        "showMode" : true,
+        "choicesUpdateHandler" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
+        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ]
       }
     }, {
       "type" : "Control",
