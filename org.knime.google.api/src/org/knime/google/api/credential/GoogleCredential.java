@@ -54,10 +54,12 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.credentials.base.Credential;
@@ -134,6 +136,13 @@ public class GoogleCredential
         return Optional.ofNullable(m_credentials.getAccessToken())//
             .map(AccessToken::getExpirationTime)//
             .map(Date::toInstant);
+    }
+
+    @Override
+    public Set<String> getScopes() {
+        return Optional.ofNullable(m_credentials.getAccessToken().getScopes())//
+                .map(Set::copyOf)//
+                .orElse(Collections.emptySet());
     }
 
     @Override
