@@ -24,7 +24,7 @@
 	<modules>
         <!-- this needs to go first because it ensures that jar files required  are present -->
         <module>org.knime.ext.google.sdk/libs/fetch_jars</module>
-		<module>org.knime.ext.google.sdk</module>	
+		<module>org.knime.ext.google.sdk</module>
 
 		<module>org.knime.google.api</module>
 		<module>org.knime.google.api.tests/lib/fetch_jars</module>
@@ -49,6 +49,11 @@
 			<layout>p2</layout>
 			<url>${knime.shared.p2}</url>
 		</repository>
+        <repository>
+            <id>p2-knime-filehandling-core</id>
+            <layout>p2</layout>
+            <url>${knime.filehandling.core.p2}</url>
+        </repository>
 		<repository>
 			<id>p2-knime-tp</id>
 			<layout>p2</layout>
