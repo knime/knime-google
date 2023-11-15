@@ -48,10 +48,12 @@
  */
 package org.knime.google.api.analytics.ga4.port;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.swing.JComponent;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -61,6 +63,7 @@ import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.webui.node.port.PortViewManager;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 
 /**
@@ -73,10 +76,24 @@ import org.knime.google.api.analytics.ga4.node.GAProperty;
  */
 public final class GAConnectionPortObject extends AbstractSimplePortObject {
 
+    /**
+     * Name of the {@link GAConnectionPortObject} port.
+     */
+    public static final String PORT_NAME = "Google Analytics Connection";
+
+
     /** Type of the port object. */
     @SuppressWarnings("hiding")
-    public static final PortType TYPE =
-            PortTypeRegistry.getInstance().getPortType(GAConnectionPortObject.class);
+    public static final PortType TYPE;
+
+    static {
+        TYPE = PortTypeRegistry.getInstance().getPortType(GAConnectionPortObject.class);
+        PortViewManager.registerPortViews(TYPE, //
+            List.of(new PortViewManager.PortViewDescriptor(PORT_NAME, GAPortViewFactories.PORT_SPEC_VIEW_FACTORY), //
+                new PortViewManager.PortViewDescriptor(PORT_NAME, GAPortViewFactories.PORT_VIEW_FACTORY)), //
+            List.of(0), //
+            List.of(1));
+    }
 
     /**
      * @noreference This class is not intended to be referenced by clients.
@@ -100,7 +117,7 @@ public final class GAConnectionPortObject extends AbstractSimplePortObject {
 
     @Override
     public String getSummary() {
-        return m_spec.getSummary();
+        return String.format("Google Analytics 4 property ID: %s", getProperty().getPropertyId());
     }
 
     @Override
@@ -138,5 +155,18 @@ public final class GAConnectionPortObject extends AbstractSimplePortObject {
     @Override
     public JComponent[] getViews() {
         return m_spec.getViews();
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if (other instanceof GAConnectionPortObject obj) {
+            return m_spec.equals(obj.getSpec());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(m_spec).toHashCode();
     }
 }

@@ -51,9 +51,6 @@ package org.knime.google.api.analytics.ga4.port;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -61,7 +58,6 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.util.ViewUtils;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 
 /**
@@ -118,21 +114,6 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
         return m_property;
     }
 
-    String getSummary() {
-        final var sb = new StringBuilder();
-        if (m_property != null) {
-            sb.append("Google Analytics 4 property: %s%n".formatted(m_property.getPropertyId()));
-        } else {
-            sb.append("Google Analytics property unavailable.");
-        }
-        if (m_connection != null) {
-            sb.append("Google Analytics Connection:\n").append(m_connection.toString());
-        } else {
-            sb.append("Google Analytics connection unavailable.");
-        }
-        return sb.toString();
-    }
-
     @Override
     protected void save(final ModelContentWO model) {
         m_connection.saveTo(model);
@@ -143,16 +124,6 @@ public final class GAConnectionPortObjectSpec extends AbstractSimplePortObjectSp
     protected void load(final ModelContentRO model) throws InvalidSettingsException {
         m_connection = new GAConnection(model);
         m_property = GAProperty.loadSettings(model, KEY_GA_PROPERTY);
-    }
-
-    @Override
-    public JComponent[] getViews() {
-        final var sb = new StringBuilder("<html>")
-                .append(getSummary().replace("\n", "<br>"))
-                .append("</html>");
-        final var f = ViewUtils.getInFlowLayout(new JLabel(sb.toString()));
-        f.setName("Connection");
-        return new JComponent[]{ f };
     }
 
     @Override

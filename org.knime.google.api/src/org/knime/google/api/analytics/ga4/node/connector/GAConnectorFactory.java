@@ -84,7 +84,7 @@ public final class GAConnectorFactory extends WebUINodeFactory<GAConnectorNodeMo
             .modelSettingsClass(GAConnectorNodeSettings.class)//
             .addInputPort("Google Service Connection", CredentialPortObject.TYPE,
                 "The Google Service connection to use.")
-            .addOutputPort("Google Analytics Connection", GAConnectionPortObject.TYPE,
+            .addOutputPort(GAConnectionPortObject.PORT_NAME, GAConnectionPortObject.TYPE,
                 "A connection to a Google Analytics 4 property.")
             .sinceVersion(5, 1, 0)
             .build();
