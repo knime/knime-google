@@ -202,8 +202,8 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
         public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext ctx) {
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             try {
-                final var d = Duration.ofSeconds(6);
-                final var conn = new GAConnection(credentialRef, d, d, d);
+                final var conn = new GAConnection(credentialRef, GAConnection.DEFAULT_CONNECT_TIMEOUT,
+                    GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
                 return GAConnectorNodeModel.fetchAllAccountIdsAndNames(conn).stream()//
                     .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
                     .toArray(IdAndText[]::new);
@@ -231,8 +231,8 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
             }
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             try {
-                final var d = Duration.ofSeconds(6);
-                final var conn = new GAConnection(credentialRef, d, d, d);
+                final var conn = new GAConnection(credentialRef, GAConnection.DEFAULT_CONNECT_TIMEOUT,
+                    GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
                 final var accountId = settings.getAnalyticsAccountId().getAccountId();
                 return GAConnectorNodeModel.fetchPropertiesForAccount(conn, accountId).stream()//
                     .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
