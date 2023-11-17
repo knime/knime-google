@@ -102,6 +102,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     @Section(title = "Client ID", advanced = true)
     @After(ScopesSection.class)
+    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     interface ClientIdSection {
     }
 

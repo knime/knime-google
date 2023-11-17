@@ -51,7 +51,6 @@ package org.knime.google.api.nodes.authenticator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -85,18 +84,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @SuppressWarnings("restriction")
 public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
 
-    @Widget(title = "Standard/All/Custom scopes", description = """
-            How to specify the scopes that will be requested during login.
-            You can choose from a list of predefined <b>standard</b> scopes, select <b>all standard</b> scopes,
-            or enter <b>custom</b> scopes manually.
-            """, hideTitle = true)
+    @Widget(title = "How to select scopes", description = """
+            Scopes are
+            <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
+            permissions</a> that need to be requested during login. They specify what the resulting
+            access token can be used for. This setting defines whether to select scopes from a list of predefined
+            <b>standard</b> scopes or to enter <b>custom</b> scopes manually.
+            """)
     @ValueSwitchWidget
     @Signal(condition = ScopesSelectionMode.IsStandard.class)
     @Signal(condition = ScopesSelectionMode.IsCustom.class)
     ScopesSelectionMode m_scopesSelectionMode = ScopesSelectionMode.STANDARD;
 
     enum ScopesSelectionMode {
-            STANDARD, ALL, CUSTOM;
+            STANDARD, CUSTOM;
 
         static class IsStandard extends OneOfEnumCondition<ScopesSelectionMode> {
             @Override
@@ -113,14 +114,18 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
         }
     }
 
-    @Widget(title = "Scopes", description = "The list of scopes to request for the access token.")
+    @Widget(title = "Standard scopes", description = """
+            Choose scopes from a predefined list of standard scopes. Scopes are
+            <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
+            permissions</a> and define what the resulting access token can be used for.
+            """)
     @ArrayWidget(addButtonText = "Add Scope")
     @Effect(signals = ScopesSelectionMode.IsStandard.class, type = EffectType.SHOW)
     @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class)
     StandardScope[] m_standardScopes = new StandardScope[0];
 
     static final class StandardScope implements DefaultNodeSettings {
-        @Widget(hideTitle = true)
+        @Widget(title = "Scope/permission")
         @ChoicesWidget(choices = ScopeChoicesProvider.class)
         String m_scopeId;
 
@@ -161,14 +166,18 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
         }
     }
 
-    @Widget(title = "Custom scopes", description = "Enter the custom scopes to use.", hideTitle = true)
+    @Widget(title = "Custom scopes", description = """
+            Enter a list of custom scopes to request during login. Scopes are
+            <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
+            permissions</a> and define what the resulting access token can be used for.
+            """)
     @ArrayWidget(addButtonText = "Add")
     @Effect(signals = ScopesSelectionMode.IsCustom.class, type = EffectType.SHOW)
     @Persist(customPersistor = CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
 
     static class CustomScope implements DefaultNodeSettings {
-        @Widget(hideTitle = true)
+        @Widget(title = "Scope/permission")
         String m_scope;
 
         CustomScope(final String scope) {
@@ -231,7 +240,6 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
     public List<String> getScopes() {
         return switch (m_scopesSelectionMode) {
             case STANDARD -> getSelectedStandardScopes();
-            case ALL -> getAllStandardScopes();
             case CUSTOM -> getSelectedCustomScopes();
             default -> throw new IllegalArgumentException("Unexpected scope selection type: " + m_scopesSelectionMode);
         };
@@ -239,17 +247,13 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
 
     private List<String> getSelectedStandardScopes() {
         List<String> scopeIds = Stream.of(m_standardScopes) //
-            .map(s -> s.m_scopeId).collect(Collectors.toList());
+            .map(s -> s.m_scopeId)//
+            .toList();
         return KnimeGoogleAuthScopeRegistry
             .getAuthScopes(KnimeGoogleAuthScopeRegistry.getInstance().getScopesFromString(scopeIds));
     }
 
-    private static List<String> getAllStandardScopes() {
-        return KnimeGoogleAuthScopeRegistry
-            .getAuthScopes(KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes());
-    }
-
     private List<String> getSelectedCustomScopes() {
-        return Stream.of(m_customScopes).map(s -> s.m_scope).collect(Collectors.toList());
+        return Stream.of(m_customScopes).map(s -> s.m_scope).toList();
     }
 }
