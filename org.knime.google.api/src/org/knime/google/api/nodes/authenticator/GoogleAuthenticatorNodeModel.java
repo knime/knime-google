@@ -49,7 +49,11 @@
 package org.knime.google.api.nodes.authenticator;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,8 +62,18 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.credentials.base.CredentialRef;
 import org.knime.credentials.base.node.AuthenticatorNodeModel;
+import org.knime.filehandling.core.connections.FSConnection;
+import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.connections.FSPath;
+import org.knime.filehandling.core.defaultnodesettings.FileSystemHelper;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.FileFilterStatistic;
+import org.knime.filehandling.core.defaultnodesettings.filechooser.reader.ReadPathAccessor;
+import org.knime.filehandling.core.defaultnodesettings.status.NodeModelStatusConsumer;
+import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage;
+import org.knime.filehandling.core.defaultnodesettings.status.StatusMessage.MessageType;
 import org.knime.google.api.credential.GoogleCredential;
-import org.knime.google.api.nodes.util.PathUtil;
+import org.knime.google.api.nodes.authenticator.APIKeySettings.APIKeyType;
 import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -82,11 +96,14 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
      */
     private CredentialRef m_interactiveCredentialRef;
 
+    private final NodeModelStatusConsumer m_statusConsumer;
+
     /**
      * @param configuration The node configuration.
      */
     protected GoogleAuthenticatorNodeModel(final WebUINodeConfiguration configuration) {
         super(configuration, GoogleAuthenticatorSettings.class);
+        m_statusConsumer = new NodeModelStatusConsumer(EnumSet.of(MessageType.ERROR, MessageType.WARNING));
     }
 
     @Override
@@ -119,7 +136,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
         };
     }
 
-    private static GoogleCredentials loadFromAPIKey(final GoogleAuthenticatorSettings settings)
+    private GoogleCredentials loadFromAPIKey(final GoogleAuthenticatorSettings settings)
             throws IOException, InvalidSettingsException {
 
         final var apiKeysettings = settings.m_apiKeySettings;
@@ -127,19 +144,28 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
 
         GoogleCredentials credential;
 
-        if (apiKeysettings.m_apiKeyFormat == APIKeySettings.APIKeyType.JSON) {
-            final var keyFilePath = PathUtil.resolveToLocalPath(apiKeysettings.m_jsonFile);
-            credential = ServiceAccountCredentialsUtil.loadFromJson(keyFilePath).createScoped(scopes);
-        } else {
-            final var keyFilePath = PathUtil.resolveToLocalPath(apiKeysettings.m_p12File);
-            credential = ServiceAccountCredentialsUtil
-                .loadFromP12(apiKeysettings.m_serviceAccountEmail, keyFilePath).createScoped(scopes);
+        try (var accessor = createPathAccessor(settings.m_apiKeySettings)) {
+            final Path keyFilePath = accessor.getRootPath(m_statusConsumer);
+
+            if (apiKeysettings.m_apiKeyFormat == APIKeySettings.APIKeyType.JSON) {
+                credential = ServiceAccountCredentialsUtil.loadFromJson(keyFilePath).createScoped(scopes);
+            } else {
+                credential = ServiceAccountCredentialsUtil
+                    .loadFromP12(apiKeysettings.m_serviceAccountEmail, keyFilePath).createScoped(scopes);
+            }
         }
 
         // get access token by refreshing token
         credential.refresh();
 
         return credential;
+    }
+
+    private static ReadPathAccessor createPathAccessor(final APIKeySettings settings) throws IOException {
+        var fileChooser = settings.m_apiKeyFormat == APIKeyType.JSON ? settings.m_jsonFile : settings.m_p12File;
+        var fsLocation = fileChooser.getFSLocation();
+
+        return new FSLocationPathAccessor(fsLocation);
     }
 
     private void disposeInteractiveCredential() {
@@ -152,5 +178,48 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
     @Override
     protected void onDisposeInternal() {
         disposeInteractiveCredential();
+    }
+
+    /**
+     * Temporary solution to enable FSLocation flow variables on all convenience file systems.
+     */
+    static class FSLocationPathAccessor implements ReadPathAccessor {
+
+        private final FSLocation m_fsLocation;
+
+        private final FSConnection m_connection;
+
+        private final FSFileSystem<?> m_fileSystem;
+
+        public FSLocationPathAccessor(final FSLocation fsLocation) throws IOException {
+            m_fsLocation = fsLocation;
+            m_connection = FileSystemHelper.retrieveFSConnection(Optional.empty(), fsLocation)
+                    .orElseThrow(() -> new IOException("File system is not available"));
+            m_fileSystem = m_connection.getFileSystem();
+        }
+
+        @Override
+        public void close() throws IOException {
+            m_fileSystem.close();
+            m_connection.close();
+        }
+
+        @Override
+        public List<FSPath> getFSPaths(final Consumer<StatusMessage> statusMessageConsumer)
+            throws IOException, InvalidSettingsException {
+            return List.of(getRootPath(statusMessageConsumer));
+        }
+
+        @Override
+        public FSPath getRootPath(final Consumer<StatusMessage> statusMessageConsumer)
+            throws IOException, InvalidSettingsException {
+            return m_fileSystem.getPath(m_fsLocation);
+        }
+
+        @Override
+        public FileFilterStatistic getFileFilterStatistic() {
+            return new FileFilterStatistic(0, 0, 0, 1, 0, 0, 0);
+        }
+
     }
 }

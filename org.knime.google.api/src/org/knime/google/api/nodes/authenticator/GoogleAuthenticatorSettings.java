@@ -63,6 +63,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
@@ -72,8 +73,9 @@ import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
 import org.knime.google.api.clientsecrets.ClientSecrets;
 import org.knime.google.api.credential.GoogleCredential;
-import org.knime.google.api.nodes.util.PathUtil;
+import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorNodeModel.FSLocationPathAccessor;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.auth.oauth2.UserCredentials;
 
 /**
@@ -167,9 +169,16 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
         private static UserCredentials loginInteractively(final GoogleAuthenticatorSettings settings)
             throws IOException, InvalidSettingsException {
-            final var clientSecrets = settings.m_useCustomClientId//
-                ? ClientSecrets.loadClientSecrets(PathUtil.resolveToLocalPath(settings.m_customClientIdFile))//
-                : ClientSecrets.loadDefaultClientSecrets();
+
+            final GoogleClientSecrets clientSecrets;
+            if (settings.m_useCustomClientId) {
+                try (final var pathAccessor =
+                    new FSLocationPathAccessor(settings.m_customClientIdFile.getFSLocation())) {
+                    clientSecrets = ClientSecrets.loadClientSecrets(pathAccessor.getRootPath(null));
+                }
+            } else {
+                clientSecrets = ClientSecrets.loadDefaultClientSecrets();
+            }
 
             final var scopes = settings.m_scopeSettings.getScopes();
 
@@ -206,7 +215,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     @Layout(ClientIdSection.class)
     @Effect(signals = {UseCustomClientIdSignal.class, AuthTypeIsInteractive.class}, operation = And.class,
         type = EffectType.SHOW)
-    String m_customClientIdFile;
+    FileChooser m_customClientIdFile = new FileChooser();
 
     /**
      * Validates the settings.

@@ -57,6 +57,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -94,7 +95,7 @@ class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
     @Widget(title = "JSON file", description = "Path to the private JSON key file.")
     @Layout(APIKeyTypeSection.Content.class)
     @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.SHOW)
-    String m_jsonFile;
+    FileChooser m_jsonFile = new FileChooser();
 
     @Widget(title = "Service account email", description = "Email address of the service account.")
     @Layout(APIKeyTypeSection.Content.class)
@@ -104,7 +105,7 @@ class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
     @Widget(title = "P12 file", description = "Path to the private P12 key file.")
     @Layout(APIKeyTypeSection.Content.class)
     @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
-    String m_p12File;
+    FileChooser m_p12File = new FileChooser();
 
     /**
      * @throws InvalidSettingsException
@@ -115,11 +116,11 @@ class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
             if (StringUtils.isEmpty(m_serviceAccountEmail)) {
                 throw new InvalidSettingsException("Please specify email address of the service account");
             }
-            if (StringUtils.isEmpty(m_p12File)) {
+            if (StringUtils.isEmpty(m_p12File.getFSLocation().getPath())) {
                 throw new InvalidSettingsException("Please specify a path to the P12 key file");
             }
         } else {
-            if (StringUtils.isEmpty(m_jsonFile)) {
+            if (StringUtils.isEmpty(m_jsonFile.getFSLocation().getPath())) {
                 throw new InvalidSettingsException("Please specify a path to the JSON file");
             }
         }
