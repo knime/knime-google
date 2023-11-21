@@ -49,6 +49,7 @@
 package org.knime.google.api.nodes.authenticator;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -66,11 +67,14 @@ import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpdateHandler;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.DeclaringDefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthType;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
 import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
@@ -126,7 +130,7 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
 
     static final class StandardScope implements DefaultNodeSettings {
         @Widget(title = "Scope/permission")
-        @ChoicesWidget(choices = ScopeChoicesProvider.class)
+        @ChoicesWidget(choicesUpdateHandler = ScopeChoicesUpdateHandler.class)
         String m_scopeId;
 
         StandardScope() {
@@ -136,15 +140,30 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
             m_scopeId = scopeId;
         }
 
-        static class ScopeChoicesProvider implements ChoicesProvider {
+        static class ScopeChoicesUpdateHandler implements ChoicesUpdateHandler<ScopeChoicesDependency> {
+
             @Override
-            public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext context) {
-                return KnimeGoogleAuthScopeRegistry.getInstance().getOAuthEnabledKnimeGoogleAuthScopes() //
-                    .stream() //
-                    .map(s -> new IdAndText(s.getScopeID(), s.getAuthScopeName())) //
-                    .toArray(IdAndText[]::new);
+            public IdAndText[] update(final ScopeChoicesDependency settings,
+                final DefaultNodeSettingsContext context)
+                throws WidgetHandlerException {
+                if (settings == null) {
+                    return new IdAndText[0];
+                }
+                final var registry = KnimeGoogleAuthScopeRegistry.getInstance();
+                final var scopes = settings.m_authType == AuthType.API_KEY
+                        ? registry.getServiceAccountEnabledKnimeGoogleAuthScopes()
+                            : registry.getOAuthEnabledKnimeGoogleAuthScopes();
+
+                return scopes.stream().map(s -> new IdAndText(s.getScopeID(), s.getAuthScopeName())) //
+                        .sorted(Comparator.comparing(IdAndText::text)) //
+                        .toArray(IdAndText[]::new);
             }
         }
+
+        static class ScopeChoicesDependency {
+            @DeclaringDefaultNodeSettings(GoogleAuthenticatorSettings.class)
+            AuthType m_authType;
+       }
 
         static final class ScopeArrayPersistor extends NodeSettingsPersistorWithConfigKey<StandardScope[]> {
             @Override
