@@ -62,7 +62,6 @@ import org.knime.core.webui.node.port.PortSpecViewFactory;
 import org.knime.core.webui.node.port.PortView;
 import org.knime.core.webui.node.port.PortViewFactory;
 import org.knime.core.webui.page.Page;
-import org.knime.google.api.GooglePlugInActivator;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 
 /**
@@ -90,7 +89,7 @@ public final class GAPortViewFactories {
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(() -> createHtmlContent(portObject), "index.html").build();
+                return Page.builder(() -> createHtmlContent(portObject.getSpec()), "index.html").build();
             }
 
             @SuppressWarnings("unchecked")
@@ -106,17 +105,38 @@ public final class GAPortViewFactories {
         };
     }
 
-    private static String createHtmlContent(final GAConnectionPortObject portObject) {
+    /**
+     * @param pos The port object spec.
+     */
+    private static PortView createPortSpecView(final GAConnectionPortObjectSpec pos) {
+        return new PortView() {
+            @Override
+            public Page getPage() {
+                return Page.builder(() -> createHtmlContent(pos), "index.html").build();
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public Optional<InitialDataService<?>> createInitialDataService() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<RpcDataService> createRpcDataService() {
+                return Optional.empty();
+            }
+        };
+    }
+
+    private static String createHtmlContent(final GAConnectionPortObjectSpec pos) {
         final var sb = new StringBuilder();
         sb.append("<html><head><style>\n");
-        GooglePlugInActivator.getResource("resources/table.css").ifPresent(url -> {
-            try (var in = url.openStream()) {
-                sb.append(String.join("\n", IOUtils.readLines(in, StandardCharsets.UTF_8)));
-            } catch (IOException ignored) { // NOSONAR ignore, should always work
-            }
-        });
+        try (final var in = GAPortViewFactories.class.getResourceAsStream("table.css")) {
+            sb.append(IOUtils.toString(in, StandardCharsets.UTF_8));
+        } catch (IOException ignored) { // NOSONAR ignore, should always work
+        }
         sb.append("</style></head><body>\n");
-        sb.append(renderPortViewData(portObject.getConnection(), portObject.getProperty()));
+        sb.append(renderPortViewData(pos.getConnection(), pos.getProperty()));
         sb.append("</body></html>\n");
         return sb.toString();
     }
@@ -145,29 +165,6 @@ public final class GAPortViewFactories {
         });
         sb.append("</table>\n");
         return sb.toString();
-    }
-
-    /**
-     * @param pos The port object spec.
-     */
-    private static PortView createPortSpecView(final GAConnectionPortObjectSpec pos) {
-        return new PortView() {
-            @Override
-            public Page getPage() {
-                return Page.builder(() -> GAConnectionPortObject.PORT_NAME, "index.html").build();
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public Optional<InitialDataService<?>> createInitialDataService() {
-                return Optional.empty();
-            }
-
-            @Override
-            public Optional<RpcDataService> createRpcDataService() {
-                return Optional.empty();
-            }
-        };
     }
 
     private GAPortViewFactories() {
