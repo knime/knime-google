@@ -2,25 +2,25 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Google API Nodes
 Bundle-SymbolicName: org.knime.google.api;singleton:=true
-Bundle-Version: 5.2.0.qualifier
+Bundle-Version: 5.3.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.google.api.analytics.data,
  org.knime.google.api.credential,
  org.knime.google.api.nodes.util,
  org.knime.google.api.scopes
-Require-Bundle: org.knime.base;bundle-version="[5.2.0,6.0.0)",
- org.knime.core.ui;bundle-version="[5.2.0,6.0.0)",
- org.knime.base.filehandling;bundle-version="[5.2.0,6.0.0)",
- org.knime.cloud.core;bundle-version="[5.2.0,6.0.0)",
+Require-Bundle: org.knime.base;bundle-version="[5.3.0,6.0.0)",
+ org.knime.core.ui;bundle-version="[5.3.0,6.0.0)",
+ org.knime.base.filehandling;bundle-version="[5.3.0,6.0.0)",
+ org.knime.cloud.core;bundle-version="[5.3.0,6.0.0)",
  org.knime.ext.google.sdk;bundle-version="[5.2.0,6.0.0)",
  org.apache.commons.lang3;bundle-version="[3.3.1,4.0.0)",
  org.apache.commons.logging;bundle-version="[1.1.1,2.0.0)",
  com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.13.2,3.0.0)",
- org.knime.time;bundle-version="[5.2.0,6.0.0)",
- org.knime.credentials.base;bundle-version="[5.2.0,6.0.0)",
- org.knime.credentials.base.oauth;bundle-version="[5.2.0,6.0.0)",
- org.knime.filehandling.core;bundle-version="[5.2.0,6.0.0)"
+ org.knime.time;bundle-version="[5.3.0,6.0.0)",
+ org.knime.credentials.base;bundle-version="[5.3.0,6.0.0)",
+ org.knime.credentials.base.oauth;bundle-version="[5.3.0,6.0.0)",
+ org.knime.filehandling.core;bundle-version="[5.3.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-Activator: org.knime.google.api.GooglePlugInActivator
 Bundle-ActivationPolicy: lazy
