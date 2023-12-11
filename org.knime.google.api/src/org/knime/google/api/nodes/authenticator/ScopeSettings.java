@@ -190,7 +190,7 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> and define what the resulting access token can be used for.
             """)
-    @ArrayWidget(addButtonText = "Add")
+    @ArrayWidget(addButtonText = "Add Scope")
     @Effect(signals = ScopesSelectionMode.IsCustom.class, type = EffectType.SHOW)
     @Persist(customPersistor = CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
