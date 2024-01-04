@@ -72,23 +72,6 @@ public final class ServiceAccountCredentialsUtil {
     private ServiceAccountCredentialsUtil() {
     }
 
-    /**
-     * Loads Google private key from P12 file.
-     *
-     * @param keyFilePath key location
-     * @return private key
-     * @throws IOException
-     */
-    private static PrivateKey loadPrivateKeyFromP12(final Path keyFilePath) throws IOException {
-        try (final var in = Files.newInputStream(keyFilePath)) {
-            return loadPrivateKeyFromP12(in);
-        } catch (NoSuchFileException e) {
-            throw ExceptionUtil.createFormattedNoSuchFileException(e, "File");
-        } catch (AccessDeniedException e) { // NOSONAR
-            throw ExceptionUtil.createAccessDeniedException(keyFilePath);
-        }
-    }
-
     private static PrivateKey loadPrivateKeyFromP12(final InputStream stream) throws IOException {
         try {
             return SecurityUtils.loadPrivateKeyFromKeyStore(SecurityUtils.getPkcs12KeyStore(), stream, "notasecret",
@@ -110,7 +93,36 @@ public final class ServiceAccountCredentialsUtil {
     public static ServiceAccountCredentials loadFromP12(final String serviceAccountEmail, final Path keyFilePath)
         throws IOException {
 
-        final var privateKey = loadPrivateKeyFromP12(keyFilePath);
+        final PrivateKey privKey;
+
+        try (final var in = Files.newInputStream(keyFilePath)) {
+            privKey = loadPrivateKeyFromP12(in);
+        } catch (NoSuchFileException e) {
+            throw ExceptionUtil.createFormattedNoSuchFileException(e, "File");
+        } catch (AccessDeniedException e) { // NOSONAR
+            throw ExceptionUtil.createAccessDeniedException(keyFilePath);
+        }
+
+        return ServiceAccountCredentials.newBuilder()//
+            .setHttpTransportFactory(GoogleApiUtil::getHttpTransport)//
+            .setClientEmail(serviceAccountEmail)//
+            .setPrivateKey(privKey)//
+            .build();
+    }
+
+    /**
+     * Loads {@link ServiceAccountCredentials} from the given input stream which must provide access to the contents of
+     * a p12 file.
+     *
+     * @param serviceAccountEmail The service account email.
+     * @param p12InputStream Input stream from which to read the p12 file.
+     * @return the loaded {@link ServiceAccountCredentials}
+     * @throws IOException If something went wrong while loading, e.g. the key file had the wrong format.
+     */
+    public static ServiceAccountCredentials loadFromP12(final String serviceAccountEmail,
+        final InputStream p12InputStream) throws IOException {
+
+        final var privateKey = loadPrivateKeyFromP12(p12InputStream);
 
         return ServiceAccountCredentials.newBuilder()//
             .setHttpTransportFactory(GoogleApiUtil::getHttpTransport)//

@@ -49,6 +49,7 @@ package org.knime.google.api.nodes.connector;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.UUID;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -61,11 +62,11 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.FileUtil;
 import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.google.api.credential.GoogleCredential;
-import org.knime.google.api.nodes.util.PathUtil;
 import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
 
 /**
@@ -74,6 +75,8 @@ import org.knime.google.api.nodes.util.ServiceAccountCredentialsUtil;
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  */
 public class GoogleApiConnectorModel extends NodeModel {
+
+    private static final Duration KEY_FILE_READ_TIMEOUT = Duration.ofSeconds(60);
 
     private GoogleApiConnectorConfiguration m_config = new GoogleApiConnectorConfiguration();
 
@@ -95,11 +98,16 @@ public class GoogleApiConnectorModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
 
-        final var keyFilePath = PathUtil.resolveToLocalPath(m_config.getKeyFileLocation());
-        final var serviceCreds =
-            ServiceAccountCredentialsUtil.loadFromP12(m_config.getServiceAccountEmail(), keyFilePath)//
-                .createScoped(m_config.getScopes());
-        m_credentialCacheKey = CredentialCache.store(new GoogleCredential(serviceCreds));
+        final var keyFileURL = FileUtil.toURL(m_config.getKeyFileLocation());
+
+        try (final var p12Stream = FileUtil.openStreamWithTimeout(keyFileURL, (int) KEY_FILE_READ_TIMEOUT.toMillis())) {
+
+            final var serviceCreds =
+                ServiceAccountCredentialsUtil.loadFromP12(m_config.getServiceAccountEmail(), p12Stream)//
+                    .createScoped(m_config.getScopes());
+
+            m_credentialCacheKey = CredentialCache.store(new GoogleCredential(serviceCreds));
+        }
 
         return new PortObject[]{
             new CredentialPortObject(new CredentialPortObjectSpec(GoogleCredential.TYPE, m_credentialCacheKey))};
