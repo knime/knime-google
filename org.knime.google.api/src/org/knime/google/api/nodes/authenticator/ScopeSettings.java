@@ -59,7 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
@@ -78,15 +78,13 @@ import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.Auth
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
 import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * Scope settings for the Google Authenticator node.
  *
  * @author Alexander Bondaletov, Redfield SE
  */
 @SuppressWarnings("restriction")
-public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
+public class ScopeSettings implements DefaultNodeSettings, WidgetGroup {
 
     @Widget(title = "How to select scopes", description = """
             Scopes are
@@ -255,7 +253,6 @@ public class ScopeSettings implements DefaultNodeSettings, LayoutGroup {
     /**
      * @return The selected scopes.
      */
-    @JsonIgnore
     public List<String> getScopes() {
         return switch (m_scopesSelectionMode) {
             case STANDARD -> getSelectedStandardScopes();

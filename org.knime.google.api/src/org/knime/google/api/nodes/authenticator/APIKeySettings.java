@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
@@ -69,7 +69,7 @@ import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.APIK
  * @author Zkriya Rakhimberdiyev, Redfield SE
  */
 @SuppressWarnings("restriction")
-class APIKeySettings implements LayoutGroup, DefaultNodeSettings {
+class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
 
     enum APIKeyType {
         @Label("JSON")

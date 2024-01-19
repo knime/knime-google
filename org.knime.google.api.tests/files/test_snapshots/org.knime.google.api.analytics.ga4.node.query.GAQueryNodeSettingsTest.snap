@@ -227,7 +227,8 @@
               "showNoneColumn" : false,
               "showRowKeys" : false,
               "showSearch" : true,
-              "showMode" : true
+              "showMode" : true,
+              "hideOnNull" : false
             }
           } ],
           "addButtonText" : "Add metric",
@@ -282,8 +283,7 @@
               }
             }, {
               "type" : "Control",
-              "scope" : "#/properties/rangeName",
-              "options" : { }
+              "scope" : "#/properties/rangeName"
             } ]
           } ],
           "addButtonText" : "Add date range"
@@ -344,12 +344,10 @@
             }
           }, {
             "type" : "Control",
-            "scope" : "#/properties/stringFilter/properties/matchType",
-            "options" : { }
+            "scope" : "#/properties/stringFilter/properties/matchType"
           }, {
             "type" : "Control",
-            "scope" : "#/properties/stringFilter/properties/value",
-            "options" : { }
+            "scope" : "#/properties/stringFilter/properties/value"
           } ],
           "addButtonText" : "Add filter criterion",
           "arrayElementTitle" : "Filter criterion"

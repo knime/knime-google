@@ -54,7 +54,7 @@ import java.util.function.Function;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.LayoutGroup;
+import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.HasMultipleItemsCondition;
@@ -69,7 +69,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GADimensionFilterExpression implements DefaultNodeSettings, LayoutGroup {
+final class GADimensionFilterExpression implements DefaultNodeSettings, WidgetGroup {
 
     @Widget(title = "Filter if matched by",
             description = """
