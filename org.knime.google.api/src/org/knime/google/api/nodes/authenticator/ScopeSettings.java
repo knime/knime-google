@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
@@ -84,7 +85,7 @@ import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
  * @author Alexander Bondaletov, Redfield SE
  */
 @SuppressWarnings("restriction")
-public class ScopeSettings implements DefaultNodeSettings, WidgetGroup {
+public class ScopeSettings implements WidgetGroup, PersistableSettings {
 
     @Widget(title = "How to select scopes", description = """
             Scopes are

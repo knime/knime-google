@@ -1,0 +1,490 @@
+{
+  "data" : {
+    "model" : {
+      "authType" : "INTERACTIVE",
+      "apiKeySettings" : {
+        "apiKeyFormat" : "JSON",
+        "jsonFile" : {
+          "path" : {
+            "fsCategory" : "LOCAL",
+            "path" : "",
+            "timeout" : 1000
+          }
+        },
+        "p12File" : {
+          "path" : {
+            "fsCategory" : "LOCAL",
+            "path" : "",
+            "timeout" : 1000
+          }
+        }
+      },
+      "scopeSettings" : {
+        "scopesSelectionMode" : "STANDARD",
+        "standardScopes" : [ ],
+        "customScopes" : [ ]
+      },
+      "useCustomClientId" : false,
+      "customClientIdFile" : {
+        "path" : {
+          "fsCategory" : "LOCAL",
+          "path" : "",
+          "timeout" : 1000
+        }
+      }
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "apiKeySettings" : {
+            "type" : "object",
+            "properties" : {
+              "apiKeyFormat" : {
+                "oneOf" : [ {
+                  "const" : "JSON",
+                  "title" : "JSON"
+                }, {
+                  "const" : "P12",
+                  "title" : "P12"
+                } ],
+                "title" : "API key format",
+                "description" : "Which format of API key to use. Google cloud provides API keys as either JSON or P12 (legacy).",
+                "default" : "JSON"
+              },
+              "jsonFile" : {
+                "type" : "object",
+                "properties" : {
+                  "path" : {
+                    "type" : "object",
+                    "default" : {
+                      "fsCategory" : "LOCAL",
+                      "path" : "",
+                      "timeout" : 1000
+                    }
+                  }
+                },
+                "title" : "JSON file",
+                "description" : "Path to the private JSON key file.",
+                "default" : {
+                  "path" : {
+                    "fsCategory" : "LOCAL",
+                    "path" : "",
+                    "timeout" : 1000
+                  }
+                }
+              },
+              "p12File" : {
+                "type" : "object",
+                "properties" : {
+                  "path" : {
+                    "type" : "object",
+                    "default" : {
+                      "fsCategory" : "LOCAL",
+                      "path" : "",
+                      "timeout" : 1000
+                    }
+                  }
+                },
+                "title" : "P12 file",
+                "description" : "Path to the private P12 key file.",
+                "default" : {
+                  "path" : {
+                    "fsCategory" : "LOCAL",
+                    "path" : "",
+                    "timeout" : 1000
+                  }
+                }
+              },
+              "serviceAccountEmail" : {
+                "type" : "string",
+                "title" : "Service account email",
+                "description" : "Email address of the service account."
+              }
+            },
+            "default" : {
+              "apiKeyFormat" : "JSON",
+              "jsonFile" : {
+                "path" : {
+                  "fsCategory" : "LOCAL",
+                  "path" : "",
+                  "timeout" : 1000
+                }
+              },
+              "p12File" : {
+                "path" : {
+                  "fsCategory" : "LOCAL",
+                  "path" : "",
+                  "timeout" : 1000
+                }
+              }
+            }
+          },
+          "authType" : {
+            "oneOf" : [ {
+              "const" : "INTERACTIVE",
+              "title" : "Interactive"
+            }, {
+              "const" : "API_KEY",
+              "title" : "API Key"
+            } ],
+            "title" : "Authentication type",
+            "description" : "Authentication method to use.",
+            "default" : "INTERACTIVE"
+          },
+          "customClientIdFile" : {
+            "type" : "object",
+            "properties" : {
+              "path" : {
+                "type" : "object",
+                "default" : {
+                  "fsCategory" : "LOCAL",
+                  "path" : "",
+                  "timeout" : 1000
+                }
+              }
+            },
+            "title" : "Custom client ID file (JSON format)",
+            "description" : "The path to a JSON file with the custom client ID.",
+            "default" : {
+              "path" : {
+                "fsCategory" : "LOCAL",
+                "path" : "",
+                "timeout" : 1000
+              }
+            }
+          },
+          "loginCredentialRef" : {
+            "type" : "string",
+            "format" : "uuid",
+            "title" : "Login",
+            "description" : "Clicking on login opens a new browser window/tab which allows to interactively log into the service.",
+            "configKeys" : [ "loginCredentialRef_Internals" ]
+          },
+          "scopeSettings" : {
+            "type" : "object",
+            "properties" : {
+              "customScopes" : {
+                "title" : "Custom scopes",
+                "description" : "Enter a list of custom scopes to request during login. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
+                "default" : [ ],
+                "configKeys" : [ "customScopes" ],
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "scope" : {
+                      "type" : "string",
+                      "title" : "Scope/permission"
+                    }
+                  },
+                  "configKeys" : [ "customScopes" ]
+                }
+              },
+              "scopesSelectionMode" : {
+                "oneOf" : [ {
+                  "const" : "STANDARD",
+                  "title" : "Standard"
+                }, {
+                  "const" : "CUSTOM",
+                  "title" : "Custom"
+                } ],
+                "title" : "How to select scopes",
+                "description" : "Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> that need to be requested during login. They specify what the resulting\naccess token can be used for. This setting defines whether to select scopes from a list of predefined\n<b>standard</b> scopes or to enter <b>custom</b> scopes manually.\n",
+                "default" : "STANDARD"
+              },
+              "standardScopes" : {
+                "title" : "Standard scopes",
+                "description" : "Choose scopes from a predefined list of standard scopes. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
+                "default" : [ ],
+                "configKeys" : [ "standardScopes" ],
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "scopeId" : {
+                      "type" : "string",
+                      "title" : "Scope/permission"
+                    }
+                  },
+                  "configKeys" : [ "standardScopes" ]
+                }
+              }
+            },
+            "default" : {
+              "scopesSelectionMode" : "STANDARD",
+              "standardScopes" : [ ],
+              "customScopes" : [ ]
+            }
+          },
+          "useCustomClientId" : {
+            "type" : "boolean",
+            "title" : "Use custom client ID",
+            "description" : "Enable the option to use custom client ID.",
+            "default" : false
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/authType"
+    }, {
+      "label" : "API Key",
+      "type" : "Section",
+      "rule" : {
+        "effect" : "HIDE",
+        "condition" : {
+          "scope" : "#/properties/model/properties/authType",
+          "schema" : {
+            "oneOf" : [ {
+              "const" : "INTERACTIVE"
+            } ]
+          }
+        }
+      },
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat",
+        "options" : {
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/apiKeySettings/properties/jsonFile",
+        "options" : {
+          "format" : "fileChooser"
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "JSON"
+              } ]
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail",
+        "rule" : {
+          "effect" : "HIDE",
+          "condition" : {
+            "scope" : "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "JSON"
+              } ]
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/apiKeySettings/properties/p12File",
+        "options" : {
+          "format" : "fileChooser"
+        },
+        "rule" : {
+          "effect" : "HIDE",
+          "condition" : {
+            "scope" : "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "JSON"
+              } ]
+            }
+          }
+        }
+      } ]
+    }, {
+      "label" : "Scopes of access",
+      "type" : "Section",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode",
+        "options" : {
+          "format" : "valueSwitch"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/scopeSettings/properties/standardScopes",
+        "options" : {
+          "detail" : [ {
+            "type" : "Control",
+            "scope" : "#/properties/scopeId",
+            "options" : {
+              "possibleValues" : [ ],
+              "format" : "dropDown",
+              "showNoneColumn" : false,
+              "showRowKeys" : false,
+              "showSearch" : true,
+              "showMode" : true,
+              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
+              "dependencies" : [ "#/properties/model/properties/authType" ]
+            }
+          } ],
+          "addButtonText" : "Add Scope"
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "STANDARD"
+              } ]
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/scopeSettings/properties/customScopes",
+        "options" : {
+          "detail" : [ {
+            "type" : "Control",
+            "scope" : "#/properties/scope"
+          } ],
+          "addButtonText" : "Add Scope"
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "CUSTOM"
+              } ]
+            }
+          }
+        }
+      } ]
+    }, {
+      "label" : "Client ID",
+      "type" : "Section",
+      "options" : {
+        "isAdvanced" : true
+      },
+      "rule" : {
+        "effect" : "SHOW",
+        "condition" : {
+          "scope" : "#/properties/model/properties/authType",
+          "schema" : {
+            "oneOf" : [ {
+              "const" : "INTERACTIVE"
+            } ]
+          }
+        }
+      },
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/useCustomClientId",
+        "options" : {
+          "format" : "checkbox",
+          "isAdvanced" : true
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/authType",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "INTERACTIVE"
+              } ]
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/customClientIdFile",
+        "options" : {
+          "format" : "fileChooser",
+          "isAdvanced" : true
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "type" : "AND",
+            "conditions" : [ {
+              "scope" : "#/properties/model/properties/useCustomClientId",
+              "schema" : {
+                "const" : true
+              }
+            }, {
+              "scope" : "#/properties/model/properties/authType",
+              "schema" : {
+                "oneOf" : [ {
+                  "const" : "INTERACTIVE"
+                } ]
+              }
+            } ]
+          }
+        }
+      } ]
+    }, {
+      "label" : "Authentication",
+      "type" : "Section",
+      "rule" : {
+        "effect" : "SHOW",
+        "condition" : {
+          "scope" : "#/properties/model/properties/authType",
+          "schema" : {
+            "oneOf" : [ {
+              "const" : "INTERACTIVE"
+            } ]
+          }
+        }
+      },
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/loginCredentialRef",
+        "options" : {
+          "actionHandler" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$LoginActionHandler",
+          "format" : "button",
+          "states" : [ {
+            "id" : "READY",
+            "disabled" : false,
+            "primary" : true,
+            "nextState" : "CANCEL",
+            "text" : "Login"
+          }, {
+            "id" : "CANCEL",
+            "disabled" : false,
+            "primary" : false,
+            "text" : "Cancel login"
+          }, {
+            "id" : "DONE",
+            "disabled" : false,
+            "primary" : true,
+            "nextState" : "CANCEL",
+            "text" : "Login again"
+          } ],
+          "displayErrorMessage" : true,
+          "showTitleAndDescription" : false,
+          "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/useCustomClientId", "#/properties/model/properties/customClientIdFile" ],
+          "updateOptions" : {
+            "updateHandler" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$LoginUpdateHandler",
+            "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/useCustomClientId", "#/properties/model/properties/customClientIdFile" ]
+          }
+        },
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/authType",
+            "schema" : {
+              "oneOf" : [ {
+                "const" : "INTERACTIVE"
+              } ]
+            }
+          }
+        }
+      } ]
+    } ]
+  }
+}
