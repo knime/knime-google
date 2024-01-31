@@ -59,7 +59,7 @@ public class KnimeCloudPlatformReadAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "CloudPlatformRead";
 
-    private static final String SCOPE_NAME = "Google Cloud Platform (Read)";
+    private static final String SCOPE_NAME = "Google Cloud Platform (read-only)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
         GoogleApiStorageScopes.CLOUD_PLATFORM_READ_ONLY);

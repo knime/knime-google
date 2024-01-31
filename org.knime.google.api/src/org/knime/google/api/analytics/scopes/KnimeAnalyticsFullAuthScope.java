@@ -63,7 +63,7 @@ public class KnimeAnalyticsFullAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "GoogleAnalyticsFull";
 
-    private static final String SCOPE_NAME = "Google Analytics Connection (Full)";
+    private static final String SCOPE_NAME = "Google Analytics";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
         AnalyticsScopes.ANALYTICS,

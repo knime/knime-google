@@ -64,7 +64,7 @@ public class KnimeDriveReadWriteAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "GoogleDriveReadWrite";
 
-    private static final String SCOPE_NAME = "Google Drive connection (Read/Write)";
+    private static final String SCOPE_NAME = "Google Drive";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
         DriveScopes.DRIVE);

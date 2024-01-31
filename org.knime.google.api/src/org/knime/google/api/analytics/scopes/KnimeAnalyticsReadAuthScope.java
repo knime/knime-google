@@ -63,7 +63,7 @@ public class KnimeAnalyticsReadAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "GoogleAnalyticsRead";
 
-    private static final String SCOPE_NAME = "Google Analytics Connection (Read)";
+    private static final String SCOPE_NAME = "Google Analytics (read-only)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(AnalyticsScopes.ANALYTICS_READONLY);
 
