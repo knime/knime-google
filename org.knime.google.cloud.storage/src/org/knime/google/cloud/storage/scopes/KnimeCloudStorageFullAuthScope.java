@@ -59,7 +59,7 @@ public class KnimeCloudStorageFullAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "CloudStorageFull";
 
-    private static final String SCOPE_NAME = "Google Cloud Storage (full)";
+    private static final String SCOPE_NAME = "Google Cloud Storage";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
         GoogleApiStorageScopes.DEVSTORAGE_FULL_CONTROL,

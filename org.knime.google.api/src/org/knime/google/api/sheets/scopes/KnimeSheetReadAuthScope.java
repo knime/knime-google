@@ -65,7 +65,7 @@ public class KnimeSheetReadAuthScope implements KnimeGoogleAuthScope {
 
     private static final String SCOPE_ID = "GoogleSheetsRead";
 
-    private static final String SCOPE_NAME = "Google Sheets Connection (Read)";
+    private static final String SCOPE_NAME = "Google Sheets (read-only)";
 
     private static final List<String> SCOPE_LIST = Arrays.asList(
         SheetsScopes.SPREADSHEETS_READONLY,
