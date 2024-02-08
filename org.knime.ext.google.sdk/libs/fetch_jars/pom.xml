@@ -198,6 +198,9 @@
 							<excludeGroupIds>
 								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt,org.apache.arrow,io.netty
 							</excludeGroupIds>
+							<excludeArtifactIds>
+								grpc-netty-shaded
+							</excludeArtifactIds>
 						</configuration>
 						<phase>
 							package</phase>
@@ -215,6 +218,9 @@
 							<excludeGroupIds>
 								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt,org.apache.arrow,io.netty
 							</excludeGroupIds>
+							<excludeArtifactIds>
+								grpc-netty-shaded
+							</excludeArtifactIds>
 						</configuration>
 						<phase>
 							package</phase>

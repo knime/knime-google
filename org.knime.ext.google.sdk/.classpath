@@ -8,8 +8,7 @@
 	<classpathentry exported="true" kind="lib" path="libs/grpc-core-1.56.1.jar" sourcepath="libs/grpc-core-1.56.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-netty-shaded-1.56.1.jar" sourcepath="libs/grpc-netty-shaded-1.56.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>	
 	<classpathentry exported="true" kind="lib" path="libs/json-20230227.jar" sourcepath="libs/json-20230227-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
