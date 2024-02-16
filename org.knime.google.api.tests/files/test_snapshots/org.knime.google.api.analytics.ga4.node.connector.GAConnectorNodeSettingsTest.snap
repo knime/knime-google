@@ -78,7 +78,8 @@
         "showSearch" : true,
         "showMode" : true,
         "choicesUpdateHandler" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
-        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ]
+        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ],
+        "setFirstValueOnUpdate" : true
       }
     }, {
       "type" : "Control",

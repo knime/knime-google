@@ -327,7 +327,8 @@
               "showSearch" : true,
               "showMode" : true,
               "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
-              "dependencies" : [ "#/properties/model/properties/authType" ]
+              "dependencies" : [ "#/properties/model/properties/authType" ],
+              "setFirstValueOnUpdate" : true
             }
           } ],
           "addButtonText" : "Add Scope"
