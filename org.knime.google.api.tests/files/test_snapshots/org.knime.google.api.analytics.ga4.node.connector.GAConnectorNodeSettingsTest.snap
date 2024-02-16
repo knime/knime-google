@@ -71,7 +71,6 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
-        "possibleValues" : [ ],
         "format" : "dropDown",
         "showNoneColumn" : false,
         "showRowKeys" : false,
