@@ -76,6 +76,7 @@
               },
               "filters" : {
                 "title" : "Dimension filter",
+                "description" : "<p>\nData can be filtered by comparing dimension values to strings or based on list inclusion.\n</p>\n<p>\nEach filter criterion can be negated to invert its results, for example to <i>exclude</i> results whose\ndimension values are in the specified list.\nThe dimension filter can be configured such that <i>all</i> criteria\nmust match for a result to be returned, or such that <i>any</i> criterion must match.\n</p>\n",
                 "default" : [ ],
                 "type" : "array",
                 "items" : {
@@ -142,8 +143,6 @@
                 }
               }
             },
-            "title" : "Dimension filter",
-            "description" : "<p>\nData can be filtered by comparing dimension values to strings or based on list inclusion.\n</p>\n<p>\nEach filter criterion can be negated to invert its results, for example to <i>exclude</i> results whose\ndimension values are in the specified list.\nThe dimension filter can be configured such that <i>all</i> criteria\nmust match for a result to be returned, or such that <i>any</i> criterion must match.\n</p>\n",
             "default" : {
               "connectVia" : "AND",
               "filters" : [ ]

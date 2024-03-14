@@ -128,7 +128,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
     StandardScope[] m_standardScopes = new StandardScope[0];
 
     static final class StandardScope implements DefaultNodeSettings {
-        @Widget(title = "Scope/permission")
+        @Widget(title = "Scope/permission", description = "")
         @ChoicesWidget(choicesUpdateHandler = ScopeChoicesUpdateHandler.class)
         String m_scopeId;
 
@@ -195,7 +195,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
     CustomScope[] m_customScopes = new CustomScope[0];
 
     static class CustomScope implements DefaultNodeSettings {
-        @Widget(title = "Scope/permission")
+        @Widget(title = "Scope/permission", description = "")
         String m_scope;
 
         CustomScope(final String scope) {

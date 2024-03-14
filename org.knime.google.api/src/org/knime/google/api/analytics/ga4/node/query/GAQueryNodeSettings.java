@@ -151,17 +151,6 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     interface DimensionFiltersSection {
     }
 
-    @Widget(title = "Dimension filter", description = """
-            <p>
-            Data can be filtered by comparing dimension values to strings or based on list inclusion.
-            </p>
-            <p>
-            Each filter criterion can be negated to invert its results, for example to <i>exclude</i> results whose
-            dimension values are in the specified list.
-            The dimension filter can be configured such that <i>all</i> criteria
-            must match for a result to be returned, or such that <i>any</i> criterion must match.
-            </p>
-            """)
     @Layout(DimensionFiltersSection.class)
     @Persist(optional = true) // optional since unavailable in 4.7
     GADimensionFilterExpression m_gaDimensionFilter = new GADimensionFilterExpression();

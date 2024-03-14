@@ -87,7 +87,17 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, WidgetGr
 
     @Signal(condition = HasMultipleItemsCondition.class)
     @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Filter criterion")
-    @Widget(title = "Dimension filter")
+    @Widget(title = "Dimension filter", description = """
+            <p>
+            Data can be filtered by comparing dimension values to strings or based on list inclusion.
+            </p>
+            <p>
+            Each filter criterion can be negated to invert its results, for example to <i>exclude</i> results whose
+            dimension values are in the specified list.
+            The dimension filter can be configured such that <i>all</i> criteria
+            must match for a result to be returned, or such that <i>any</i> criterion must match.
+            </p>
+            """)
     GADimensionFilterCriterion[] m_filters = new GADimensionFilterCriterion[0];
 
     GADimensionFilterExpression() {
