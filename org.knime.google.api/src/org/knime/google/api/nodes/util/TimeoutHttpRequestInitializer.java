@@ -44,74 +44,61 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2023 (bjoern): created
+ *   May 15, 2024 (bjoern): created
  */
 package org.knime.google.api.nodes.util;
 
+import java.io.IOException;
 import java.time.Duration;
 
+import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
 
 /**
- * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
+ * {@link HttpRequestInitializer} that sets HTTP connect/read timeout. It also allows to wrap an inner
+ * {@link HttpRequestInitializer}, e.g. one that adds credentials to the request.
  *
  * @author Bjoern Lohrmann, KNIME GmbH
  */
-public final class GoogleApiUtil {
+public class TimeoutHttpRequestInitializer implements HttpRequestInitializer {
+
+    private final Duration m_connectTimeout;
+
+    private final Duration m_readTimeout;
+
+    private final HttpRequestInitializer m_wrapped;
 
     /**
-     * Default timeout for establishing HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_CONNECT_TIMEOUT = Duration.ofMinutes(1);
-
-    /**
-     * Default timeout for reading from HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_READ_TIMEOUT = Duration.ofMinutes(2);
-
-    private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new NetHttpTransport();
-
-    private static final JsonFactory JSON_FACTORY = new GsonFactory();
-
-    private static final HttpRequestInitializer DEFAULT_HTTP_REQUEST_INITIALIZER =
-        new TimeoutHttpRequestInitializer(DEFAULT_HTTP_CONNECT_TIMEOUT, DEFAULT_HTTP_READ_TIMEOUT);
-
-    private GoogleApiUtil() {
-    }
-
-    /**
-     * @return the default {@link HttpTransport} instance
-     */
-    public static HttpTransport getHttpTransport() {
-        return DEFAULT_HTTP_TRANSPORT;
-    }
-
-    /**
+     * Constructor.
      *
-     * @return the default {@link HttpRequestInitializer} instance to use
+     * @param connectTimeout The HTTP connect timeout to use for each request.
+     * @param readTimeout The HTTP read timeout to use for each request.
      */
-    public static HttpRequestInitializer getDefaultHttpRequestInitializer() {
-        return DEFAULT_HTTP_REQUEST_INITIALIZER;
+    public TimeoutHttpRequestInitializer(final Duration connectTimeout, final Duration readTimeout) {
+        this(connectTimeout, readTimeout, null);
     }
 
     /**
-     * @param connectTimeout The HTTP connect timeout to use.
-     * @param readTimeout The HTTP read timeout to use.
-     * @return a {@link HttpRequestInitializer} instance that sets HTTP connect/read timeouts.
+     * Constructor that allows to pass a {@link HttpRequestInitializer} to be wrapped.
+     *
+     * @param connectTimeout The HTTP connect timeout to use for each request.
+     * @param readTimeout The HTTP read timeout to use for each request.
+     * @param wrapped A {@link HttpRequestInitializer} to be wrapped.
      */
-    public static HttpRequestInitializer getHttpRequestInitializerWithTimeouts(final Duration connectTimeout,
-        final Duration readTimeout) {
-        return new TimeoutHttpRequestInitializer(connectTimeout, readTimeout);
+    public TimeoutHttpRequestInitializer(final Duration connectTimeout, final Duration readTimeout,
+        final HttpRequestInitializer wrapped) {
+
+        m_connectTimeout = connectTimeout;
+        m_readTimeout = readTimeout;
+        m_wrapped = wrapped;
     }
 
-    /**
-     * @return the {@link JsonFactory} instance that should be used by all nodes.
-     */
-    public static JsonFactory getJsonFactory() {
-        return JSON_FACTORY;
+    @Override
+    public void initialize(final HttpRequest request) throws IOException {
+        if (m_wrapped != null) {
+            m_wrapped.initialize(request);
+        }
+        request.setConnectTimeout((int)m_connectTimeout.toMillis());
+        request.setReadTimeout((int)m_readTimeout.toMillis());
     }
 }

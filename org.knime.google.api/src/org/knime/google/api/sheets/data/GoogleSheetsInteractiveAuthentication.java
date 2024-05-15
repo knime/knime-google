@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -61,6 +62,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.google.api.clientsecrets.ClientSecrets;
 import org.knime.google.api.nodes.authenticator.CustomAuthorizationCodeInstalledApp;
 import org.knime.google.api.nodes.util.GoogleApiUtil;
+import org.knime.google.api.nodes.util.TimeoutHttpRequestInitializer;
 import org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory;
 import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
@@ -90,6 +92,8 @@ public class GoogleSheetsInteractiveAuthentication {
     /** The scopes required for the {@link GoogleSheetsInteractiveAuthentication} */
     private static final List<String> SCOPES = Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_READONLY);
 
+
+
     /**
      * Returns a {@link Sheets} service for the given user from the given application name
      * and the path for the data store file. The authentication is verified.
@@ -97,15 +101,20 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param locationType The {@link CredentialLocationType} used for authentication
      * @param credentialPath the path for the data store file
      * @param user the user for which the credentials should be used
+     * @param connectTimeout Connect timeout for HTTP connections.
+     * @param readTimeout Read timeout for HTTP connections.
      * @return A sheets service authenticated for the given user, with credentials read from
      * the given location of the data store file
      * @throws IOException If there is a problem reading the credentials from the data storage file
      */
     public static Sheets getExistingAuthSheetService(final CredentialLocationType locationType,
-        final String credentialPath, final String user) throws IOException {
-        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
-        Credential credential = getAuthorizationCodeFlow(credentialDataStoreFactory).loadCredential(user);
-        Sheets service = getSheetService(credential);
+        final String credentialPath, final String user, final Duration connectTimeout, final Duration readTimeout)
+        throws IOException {
+
+        final var credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
+        final var credential =
+            getAuthorizationCodeFlow(credentialDataStoreFactory, connectTimeout, readTimeout).loadCredential(user);
+        final var service = getSheetService(credential, connectTimeout, readTimeout);
         testService(service);
         return service;
     }
@@ -116,17 +125,25 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param locationType The {@link CredentialLocationType} used for authentication
      * @param credentialPath The path to the credentials or {@link Null}.
      * @param user The user that should be used for authenticating with Google Drive
+     * @param connectTimeout Connect timeout for HTTP connections.
+     * @param readTimeout Read timeout for HTTP connections.
      * @return The google drive service
      * @throws IOException If the credential storage cannot be accesssed
      */
     public static Drive getExistingAuthDriveService(final CredentialLocationType locationType,
-        final String credentialPath, final String user) throws IOException {
-        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
-        Credential credential = getAuthorizationCodeFlow(credentialDataStoreFactory).loadCredential(user);
-        Drive service = new Drive.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(), credential)
-                .setApplicationName(GoogleSheetsConnection.APP_NAME)
+        final String credentialPath, final String user, final Duration connectTimeout, final Duration readTimeout)
+        throws IOException {
+
+        final var credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
+        final var credential =
+            getAuthorizationCodeFlow(credentialDataStoreFactory, connectTimeout, readTimeout).loadCredential(user);
+
+        return new Drive.Builder(//
+            GoogleApiUtil.getHttpTransport(), //
+            GoogleApiUtil.getJsonFactory(), //
+            new TimeoutHttpRequestInitializer(connectTimeout, readTimeout, credential))//
+                .setApplicationName(GoogleSheetsConnection.APP_NAME)//
                 .build();
-        return service;
     }
 
     /**
@@ -138,40 +155,50 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param locationType The {@link CredentialLocationType} used for authentication
      * @param credentialPath The path to the data store file
      * @param user The user to be used for authentication
+     * @param connectTimeout Connect timeout for HTTP connections.
+     * @param readTimeout Read timeout for HTTP connections.
      * @return An authenticated sheet service.
      * @throws IOException If there is a problem reading the credentials from the data storage file
-     * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    public static Sheets getAuthRenewedSheetsService(final CredentialLocationType locationType, final String credentialPath,
-        final String user) throws IOException, GeneralSecurityException {
-        DataStoreFactory credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
-        try{
-            return getAuthSheetsService(credentialDataStoreFactory, user);
-        } catch (IOException | GeneralSecurityException e) {
-            getAuthorizationCodeFlow(credentialDataStoreFactory).getCredentialDataStore().delete(user);
-            return getAuthSheetsService(credentialDataStoreFactory, user);
+    public static Sheets getAuthRenewedSheetsService(final CredentialLocationType locationType,
+        final String credentialPath, final String user, final Duration connectTimeout, final Duration readTimeout)
+        throws IOException {
+
+        final var credentialDataStoreFactory = getCredentialDataStoreFactory(locationType, credentialPath);
+        try {
+            return getAuthSheetsService(credentialDataStoreFactory, user, connectTimeout, readTimeout);
+        } catch (IOException e) { // NOSONAR
+            getAuthorizationCodeFlow(credentialDataStoreFactory, connectTimeout, readTimeout).getCredentialDataStore()
+                .delete(user);
+            return getAuthSheetsService(credentialDataStoreFactory, user, connectTimeout, readTimeout);
         }
     }
-
 
     /**
      * Creates an authorized credential object.
      * If the given user is not yet authenticated a pop-up will ask the user to authenticate.
      * The acquired authentication token will be stored in the given {@link File}.
      *
+     * @param connectTimeout Connect timeout for HTTP connections.
+     * @param readTimeout Read timeout for HTTP connections.
      * @return an authorized Credential object.
      * @throws IOException If there is a problem reading the credentials from the data storage file
      */
-    private static Credential authorize(final DataStoreFactory credentialDataStore, final String user)
-        throws IOException {
-        final GoogleAuthorizationCodeFlow flow = getAuthorizationCodeFlow(credentialDataStore);
-        final Credential credential =
-            new CustomAuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(user);
-        return credential;
+    private static Credential authorize(final DataStoreFactory credentialDataStore, final String user,
+        final Duration connectTimeout, final Duration readTimeout) throws IOException {
+
+        final GoogleAuthorizationCodeFlow flow =
+            getAuthorizationCodeFlow(credentialDataStore, connectTimeout, readTimeout);
+        return new CustomAuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize(user);
     }
 
-    private static Sheets getSheetService(final Credential credential) {
-        return new Sheets.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(), credential)
+    private static Sheets getSheetService(final Credential credential, final Duration connectTimeout,
+        final Duration readTimeout) {
+
+        return new Sheets.Builder(//
+                    GoogleApiUtil.getHttpTransport(), //
+                    GoogleApiUtil.getJsonFactory(), //
+                    new TimeoutHttpRequestInitializer(connectTimeout, readTimeout, credential))//
                 .setApplicationName(GoogleSheetsConnection.APP_NAME).build();
     }
 
@@ -187,20 +214,29 @@ public class GoogleSheetsInteractiveAuthentication {
      * @throws IOException If there is a problem reading the credentials from the data storage file
      * @throws GeneralSecurityException If there is a problem testing the sheet service
      */
-    private static Sheets getAuthSheetsService(final DataStoreFactory credentialDataStoreFactory,
-        final String user) throws IOException, GeneralSecurityException {
-            final Credential credential = authorize(credentialDataStoreFactory, user);
-            Sheets service = getSheetService(credential);
-            testService(service);
-            return service;
+    private static Sheets getAuthSheetsService(final DataStoreFactory credentialDataStoreFactory, final String user,
+        final Duration connectTimeout, final Duration readTimeout) throws IOException {
+
+        final var credential = authorize(credentialDataStoreFactory, user, connectTimeout, readTimeout);
+        final var service = getSheetService(credential, connectTimeout, readTimeout);
+        testService(service);
+        return service;
     }
 
-    private static GoogleAuthorizationCodeFlow
-        getAuthorizationCodeFlow(final DataStoreFactory credentialDataStoreFactory) throws IOException {
+    private static GoogleAuthorizationCodeFlow getAuthorizationCodeFlow(
+        final DataStoreFactory credentialDataStoreFactory, final Duration connectTimeout, final Duration readTimeout)
+        throws IOException {
 
         final var clientSecrets = ClientSecrets.loadDeprecatedDefaultClientSecrets();
-        return new GoogleAuthorizationCodeFlow.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
-            clientSecrets, SCOPES).setDataStoreFactory(credentialDataStoreFactory).setAccessType("offline").build();
+        return new GoogleAuthorizationCodeFlow.Builder(//
+            GoogleApiUtil.getHttpTransport(), //
+            GoogleApiUtil.getJsonFactory(), //
+            clientSecrets, SCOPES)//
+                .setRequestInitializer(//
+                    GoogleApiUtil.getHttpRequestInitializerWithTimeouts(connectTimeout, readTimeout))//
+                .setDataStoreFactory(credentialDataStoreFactory)//
+                .setAccessType("offline")//
+                .build();
     }
 
     /**
@@ -225,7 +261,7 @@ public class GoogleSheetsInteractiveAuthentication {
      * @throws IOException If temporary folder cannot be created
      */
     public static String getTempCredentialPath(final String credentialByteString) throws IOException {
-        File tempFolder = FileUtil.createTempDir("sheets");
+        final var tempFolder = FileUtil.createTempDir("sheets");
         createTempFromByteFile(tempFolder, credentialByteString);
         return tempFolder.getPath();
     }
@@ -237,7 +273,8 @@ public class GoogleSheetsInteractiveAuthentication {
      * @param credentialByteString The byte string that should be decoded to the given folder
      * @throws IOException If there is an error when writing the temp file
      */
-    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString) throws IOException {
+    public static void createTempFromByteFile(final File tempFolder, final String credentialByteString)
+        throws IOException {
         byte[] decodeBase64 = Base64.getDecoder().decode(credentialByteString);
         Files.write(new File(tempFolder, STORAGE_CREDENTIAL).toPath(), decodeBase64);
     }
@@ -263,19 +300,13 @@ public class GoogleSheetsInteractiveAuthentication {
      * @return The {@link DataStoreFactory} corresponding to the given {@link CredentialLocationType} and path
      * @throws IOException If the {@link DataStoreFactory} cannot be created
      */
-    private static DataStoreFactory getCredentialDataStoreFactory(final CredentialLocationType locationType, final String credentialPath) throws IOException {
-        DataStoreFactory credentialDataStoreFactory = null;
-        switch(locationType) {
-            case MEMORY:
-                credentialDataStoreFactory = MemoryDataStoreFactory.getDefaultInstance();
-                break;
-            case DEFAULT:
-                credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
-                break;
-            case CUSTOM:
-                credentialDataStoreFactory = new FileDataStoreFactory(new File(credentialPath));
-                break;
-        }
-        return credentialDataStoreFactory;
+    private static DataStoreFactory getCredentialDataStoreFactory(final CredentialLocationType locationType,
+        final String credentialPath) throws IOException {
+
+        return switch (locationType) {
+            case MEMORY -> MemoryDataStoreFactory.getDefaultInstance();
+            case DEFAULT -> new FileDataStoreFactory(new File(credentialPath));
+            case CUSTOM -> new FileDataStoreFactory(new File(credentialPath));
+        };
     }
 }
