@@ -62,6 +62,7 @@ import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.credential.CredentialRefSerializer;
 import org.knime.google.api.credential.CredentialUtil;
 import org.knime.google.api.nodes.util.GoogleApiUtil;
+import org.knime.google.api.nodes.util.TimeoutHttpRequestInitializer;
 import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
 import com.google.api.services.analytics.Analytics;
@@ -186,16 +187,31 @@ public final class GoogleSheetsConnection {
     public Sheets getSheetsService() throws IOException, NoSuchCredentialException {
         if (m_sheets == null) {
             if (m_interactiveAuth) {
-                m_sheets = GoogleSheetsInteractiveAuthentication.
-                        getExistingAuthSheetService(m_credentialLocationType, m_credentialPath, m_user);
+                m_sheets = GoogleSheetsInteractiveAuthentication.getExistingAuthSheetService(//
+                    m_credentialLocationType, //
+                    m_credentialPath, //
+                    m_user, //
+                    GoogleApiUtil.DEFAULT_HTTP_CONNECT_TIMEOUT, //
+                    GoogleApiUtil.DEFAULT_HTTP_READ_TIMEOUT);
             } else {
-                final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
-                final var credAdapter = new HttpCredentialsAdapter(creds);
-                m_sheets = new Sheets.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
-                    credAdapter).setApplicationName(APP_NAME).build();
+
+                m_sheets = new Sheets.Builder(//
+                    GoogleApiUtil.getHttpTransport(), //
+                    GoogleApiUtil.getJsonFactory(), //
+                    createHttpRequestInitializer())//
+                        .setApplicationName(APP_NAME)//
+                        .build();
             }
         }
         return m_sheets;
+    }
+
+    private TimeoutHttpRequestInitializer createHttpRequestInitializer() throws IOException, NoSuchCredentialException {
+        final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
+        return new TimeoutHttpRequestInitializer(//
+            GoogleApiUtil.DEFAULT_HTTP_CONNECT_TIMEOUT, //
+            GoogleApiUtil.DEFAULT_HTTP_READ_TIMEOUT, //
+            new HttpCredentialsAdapter(creds));
     }
 
     /**
@@ -208,13 +224,19 @@ public final class GoogleSheetsConnection {
     public Drive getDriveService() throws IOException, NoSuchCredentialException {
         if (m_drive == null) {
             if (m_interactiveAuth) {
-                m_drive = GoogleSheetsInteractiveAuthentication.
-                        getExistingAuthDriveService(m_credentialLocationType, m_credentialPath, m_user);
+                m_drive = GoogleSheetsInteractiveAuthentication.getExistingAuthDriveService(m_credentialLocationType, //
+                    m_credentialPath, //
+                    m_user, //
+                    GoogleApiUtil.DEFAULT_HTTP_CONNECT_TIMEOUT, //
+                    GoogleApiUtil.DEFAULT_HTTP_READ_TIMEOUT);
             } else {
-                final var creds = CredentialUtil.toOAuth2Credentials(m_credentialRef);
-                final var credAdapter = new HttpCredentialsAdapter(creds);
-                m_drive = new Drive.Builder(GoogleApiUtil.getHttpTransport(), GoogleApiUtil.getJsonFactory(),
-                    credAdapter).setApplicationName(APP_NAME).build();
+
+                m_drive = new Drive.Builder(//
+                    GoogleApiUtil.getHttpTransport(), //
+                    GoogleApiUtil.getJsonFactory(), //
+                    createHttpRequestInitializer())//
+                        .setApplicationName(APP_NAME)//
+                        .build();
             }
         }
         return m_drive;

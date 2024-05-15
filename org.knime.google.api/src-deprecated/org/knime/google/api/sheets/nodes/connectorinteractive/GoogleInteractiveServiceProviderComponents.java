@@ -78,6 +78,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.SwingWorkerWithContext;
+import org.knime.google.api.nodes.util.GoogleApiUtil;
 import org.knime.google.api.sheets.data.GoogleSheetsInteractiveAuthentication;
 import org.knime.google.api.sheets.nodes.connectorinteractive.SettingsModelCredentialLocation.CredentialLocationType;
 
@@ -173,8 +174,12 @@ final class GoogleInteractiveServiceProviderComponents {
 
             @Override
             protected Sheets doInBackgroundWithContext() throws Exception {
-                return GoogleSheetsInteractiveAuthentication.getAuthRenewedSheetsService(m_settings.getLocationType(),
-                    m_settings.getCredentialLocation(), m_settings.getUserString());
+                return GoogleSheetsInteractiveAuthentication.getAuthRenewedSheetsService(//
+                    m_settings.getLocationType(),//
+                    m_settings.getCredentialLocation(),//
+                    m_settings.getUserString(),
+                    GoogleApiUtil.DEFAULT_HTTP_CONNECT_TIMEOUT,
+                    GoogleApiUtil.DEFAULT_HTTP_READ_TIMEOUT);
             }
 
             @Override
