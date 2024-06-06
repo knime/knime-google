@@ -127,7 +127,16 @@ public class GoogleCredential
 
     @Override
     public String getAccessToken() throws IOException {
-        m_credentials.refreshIfExpired();
+        return getAccessToken(false);
+    }
+
+    @Override
+    public String getAccessToken(final boolean forceRefresh) throws IOException {
+        if (forceRefresh) {
+            m_credentials.refresh();
+        } else {
+            m_credentials.refreshIfExpired();
+        }
         return m_credentials.getAccessToken().getTokenValue();
     }
 
