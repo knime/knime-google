@@ -30,7 +30,7 @@
             "title" : "Connect timeout (seconds)",
             "description" : "        Specify the timeout in seconds to establish a connection.\n",
             "default" : 30.0,
-            "minimum" : 1,
+            "minimum" : 1.0,
             "configKeys" : [ "connectTimeout" ]
           },
           "readTimeoutSec" : {
@@ -39,7 +39,7 @@
             "title" : "Read timeout (seconds)",
             "description" : "        Specify the timeout in seconds to read data from an already established connection.\n",
             "default" : 30.0,
-            "minimum" : 1,
+            "minimum" : 1.0,
             "configKeys" : [ "readTimeout" ]
           },
           "retryMaxElapsedTimeSec" : {
@@ -48,7 +48,7 @@
             "title" : "Retry timeout (seconds)",
             "description" : "        Specify the total duration for which the same request is allowed to be retried in case of server\n        errors (5xx) and request timeouts (408), starting when the request is initially made.\n",
             "default" : 60.0,
-            "minimum" : 1,
+            "minimum" : 1.0,
             "configKeys" : [ "serverErrorRetryMaxElapsedTime" ]
           }
         }
