@@ -44,78 +44,57 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2023 (bjoern): created
+ *   Jun 24, 2024 (lw): created
  */
 package org.knime.google.api.nodes.util;
 
-import java.time.Duration;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.apache.v2.ApacheHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.conn.DefaultRoutePlanner;
+import org.apache.http.protocol.HttpContext;
+import org.knime.core.util.proxy.search.GlobalProxySearch;
 
 /**
- * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
+ * Route planner that chooses the proxy if one is found via {@link GlobalProxySearch}.
+ * If none is found, a direct connection is established.
  *
- * @author Bjoern Lohrmann, KNIME GmbH
+ * @author @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-public final class GoogleApiUtil {
+final class ProxyHttpRoutePlanner extends DefaultRoutePlanner {
 
-    /**
-     * Default timeout for establishing HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_CONNECT_TIMEOUT = Duration.ofMinutes(1);
-
-    /**
-     * Default timeout for reading from HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_READ_TIMEOUT = Duration.ofMinutes(2);
-
-    private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport( //
-        ApacheHttpTransport.newDefaultHttpClientBuilder() //
-        .setRoutePlanner(new ProxyHttpRoutePlanner()) //
-        .setDefaultCredentialsProvider(new ProxyCredentialsProvider())
-        .build());
-
-    private static final JsonFactory JSON_FACTORY = new GsonFactory();
-
-    private static final HttpRequestInitializer DEFAULT_HTTP_REQUEST_INITIALIZER =
-        new TimeoutHttpRequestInitializer(DEFAULT_HTTP_CONNECT_TIMEOUT, DEFAULT_HTTP_READ_TIMEOUT);
-
-    private GoogleApiUtil() {
+    ProxyHttpRoutePlanner() {
+        super(null);
     }
 
     /**
-     * @return the default {@link HttpTransport} instance
-     */
-    public static HttpTransport getHttpTransport() {
-        return DEFAULT_HTTP_TRANSPORT;
-    }
-
-    /**
+     * Creates a {@link URI} based on a {@link HttpHost} instance.
      *
-     * @return the default {@link HttpRequestInitializer} instance to use
+     * @param authScope scope
+     * @return constructed URI, defaults to Google APIs address
      */
-    public static HttpRequestInitializer getDefaultHttpRequestInitializer() {
-        return DEFAULT_HTTP_REQUEST_INITIALIZER;
+    static URI createURIFromHttpHost(final HttpHost target) throws URISyntaxException {
+        // explicitly omitting the scheme here to avoid SSL handshake attempts for non-HTTPS-proxies
+        // which would happen when one of those is configured in a HTTPS proxy field in settings
+        return new URIBuilder() //
+            .setHost(target.getHostName()) //
+            .setPort(target.getPort()) //
+            .build();
     }
 
-    /**
-     * @param connectTimeout The HTTP connect timeout to use.
-     * @param readTimeout The HTTP read timeout to use.
-     * @return a {@link HttpRequestInitializer} instance that sets HTTP connect/read timeouts.
-     */
-    public static HttpRequestInitializer getHttpRequestInitializerWithTimeouts(final Duration connectTimeout,
-        final Duration readTimeout) {
-        return new TimeoutHttpRequestInitializer(connectTimeout, readTimeout);
-    }
-
-    /**
-     * @return the {@link JsonFactory} instance that should be used by all nodes.
-     */
-    public static JsonFactory getJsonFactory() {
-        return JSON_FACTORY;
+    @Override
+    protected HttpHost determineProxy(final HttpHost target, final HttpRequest request, final HttpContext context)
+        throws HttpException {
+        try {
+            return GlobalProxySearch.getCurrentFor(createURIFromHttpHost(target)) //
+                .map(cfg -> new HttpHost(cfg.host(), cfg.intPort())) //
+                .orElse(null);
+        } catch (URISyntaxException e) {
+            throw new HttpException("Could not create URI target for proxy search", e);
+        }
     }
 }

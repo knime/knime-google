@@ -44,78 +44,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2023 (bjoern): created
+ *   Jun 24, 2024 (lw): created
  */
 package org.knime.google.api.nodes.util;
 
-import java.time.Duration;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Objects;
 
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.apache.v2.ApacheHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.proxy.GlobalProxyConfig;
+import org.knime.core.util.proxy.search.GlobalProxySearch;
+
+import com.google.api.services.drive.Drive;
 
 /**
- * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
+ * Basic credentials provider that first queries the {@link GlobalProxySearch},
+ * then checks its stored {@link Credentials}.
  *
- * @author Bjoern Lohrmann, KNIME GmbH
+ * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-public final class GoogleApiUtil {
+final class ProxyCredentialsProvider extends BasicCredentialsProvider {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ProxyCredentialsProvider.class);
+
+    private static final URI DEFAULT_ROOT_URI = URI.create(Drive.DEFAULT_ROOT_URL);
 
     /**
-     * Default timeout for establishing HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_CONNECT_TIMEOUT = Duration.ofMinutes(1);
-
-    /**
-     * Default timeout for reading from HTTP connections.
-     */
-    public static final Duration DEFAULT_HTTP_READ_TIMEOUT = Duration.ofMinutes(2);
-
-    private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport( //
-        ApacheHttpTransport.newDefaultHttpClientBuilder() //
-        .setRoutePlanner(new ProxyHttpRoutePlanner()) //
-        .setDefaultCredentialsProvider(new ProxyCredentialsProvider())
-        .build());
-
-    private static final JsonFactory JSON_FACTORY = new GsonFactory();
-
-    private static final HttpRequestInitializer DEFAULT_HTTP_REQUEST_INITIALIZER =
-        new TimeoutHttpRequestInitializer(DEFAULT_HTTP_CONNECT_TIMEOUT, DEFAULT_HTTP_READ_TIMEOUT);
-
-    private GoogleApiUtil() {
-    }
-
-    /**
-     * @return the default {@link HttpTransport} instance
-     */
-    public static HttpTransport getHttpTransport() {
-        return DEFAULT_HTTP_TRANSPORT;
-    }
-
-    /**
+     * Creates a {@link URI} based on an {@link AuthScope} instance.
      *
-     * @return the default {@link HttpRequestInitializer} instance to use
+     * @param authScope scope
+     * @return constructed URI, defaults to Google APIs address
      */
-    public static HttpRequestInitializer getDefaultHttpRequestInitializer() {
-        return DEFAULT_HTTP_REQUEST_INITIALIZER;
+    private static URI createURIFromAuthScope(final AuthScope authScope) {
+        if (authScope == AuthScope.ANY) {
+            return DEFAULT_ROOT_URI;
+        }
+        final var httpHost = authScope.getOrigin() != null ? authScope.getOrigin()
+            : new HttpHost(authScope.getHost(), authScope.getPort());
+        try {
+            return ProxyHttpRoutePlanner.createURIFromHttpHost(httpHost);
+        } catch (URISyntaxException e) {
+            LOGGER.warn(() -> "Could not create URI target for proxy search on input \"%s\", defaulting to target: %s"
+                .formatted(httpHost, DEFAULT_ROOT_URI), e);
+            return DEFAULT_ROOT_URI;
+        }
     }
 
-    /**
-     * @param connectTimeout The HTTP connect timeout to use.
-     * @param readTimeout The HTTP read timeout to use.
-     * @return a {@link HttpRequestInitializer} instance that sets HTTP connect/read timeouts.
-     */
-    public static HttpRequestInitializer getHttpRequestInitializerWithTimeouts(final Duration connectTimeout,
-        final Duration readTimeout) {
-        return new TimeoutHttpRequestInitializer(connectTimeout, readTimeout);
-    }
-
-    /**
-     * @return the {@link JsonFactory} instance that should be used by all nodes.
-     */
-    public static JsonFactory getJsonFactory() {
-        return JSON_FACTORY;
+    @Override
+    public Credentials getCredentials(final AuthScope authScope) {
+        return GlobalProxySearch.getCurrentFor(createURIFromAuthScope(authScope)) //
+            .map(GlobalProxyConfig::forApacheHttpClient) //
+            .map(p -> p.getSecond().getCredentials(authScope)) //
+            .filter(Objects::nonNull) //
+            .orElse(super.getCredentials(authScope));
     }
 }
