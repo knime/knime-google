@@ -258,7 +258,8 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/jsonFile",
         "options" : {
-          "format" : "fileChooser"
+          "format" : "fileChooser",
+          "fileExtensions" : [ "json" ]
         },
         "rule" : {
           "effect" : "SHOW",
@@ -289,7 +290,8 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/p12File",
         "options" : {
-          "format" : "fileChooser"
+          "format" : "fileChooser",
+          "fileExtensions" : [ "p12" ]
         },
         "rule" : {
           "effect" : "HIDE",
@@ -320,14 +322,14 @@
             "type" : "Control",
             "scope" : "#/properties/scopeId",
             "options" : {
+              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
+              "dependencies" : [ "#/properties/model/properties/authType" ],
+              "setFirstValueOnUpdate" : true,
               "format" : "dropDown",
               "showNoneColumn" : false,
               "showRowKeys" : false,
               "showSearch" : true,
-              "showMode" : true,
-              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
-              "dependencies" : [ "#/properties/model/properties/authType" ],
-              "setFirstValueOnUpdate" : true
+              "showMode" : true
             }
           } ],
           "addButtonText" : "Add Scope"
