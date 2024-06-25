@@ -58,6 +58,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.FileReaderWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -95,6 +96,7 @@ class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
     @Widget(title = "JSON file", description = "Path to the private JSON key file.")
     @Layout(APIKeyTypeSection.Content.class)
     @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.SHOW)
+    @FileReaderWidget(fileExtensions = {"json"})
     FileChooser m_jsonFile = new FileChooser();
 
     @Widget(title = "Service account email", description = "Email address of the service account.")
@@ -104,6 +106,7 @@ class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
 
     @Widget(title = "P12 file", description = "Path to the private P12 key file.")
     @Layout(APIKeyTypeSection.Content.class)
+    @FileReaderWidget(fileExtensions = {"p12"})
     @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
     FileChooser m_p12File = new FileChooser();
 
