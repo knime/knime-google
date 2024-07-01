@@ -44,62 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jun 24, 2024 (lw): created
+ *   Jul 1, 2024 (lw): created
  */
 package org.knime.google.api.nodes.util;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.conn.DefaultRoutePlanner;
+import org.apache.http.HttpResponse;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.protocol.HttpContext;
-import org.knime.core.util.proxy.search.GlobalProxySearch;
+import org.eclipse.core.net.proxy.IProxyService;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * Route planner that chooses the proxy if one is found via {@link GlobalProxySearch}.
- * If none is found, a direct connection is established.
+ * Connection reuse strategy that listens on changes in Eclipse's proxy data, as that data
+ * (especially credentials) are not matched when checking whether a connection can be reused
+ * by the {@link HttpClientConnectionManager} of the Apache HTTP client.
  *
  * @author @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-final class ProxyHttpRoutePlanner extends DefaultRoutePlanner {
+final class ProxyConnectionReuseStrategy extends DefaultClientConnectionReuseStrategy {
 
-    static final ProxyHttpRoutePlanner INSTANCE = new ProxyHttpRoutePlanner();
+    @SuppressWarnings("hiding")
+    static final ProxyConnectionReuseStrategy INSTANCE = new ProxyConnectionReuseStrategy();
+
+    private volatile boolean m_isProxyDataUpdate;
 
     /**
      * Hides constructor.
      */
-    private ProxyHttpRoutePlanner() {
-        super(null);
-    }
-
-    /**
-     * Creates a {@link URI} based on a {@link HttpHost} instance.
-     *
-     * @param authScope scope
-     * @return constructed URI, defaults to Google APIs address
-     */
-    static URI createURIFromHttpHost(final HttpHost target) throws URISyntaxException {
-        // explicitly omitting the scheme here to avoid SSL handshake attempts for non-HTTPS-proxies
-        // which would happen when one of those is configured in a HTTPS proxy field in settings
-        return new URIBuilder() //
-            .setHost(target.getHostName()) //
-            .setPort(target.getPort()) //
-            .build();
+    private ProxyConnectionReuseStrategy() {
+        // using proxy service class name as String to avoid initialization of the class
+        final ServiceTracker<IProxyService, IProxyService> tracker = new ServiceTracker<>(
+                FrameworkUtil.getBundle(getClass()).getBundleContext(), //
+            "org.eclipse.core.net.proxy.IProxyService", null);
+        try {
+            tracker.open();
+            final var service = tracker.getService();
+            if (service != null) {
+                service.addProxyChangeListener(e -> m_isProxyDataUpdate = true);
+            }
+        } finally {
+            tracker.close();
+        }
     }
 
     @Override
-    protected HttpHost determineProxy(final HttpHost target, final HttpRequest request, final HttpContext context)
-        throws HttpException {
-        try {
-            return GlobalProxySearch.getCurrentFor(createURIFromHttpHost(target)) //
-                .map(cfg -> new HttpHost(cfg.host(), cfg.intPort())) //
-                .orElse(null);
-        } catch (URISyntaxException e) {
-            throw new HttpException("Could not create URI target for proxy search", e);
-        }
+    public boolean keepAlive(final HttpResponse response, final HttpContext context) {
+        final var isUpdate = m_isProxyDataUpdate;
+        m_isProxyDataUpdate = false;
+        return !isUpdate && super.keepAlive(response, context);
     }
 }

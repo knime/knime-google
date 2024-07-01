@@ -74,6 +74,14 @@ final class ProxyCredentialsProvider extends BasicCredentialsProvider {
 
     private static final URI DEFAULT_ROOT_URI = URI.create(Drive.DEFAULT_ROOT_URL);
 
+    static final ProxyCredentialsProvider INSTANCE = new ProxyCredentialsProvider();
+
+    /**
+     * Hides constructor.
+     */
+    private ProxyCredentialsProvider() {
+    }
+
     /**
      * Creates a {@link URI} based on an {@link AuthScope} instance.
      *

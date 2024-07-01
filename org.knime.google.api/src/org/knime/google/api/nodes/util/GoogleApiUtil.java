@@ -75,8 +75,9 @@ public final class GoogleApiUtil {
 
     private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport( //
         ApacheHttpTransport.newDefaultHttpClientBuilder() //
-        .setRoutePlanner(new ProxyHttpRoutePlanner()) //
-        .setDefaultCredentialsProvider(new ProxyCredentialsProvider())
+        .setRoutePlanner(ProxyHttpRoutePlanner.INSTANCE) //
+        .setDefaultCredentialsProvider(ProxyCredentialsProvider.INSTANCE) //
+        .setConnectionReuseStrategy(ProxyConnectionReuseStrategy.INSTANCE) //
         .build());
 
     private static final JsonFactory JSON_FACTORY = new GsonFactory();
