@@ -49,17 +49,21 @@
 package org.knime.google.api.nodes.util;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.protocol.HttpContext;
-import org.eclipse.core.net.proxy.IProxyService;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * Connection reuse strategy that listens on changes in Eclipse's proxy data, as that data
- * (especially credentials) are not matched when checking whether a connection can be reused
- * by the {@link HttpClientConnectionManager} of the Apache HTTP client.
+ * Connection reuse strategy that always denies reusing the connection when a proxy was used,
+ * as that data (especially credentials) are not matched when checking whether a connection
+ * can be reused by the {@link HttpClientConnectionManager} of the Apache HTTP client.
+ * <p>
+ * We cannot simply listen on changes in proxy settings because the reuse/keep-alive property
+ * is always checked immediately *after* an HTTP request, not before one. We can never know if
+ * proxy settings have changed.
+ * </p>
  *
  * @author @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
@@ -68,31 +72,17 @@ final class ProxyConnectionReuseStrategy extends DefaultClientConnectionReuseStr
     @SuppressWarnings("hiding")
     static final ProxyConnectionReuseStrategy INSTANCE = new ProxyConnectionReuseStrategy();
 
-    private volatile boolean m_isProxyDataUpdate;
-
     /**
      * Hides constructor.
      */
     private ProxyConnectionReuseStrategy() {
-        // using proxy service class name as String to avoid initialization of the class
-        final ServiceTracker<IProxyService, IProxyService> tracker = new ServiceTracker<>(
-                FrameworkUtil.getBundle(getClass()).getBundleContext(), //
-            "org.eclipse.core.net.proxy.IProxyService", null);
-        try {
-            tracker.open();
-            final var service = tracker.getService();
-            if (service != null) {
-                service.addProxyChangeListener(e -> m_isProxyDataUpdate = true);
-            }
-        } finally {
-            tracker.close();
-        }
     }
 
     @Override
     public boolean keepAlive(final HttpResponse response, final HttpContext context) {
-        final var isUpdate = m_isProxyDataUpdate;
-        m_isProxyDataUpdate = false;
-        return !isUpdate && super.keepAlive(response, context);
+        // only keep alive if no proxy was used, as the user can dynamically change
+        // proxy settings, then we always want use newly configured connections
+        final var route = (HttpRoute) context.getAttribute(HttpClientContext.HTTP_ROUTE);
+        return (route == null || route.getProxyHost() == null) && super.keepAlive(response, context);
     }
 }
