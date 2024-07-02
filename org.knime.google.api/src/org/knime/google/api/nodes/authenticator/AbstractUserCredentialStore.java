@@ -169,6 +169,7 @@ public abstract class AbstractUserCredentialStore {
             m_scopes)//
                 .setDataStoreFactory(dataStoreFactory)//
                 .setAccessType("offline")//
+                .setApprovalPrompt("force")
                 .build();
     }
 
