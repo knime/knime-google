@@ -48,13 +48,17 @@
  */
 package org.knime.google.api.nodes.util;
 
+import java.net.URI;
 import java.time.Duration;
+
+import org.knime.core.util.proxy.apache.ProxyHttpClients;
 
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.v2.ApacheHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
 
 /**
  * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
@@ -73,12 +77,10 @@ public final class GoogleApiUtil {
      */
     public static final Duration DEFAULT_HTTP_READ_TIMEOUT = Duration.ofMinutes(2);
 
-    private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport( //
-        ApacheHttpTransport.newDefaultHttpClientBuilder() //
-        .setRoutePlanner(ProxyHttpRoutePlanner.INSTANCE) //
-        .setDefaultCredentialsProvider(ProxyCredentialsProvider.INSTANCE) //
-        .setConnectionReuseStrategy(ProxyConnectionReuseStrategy.INSTANCE) //
-        .build());
+    private static final URI DEFAULT_URI = URI.create(Drive.DEFAULT_ROOT_URL);
+
+    private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport(
+        ProxyHttpClients.customForBuilder(ApacheHttpTransport.newDefaultHttpClientBuilder(), DEFAULT_URI).build());
 
     private static final JsonFactory JSON_FACTORY = new GsonFactory();
 
