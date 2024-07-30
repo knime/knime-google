@@ -48,13 +48,19 @@
  */
 package org.knime.google.api.nodes.util;
 
+import java.net.URI;
 import java.time.Duration;
+
+import org.knime.core.util.proxy.apache.ProxyConnectionReuseStrategy;
+import org.knime.core.util.proxy.apache.ProxyCredentialsProvider;
+import org.knime.core.util.proxy.apache.ProxyHttpRoutePlanner;
 
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.v2.ApacheHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
 
 /**
  * Provides a {@link HttpTransport} and {@link JsonFactory} for use in the Google nodes.
@@ -76,7 +82,7 @@ public final class GoogleApiUtil {
     private static final HttpTransport DEFAULT_HTTP_TRANSPORT = new ApacheHttpTransport( //
         ApacheHttpTransport.newDefaultHttpClientBuilder() //
         .setRoutePlanner(ProxyHttpRoutePlanner.INSTANCE) //
-        .setDefaultCredentialsProvider(ProxyCredentialsProvider.INSTANCE) //
+        .setDefaultCredentialsProvider(new ProxyCredentialsProvider(URI.create(Drive.DEFAULT_ROOT_URL))) //
         .setConnectionReuseStrategy(ProxyConnectionReuseStrategy.INSTANCE) //
         .build());
 
