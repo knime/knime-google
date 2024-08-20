@@ -53,14 +53,16 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.APIKeyTypeSection;
 
 /**
@@ -78,33 +80,39 @@ class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
         P12;
     }
 
-    static class APIKeyTypeIsJSON extends OneOfEnumCondition<APIKeyType> {
+    class APIKeyTypeRef implements Reference<APIKeyType> {
+
+    }
+
+    static class APIKeyTypeIsJSON implements PredicateProvider {
+
         @Override
-        public APIKeyType[] oneOf() {
-            return new APIKeyType[] { APIKeyType.JSON };
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(APIKeyTypeRef.class).isOneOf(APIKeyType.JSON);
         }
+
     }
 
     @Widget(title = "API key format",//
             description = "Which format of API key to use. Google cloud provides API keys as either JSON or P12 (legacy).")
     @Layout(APIKeyTypeSection.TypeSwitcher.class)
-    @Signal(condition = APIKeyTypeIsJSON.class)
+    @ValueReference(APIKeyTypeRef.class)
     @ValueSwitchWidget
     APIKeyType m_apiKeyFormat = APIKeyType.JSON;
 
     @Widget(title = "JSON file", description = "Path to the private JSON key file.")
     @Layout(APIKeyTypeSection.Content.class)
-    @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.SHOW)
+    @Effect(predicate = APIKeyTypeIsJSON.class, type = EffectType.SHOW)
     FileChooser m_jsonFile = new FileChooser();
 
     @Widget(title = "Service account email", description = "Email address of the service account.")
     @Layout(APIKeyTypeSection.Content.class)
-    @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
+    @Effect(predicate = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
     String m_serviceAccountEmail;
 
     @Widget(title = "P12 file", description = "Path to the private P12 key file.")
     @Layout(APIKeyTypeSection.Content.class)
-    @Effect(signals = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
+    @Effect(predicate = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
     FileChooser m_p12File = new FileChooser();
 
     /**

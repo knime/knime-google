@@ -63,10 +63,6 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
@@ -75,6 +71,12 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpda
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.DeclaringDefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthType;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
 import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
@@ -95,26 +97,33 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             <b>standard</b> scopes or to enter <b>custom</b> scopes manually.
             """)
     @ValueSwitchWidget
-    @Signal(condition = ScopesSelectionMode.IsStandard.class)
-    @Signal(condition = ScopesSelectionMode.IsCustom.class)
+    @ValueReference(ScopesSelectionModeRef.class)
     ScopesSelectionMode m_scopesSelectionMode = ScopesSelectionMode.STANDARD;
 
     enum ScopesSelectionMode {
             STANDARD, CUSTOM;
+    }
 
-        static class IsStandard extends OneOfEnumCondition<ScopesSelectionMode> {
-            @Override
-            public ScopesSelectionMode[] oneOf() {
-                return new ScopesSelectionMode[]{STANDARD};
-            }
+    class ScopesSelectionModeRef implements Reference<ScopesSelectionMode> {
+
+    }
+
+    static final class ScopesSelectionModeIsStandard implements PredicateProvider {
+
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.STANDARD);
         }
 
-        static class IsCustom extends OneOfEnumCondition<ScopesSelectionMode> {
-            @Override
-            public ScopesSelectionMode[] oneOf() {
-                return new ScopesSelectionMode[]{CUSTOM};
-            }
+    }
+
+    static final class ScopesSelectionModeIsCustom implements PredicateProvider {
+
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.CUSTOM);
         }
+
     }
 
     @Widget(title = "Standard scopes", description = """
@@ -123,7 +132,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             permissions</a> and define what the resulting access token can be used for.
             """)
     @ArrayWidget(addButtonText = "Add Scope")
-    @Effect(signals = ScopesSelectionMode.IsStandard.class, type = EffectType.SHOW)
+    @Effect(predicate = ScopesSelectionModeIsStandard.class, type = EffectType.SHOW)
     @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class)
     StandardScope[] m_standardScopes = new StandardScope[0];
 
@@ -190,7 +199,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             permissions</a> and define what the resulting access token can be used for.
             """)
     @ArrayWidget(addButtonText = "Add Scope")
-    @Effect(signals = ScopesSelectionMode.IsCustom.class, type = EffectType.SHOW)
+    @Effect(predicate = ScopesSelectionModeIsCustom.class, type = EffectType.SHOW)
     @Persist(customPersistor = CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
 

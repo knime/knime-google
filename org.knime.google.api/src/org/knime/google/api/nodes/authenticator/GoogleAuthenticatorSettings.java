@@ -57,18 +57,18 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.And;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.TrueCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.credentials.base.CredentialCache;
 import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
 import org.knime.google.api.clientsecrets.ClientSecrets;
@@ -87,7 +87,7 @@ import com.google.auth.oauth2.UserCredentials;
 public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     @Section(title = "API Key")
-    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.HIDE)
+    @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.HIDE)
     interface APIKeyTypeSection {
         interface TypeSwitcher {
         }
@@ -104,12 +104,12 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     @Section(title = "Client ID", advanced = true)
     @After(ScopesSection.class)
-    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     interface ClientIdSection {
     }
 
     @Section(title = "Authentication")
-    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     @After(ClientIdSection.class)
     interface AuthenticationSection {
     }
@@ -120,15 +120,20 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             API_KEY;
     }
 
-    static class AuthTypeIsInteractive extends OneOfEnumCondition<AuthType> {
+    class AuthTypeRef implements Reference<AuthType> {
+
+    }
+
+    static class AuthTypeIsInteractive implements PredicateProvider {
+
         @Override
-        public AuthType[] oneOf() {
-            return new AuthType[]{AuthType.INTERACTIVE};
+        public Predicate init(final PredicateInitializer i) {
+            return i.getEnum(AuthTypeRef.class).isOneOf(AuthType.INTERACTIVE);
         }
     }
 
     @Widget(title = "Authentication type", description = "Authentication method to use.")
-    @Signal(condition = AuthTypeIsInteractive.class)
+    @ValueReference(AuthTypeRef.class)
     AuthType m_authType = AuthType.INTERACTIVE;
 
     APIKeySettings m_apiKeySettings = new APIKeySettings();
@@ -144,7 +149,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             + "allows to interactively log into the service.")
     @Persist(optional = true, hidden = true, customPersistor = TokenCacheKeyPersistor.class)
     @Layout(AuthenticationSection.class)
-    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     UUID m_loginCredentialRef;
 
     static class LoginActionHandler extends CancelableActionHandler<UUID, GoogleAuthenticatorSettings> {
@@ -200,21 +205,30 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
     }
 
+    static final class UseCustomClientIdRef implements Reference<Boolean> {
+
+    }
+
     @Widget(title = "Use custom client ID", description = "Enable the option to use custom client ID.", advanced = true)
     @Layout(ClientIdSection.class)
-    @Effect(signals = AuthTypeIsInteractive.class, type = EffectType.SHOW)
-    @Signal(id = UseCustomClientIdSignal.class, condition = TrueCondition.class)
+    @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @ValueReference(UseCustomClientIdRef.class)
     boolean m_useCustomClientId;
 
-    interface UseCustomClientIdSignal {
+    static final class UseCustomClientId implements PredicateProvider {
+
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getBoolean(UseCustomClientIdRef.class).isTrue().and(i.getPredicate(AuthTypeIsInteractive.class));
+        }
+
     }
 
     @Widget(title = "Custom client ID file (JSON format)", //
         description = "The path to a JSON file with the custom client ID.", //
         advanced = true)
     @Layout(ClientIdSection.class)
-    @Effect(signals = {UseCustomClientIdSignal.class, AuthTypeIsInteractive.class}, operation = And.class,
-        type = EffectType.SHOW)
+    @Effect(predicate = UseCustomClientId.class, type = EffectType.SHOW)
     FileChooser m_customClientIdFile = new FileChooser();
 
     /**

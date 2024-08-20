@@ -55,13 +55,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.HasMultipleItemsCondition;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.Signal;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 
 /**
  * An expression for combining dimension filter critera.
@@ -81,11 +83,25 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, WidgetGr
                         criteria (union of matches)</li>
                     </ul>
                     """)
-    @Effect(signals = HasMultipleItemsCondition.class, type = EffectType.SHOW)
+    @Effect(predicate = HasMultipleFilters.class, type = EffectType.SHOW)
     @ValueSwitchWidget
     GAFilterGroup m_connectVia = GAFilterGroup.AND;
 
-    @Signal(condition = HasMultipleItemsCondition.class)
+
+    class FiltersRef implements Reference<GADimensionFilterCriterion[]> {
+
+    }
+
+    static final class HasMultipleFilters implements PredicateProvider {
+
+        @Override
+        public Predicate init(final PredicateInitializer i) {
+            return i.getArray(FiltersRef.class).hasMultipleItems();
+        }
+
+    }
+
+    @ValueReference(FiltersRef.class)
     @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Filter criterion")
     @Widget(title = "Dimension filter", description = """
             <p>
