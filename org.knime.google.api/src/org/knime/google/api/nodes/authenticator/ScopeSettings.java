@@ -104,26 +104,21 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             STANDARD, CUSTOM;
     }
 
-    class ScopesSelectionModeRef implements Reference<ScopesSelectionMode> {
-
+    interface ScopesSelectionModeRef extends Reference<ScopesSelectionMode> {
     }
 
     static final class ScopesSelectionModeIsStandard implements PredicateProvider {
-
         @Override
         public Predicate init(final PredicateInitializer i) {
             return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.STANDARD);
         }
-
     }
 
     static final class ScopesSelectionModeIsCustom implements PredicateProvider {
-
         @Override
         public Predicate init(final PredicateInitializer i) {
             return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.CUSTOM);
         }
-
     }
 
     @Widget(title = "Standard scopes", description = """

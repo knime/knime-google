@@ -120,12 +120,10 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             API_KEY;
     }
 
-    class AuthTypeRef implements Reference<AuthType> {
-
+    interface AuthTypeRef extends Reference<AuthType> {
     }
 
     static class AuthTypeIsInteractive implements PredicateProvider {
-
         @Override
         public Predicate init(final PredicateInitializer i) {
             return i.getEnum(AuthTypeRef.class).isOneOf(AuthType.INTERACTIVE);

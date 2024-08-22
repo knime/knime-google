@@ -54,7 +54,6 @@ import java.util.function.Function;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -71,7 +70,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueRefere
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GADimensionFilterExpression implements DefaultNodeSettings, WidgetGroup {
+final class GADimensionFilterExpression implements DefaultNodeSettings {
 
     @Widget(title = "Filter if matched by",
             description = """
@@ -88,17 +87,14 @@ final class GADimensionFilterExpression implements DefaultNodeSettings, WidgetGr
     GAFilterGroup m_connectVia = GAFilterGroup.AND;
 
 
-    class FiltersRef implements Reference<GADimensionFilterCriterion[]> {
-
+    interface FiltersRef extends Reference<GADimensionFilterCriterion[]> {
     }
 
     static final class HasMultipleFilters implements PredicateProvider {
-
         @Override
         public Predicate init(final PredicateInitializer i) {
             return i.getArray(FiltersRef.class).hasMultipleItems();
         }
-
     }
 
     @ValueReference(FiltersRef.class)

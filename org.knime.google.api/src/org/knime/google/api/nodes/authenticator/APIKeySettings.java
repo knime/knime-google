@@ -52,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
@@ -71,7 +70,7 @@ import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.APIK
  * @author Zkriya Rakhimberdiyev, Redfield SE
  */
 @SuppressWarnings("restriction")
-class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
+class APIKeySettings implements DefaultNodeSettings {
 
     enum APIKeyType {
         @Label("JSON")
@@ -80,17 +79,14 @@ class APIKeySettings implements WidgetGroup, DefaultNodeSettings {
         P12;
     }
 
-    class APIKeyTypeRef implements Reference<APIKeyType> {
-
+    interface APIKeyTypeRef extends Reference<APIKeyType> {
     }
 
     static class APIKeyTypeIsJSON implements PredicateProvider {
-
         @Override
         public Predicate init(final PredicateInitializer i) {
             return i.getEnum(APIKeyTypeRef.class).isOneOf(APIKeyType.JSON);
         }
-
     }
 
     @Widget(title = "API key format",//
