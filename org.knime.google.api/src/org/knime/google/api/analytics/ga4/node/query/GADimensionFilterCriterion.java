@@ -59,9 +59,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.FieldBasedNodeSettingsPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.rule.OneOfEnumCondition;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
@@ -105,20 +103,6 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
         m_stringFilter = Objects.requireNonNull(stringFilter);
         m_caseSensitivity = Objects.requireNonNull(caseSensitivity);
         m_isNegated = isNegated;
-    }
-
-    enum DimensionFilterType {
-        @Label("String comparison")
-        STRING;
-
-        static class IsString extends OneOfEnumCondition<DimensionFilterType> {
-
-            @Override
-            public DimensionFilterType[] oneOf() {
-                return new DimensionFilterType[] {STRING};
-            }
-
-        }
     }
 
     void validate() throws InvalidSettingsException {
