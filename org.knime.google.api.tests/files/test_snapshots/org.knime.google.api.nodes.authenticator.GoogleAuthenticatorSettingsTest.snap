@@ -8,14 +8,20 @@
           "path" : {
             "fsCategory" : "LOCAL",
             "path" : "",
-            "timeout" : 10000
+            "timeout" : 10000,
+            "context" : {
+              "fsToString" : "(LOCAL, )"
+            }
           }
         },
         "p12File" : {
           "path" : {
             "fsCategory" : "LOCAL",
             "path" : "",
-            "timeout" : 10000
+            "timeout" : 10000,
+            "context" : {
+              "fsToString" : "(LOCAL, )"
+            }
           }
         }
       },
@@ -29,7 +35,10 @@
         "path" : {
           "fsCategory" : "LOCAL",
           "path" : "",
-          "timeout" : 10000
+          "timeout" : 10000,
+          "context" : {
+            "fsToString" : "(LOCAL, )"
+          }
         }
       }
     }
@@ -63,7 +72,10 @@
                     "default" : {
                       "fsCategory" : "LOCAL",
                       "path" : "",
-                      "timeout" : 10000
+                      "timeout" : 10000,
+                      "context" : {
+                        "fsToString" : "(LOCAL, )"
+                      }
                     }
                   }
                 },
@@ -73,7 +85,10 @@
                   "path" : {
                     "fsCategory" : "LOCAL",
                     "path" : "",
-                    "timeout" : 10000
+                    "timeout" : 10000,
+                    "context" : {
+                      "fsToString" : "(LOCAL, )"
+                    }
                   }
                 }
               },
@@ -85,7 +100,10 @@
                     "default" : {
                       "fsCategory" : "LOCAL",
                       "path" : "",
-                      "timeout" : 10000
+                      "timeout" : 10000,
+                      "context" : {
+                        "fsToString" : "(LOCAL, )"
+                      }
                     }
                   }
                 },
@@ -95,7 +113,10 @@
                   "path" : {
                     "fsCategory" : "LOCAL",
                     "path" : "",
-                    "timeout" : 10000
+                    "timeout" : 10000,
+                    "context" : {
+                      "fsToString" : "(LOCAL, )"
+                    }
                   }
                 }
               },
@@ -111,14 +132,20 @@
                 "path" : {
                   "fsCategory" : "LOCAL",
                   "path" : "",
-                  "timeout" : 10000
+                  "timeout" : 10000,
+                  "context" : {
+                    "fsToString" : "(LOCAL, )"
+                  }
                 }
               },
               "p12File" : {
                 "path" : {
                   "fsCategory" : "LOCAL",
                   "path" : "",
-                  "timeout" : 10000
+                  "timeout" : 10000,
+                  "context" : {
+                    "fsToString" : "(LOCAL, )"
+                  }
                 }
               }
             }
@@ -143,7 +170,10 @@
                 "default" : {
                   "fsCategory" : "LOCAL",
                   "path" : "",
-                  "timeout" : 10000
+                  "timeout" : 10000,
+                  "context" : {
+                    "fsToString" : "(LOCAL, )"
+                  }
                 }
               }
             },
@@ -153,7 +183,10 @@
               "path" : {
                 "fsCategory" : "LOCAL",
                 "path" : "",
-                "timeout" : 10000
+                "timeout" : 10000,
+                "context" : {
+                  "fsToString" : "(LOCAL, )"
+                }
               }
             }
           },
@@ -320,14 +353,14 @@
             "type" : "Control",
             "scope" : "#/properties/scopeId",
             "options" : {
+              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
+              "dependencies" : [ "#/properties/model/properties/authType" ],
+              "setFirstValueOnUpdate" : true,
               "format" : "dropDown",
               "showNoneColumn" : false,
               "showRowKeys" : false,
               "showSearch" : true,
-              "showMode" : true,
-              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
-              "dependencies" : [ "#/properties/model/properties/authType" ],
-              "setFirstValueOnUpdate" : true
+              "showMode" : true
             }
           } ],
           "addButtonText" : "Add Scope"
