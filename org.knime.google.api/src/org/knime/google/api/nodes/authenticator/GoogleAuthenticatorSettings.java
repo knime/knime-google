@@ -86,7 +86,7 @@ import com.google.auth.oauth2.UserCredentials;
 @SuppressWarnings("restriction")
 public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
-    @Section(title = "API Key")
+    @Section(title = "Authentication Key")
     @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.HIDE)
     interface APIKeyTypeSection {
         interface TypeSwitcher {
@@ -102,7 +102,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     interface ScopesSection {
     }
 
-    @Section(title = "Client ID", advanced = true)
+    @Section(title = "Client/App configuration", advanced = true)
     @After(ScopesSection.class)
     @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     interface ClientIdSection {
@@ -116,7 +116,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     enum AuthType {
             @Label("Interactive")
-            INTERACTIVE, @Label("API Key")
+            INTERACTIVE, @Label("Service Account")
             API_KEY;
     }
 
@@ -222,7 +222,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
 
     }
 
-    @Widget(title = "Custom client ID file (JSON format)", //
+    @Widget(title = "ID file (JSON format)", //
         description = "The path to a JSON file with the custom client ID.", //
         advanced = true)
     @Layout(ClientIdSection.class)

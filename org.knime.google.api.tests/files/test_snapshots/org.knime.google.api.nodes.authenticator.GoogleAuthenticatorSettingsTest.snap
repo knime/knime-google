@@ -60,7 +60,7 @@
                   "const" : "P12",
                   "title" : "P12"
                 } ],
-                "title" : "API key format",
+                "title" : "Type",
                 "description" : "Which format of API key to use. Google cloud provides API keys as either JSON or P12 (legacy).",
                 "default" : "JSON"
               },
@@ -156,7 +156,7 @@
               "title" : "Interactive"
             }, {
               "const" : "API_KEY",
-              "title" : "API Key"
+              "title" : "Service Account"
             } ],
             "title" : "Authentication type",
             "description" : "Authentication method to use.",
@@ -177,7 +177,7 @@
                 }
               }
             },
-            "title" : "Custom client ID file (JSON format)",
+            "title" : "ID file (JSON format)",
             "description" : "The path to a JSON file with the custom client ID.",
             "default" : {
               "path" : {
@@ -268,7 +268,7 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/authType"
     }, {
-      "label" : "API Key",
+      "label" : "Authentication Key",
       "type" : "Section",
       "rule" : {
         "effect" : "HIDE",
@@ -399,7 +399,7 @@
         }
       } ]
     }, {
-      "label" : "Client ID",
+      "label" : "Client/App configuration",
       "type" : "Section",
       "options" : {
         "isAdvanced" : true

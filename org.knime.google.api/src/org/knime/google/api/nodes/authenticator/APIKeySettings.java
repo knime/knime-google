@@ -89,7 +89,7 @@ class APIKeySettings implements DefaultNodeSettings {
         }
     }
 
-    @Widget(title = "API key format",//
+    @Widget(title = "Type",//
             description = "Which format of API key to use. Google cloud provides API keys as either JSON or P12 (legacy).")
     @Layout(APIKeyTypeSection.TypeSwitcher.class)
     @ValueReference(APIKeyTypeRef.class)
