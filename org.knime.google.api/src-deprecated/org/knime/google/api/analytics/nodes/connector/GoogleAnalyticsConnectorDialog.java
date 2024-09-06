@@ -85,7 +85,9 @@ import com.google.auth.oauth2.OAuth2Credentials;
  * The dialog to the GoogleAnalyticsConnector node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 @SuppressWarnings("cast")
 public class GoogleAnalyticsConnectorDialog extends NodeDialogPane {
 

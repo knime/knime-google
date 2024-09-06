@@ -70,7 +70,9 @@ import org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSp
  * The model of the GoogleAnalyticsConnector node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class GoogleAnalyticsConnectorModel extends NodeModel {
 
     private static final int CREDENTIAL_INPUT_PORT = 0;

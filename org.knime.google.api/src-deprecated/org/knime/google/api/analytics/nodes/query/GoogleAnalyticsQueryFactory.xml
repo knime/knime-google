@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="./googleanalyticsquery.png" type="Manipulator"
+<knimeNode icon="./googleanalyticsquery.png" type="Manipulator" deprecated="true"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Analytics Query (legacy)</name>
+	<name>Google Analytics Query (deprecated)</name>
 	<shortDescription>Execute a query to retrieve data from the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Execute a query to retrieve data from the Google Analytics API (Universal Analytics).
+			<p><b>Note: Google has discontinued Universal Analytics and has replaced it with Google Analytics 4.
+			This node does not work anymore since July 2024. Please use the new Google Analytics Query node.</b>
+			<a href="https://support.google.com/analytics/answer/11583528">Learn more</a></p>
+			
+			<p>Execute a query to retrieve data from the Google Analytics API (Universal Analytics).</p>
 		</intro>
 		<option name="Dimensions">
 			<i>(Optional)</i>

@@ -43,59 +43,107 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Mar 20, 2014 ("Patrick Winter"): created
+ *   Mar 19, 2014 ("Patrick Winter"): created
  */
-package org.knime.google.api.analytics.nodes.connector;
+package org.knime.google.api.analytics.data;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.port.AbstractSimplePortObjectSpec;
+import org.knime.core.node.util.ViewUtils;
 
 /**
- * The factory of the GoogleAnalyticsConnector node.
+ * Specification for the {@link GoogleAnalyticsConnectionPortObject}.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
-public class GoogleAnalyticsConnectorFactory extends NodeFactory<GoogleAnalyticsConnectorModel> {
+@Deprecated(since = "5.4")
+public final class GoogleAnalyticsConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
+    public static final class Serializer
+        extends AbstractSimplePortObjectSpecSerializer<GoogleAnalyticsConnectionPortObjectSpec> { }
+
+    private GoogleAnalyticsConnection m_googleAnalyticsConnection;
 
     /**
-     * {@inheritDoc}
+     * Constructor for a port object spec that holds no {@link GoogleAnalyticsConnection}.
      */
-    @Override
-    public GoogleAnalyticsConnectorModel createNodeModel() {
-        return new GoogleAnalyticsConnectorModel();
+    public GoogleAnalyticsConnectionPortObjectSpec() {
+        m_googleAnalyticsConnection = null;
+    }
+
+    /**
+     * @param googleAnalyticsConnection The {@link GoogleAnalyticsConnection} that will be contained by this port object spec
+     */
+    public GoogleAnalyticsConnectionPortObjectSpec(final GoogleAnalyticsConnection googleAnalyticsConnection) {
+        m_googleAnalyticsConnection = googleAnalyticsConnection;
+    }
+
+    /**
+     * @return The contained {@link GoogleAnalyticsConnection} object
+     */
+    public GoogleAnalyticsConnection getGoogleAnalyticsConnection() {
+        return m_googleAnalyticsConnection;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected int getNrNodeViews() {
-        return 0;
+    protected void save(final ModelContentWO model) {
+        m_googleAnalyticsConnection.save(model);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleAnalyticsConnectorModel> createNodeView(final int viewIndex, final GoogleAnalyticsConnectorModel nodeModel) {
-        return null;
+    protected void load(final ModelContentRO model) throws InvalidSettingsException {
+        m_googleAnalyticsConnection = new GoogleAnalyticsConnection(model);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected boolean hasDialog() {
-        return true;
+    public boolean equals(final Object ospec) {
+        if (this == ospec) {
+            return true;
+        }
+        if (!(ospec instanceof GoogleAnalyticsConnectionPortObjectSpec)) {
+            return false;
+        }
+        GoogleAnalyticsConnectionPortObjectSpec spec = (GoogleAnalyticsConnectionPortObjectSpec)ospec;
+        return m_googleAnalyticsConnection.equals(spec.m_googleAnalyticsConnection);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleAnalyticsConnectorDialog();
+    public int hashCode() {
+        return m_googleAnalyticsConnection != null ? m_googleAnalyticsConnection.hashCode() : 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent[] getViews() {
+        String text;
+        if (getGoogleAnalyticsConnection() != null) {
+            text = "<html>" + getGoogleAnalyticsConnection().toString().replace("\n", "<br>") + "</html>";
+        } else {
+            text = "No connection available";
+        }
+        JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
+        f.setName("Connection");
+        return new JComponent[]{f};
     }
 
 }

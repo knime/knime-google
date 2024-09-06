@@ -107,7 +107,9 @@ import com.google.api.services.analytics.model.Segments;
  * The dialog to the GoogleAnalyticsConnector node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class GoogleAnalyticsQueryDialog extends NodeDialogPane {
 
     private Columns m_columns;

@@ -15,7 +15,9 @@ import javax.swing.SpinnerNumberModel;
 
 /**
  * UI to customise different timeouts used when communicating with a server.
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class ConnectionTimeoutPanel extends JPanel {
 
     JSpinner m_connectionTimeoutSpinner = createSpinner((int)GoogleAnalyticsConnectorConfiguration.DEFAULT_CONNECT_TIMEOUT.getSeconds());

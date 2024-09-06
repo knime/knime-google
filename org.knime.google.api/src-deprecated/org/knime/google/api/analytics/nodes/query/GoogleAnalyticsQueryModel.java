@@ -85,7 +85,9 @@ import com.google.api.services.analytics.model.GaData;
  * The model of the GoogleAnalyticsQuery node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class GoogleAnalyticsQueryModel extends NodeModel {
 
     private GoogleAnalyticsQueryConfiguration m_config = new GoogleAnalyticsQueryConfiguration();

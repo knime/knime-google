@@ -43,105 +43,61 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Mar 19, 2014 ("Patrick Winter"): created
+ *   Mar 20, 2014 ("Patrick Winter"): created
  */
-package org.knime.google.api.analytics.data;
+package org.knime.google.api.analytics.nodes.query;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.port.AbstractSimplePortObjectSpec;
-import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Specification for the {@link GoogleAnalyticsConnectionPortObject}.
+ * The factory of the GoogleAnalyticsQuery node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
-public final class GoogleAnalyticsConnectionPortObjectSpec extends AbstractSimplePortObjectSpec {
-    public static final class Serializer
-        extends AbstractSimplePortObjectSpecSerializer<GoogleAnalyticsConnectionPortObjectSpec> { }
-
-    private GoogleAnalyticsConnection m_googleAnalyticsConnection;
+@Deprecated(since = "5.4")
+public class GoogleAnalyticsQueryFactory extends NodeFactory<GoogleAnalyticsQueryModel> {
 
     /**
-     * Constructor for a port object spec that holds no {@link GoogleAnalyticsConnection}.
+     * {@inheritDoc}
      */
-    public GoogleAnalyticsConnectionPortObjectSpec() {
-        m_googleAnalyticsConnection = null;
-    }
-
-    /**
-     * @param googleAnalyticsConnection The {@link GoogleAnalyticsConnection} that will be contained by this port object spec
-     */
-    public GoogleAnalyticsConnectionPortObjectSpec(final GoogleAnalyticsConnection googleAnalyticsConnection) {
-        m_googleAnalyticsConnection = googleAnalyticsConnection;
-    }
-
-    /**
-     * @return The contained {@link GoogleAnalyticsConnection} object
-     */
-    public GoogleAnalyticsConnection getGoogleAnalyticsConnection() {
-        return m_googleAnalyticsConnection;
+    @Override
+    public GoogleAnalyticsQueryModel createNodeModel() {
+        return new GoogleAnalyticsQueryModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void save(final ModelContentWO model) {
-        m_googleAnalyticsConnection.save(model);
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void load(final ModelContentRO model) throws InvalidSettingsException {
-        m_googleAnalyticsConnection = new GoogleAnalyticsConnection(model);
+    public NodeView<GoogleAnalyticsQueryModel> createNodeView(final int viewIndex, final GoogleAnalyticsQueryModel nodeModel) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(final Object ospec) {
-        if (this == ospec) {
-            return true;
-        }
-        if (!(ospec instanceof GoogleAnalyticsConnectionPortObjectSpec)) {
-            return false;
-        }
-        GoogleAnalyticsConnectionPortObjectSpec spec = (GoogleAnalyticsConnectionPortObjectSpec)ospec;
-        return m_googleAnalyticsConnection.equals(spec.m_googleAnalyticsConnection);
+    protected boolean hasDialog() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int hashCode() {
-        return m_googleAnalyticsConnection != null ? m_googleAnalyticsConnection.hashCode() : 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JComponent[] getViews() {
-        String text;
-        if (getGoogleAnalyticsConnection() != null) {
-            text = "<html>" + getGoogleAnalyticsConnection().toString().replace("\n", "<br>") + "</html>";
-        } else {
-            text = "No connection available";
-        }
-        JPanel f = ViewUtils.getInFlowLayout(new JLabel(text));
-        f.setName("Connection");
-        return new JComponent[]{f};
+    protected NodeDialogPane createNodeDialogPane() {
+        return new GoogleAnalyticsQueryDialog();
     }
 
 }

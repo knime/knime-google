@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="./googleanalyticsconnector.png" type="Manipulator"
+<knimeNode icon="./googleanalyticsconnector.png" type="Manipulator" deprecated="true"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Google Analytics Connector (legacy)</name>
+	<name>Google Analytics Connector (deprecated)</name>
 	<shortDescription>Create a connection to the Google Analytics API.</shortDescription>
 	<fullDescription>
 		<intro>
-			Create a connection to the Google Analytics API (Universal Analytics), given a Google API connection.
-			<p>
-			For details see: <a href="https://developers.google.com/analytics/resources/concepts/gaConceptsAccounts">developers.google.com/analytics/resources/concepts/gaConceptsAccounts</a>.
-			</p>
+			<p><b>Note: Google has discontinued Universal Analytics and has replaced it with Google Analytics 4.
+			This node does not work anymore since July 2024. Please use the new Google Analytics Connector node.</b>
+			<a href="https://support.google.com/analytics/answer/11583528">Learn more</a></p>
+			
+			<p>Create a connection to the Google Analytics API (Universal Analytics), given a Google API connection.</p>
 		</intro>
 		<tab name="General Settings">
 			<option name="Account">The account.</option>

@@ -68,7 +68,9 @@ import com.google.api.services.analytics.model.Segment;
  * Configuration of the GoogleAnalyticsQuery node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class GoogleAnalyticsQueryConfiguration {
 
     private static final DateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd");

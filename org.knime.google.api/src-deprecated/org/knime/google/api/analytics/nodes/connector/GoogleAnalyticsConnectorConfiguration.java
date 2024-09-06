@@ -60,7 +60,9 @@ import org.knime.google.api.analytics.data.GoogleAnalyticsConnection;
  * Configuration of the GoogleAnalyticsConnector node.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public class GoogleAnalyticsConnectorConfiguration {
 
     private static final String CFG_PROFILE_ID = "profile_id";

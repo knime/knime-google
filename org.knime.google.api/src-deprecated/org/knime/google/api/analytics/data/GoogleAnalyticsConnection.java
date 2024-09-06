@@ -85,7 +85,9 @@ import com.google.auth.http.HttpCredentialsAdapter;
  * Use the {@link Analytics} object returned by {@link #getAnalytics()} to communicate with the Google Analytics API.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @deprecated
  */
+@Deprecated(since = "5.4")
 public final class GoogleAnalyticsConnection {
 
     private static final String ALL_WILDCARD = "~all";

@@ -4,10 +4,12 @@
    <extension-point id="knimeGoogleAuthScope" name="KnimeGoogleAuthScope" schema="schema/KnimeGoogleAuthScope.exsd"/>
    <extension point="org.knime.workbench.repository.nodes">
       <node 
+            deprecated="true"
             category-path="/toolintegration/googleanalytics" 
             factory-class="org.knime.google.api.analytics.nodes.connector.GoogleAnalyticsConnectorFactory">
       </node>
       <node 
+            deprecated="true"
             category-path="/toolintegration/googleanalytics"
             factory-class="org.knime.google.api.analytics.nodes.query.GoogleAnalyticsQueryFactory">
       </node>
@@ -104,7 +106,7 @@
       <portType
             color="#fe5617"
             hidden="true"
-            name="Google Analytics (legacy)"
+            name="Google Analytics (deprecated)"
             objectClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject"
             objectSerializer="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObject$Serializer"
             specClass="org.knime.google.api.analytics.data.GoogleAnalyticsConnectionPortObjectSpec"
