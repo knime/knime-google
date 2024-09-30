@@ -213,8 +213,7 @@
                       "type" : "string",
                       "title" : "Scope/permission"
                     }
-                  },
-                  "configKeys" : [ "customScopes" ]
+                  }
                 }
               },
               "scopesSelectionMode" : {
@@ -242,8 +241,7 @@
                       "type" : "string",
                       "title" : "Scope/permission"
                     }
-                  },
-                  "configKeys" : [ "standardScopes" ]
+                  }
                 }
               }
             },
