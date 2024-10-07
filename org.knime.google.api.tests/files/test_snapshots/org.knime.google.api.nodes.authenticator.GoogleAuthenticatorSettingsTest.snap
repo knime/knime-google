@@ -224,7 +224,7 @@
                   "const" : "CUSTOM",
                   "title" : "Custom"
                 } ],
-                "title" : "How to select scopes",
+                "title" : "Scope type",
                 "description" : "Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> that need to be requested during login. They specify what the resulting\naccess token can be used for. This setting defines whether to select scopes from a list of predefined\n<b>standard</b> scopes or to enter <b>custom</b> scopes manually.\n",
                 "default" : "STANDARD"
               },
@@ -361,7 +361,7 @@
               "showMode" : true
             }
           } ],
-          "addButtonText" : "Add Scope"
+          "addButtonText" : "Add scope"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -382,7 +382,7 @@
             "type" : "Control",
             "scope" : "#/properties/scope"
           } ],
-          "addButtonText" : "Add Scope"
+          "addButtonText" : "Add scope"
         },
         "rule" : {
           "effect" : "SHOW",

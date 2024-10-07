@@ -89,7 +89,7 @@ import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 @SuppressWarnings("restriction")
 public class ScopeSettings implements WidgetGroup, PersistableSettings {
 
-    @Widget(title = "How to select scopes", description = """
+    @Widget(title = "Scope type", description = """
             Scopes are
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> that need to be requested during login. They specify what the resulting
@@ -126,7 +126,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> and define what the resulting access token can be used for.
             """)
-    @ArrayWidget(addButtonText = "Add Scope")
+    @ArrayWidget(addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsStandard.class, type = EffectType.SHOW)
     @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class)
     StandardScope[] m_standardScopes = new StandardScope[0];
@@ -193,7 +193,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> and define what the resulting access token can be used for.
             """)
-    @ArrayWidget(addButtonText = "Add Scope")
+    @ArrayWidget(addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsCustom.class, type = EffectType.SHOW)
     @Persist(customPersistor = CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
