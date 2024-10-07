@@ -361,7 +361,7 @@
               "showMode" : true
             }
           } ],
-          "addButtonText" : "Add Scope"
+          "addButtonText" : "Add scope"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -382,7 +382,7 @@
             "type" : "Control",
             "scope" : "#/properties/scope"
           } ],
-          "addButtonText" : "Add Scope"
+          "addButtonText" : "Add scope"
         },
         "rule" : {
           "effect" : "SHOW",
