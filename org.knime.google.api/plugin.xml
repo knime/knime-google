@@ -43,7 +43,7 @@
             factory-class="org.knime.google.api.sheets.nodes.connectorinteractive.GoogleSheetsInteractiveServiceProviderFactory">
       </node>
       <node
-            after="org.knime.google.api.nodes.authconnector.GoogleAuthNodeFactory"
+            after="org.knime.google.api.nodes.authenticator.GoogleAuthenticatorNodeFactory"
             category-path="/io/connectors/googleservices"
             deprecated="false"
             factory-class="org.knime.google.api.sheets.nodes.connector.GoogleSheetsConnectorFactory">
