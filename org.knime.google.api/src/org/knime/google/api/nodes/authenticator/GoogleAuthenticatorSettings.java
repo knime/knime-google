@@ -57,7 +57,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
@@ -153,8 +153,8 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     static class LoginActionHandler extends CancelableActionHandler<UUID, GoogleAuthenticatorSettings> {
 
         @Override
-        protected UUID invoke(final GoogleAuthenticatorSettings settings,
-            final DefaultNodeSettingsContext context) throws WidgetHandlerException {
+        protected UUID invoke(final GoogleAuthenticatorSettings settings, final DefaultNodeSettingsContext context)
+            throws WidgetHandlerException {
 
             try {
                 settings.validate();
@@ -199,8 +199,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         }
     }
 
-    static class LoginUpdateHandler
-        extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
+    static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
     }
 
     static final class UseCustomClientIdRef implements Reference<Boolean> {
@@ -227,7 +226,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         advanced = true)
     @Layout(ClientIdSection.class)
     @Effect(predicate = UseCustomClientId.class, type = EffectType.SHOW)
-    FileChooser m_customClientIdFile = new FileChooser();
+    FileSelection m_customClientIdFile = new FileSelection();
 
     /**
      * Validates the settings.

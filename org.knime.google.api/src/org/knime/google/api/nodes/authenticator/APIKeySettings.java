@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.filechooser.FileChooser;
+import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -99,7 +99,7 @@ class APIKeySettings implements DefaultNodeSettings {
     @Widget(title = "JSON file", description = "Path to the private JSON key file.")
     @Layout(APIKeyTypeSection.Content.class)
     @Effect(predicate = APIKeyTypeIsJSON.class, type = EffectType.SHOW)
-    FileChooser m_jsonFile = new FileChooser();
+    FileSelection m_jsonFile = new FileSelection();
 
     @Widget(title = "Service account email", description = "Email address of the service account.")
     @Layout(APIKeyTypeSection.Content.class)
@@ -109,7 +109,7 @@ class APIKeySettings implements DefaultNodeSettings {
     @Widget(title = "P12 file", description = "Path to the private P12 key file.")
     @Layout(APIKeyTypeSection.Content.class)
     @Effect(predicate = APIKeyTypeIsJSON.class, type = EffectType.HIDE)
-    FileChooser m_p12File = new FileChooser();
+    FileSelection m_p12File = new FileSelection();
 
     /**
      * @throws InvalidSettingsException
