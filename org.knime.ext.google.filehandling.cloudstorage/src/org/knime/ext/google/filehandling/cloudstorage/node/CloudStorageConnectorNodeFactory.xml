@@ -17,7 +17,9 @@
             or to perform other file system operations (browse/list files, copy, move, ...).
             </p>
             
-            <p>Please note that for authentication purposes, this node requires the "Google Authentication (API key)" node to be connected to its input port.</p>
+            <p>Please note that for authentication purposes, this node requires the 
+            <a href="https://hub.knime.com/n/bF5bfd2lJMf3IYjf">Google Authenticator</a> node with the authentication 
+            type "Service Account" to be connected to its input port.</p>
             
             <p><b>Path syntax:</b> Paths for Google Cloud Storage are specified with a UNIX-like syntax, /mybucket/myfolder/myfile. An absolute
             for Google Cloud Storage consists of:
