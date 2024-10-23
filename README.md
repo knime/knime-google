@@ -1,5 +1,7 @@
 # ![Image](https://www.knime.com/files/knime_logo_github_40x40_4layers.png) KNIME® Google APIs
 
+This repository is maintained by the [KNIME Team Quokkas](mailto:scrum-bd-esi@knime.com).
+
 This repository contains:
 
 * [KNIME Google APIs](https://hub.knime.com/knime/extensions/org.knime.features.google.api/latest)  
