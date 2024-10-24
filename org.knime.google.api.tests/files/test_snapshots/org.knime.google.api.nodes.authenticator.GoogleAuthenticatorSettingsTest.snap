@@ -194,17 +194,12 @@
             "type" : "string",
             "format" : "uuid",
             "title" : "Login",
-            "description" : "Clicking on login opens a new browser window/tab which allows to interactively log into the service.",
-            "configKeys" : [ "loginCredentialRef_Internals" ]
+            "description" : "Clicking on login opens a new browser window/tab which allows to interactively log into the service."
           },
           "scopeSettings" : {
             "type" : "object",
             "properties" : {
               "customScopes" : {
-                "title" : "Custom scopes",
-                "description" : "Enter a list of custom scopes to request during login. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
-                "default" : [ ],
-                "configKeys" : [ "customScopes" ],
                 "type" : "array",
                 "items" : {
                   "type" : "object",
@@ -214,7 +209,10 @@
                       "title" : "Scope/permission"
                     }
                   }
-                }
+                },
+                "title" : "Custom scopes",
+                "description" : "Enter a list of custom scopes to request during login. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
+                "default" : [ ]
               },
               "scopesSelectionMode" : {
                 "oneOf" : [ {
@@ -229,10 +227,6 @@
                 "default" : "STANDARD"
               },
               "standardScopes" : {
-                "title" : "Standard scopes",
-                "description" : "Choose scopes from a predefined list of standard scopes. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
-                "default" : [ ],
-                "configKeys" : [ "standardScopes" ],
                 "type" : "array",
                 "items" : {
                   "type" : "object",
@@ -242,7 +236,10 @@
                       "title" : "Scope/permission"
                     }
                   }
-                }
+                },
+                "title" : "Standard scopes",
+                "description" : "Choose scopes from a predefined list of standard scopes. Scopes are\n<a href=\"https://developers.google.com/identity/protocols/oauth2/scopes\">\npermissions</a> and define what the resulting access token can be used for.\n",
+                "default" : [ ]
               }
             },
             "default" : {
@@ -517,5 +514,69 @@
         }
       } ]
     } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "authType" : { },
+          "apiKeySettings" : {
+            "type" : "object",
+            "properties" : {
+              "apiKeyFormat" : { },
+              "jsonFile" : {
+                "type" : "object",
+                "properties" : {
+                  "path" : { }
+                }
+              },
+              "serviceAccountEmail" : { },
+              "p12File" : {
+                "type" : "object",
+                "properties" : {
+                  "path" : { }
+                }
+              }
+            }
+          },
+          "scopeSettings" : {
+            "type" : "object",
+            "properties" : {
+              "scopesSelectionMode" : { },
+              "standardScopes" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "scopeId" : { }
+                  }
+                }
+              },
+              "customScopes" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "object",
+                  "properties" : {
+                    "scope" : { }
+                  }
+                }
+              }
+            }
+          },
+          "loginCredentialRef" : {
+            "configPaths" : [ ]
+          },
+          "useCustomClientId" : { },
+          "customClientIdFile" : {
+            "type" : "object",
+            "properties" : {
+              "path" : { }
+            }
+          }
+        }
+      }
+    }
   }
 }

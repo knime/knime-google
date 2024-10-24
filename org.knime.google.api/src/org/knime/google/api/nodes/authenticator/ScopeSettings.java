@@ -60,8 +60,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.NodeSettingsPersistorWithConfigKey;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
@@ -128,7 +128,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             """)
     @ArrayWidget(addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsStandard.class, type = EffectType.SHOW)
-    @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class)
+    @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class, optional = true)
     StandardScope[] m_standardScopes = new StandardScope[0];
 
     static final class StandardScope implements DefaultNodeSettings {
@@ -146,38 +146,33 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
         static class ScopeChoicesUpdateHandler implements ChoicesUpdateHandler<ScopeChoicesDependency> {
 
             @Override
-            public IdAndText[] update(final ScopeChoicesDependency settings,
-                final DefaultNodeSettingsContext context)
+            public IdAndText[] update(final ScopeChoicesDependency settings, final DefaultNodeSettingsContext context)
                 throws WidgetHandlerException {
                 if (settings == null) {
                     return new IdAndText[0];
                 }
                 final var registry = KnimeGoogleAuthScopeRegistry.getInstance();
-                final var scopes = settings.m_authType == AuthType.API_KEY
-                        ? registry.getServiceAccountEnabledKnimeGoogleAuthScopes()
-                            : registry.getOAuthEnabledKnimeGoogleAuthScopes();
+                final var scopes =
+                    settings.m_authType == AuthType.API_KEY ? registry.getServiceAccountEnabledKnimeGoogleAuthScopes()
+                        : registry.getOAuthEnabledKnimeGoogleAuthScopes();
 
                 return scopes.stream().map(s -> new IdAndText(s.getScopeID(), s.getAuthScopeName())) //
-                        .sorted(Comparator.comparing(IdAndText::text)) //
-                        .toArray(IdAndText[]::new);
+                    .sorted(Comparator.comparing(IdAndText::text)) //
+                    .toArray(IdAndText[]::new);
             }
         }
 
         static class ScopeChoicesDependency {
             @DeclaringDefaultNodeSettings(GoogleAuthenticatorSettings.class)
             AuthType m_authType;
-       }
+        }
 
         static final class ScopeArrayPersistor extends NodeSettingsPersistorWithConfigKey<StandardScope[]> {
             @Override
             public StandardScope[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
-                if (settings.containsKey(getConfigKey())) {
-                    return Arrays.stream(settings.getStringArray(getConfigKey()))//
-                        .map(StandardScope::new)//
-                        .toArray(StandardScope[]::new);
-                } else {
-                    return new StandardScope[0];
-                }
+                return Arrays.stream(settings.getStringArray(getConfigKey()))//
+                    .map(StandardScope::new)//
+                    .toArray(StandardScope[]::new);
             }
 
             @Override

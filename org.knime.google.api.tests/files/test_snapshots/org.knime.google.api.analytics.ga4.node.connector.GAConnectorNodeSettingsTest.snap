@@ -15,14 +15,12 @@
           "analyticsAccountId" : {
             "type" : "object",
             "title" : "Google Analytics 4 account",
-            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#account\">account</a> from which you want to fetch properties.\n</p>\n<p>\nIf no accounts are listed, check that at least one analytics account has been created with\nthe admin account.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe account is identified by its <i>numeric</i> ID which is visible below the account&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Analytics Accounts&quot; navigation section.\n</p>\n",
-            "configKeys" : [ "ga4Account" ]
+            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#account\">account</a> from which you want to fetch properties.\n</p>\n<p>\nIf no accounts are listed, check that at least one analytics account has been created with\nthe admin account.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe account is identified by its <i>numeric</i> ID which is visible below the account&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Analytics Accounts&quot; navigation section.\n</p>\n"
           },
           "analyticsPropertyId" : {
             "type" : "object",
             "title" : "Google Analytics 4 property",
-            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#property\">property</a> from which you want to query data.\n</p>\n<p>\nIf no properties are listed, check that your account has access to at least one <i>Google Analytics 4\n</i> property. Universal Analytics properties are not supported.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Properties &amp; Apps &quot; navigation section.\n</p>\n",
-            "configKeys" : [ "ga4Property" ]
+            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#property\">property</a> from which you want to query data.\n</p>\n<p>\nIf no properties are listed, check that your account has access to at least one <i>Google Analytics 4\n</i> property. Universal Analytics properties are not supported.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Properties &amp; Apps &quot; navigation section.\n</p>\n"
           },
           "connTimeoutSec" : {
             "type" : "integer",
@@ -30,8 +28,7 @@
             "title" : "Connect timeout (seconds)",
             "description" : "        Specify the timeout in seconds to establish a connection.\n",
             "default" : 30.0,
-            "minimum" : 1.0,
-            "configKeys" : [ "connectTimeout" ]
+            "minimum" : 1.0
           },
           "readTimeoutSec" : {
             "type" : "integer",
@@ -39,8 +36,7 @@
             "title" : "Read timeout (seconds)",
             "description" : "        Specify the timeout in seconds to read data from an already established connection.\n",
             "default" : 30.0,
-            "minimum" : 1.0,
-            "configKeys" : [ "readTimeout" ]
+            "minimum" : 1.0
           },
           "retryMaxElapsedTimeSec" : {
             "type" : "integer",
@@ -48,8 +44,7 @@
             "title" : "Retry timeout (seconds)",
             "description" : "        Specify the total duration for which the same request is allowed to be retried in case of server\n        errors (5xx) and request timeouts (408), starting when the request is initially made.\n",
             "default" : 60.0,
-            "minimum" : 1.0,
-            "configKeys" : [ "serverErrorRetryMaxElapsedTime" ]
+            "minimum" : 1.0
           }
         }
       }
@@ -71,14 +66,14 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
+        "choicesUpdateHandler" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
+        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ],
+        "setFirstValueOnUpdate" : true,
         "format" : "dropDown",
         "showNoneColumn" : false,
         "showRowKeys" : false,
         "showSearch" : true,
-        "showMode" : true,
-        "choicesUpdateHandler" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
-        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ],
-        "setFirstValueOnUpdate" : true
+        "showMode" : true
       }
     }, {
       "type" : "Control",
@@ -99,5 +94,30 @@
         "isAdvanced" : true
       }
     } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "analyticsAccountId" : {
+            "configKey" : "ga4Account"
+          },
+          "analyticsPropertyId" : {
+            "configKey" : "ga4Property"
+          },
+          "connTimeoutSec" : {
+            "configKey" : "connectTimeout"
+          },
+          "readTimeoutSec" : {
+            "configKey" : "readTimeout"
+          },
+          "retryMaxElapsedTimeSec" : {
+            "configKey" : "serverErrorRetryMaxElapsedTime"
+          }
+        }
+      }
+    }
   }
 }
