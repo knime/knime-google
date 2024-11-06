@@ -74,6 +74,11 @@
 			<layout>p2</layout>
 			<url>${knime.gateway.p2}</url>
 		</repository>
+                <repository>
+                        <id>p2-knime-svg</id>
+                        <layout>p2</layout>
+                        <url>${knime.svg.p2}</url>
+                </repository>
 		<repository>
 			<id>p2-knime-base</id>
 			<layout>p2</layout>
