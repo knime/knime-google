@@ -3,8 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Google Cloud Storage Connector
 Bundle-SymbolicName: org.knime.ext.google.filehandling.cloudstorage;singleton:=true
 Bundle-Version: 5.4.0.qualifier
-Bundle-Vendor: 
- KNIME AG, Zurich, Switzerland
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.base;bundle-version="[5.4.0,6.0.0)",
  org.knime.workbench.repository;bundle-version="[5.4.0,6.0.0)",
  org.knime.ext.google.sdk;bundle-version="[5.2.0,6.0.0)",
