@@ -265,7 +265,7 @@
               "type" : "Control",
               "scope" : "#/properties/fromDate",
               "options" : {
-                "format" : "date-time",
+                "format" : "localDate",
                 "showTime" : false,
                 "showSeconds" : false,
                 "showMilliseconds" : false
@@ -274,7 +274,7 @@
               "type" : "Control",
               "scope" : "#/properties/toDate",
               "options" : {
-                "format" : "date-time",
+                "format" : "localDate",
                 "showTime" : false,
                 "showSeconds" : false,
                 "showMilliseconds" : false
