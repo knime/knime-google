@@ -60,8 +60,10 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonChange;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.button.CancelableActionHandler.States;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
@@ -200,6 +202,16 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     }
 
     static class LoginUpdateHandler extends CancelableActionHandler.UpdateHandler<UUID, GoogleAuthenticatorSettings> {
+
+        // FIXME this method override was added to work around issue UIEXT-2324
+        // Once the issue is fixed it should be possible to remove this workaround,
+        // because it has an undesired side-effect (the button never shows "logged in"
+        // when the dialog is opened.
+        @Override
+        public ButtonChange<UUID, States> update(final GoogleAuthenticatorSettings settings,
+                final DefaultNodeSettingsContext context) throws WidgetHandlerException {
+            return new ButtonChange<>(States.READY);
+        }
     }
 
     static final class UseCustomClientIdRef implements Reference<Boolean> {
