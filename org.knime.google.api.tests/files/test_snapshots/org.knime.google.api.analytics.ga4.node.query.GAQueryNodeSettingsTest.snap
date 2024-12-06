@@ -265,19 +265,13 @@
               "type" : "Control",
               "scope" : "#/properties/fromDate",
               "options" : {
-                "format" : "localDate",
-                "showTime" : false,
-                "showSeconds" : false,
-                "showMilliseconds" : false
+                "format" : "localDate"
               }
             }, {
               "type" : "Control",
               "scope" : "#/properties/toDate",
               "options" : {
-                "format" : "localDate",
-                "showTime" : false,
-                "showSeconds" : false,
-                "showMilliseconds" : false
+                "format" : "localDate"
               }
             }, {
               "type" : "Control",
