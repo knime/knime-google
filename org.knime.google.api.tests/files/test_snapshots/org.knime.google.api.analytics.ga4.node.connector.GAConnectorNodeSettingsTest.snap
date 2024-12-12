@@ -27,24 +27,21 @@
             "format" : "int32",
             "title" : "Connect timeout (seconds)",
             "description" : "        Specify the timeout in seconds to establish a connection.\n",
-            "default" : 30.0,
-            "minimum" : 1.0
+            "default" : 30.0
           },
           "readTimeoutSec" : {
             "type" : "integer",
             "format" : "int32",
             "title" : "Read timeout (seconds)",
             "description" : "        Specify the timeout in seconds to read data from an already established connection.\n",
-            "default" : 30.0,
-            "minimum" : 1.0
+            "default" : 30.0
           },
           "retryMaxElapsedTimeSec" : {
             "type" : "integer",
             "format" : "int32",
             "title" : "Retry timeout (seconds)",
             "description" : "        Specify the total duration for which the same request is allowed to be retried in case of server\n        errors (5xx) and request timeouts (408), starting when the request is initially made.\n",
-            "default" : 60.0,
-            "minimum" : 1.0
+            "default" : 60.0
           }
         }
       }
@@ -79,19 +76,22 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/connTimeoutSec",
       "options" : {
-        "isAdvanced" : true
+        "isAdvanced" : true,
+        "min" : 1.0
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/readTimeoutSec",
       "options" : {
-        "isAdvanced" : true
+        "isAdvanced" : true,
+        "min" : 1.0
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/retryMaxElapsedTimeSec",
       "options" : {
-        "isAdvanced" : true
+        "isAdvanced" : true,
+        "min" : 1.0
       }
     } ]
   },
