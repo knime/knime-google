@@ -178,7 +178,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      * Implementation of the settings update supplier for the {@link AnalyticsAccountUpdateHandler}. An accessible
      * constructor is needed for the conversion between JSON and Java objects.
      */
-    private static final class AccountChoiceDependency implements AccountChoice {
+    static final class AccountChoiceDependency implements AccountChoice {
 
         GAAccount m_analyticsAccountId;
 
@@ -201,8 +201,11 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
         @Override
         public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext ctx) {
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
+            if (credentialRef.isEmpty()) {
+                return new IdAndText[0];
+            }
             try {
-                final var conn = new GAConnection(credentialRef, GAConnection.DEFAULT_CONNECT_TIMEOUT,
+                final var conn = new GAConnection(credentialRef.get(), GAConnection.DEFAULT_CONNECT_TIMEOUT,
                     GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
                 return GAConnectorNodeModel.fetchAllAccountIdsAndNames(conn).stream()//
                     .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
@@ -221,7 +224,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    private static final class AnalyticsAccountUpdateHandler implements ChoicesUpdateHandler<AccountChoiceDependency> {
+    static final class AnalyticsAccountUpdateHandler implements ChoicesUpdateHandler<AccountChoiceDependency> {
 
         @Override
         public IdAndText[] update(final AccountChoiceDependency settings, final DefaultNodeSettingsContext ctx)
@@ -230,8 +233,11 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
                 return new IdAndText[0];
             }
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
+            if (credentialRef.isEmpty()) {
+                return new IdAndText[0];
+            }
             try {
-                final var conn = new GAConnection(credentialRef, GAConnection.DEFAULT_CONNECT_TIMEOUT,
+                final var conn = new GAConnection(credentialRef.get(), GAConnection.DEFAULT_CONNECT_TIMEOUT,
                     GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
                 final var accountId = settings.getAnalyticsAccountId().getAccountId();
                 return GAConnectorNodeModel.fetchPropertiesForAccount(conn, accountId).stream()//
