@@ -49,6 +49,7 @@
 package org.knime.google.api.analytics.ga4.node.connector;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -58,6 +59,7 @@ import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.ClassUtils;
 import org.knime.core.util.Pair;
 import org.knime.core.webui.node.impl.WebUINodeConfiguration;
 import org.knime.core.webui.node.impl.WebUINodeModel;
@@ -100,14 +102,13 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs, final GAConnectorNodeSettings modelSettings)
             throws InvalidSettingsException {
-
-        final var credentialRef = getCredentialRef(inSpecs);
-
         // we do not require the analytics ID to be non-null
         // only the property ID is needed for the output port object
         CheckUtils.checkSettingNotNull(modelSettings.m_analyticsPropertyId,
             "Google Analytics property ID is missing.");
 
+        final var credentialRef = getCredentialRef(inSpecs).orElseThrow(
+            () -> new InvalidSettingsException("The credential port for the Google service must be connected."));
         final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec, //NOSONAR
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
 
@@ -117,9 +118,8 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
             final GAConnectorNodeSettings modelSettings) throws Exception {
-
-        final var credentialRef = getCredentialRef(inObjects);
-
+        final var credentialRef = getCredentialRef(inObjects).orElseThrow(
+            () -> new InvalidSettingsException("The credential port for the Google service must be connected."));
         final var conn = new GAConnection(credentialRef, modelSettings.m_connTimeoutSec,
             modelSettings.m_readTimeoutSec, modelSettings.m_retryMaxElapsedTimeSec);
 
@@ -133,12 +133,14 @@ final class GAConnectorNodeModel extends WebUINodeModel<GAConnectorNodeSettings>
         return new PortObject[] { new GAConnectionPortObject(spec) };
     }
 
-    static CredentialRef getCredentialRef(final PortObject[] portObjects) {
-        return ((CredentialPortObject) portObjects[CREDENTIAL_INPUT_PORT]).toRef();
+    static Optional<CredentialRef> getCredentialRef(final PortObject[] portObjects) {
+        return ClassUtils.castOptional(CredentialPortObject.class, portObjects[CREDENTIAL_INPUT_PORT])
+            .map(CredentialPortObject::toRef);
     }
 
-    static CredentialRef getCredentialRef(final PortObjectSpec[] portObjectSpecs) {
-        return ((CredentialPortObjectSpec) portObjectSpecs[CREDENTIAL_INPUT_PORT]).toRef();
+    static Optional<CredentialRef> getCredentialRef(final PortObjectSpec[] portObjectSpecs) {
+        return ClassUtils.castOptional(CredentialPortObjectSpec.class, portObjectSpecs[CREDENTIAL_INPUT_PORT])
+            .map(CredentialPortObjectSpec::toRef);
     }
 
     static List<Pair<String, String>> fetchAllAccountIdsAndNames(final GAConnection connection) throws KNIMEException {
