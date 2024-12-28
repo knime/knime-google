@@ -5,7 +5,7 @@ Bundle-SymbolicName: org.knime.ext.google.sdk;singleton:=true
 Bundle-Version: 5.5.0.qualifier
 Require-Bundle: org.apache.httpcomponents.httpclient;bundle-version="[4.5.13,5.0.0)",
  org.apache.httpcomponents.httpcore;bundle-version="[4.4.16,5.0.0)",
- com.google.flatbuffers.java;bundle-version="[1.12.0,2.0.0)",
+ com.google.flatbuffers.java;bundle-version="[24.3.25,24.3.25]",
  com.google.guava;bundle-version="[31,32)",
  com.google.guava.failureaccess;bundle-version="1.0.1",
  org.apache.commons.codec;bundle-version="[1.14.0,2.0.0)",
@@ -16,9 +16,9 @@ Require-Bundle: org.apache.httpcomponents.httpclient;bundle-version="[4.5.13,5.0
  com.fasterxml.jackson.datatype.jackson-datatype-jsr310;bundle-version="[2.13.2,3.0.0)",
  slf4j.api;bundle-version="[2.0.12,3.0.0)",
  org.apache.commons.logging;bundle-version="[1.2.0,2.0.0)",
- org.apache.arrow.memory-core;bundle-version="[14.0.2,15.0.0)",
- org.apache.arrow.format;bundle-version="[14.0.2,15.0.0)",
- org.apache.arrow.vector;bundle-version="[14.0.2,15.0.0)",
+ org.apache.arrow.memory-core;bundle-version="[18.1.0,19.0.0)",
+ org.apache.arrow.format;bundle-version="[18.1.0,19.0.0)",
+ org.apache.arrow.vector;bundle-version="[18.1.0,19.0.0)",
  io.grpc.netty-shaded;bundle-version="[1.56.1,2.0.0)"
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-ClassPath: .,
