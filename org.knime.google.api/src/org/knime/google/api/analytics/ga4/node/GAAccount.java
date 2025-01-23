@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.NodeSettingsPersistorWithConfigKey;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -126,18 +126,25 @@ public record GAAccount(String m_accountId) {
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    public static final class Persistor extends NodeSettingsPersistorWithConfigKey<GAAccount> {
+    public static final class Persistor implements NodeSettingsPersistor<GAAccount> {
+
+        private static final String KEY_GA_ACCOUNT = "ga4Account";
 
         @Override
         public GAAccount load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            return GAAccount.loadSettings(settings, getConfigKey());
+            return GAAccount.loadSettings(settings, KEY_GA_ACCOUNT);
         }
 
         @Override
         public void save(final GAAccount prop, final NodeSettingsWO settings) {
             if (prop != null) {
-                prop.saveSettings(settings, getConfigKey());
+                prop.saveSettings(settings, KEY_GA_ACCOUNT);
             }
+        }
+
+        @Override
+        public String[][] getConfigPaths() {
+            return new String[][]{{KEY_GA_ACCOUNT, KEY_GA_ACCOUNT_ID}};
         }
     }
 }

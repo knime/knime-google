@@ -424,19 +424,7 @@
               "filters" : {
                 "type" : "array",
                 "items" : {
-                  "type" : "object",
-                  "properties" : {
-                    "name" : { },
-                    "isNegated" : { },
-                    "caseSensitivity" : { },
-                    "stringFilter" : {
-                      "type" : "object",
-                      "properties" : {
-                        "matchType" : { },
-                        "value" : { }
-                      }
-                    }
-                  }
+                  "propertiesConfigPaths" : [ [ "name" ], [ "caseSensitivity" ], [ "isNegated" ], [ "matchType" ], [ "value" ] ]
                 }
               }
             }

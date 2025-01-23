@@ -56,7 +56,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -72,7 +72,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicatePr
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.credentials.base.CredentialCache;
-import org.knime.credentials.base.oauth.api.nodesettings.TokenCacheKeyPersistor;
+import org.knime.credentials.base.oauth.api.nodesettings.AbstractTokenCacheKeyPersistor;
 import org.knime.google.api.clientsecrets.ClientSecrets;
 import org.knime.google.api.credential.GoogleCredential;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorNodeModel.FSLocationPathAccessor;
@@ -147,10 +147,16 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     @Widget(title = "Login", //
         description = "Clicking on login opens a new browser window/tab which "
             + "allows to interactively log into the service.")
-    @Persist(optional = true, hidden = true, customPersistor = TokenCacheKeyPersistor.class)
+    @Persistor(LoginCredentialRefPersistor.class)
     @Layout(AuthenticationSection.class)
     @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     UUID m_loginCredentialRef;
+
+    static final class LoginCredentialRefPersistor extends AbstractTokenCacheKeyPersistor {
+        LoginCredentialRefPersistor() {
+            super("loginCredentialRef");
+        }
+    }
 
     static class LoginActionHandler extends CancelableActionHandler<UUID, GoogleAuthenticatorSettings> {
 
@@ -209,7 +215,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         // when the dialog is opened.
         @Override
         public ButtonChange<UUID, States> update(final GoogleAuthenticatorSettings settings,
-                final DefaultNodeSettingsContext context) throws WidgetHandlerException {
+            final DefaultNodeSettingsContext context) throws WidgetHandlerException {
             return new ButtonChange<>(States.READY);
         }
     }

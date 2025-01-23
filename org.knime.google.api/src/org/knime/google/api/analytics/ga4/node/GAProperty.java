@@ -53,17 +53,16 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.NodeSettingsPersistorWithConfigKey;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * A representation of a Google Analytics 4 property, which is identified by a numeric ID.
- * The existence of an instance of this class does not imply that the property exists with Google Analytics.
- * In other words, when creating an instance, <em>no API calls</em> are made to verify the property identified
- * by the ID actually exists, is accessible, or is indeed representing a Google Analytics 4 property (and not, e.g.
- * a Universal Analytics property).
+ * A representation of a Google Analytics 4 property, which is identified by a numeric ID. The existence of an instance
+ * of this class does not imply that the property exists with Google Analytics. In other words, when creating an
+ * instance, <em>no API calls</em> are made to verify the property identified by the ID actually exists, is accessible,
+ * or is indeed representing a Google Analytics 4 property (and not, e.g. a Universal Analytics property).
  *
  * @param m_propertyId numeric Google Analytics 4 Property ID (<b>without</b> prefix, e.g. "p/" or "property/")
  *
@@ -76,7 +75,6 @@ public record GAProperty(String m_propertyId) {
 
     /** Key for storing the Property ID. */
     private static final String KEY_GA_PROPERTY_ID = "analyticsPropertyId";
-
 
     /**
      * Creates a Google Analytics 4 property.
@@ -93,6 +91,7 @@ public record GAProperty(String m_propertyId) {
 
     /**
      * Returns the numeric ID of the property (without "property/" prefix).
+     *
      * @return the propertyId
      */
     @JsonValue
@@ -108,8 +107,7 @@ public record GAProperty(String m_propertyId) {
      * @return valid representation of a Google Analytics 4 property
      * @throws InvalidSettingsException if the model did not provide a valid GA property
      */
-    public static GAProperty loadSettings(final ConfigRO cfg, final String key)
-            throws InvalidSettingsException {
+    public static GAProperty loadSettings(final ConfigRO cfg, final String key) throws InvalidSettingsException {
         if (!cfg.containsKey(key)) {
             return null;
         }
@@ -132,18 +130,25 @@ public record GAProperty(String m_propertyId) {
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    public static final class Persistor extends NodeSettingsPersistorWithConfigKey<GAProperty> {
+    public static final class Persistor implements NodeSettingsPersistor<GAProperty> {
+
+        private static final String CONFIG_KEY = "ga4Property";
 
         @Override
         public GAProperty load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            return GAProperty.loadSettings(settings, getConfigKey());
+            return GAProperty.loadSettings(settings, CONFIG_KEY);
         }
 
         @Override
         public void save(final GAProperty prop, final NodeSettingsWO settings) {
             if (prop != null) {
-                prop.saveSettings(settings, getConfigKey());
+                prop.saveSettings(settings, CONFIG_KEY);
             }
+        }
+
+        @Override
+        public String[][] getConfigPaths() {
+            return new String[][]{{CONFIG_KEY, KEY_GA_PROPERTY_ID}};
         }
     }
 }

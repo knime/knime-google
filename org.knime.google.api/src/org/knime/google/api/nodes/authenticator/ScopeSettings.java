@@ -60,9 +60,10 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.NodeSettingsPersistorWithConfigKey;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
@@ -128,7 +129,8 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             """)
     @ArrayWidget(addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsStandard.class, type = EffectType.SHOW)
-    @Persist(customPersistor = StandardScope.ScopeArrayPersistor.class, optional = true)
+    @Persistor(StandardScope.ScopeArrayPersistor.class)
+    @Migrate(loadDefaultIfAbsent = true)
     StandardScope[] m_standardScopes = new StandardScope[0];
 
     static final class StandardScope implements DefaultNodeSettings {
@@ -167,10 +169,13 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             AuthType m_authType;
         }
 
-        static final class ScopeArrayPersistor extends NodeSettingsPersistorWithConfigKey<StandardScope[]> {
+        static final class ScopeArrayPersistor implements NodeSettingsPersistor<StandardScope[]> {
+
+            private static final String CONFIG_KEY = "standardScopes";
+
             @Override
             public StandardScope[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
-                return Arrays.stream(settings.getStringArray(getConfigKey()))//
+                return Arrays.stream(settings.getStringArray(CONFIG_KEY))//
                     .map(StandardScope::new)//
                     .toArray(StandardScope[]::new);
             }
@@ -178,7 +183,12 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             @Override
             public void save(final StandardScope[] obj, final NodeSettingsWO settings) {
                 var stringArray = Arrays.stream(obj).map(s -> s.m_scopeId).toArray(String[]::new);
-                settings.addStringArray(getConfigKey(), stringArray);
+                settings.addStringArray(CONFIG_KEY, stringArray);
+            }
+
+            @Override
+            public String[][] getConfigPaths() {
+                return new String[][]{{CONFIG_KEY}};
             }
         }
     }
@@ -190,7 +200,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             """)
     @ArrayWidget(addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsCustom.class, type = EffectType.SHOW)
-    @Persist(customPersistor = CustomScopesPersistor.class)
+    @Persistor(CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
 
     static class CustomScope implements DefaultNodeSettings {
@@ -204,10 +214,13 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
         CustomScope() {
         }
 
-        static class CustomScopesPersistor extends NodeSettingsPersistorWithConfigKey<CustomScope[]> {
+        static class CustomScopesPersistor implements NodeSettingsPersistor<CustomScope[]> {
+
+            private static final String CONFIG_KEY = "customScopes";
+
             @Override
             public CustomScope[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
-                return Stream.of(settings.getStringArray(getConfigKey())) //
+                return Stream.of(settings.getStringArray(CONFIG_KEY)) //
                     .map(CustomScope::new) //
                     .toArray(CustomScope[]::new);
             }
@@ -215,7 +228,12 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             @Override
             public void save(final CustomScope[] obj, final NodeSettingsWO settings) {
                 var strings = Stream.of(obj).map(s -> s.m_scope).toArray(String[]::new);
-                settings.addStringArray(getConfigKey(), strings);
+                settings.addStringArray(CONFIG_KEY, strings);
+            }
+
+            @Override
+            public String[][] getConfigPaths() {
+                return new String[][]{{CONFIG_KEY}};
             }
         }
     }

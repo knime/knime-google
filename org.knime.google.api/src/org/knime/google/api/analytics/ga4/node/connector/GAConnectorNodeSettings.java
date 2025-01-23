@@ -56,8 +56,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.NodeSettingsPersistorWithConfigKey;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.Persist;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
@@ -81,7 +81,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
-    @Persist(customPersistor = GAAccount.Persistor.class, configKey = "ga4Account")
+    @Persistor(GAAccount.Persistor.class)
     @Widget(title = "Google Analytics 4 account", description = """
             <p>
             Specify the Google Analytics 4
@@ -102,7 +102,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     @ChoicesWidget(choices = AnalyticsAccountsProvider.class)
     GAAccount m_analyticsAccountId; // will implicitly be handled as string
 
-    @Persist(customPersistor = GAProperty.Persistor.class, configKey = "ga4Property")
+    @Persistor(GAProperty.Persistor.class)
     @Widget(title = "Google Analytics 4 property", description = """
             <p>
             Specify the Google Analytics 4
@@ -125,21 +125,21 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
 
     /* Advanced settings */
 
-    @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_CONNECT_TIMEOUT)
+    @Persistor(ConnectTimeoutPersistor.class)
     @Widget(title = "Connect timeout (seconds)", description = """
                     Specify the timeout in seconds to establish a connection.
             """, advanced = true)
     @NumberInputWidget(min = 1)
     Duration m_connTimeoutSec = GAConnection.DEFAULT_CONNECT_TIMEOUT;
 
-    @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_READ_TIMEOUT)
+    @Persistor(ReadTimeoutPersistor.class)
     @Widget(title = "Read timeout (seconds)", description = """
                     Specify the timeout in seconds to read data from an already established connection.
             """, advanced = true)
     @NumberInputWidget(min = 1)
     Duration m_readTimeoutSec = GAConnection.DEFAULT_READ_TIMEOUT;
 
-    @Persist(customPersistor = DurationPersistorAsMillis.class, configKey = GAConnection.KEY_ERR_RETRY_MAX_ELAPSED_TIME)
+    @Persistor(RetryMaxElapsedTimePersistor.class)
     @Widget(title = "Retry timeout (seconds)", description = """
                     Specify the total duration for which the same request is allowed to be retried in case of server
                     errors (5xx) and request timeouts (408), starting when the request is initially made.
@@ -256,17 +256,46 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    private static final class DurationPersistorAsMillis extends NodeSettingsPersistorWithConfigKey<Duration> {
+    private static abstract class DurationPersistorAsMillis implements NodeSettingsPersistor<Duration> {
+
+        private final String m_configKey;
+
+        protected DurationPersistorAsMillis(final String configKey) {
+            m_configKey = configKey;
+        }
 
         @Override
         public Duration load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            return Duration.ofMillis(settings.getLong(getConfigKey()));
+            return Duration.ofMillis(settings.getLong(m_configKey));
         }
 
         @Override
         public void save(final Duration duration, final NodeSettingsWO settings) {
-            settings.addLong(getConfigKey(), duration.toMillis());
+            settings.addLong(m_configKey, duration.toMillis());
         }
 
+        @Override
+        public String[][] getConfigPaths() {
+            return new String[][]{{m_configKey}};
+        }
+
+    }
+
+    private static final class ConnectTimeoutPersistor extends DurationPersistorAsMillis {
+        public ConnectTimeoutPersistor() {
+            super(GAConnection.KEY_CONNECT_TIMEOUT);
+        }
+    }
+
+    private static final class ReadTimeoutPersistor extends DurationPersistorAsMillis {
+        public ReadTimeoutPersistor() {
+            super(GAConnection.KEY_READ_TIMEOUT);
+        }
+    }
+
+    private static final class RetryMaxElapsedTimePersistor extends DurationPersistorAsMillis {
+        public RetryMaxElapsedTimePersistor() {
+            super(GAConnection.KEY_ERR_RETRY_MAX_ELAPSED_TIME);
+        }
     }
 }

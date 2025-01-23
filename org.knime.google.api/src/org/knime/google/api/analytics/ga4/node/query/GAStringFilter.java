@@ -54,7 +54,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
@@ -64,7 +63,9 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GAStringFilter implements DefaultNodeSettings, WidgetGroup {
+final class GAStringFilter implements DefaultNodeSettings {
+
+    static final String[][] CONFIG_PATHS = new String[][]{{"matchType"}, {"value"}};
 
     @Widget(title = "String matching", description = """
             Specify how the string value is matched with the dimension value.

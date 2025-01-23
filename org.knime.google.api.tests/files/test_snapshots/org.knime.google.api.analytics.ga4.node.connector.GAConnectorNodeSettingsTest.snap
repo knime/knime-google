@@ -102,19 +102,19 @@
         "type" : "object",
         "properties" : {
           "analyticsAccountId" : {
-            "configKey" : "ga4Account"
+            "configPaths" : [ [ "ga4Account", "analyticsAccountId" ] ]
           },
           "analyticsPropertyId" : {
-            "configKey" : "ga4Property"
+            "configPaths" : [ [ "ga4Property", "analyticsPropertyId" ] ]
           },
           "connTimeoutSec" : {
-            "configKey" : "connectTimeout"
+            "configPaths" : [ [ "connectTimeout" ] ]
           },
           "readTimeoutSec" : {
-            "configKey" : "readTimeout"
+            "configPaths" : [ [ "readTimeout" ] ]
           },
           "retryMaxElapsedTimeSec" : {
-            "configKey" : "serverErrorRetryMaxElapsedTime"
+            "configPaths" : [ [ "serverErrorRetryMaxElapsedTime" ] ]
           }
         }
       }

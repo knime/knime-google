@@ -286,7 +286,9 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/jsonFile",
         "options" : {
-          "format" : "fileChooser"
+          "format" : "fileChooser",
+          "mountId" : "Local space",
+          "isLocal" : true
         },
         "rule" : {
           "effect" : "SHOW",
@@ -317,7 +319,9 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/p12File",
         "options" : {
-          "format" : "fileChooser"
+          "format" : "fileChooser",
+          "mountId" : "Local space",
+          "isLocal" : true
         },
         "rule" : {
           "effect" : "HIDE",
@@ -433,6 +437,8 @@
         "scope" : "#/properties/model/properties/customClientIdFile",
         "options" : {
           "format" : "fileChooser",
+          "mountId" : "Local space",
+          "isLocal" : true,
           "isAdvanced" : true
         },
         "rule" : {
@@ -546,22 +552,10 @@
             "properties" : {
               "scopesSelectionMode" : { },
               "standardScopes" : {
-                "type" : "array",
-                "items" : {
-                  "type" : "object",
-                  "properties" : {
-                    "scopeId" : { }
-                  }
-                }
+                "configPaths" : [ [ "standardScopes" ] ]
               },
               "customScopes" : {
-                "type" : "array",
-                "items" : {
-                  "type" : "object",
-                  "properties" : {
-                    "scope" : { }
-                  }
-                }
+                "configPaths" : [ [ "customScopes" ] ]
               }
             }
           },

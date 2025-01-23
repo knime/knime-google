@@ -48,17 +48,18 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.NodeSettingsPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.field.FieldBasedNodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -76,29 +77,25 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
     @ChoicesWidget(choices = DimensionChoicesProvider.class)
     String m_name;
 
-    @Widget(title = "Invert matches",
-            description = """
-                    Invert results matched by the criterion in order to <i>exclude</i> certain events from the result.
-                    """)
+    @Widget(title = "Invert matches", description = """
+            Invert results matched by the criterion in order to <i>exclude</i> certain events from the result.
+            """)
     boolean m_isNegated;
 
-
-    @Widget(title = "Case handling",
-            description = """
-                    Specifies whether strings should be matched case-insensitive or case-sensitive.
-                    """, advanced = true)
+    @Widget(title = "Case handling", description = """
+            Specifies whether strings should be matched case-insensitive or case-sensitive.
+            """, advanced = true)
     @ValueSwitchWidget
     CaseSensitivity m_caseSensitivity = CaseSensitivity.CASE_INSENSITIVE;
 
     GAStringFilter m_stringFilter;
-
 
     GADimensionFilterCriterion() {
         // ser/de
     }
 
     public GADimensionFilterCriterion(final String name, final GAStringFilter stringFilter,
-            final CaseSensitivity caseSensitivity, final boolean isNegated) {
+        final CaseSensitivity caseSensitivity, final boolean isNegated) {
         m_name = Objects.requireNonNull(name);
         m_stringFilter = Objects.requireNonNull(stringFilter);
         m_caseSensitivity = Objects.requireNonNull(caseSensitivity);
@@ -112,8 +109,8 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
     }
 
     /**
-     * Checks that the part of the "union" we are interested in is valid. Due to the way the UI handles the display
-     * of the union, both could be set at the same time if mistakenly enabled in the UI.
+     * Checks that the part of the "union" we are interested in is valid. Due to the way the UI handles the display of
+     * the union, both could be set at the same time if mistakenly enabled in the UI.
      *
      * @param <X> exception type
      * @param toThrowable function to provide an exception given a message
@@ -131,7 +128,9 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
     static final class GADimensionFilterSettingsPersistor implements NodeSettingsPersistor<GADimensionFilterCriterion> {
 
         private static final String CFG_KEY_NAME = "name";
+
         private static final String CFG_KEY_CASE_SENSITIVITY = "caseSensitivity";
+
         private static final String CFG_KEY_IS_NEGATED = "isNegated";
 
         @Override
@@ -139,8 +138,8 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
             final var name = settings.getString(CFG_KEY_NAME);
             final var caseSensitivity = valueOf(CaseSensitivity.class, settings, CFG_KEY_CASE_SENSITIVITY);
             final var isNegated = settings.getBoolean(CFG_KEY_IS_NEGATED);
-            return new GADimensionFilterCriterion(name, new FieldBasedNodeSettingsPersistor<>(GAStringFilter.class)
-                .load(settings), caseSensitivity, isNegated);
+            final var filter = DefaultNodeSettings.loadSettings(settings, GAStringFilter.class);
+            return new GADimensionFilterCriterion(name, filter, caseSensitivity, isNegated);
         }
 
         private static <T extends Enum<T>> T valueOf(final Class<T> enumClass, final NodeSettingsRO settings,
@@ -149,7 +148,7 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
         }
 
         private static <T extends Enum<T>> T valueOf(final Class<T> enumClass, final NodeSettingsRO settings,
-                final String key, final T defaultValue) throws InvalidSettingsException {
+            final String key, final T defaultValue) throws InvalidSettingsException {
             if (defaultValue != null && !settings.containsKey(key)) {
                 return defaultValue;
             }
@@ -157,8 +156,8 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
             try {
                 return Enum.valueOf(enumClass, enumValue);
             } catch (IllegalArgumentException e) {
-                throw new InvalidSettingsException("Unknown value \"%s\" for type \"%s\"".formatted(enumValue,
-                    enumClass.getSimpleName()), e);
+                throw new InvalidSettingsException(
+                    "Unknown value \"%s\" for type \"%s\"".formatted(enumValue, enumClass.getSimpleName()), e);
             }
         }
 
@@ -167,7 +166,15 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
             settings.addString(CFG_KEY_NAME, filter.m_name);
             settings.addString(CFG_KEY_CASE_SENSITIVITY, filter.m_caseSensitivity.name());
             settings.addBoolean(CFG_KEY_IS_NEGATED, filter.m_isNegated);
-            new FieldBasedNodeSettingsPersistor<>(GAStringFilter.class).save(filter.m_stringFilter, settings);
+            DefaultNodeSettings.saveSettings(GAStringFilter.class, filter.m_stringFilter, settings);
+        }
+
+        @Override
+        public String[][] getConfigPaths() {
+            return Stream.concat(//
+                Arrays.stream(new String[][]{{CFG_KEY_NAME}, {CFG_KEY_CASE_SENSITIVITY}, {CFG_KEY_IS_NEGATED}}), //
+                Arrays.stream(GAStringFilter.CONFIG_PATHS)//
+            ).toArray(String[][]::new);
         }
     }
 }
