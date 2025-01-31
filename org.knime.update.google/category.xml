@@ -12,6 +12,10 @@
    <feature id="org.knime.features.google.cloud.storage.source" version="0.0.0">
        <category name="knime-google" />
    </feature>
+   <bundle id="org.knime.google.api"/>
+   <bundle id="org.knime.google.api.source"/>
+   <bundle id="org.knime.ext.google.sdk"/>
+   <bundle id="org.knime.ext.google.sdk.source"/>
    <category-def name="knime-google" label="Build artifacts from knime-google">
        <description>Build artifacts from knime-google</description>
    </category-def>
