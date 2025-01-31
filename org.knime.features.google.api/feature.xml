@@ -732,20 +732,6 @@ propagated with or for interoperation with KNIME.
    </requires>
    
    <plugin
-         id="org.knime.ext.google.sdk"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.knime.google.api"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-         
-   <plugin
          id="org.knime.ext.google.filehandling.drive"
          download-size="0"
          install-size="0"
