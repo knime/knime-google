@@ -78,9 +78,9 @@ import org.knime.core.util.DesktopUtil;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
+import org.knime.google.api.sheets.nodes.util.RetryUtil;
 import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Create;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
@@ -121,7 +121,8 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         rearranger.keepOnly(filter.getIncludes());
         table = exec.createColumnRearrangeTable(table, rearranger, exec);
 
-        String spreadsheetId = createSpreadsheet(connection, m_settings.getSpreadsheetName(), m_settings.getSheetName());
+        final var spreadsheetId = createSpreadsheet(connection, m_settings.getSpreadsheetName(),
+            m_settings.getSheetName(), exec);
 
 
         writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
@@ -129,9 +130,9 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
             m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {
-            openSpreadsheetInBrowser(
-                connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSpreadsheetUrl());
-
+            openSpreadsheetInBrowser(RetryUtil.withRetry(
+                () -> connection.getSheetsService().spreadsheets().get(spreadsheetId).execute(), exec)
+                .getSpreadsheetUrl());
         }
 
         pushFlowvariables(m_settings.getSpreadsheetName(), spreadsheetId, m_settings.getSheetName());
@@ -158,12 +159,15 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * @param sheetConnection The Google Sheet connection to use
      * @param spreadsheetName The spreadsheet name
      * @param sheetName The sheet name
+     * @param exec the current execution context to set the appropriate status message
      * @return The spreadsheet id of the created spreadsheet.
      * @throws IOException If the spreadsheet could not be created
      * @throws NoSuchCredentialException
+     * @throws CanceledExecutionException
      */
     private static String createSpreadsheet(final GoogleSheetsConnection sheetConnection, final String spreadsheetName,
-        final String sheetName) throws IOException, NoSuchCredentialException {
+        final String sheetName, final ExecutionContext exec)
+                throws IOException, NoSuchCredentialException, CanceledExecutionException {
         Spreadsheet spreadsheet = new Spreadsheet();
         SpreadsheetProperties spreadsheetProperties = new SpreadsheetProperties();
         spreadsheetProperties.setTitle(spreadsheetName);
@@ -175,9 +179,9 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         sheet.setProperties(sheetProperties);
         List<Sheet> sheetList = new ArrayList<Sheet>(Arrays.asList(sheet));
         spreadsheet.setSheets(sheetList);
-        Create create = sheetConnection.getSheetsService().spreadsheets().create(spreadsheet);
+        final var execute = RetryUtil.withRetry(
+            () -> sheetConnection.getSheetsService().spreadsheets().create(spreadsheet).execute(), exec);
 
-        Spreadsheet execute = create.execute();
         return execute.getSpreadsheetId();
     }
 
@@ -209,10 +213,11 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         ValueRange body =
             collectSheetData(dataTable, addRowHeader, addColumnHeader, handleMissingValues, missingValuePattern, exec);
         exec.setMessage("Writing Sheet.");
-        sheetConnection.getSheetsService().spreadsheets().values()
-                .append(spreadsheetId, sheetName, body)
-                .setValueInputOption(valueInputOption)
-                .execute();
+        RetryUtil.withRetry(() ->
+            sheetConnection.getSheetsService().spreadsheets().values()
+                    .append(spreadsheetId, sheetName, body)
+                    .setValueInputOption(valueInputOption)
+                    .execute(), exec);
     }
 
     /**

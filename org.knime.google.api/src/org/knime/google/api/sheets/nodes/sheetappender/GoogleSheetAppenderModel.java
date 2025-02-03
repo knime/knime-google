@@ -71,6 +71,7 @@ import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.RetryUtil;
 
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
@@ -115,16 +116,17 @@ public class GoogleSheetAppenderModel extends NodeModel {
 
         String spreadsheetId = m_settings.getSpreadsheetId();
 
-        String sheetName = createSheet(connection, spreadsheetId, m_settings.getSheetName(), m_settings.createUniqueSheetName());
+        String sheetName = createSheet(connection, spreadsheetId, m_settings.getSheetName(),
+            m_settings.createUniqueSheetName(), exec);
 
         GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
             sheetName, m_settings.addRowHeader(), m_settings.addColumnHeader(),
             m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {
-            GoogleSpreadsheetWriterModel.openSpreadsheetInBrowser(
-                connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSpreadsheetUrl());
-
+            GoogleSpreadsheetWriterModel.openSpreadsheetInBrowser(RetryUtil.withRetry(
+                () -> connection.getSheetsService().spreadsheets().get(spreadsheetId).execute(), exec)
+                .getSpreadsheetUrl());
         }
 
         pushFlowvariables(m_settings.getSpreadsheetName(), spreadsheetId, sheetName);
@@ -138,12 +140,16 @@ public class GoogleSheetAppenderModel extends NodeModel {
      * @param sheetConnection The Google Sheet connection to use
      * @param spreadsheetName The spreadsheet name
      * @param sheetName The sheet name
+     * @param exec the current execution context to set the appropriate status message
      * @throws IOException If the spreadsheet could not be created
      * @throws NoSuchCredentialException
+     * @throws CanceledExecutionException
      */
     private static String createSheet(final GoogleSheetsConnection sheetConnection, final String spreadsheetId,
-        final String sheetName, final boolean createUniqueSheetName) throws IOException, NoSuchCredentialException {
-        Spreadsheet spreadsheet = sheetConnection.getSheetsService().spreadsheets().get(spreadsheetId).execute();
+        final String sheetName, final boolean createUniqueSheetName, final ExecutionContext exec)
+                throws IOException, NoSuchCredentialException, CanceledExecutionException {
+        Spreadsheet spreadsheet = RetryUtil.withRetry(() ->
+                sheetConnection.getSheetsService().spreadsheets().get(spreadsheetId).execute(), exec);
 
         List<Sheet> existingSheets = spreadsheet.getSheets();
 
@@ -169,7 +175,8 @@ public class GoogleSheetAppenderModel extends NodeModel {
         sheetCreationRequest.add(new Request().setAddSheet(new AddSheetRequest().setProperties(sheetProperties)));
 
         BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(sheetCreationRequest);
-        sheetConnection.getSheetsService().spreadsheets().batchUpdate(spreadsheetId, body).execute();
+        RetryUtil.withRetry(() -> sheetConnection.getSheetsService().spreadsheets()
+            .batchUpdate(spreadsheetId, body).execute(), exec);
         return sheetName + postfix;
     }
 
