@@ -69,6 +69,7 @@ import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.RetryUtil;
 import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
 import com.google.api.services.sheets.v4.model.ClearValuesRequest;
@@ -114,8 +115,10 @@ public class GoogleSheetUpdaterModel extends NodeModel {
             m_settings.getSheetName() : m_settings.getSheetName() + "!" + m_settings.getRange();
 
         if (m_settings.clearSheet()){
-            connection.getSheetsService().spreadsheets().values().clear(
-                m_settings.getSpreadsheetId(), sheetRange, new ClearValuesRequest()).execute();
+            RetryUtil.withRetry(() ->
+                connection.getSheetsService().spreadsheets().values()
+                .clear(m_settings.getSpreadsheetId(), sheetRange, new ClearValuesRequest())
+                .execute(), exec);
         }
         if (m_settings.append()) {
             GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
@@ -128,9 +131,9 @@ public class GoogleSheetUpdaterModel extends NodeModel {
         }
 
         if (m_settings.openAfterExecution()) {
-            GoogleSpreadsheetWriterModel.openSpreadsheetInBrowser(
-                connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSpreadsheetUrl());
-
+            GoogleSpreadsheetWriterModel.openSpreadsheetInBrowser(RetryUtil.withRetry(
+                () -> connection.getSheetsService().spreadsheets().get(spreadsheetId).execute(), exec)
+                .getSpreadsheetUrl());
         }
 
         pushFlowvariables(m_settings.getSpreadsheetName(), spreadsheetId, m_settings.getSheetName());
@@ -171,8 +174,8 @@ public class GoogleSheetUpdaterModel extends NodeModel {
                     handleMissingValues, missingValuePattern, exec);
 
         exec.setMessage("Updating Sheet.");
-        sheetConnection.getSheetsService().spreadsheets().
-            values().update(spreadsheetId, sheetName,body).setValueInputOption(valueInputOption).execute();
+        RetryUtil.withRetry(() -> sheetConnection.getSheetsService().spreadsheets().
+            values().update(spreadsheetId, sheetName,body).setValueInputOption(valueInputOption).execute(), exec) ;
     }
 
 
