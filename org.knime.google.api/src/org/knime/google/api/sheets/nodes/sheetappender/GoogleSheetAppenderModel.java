@@ -71,6 +71,7 @@ import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
 
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
@@ -120,7 +121,7 @@ public class GoogleSheetAppenderModel extends NodeModel {
             m_settings.createUniqueSheetName(), exec);
 
         GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
-            sheetName, m_settings.addRowHeader(), m_settings.addColumnHeader(),
+            RangeUtil.quoteSheetName(sheetName), m_settings.addRowHeader(), m_settings.addColumnHeader(),
             m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {

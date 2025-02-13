@@ -78,6 +78,7 @@ import org.knime.core.util.DesktopUtil;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
+import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
 import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
@@ -126,8 +127,8 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
 
 
         writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
-            m_settings.getSheetName(), m_settings.addRowHeader(), m_settings.addColumnHeader(),
-            m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
+            RangeUtil.quoteSheetName(m_settings.getSheetName()), m_settings.addRowHeader(),
+            m_settings.addColumnHeader(), m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
 
         if (m_settings.openAfterExecution()) {
             openSpreadsheetInBrowser(RetryUtil.withRetry(
@@ -194,7 +195,7 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
      * @param dataTable The data table to be written to google sheets
      * @param writeRaw Whether the table should be written to google sheets in raw format
      * @param spreadsheetId The designated spreadsheet id
-     * @param sheetName The designated sheet name
+     * @param sheetName The designated quoted sheet name
      * @param addRowHeader Whether the row header should be written to the sheet
      * @param addColumnHeader Whether the column header should be written to the sheet
      * @param handleMissingValues Whether missing values should be handled specially
@@ -213,11 +214,10 @@ public class GoogleSpreadsheetWriterModel extends NodeModel {
         ValueRange body =
             collectSheetData(dataTable, addRowHeader, addColumnHeader, handleMissingValues, missingValuePattern, exec);
         exec.setMessage("Writing Sheet.");
-        RetryUtil.withRetry(() ->
+        RetryUtil.withRetry(() -> RangeUtil.escapedRangeExecute(
             sheetConnection.getSheetsService().spreadsheets().values()
                     .append(spreadsheetId, sheetName, body)
-                    .setValueInputOption(valueInputOption)
-                    .execute(), exec);
+                    .setValueInputOption(valueInputOption)), exec);
     }
 
     /**

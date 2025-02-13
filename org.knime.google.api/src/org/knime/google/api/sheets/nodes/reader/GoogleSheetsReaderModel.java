@@ -79,6 +79,7 @@ import org.knime.core.util.UniqueNameGenerator;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
+import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -122,11 +123,12 @@ public class GoogleSheetsReaderModel extends NodeModel {
 
         ValueRange result = null;
         try {
-            String range = m_settings.selectFirstSheet()
-                    ? getFirstSheet(connection, m_settings.getSpreadSheetId(), exec)
-                        : m_settings.getSheetName();
-            range += m_settings.getRange();
-            result = getValues(connection, m_settings.getSpreadSheetId(),  range, "ROWS", exec);
+            final var sheetName = m_settings.selectFirstSheet()//
+                    ? getFirstSheet(connection, m_settings.getSpreadSheetId(), exec, LOGGER)//
+                    : m_settings.getSheetName();
+            final var sheetRange = RangeUtil.quoteSheetName(sheetName) + m_settings.getRange();
+
+            result = getValues(connection, m_settings.getSpreadSheetId(),  sheetRange, "ROWS", exec);
         } catch (IOException e) {
             throw new IOException("Could not fetch sheet name for given spreadsheet id: " + e.getMessage(), e);
         }
@@ -184,13 +186,26 @@ public class GoogleSheetsReaderModel extends NodeModel {
         final String sheetRange, final String majorDimensions, final ExecutionContext exec)
         throws IOException, NoSuchCredentialException, CanceledExecutionException {
         return RetryUtil.withRetry(
-            () -> connection.getSheetsService().spreadsheets().values().get(spreadsheetId, sheetRange)
-                .setMajorDimension(majorDimensions).execute(), exec);
+            () -> RangeUtil.escapedRangeExecute(connection.getSheetsService().spreadsheets().values()
+                .get(spreadsheetId, sheetRange).setMajorDimension(majorDimensions)), exec);
     }
 
-    private static String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId,
-        final ExecutionContext exec) throws IOException, NoSuchCredentialException, CanceledExecutionException {
-        LOGGER.debug("Fetching first sheet name for spreadsheet id: " + spreadsheetId);
+    /**
+     * Get the name of the first sheet of the spreadsheet
+     *
+     * @param connection The connection to use
+     * @param spreadsheetId The spreadsheet id for the spreadsheet to retrieve
+     * @param exec the current execution context to set the appropriate status message
+     * @param logger the logger to log this event to
+     * @return the name of the first sheet
+     * @throws IOException If an IO error occurs
+     * @throws NoSuchCredentialException
+     * @throws CanceledExecutionException
+     */
+    public static String getFirstSheet(final GoogleSheetsConnection connection, final String spreadsheetId,
+        final ExecutionContext exec, final NodeLogger logger)
+                throws IOException, NoSuchCredentialException, CanceledExecutionException {
+        logger.debug("Fetching first sheet name for spreadsheet id: " + spreadsheetId);
         var sheets = RetryUtil.withRetry(
             () -> connection.getSheetsService().spreadsheets().get(spreadsheetId).execute().getSheets(), exec);
         return sheets.get(0).getProperties().getTitle();
