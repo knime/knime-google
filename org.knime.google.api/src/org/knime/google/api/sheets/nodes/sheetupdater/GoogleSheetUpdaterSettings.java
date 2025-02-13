@@ -110,7 +110,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The {@link SettingsModelOptionalString} for the range
      */
-    protected SettingsModelOptionalString getRangeModel() {
+    SettingsModelOptionalString getRangeModel() {
         return m_rangeModel;
     }
 
@@ -119,7 +119,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The {@link SettingsModelBoolean} for appending
      */
-    protected SettingsModelBoolean getAppendModel() {
+    SettingsModelBoolean getAppendModel() {
         return m_appendModel;
     }
 
@@ -128,7 +128,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The {@link SettingsModelBoolean} for the sheet clearing before writing
      */
-    protected SettingsModelBoolean getClearSheetModel() {
+    SettingsModelBoolean getClearSheetModel() {
         return m_clearSheetModel;
     }
 
@@ -137,7 +137,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The {@link SettingsModelGoogleSpreadsheetAndSheetChooser} for the spreadsheet and sheet
      */
-    protected SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
+    SettingsModelGoogleSpreadsheetAndSheetChooser getSpreadsheetChoserModel() {
         return m_spreadsheetChoserModel;
     }
 
@@ -146,7 +146,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The selected spreadsheet's id
      */
-    protected String getSpreadsheetId() {
+    String getSpreadsheetId() {
         return m_spreadsheetChoserModel.getSpreadsheetId();
     }
 
@@ -155,7 +155,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The selected spreadsheet's name
      */
-    protected String getSpreadsheetName() {
+    String getSpreadsheetName() {
         return m_spreadsheetChoserModel.getSpreadsheetName();
     }
 
@@ -164,8 +164,15 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The selected sheet name
      */
-    protected String getSheetName() {
+    String getSheetName() {
         return m_spreadsheetChoserModel.getSheetName();
+    }
+
+    /**
+     * @return whether the first sheet should always be selected.
+     */
+    boolean selectFirstSheet() {
+        return m_spreadsheetChoserModel.getSelectFirstSheet();
     }
 
     /**
@@ -173,7 +180,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return Whether or not the restricted range should be used
      */
-    protected boolean useRange() {
+    boolean useRange() {
         return m_rangeModel.isActive();
     }
 
@@ -182,7 +189,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return The restricted range
      */
-    protected String getRange() {
+    String getRange() {
         return m_rangeModel.getStringValue().trim();
     }
 
@@ -191,7 +198,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return Whether or not the data should be appended to the existing sheet
      */
-    protected boolean append() {
+    boolean append() {
         return m_appendModel.getBooleanValue();
     }
 
@@ -200,7 +207,7 @@ final class GoogleSheetUpdaterSettings extends AbstractGoogleSheetWriterSettings
      *
      * @return Whether or not the sheet should be cleared before writing
      */
-    protected boolean clearSheet() {
+    boolean clearSheet() {
         return m_clearSheetModel.getBooleanValue();
     }
 

@@ -58,6 +58,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -68,7 +69,9 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
+import org.knime.google.api.sheets.nodes.reader.GoogleSheetsReaderModel;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
 import org.knime.google.api.sheets.nodes.util.ValueInputOption;
 
@@ -81,6 +84,9 @@ import com.google.api.services.sheets.v4.model.ValueRange;
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetUpdaterModel extends NodeModel {
+
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(GoogleSheetUpdaterModel.class);
 
 
     GoogleSheetUpdaterSettings m_settings = new GoogleSheetUpdaterSettings();
@@ -111,18 +117,24 @@ public class GoogleSheetUpdaterModel extends NodeModel {
 
         String spreadsheetId = m_settings.getSpreadsheetId();
 
-        String sheetRange = !m_settings.useRange() ?
-            m_settings.getSheetName() : m_settings.getSheetName() + "!" + m_settings.getRange();
+        final var sheetName = m_settings.selectFirstSheet()//
+            ? GoogleSheetsReaderModel.getFirstSheet(connection, spreadsheetId, exec, LOGGER)//
+            : m_settings.getSheetName();
 
-        if (m_settings.clearSheet()){
-            RetryUtil.withRetry(() ->
+        final var range = m_settings.useRange()//
+            ? ("!" + m_settings.getRange())//
+            : "";
+
+        final var sheetRange = RangeUtil.quoteSheetName(sheetName) + range;
+
+        if (m_settings.clearSheet()) {
+            RetryUtil.withRetry(() -> RangeUtil.escapedRangeExecute(
                 connection.getSheetsService().spreadsheets().values()
-                .clear(m_settings.getSpreadsheetId(), sheetRange, new ClearValuesRequest())
-                .execute(), exec);
+                .clear(m_settings.getSpreadsheetId(), sheetRange, new ClearValuesRequest())), exec);
         }
         if (m_settings.append()) {
             GoogleSpreadsheetWriterModel.writeSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
-                m_settings.getSheetName(), m_settings.addRowHeader(), m_settings.addColumnHeader(),
+                sheetRange, m_settings.addRowHeader(), m_settings.addColumnHeader(),
                 m_settings.handleMissingValues(), m_settings.getMissingValuePattern(), exec);
         } else {
             updateSpreadsheet(connection, table, m_settings.writeRaw(), spreadsheetId,
@@ -174,8 +186,8 @@ public class GoogleSheetUpdaterModel extends NodeModel {
                     handleMissingValues, missingValuePattern, exec);
 
         exec.setMessage("Updating Sheet.");
-        RetryUtil.withRetry(() -> sheetConnection.getSheetsService().spreadsheets().
-            values().update(spreadsheetId, sheetName,body).setValueInputOption(valueInputOption).execute(), exec) ;
+        RetryUtil.withRetry(() -> RangeUtil.escapedRangeExecute(sheetConnection.getSheetsService().spreadsheets().
+            values().update(spreadsheetId, sheetName, body).setValueInputOption(valueInputOption)), exec) ;
     }
 
 
