@@ -51,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -67,10 +66,12 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.VariableType;
 import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.NodesUtil;
 import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
 
@@ -130,7 +131,8 @@ public class GoogleSheetAppenderModel extends NodeModel {
                 .getSpreadsheetUrl());
         }
 
-        pushFlowvariables(m_settings.getSpreadsheetName(), spreadsheetId, sheetName);
+        NodesUtil.pushFlowVariables(m_settings.getSpreadsheetName(), spreadsheetId, sheetName,
+            getAvailableFlowVariables(VariableType.StringType.INSTANCE).keySet(), this::pushFlowVariableString);
 
         return new PortObject[]{};
     }
@@ -181,32 +183,6 @@ public class GoogleSheetAppenderModel extends NodeModel {
         return sheetName + postfix;
     }
 
-
-    /**
-     * Pushes the given information to the flow variables.
-     *
-     * @param spreadsheetName The spreadsheet name to push
-     * @param spreadsheetId The spreadsheet id to push
-     * @param sheetName The sheet name to push
-     *
-     */
-    protected void pushFlowvariables(final String spreadsheetName, final String spreadsheetId, final String sheetName) {
-        final Set<String> variables = getAvailableFlowVariables().keySet();
-        String spreadsheetNameVar = "spreadsheetName";
-
-        String postfix = "";
-        if (variables.contains(spreadsheetNameVar)) {
-            int i = 2;
-            postfix += "_";
-            while (variables.contains(spreadsheetNameVar + i)) {
-                i++;
-            }
-            postfix += i;
-        }
-        pushFlowVariableString(spreadsheetNameVar + postfix, spreadsheetName);
-        pushFlowVariableString("spreadsheetId" + postfix, spreadsheetId);
-        pushFlowVariableString("sheetName" + postfix, sheetName);
-    }
 
     /**
      * {@inheritDoc}
