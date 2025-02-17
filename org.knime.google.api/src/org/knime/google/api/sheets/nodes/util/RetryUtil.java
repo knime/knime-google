@@ -110,7 +110,7 @@ public final class RetryUtil {
                 if (e.getStatusCode() == 429 /* TOO MANY REQUESTS */ ||
                         (e.getStatusCode() >= 500 && e.getStatusCode() <= 599) /* SERVER ERROR*/) {
                     wait = parseRetryAfter(e, wait);
-                    waitFor("Got status “" + e.getStatusMessage() + "” (" + e.getStatusCode() + ")", wait, exec);
+                    waitFor("Got status \"" + e.getStatusMessage() + "\" (" + e.getStatusCode() + ")", wait, exec);
                 } else {
                     throw e;
                 }
