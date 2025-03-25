@@ -225,8 +225,7 @@
               "showNoneColumn" : false,
               "showRowKeys" : false,
               "showSearch" : true,
-              "showMode" : true,
-              "hideOnNull" : false
+              "showMode" : true
             }
           } ],
           "addButtonText" : "Add metric",

@@ -66,6 +66,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpdateHandler;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
@@ -129,14 +130,14 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
     @Widget(title = "Connect timeout (seconds)", description = """
                     Specify the timeout in seconds to establish a connection.
             """, advanced = true)
-    @NumberInputWidget(min = 1)
+    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
     Duration m_connTimeoutSec = GAConnection.DEFAULT_CONNECT_TIMEOUT;
 
     @Persistor(ReadTimeoutPersistor.class)
     @Widget(title = "Read timeout (seconds)", description = """
                     Specify the timeout in seconds to read data from an already established connection.
             """, advanced = true)
-    @NumberInputWidget(min = 1)
+    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
     Duration m_readTimeoutSec = GAConnection.DEFAULT_READ_TIMEOUT;
 
     @Persistor(RetryMaxElapsedTimePersistor.class)
@@ -144,7 +145,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
                     Specify the total duration for which the same request is allowed to be retried in case of server
                     errors (5xx) and request timeouts (408), starting when the request is initially made.
             """, advanced = true)
-    @NumberInputWidget(min = 1)
+    @NumberInputWidget(validation = IsPositiveIntegerValidation.class)
     Duration m_retryMaxElapsedTimeSec = GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME;
 
     /**

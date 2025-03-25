@@ -287,8 +287,8 @@
         "scope" : "#/properties/model/properties/apiKeySettings/properties/jsonFile",
         "options" : {
           "format" : "fileChooser",
-          "mountId" : "Local space",
-          "isLocal" : true
+          "isLocal" : true,
+          "mountId" : "Local space"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -320,8 +320,8 @@
         "scope" : "#/properties/model/properties/apiKeySettings/properties/p12File",
         "options" : {
           "format" : "fileChooser",
-          "mountId" : "Local space",
-          "isLocal" : true
+          "isLocal" : true,
+          "mountId" : "Local space"
         },
         "rule" : {
           "effect" : "HIDE",
@@ -437,8 +437,8 @@
         "scope" : "#/properties/model/properties/customClientIdFile",
         "options" : {
           "format" : "fileChooser",
-          "mountId" : "Local space",
           "isLocal" : true,
+          "mountId" : "Local space",
           "isAdvanced" : true
         },
         "rule" : {

@@ -77,21 +77,42 @@
       "scope" : "#/properties/model/properties/connTimeoutSec",
       "options" : {
         "isAdvanced" : true,
-        "min" : 1.0
+        "validations" : [ {
+          "errorMessage" : "The value must be at least 1.",
+          "id" : "min",
+          "parameters" : {
+            "min" : 1.0,
+            "isExclusive" : false
+          }
+        } ]
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/readTimeoutSec",
       "options" : {
         "isAdvanced" : true,
-        "min" : 1.0
+        "validations" : [ {
+          "errorMessage" : "The value must be at least 1.",
+          "id" : "min",
+          "parameters" : {
+            "min" : 1.0,
+            "isExclusive" : false
+          }
+        } ]
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/retryMaxElapsedTimeSec",
       "options" : {
         "isAdvanced" : true,
-        "min" : 1.0
+        "validations" : [ {
+          "errorMessage" : "The value must be at least 1.",
+          "id" : "min",
+          "parameters" : {
+            "min" : 1.0,
+            "isExclusive" : false
+          }
+        } ]
       }
     } ]
   },
