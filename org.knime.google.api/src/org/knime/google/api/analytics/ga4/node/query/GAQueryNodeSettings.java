@@ -60,7 +60,9 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
 /**
@@ -160,6 +162,18 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     interface OutputSection {
     }
 
+    static final class CurrencyCodePatternValidation extends PatternValidation {
+        @Override
+        protected String getPattern() {
+            return "$|[a-zA-Z]{3}";
+        }
+
+        @Override
+        public String getErrorMessage() {
+            return "The string must be empty or in the three letter ISO-4217 format.";
+        }
+    }
+
     @Widget(title = "Currency code", description = """
             <p>
             Specify the currency code to use for currency returning metrics, to be stated in three letter
@@ -167,14 +181,13 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             </p>
             """, advanced = true)
     @Layout(OutputSection.class)
+    @TextInputWidget(validation = CurrencyCodePatternValidation.class)
     String m_currencyCode;
 
-    @Widget(title = "Keep empty rows",
-        description = """
-                If enabled, rows will also be returned if all their metrics are equal to 0.
-                Otherwise they are omitted from the result.
-                """,
-        advanced = true)
+    @Widget(title = "Keep empty rows", description = """
+            If enabled, rows will also be returned if all their metrics are equal to 0.
+            Otherwise they are omitted from the result.
+            """, advanced = true)
     @Layout(OutputSection.class)
     boolean m_keepEmptyRows;
 
@@ -203,9 +216,9 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                 Available quotas can be seen in the """
             + " <a href=\"" + ExternalLinks.API_QUOTAS + "\">API documentation</a>.</p>"
             + """
-                <p><b>Note:</b> Retrieving a lot of data (many rows, many columns, or long date ranges) or specifying complex
-                filter criteria may be responsible for consumption of many tokens per node execution.</p>
-                """,
+                    <p><b>Note:</b> Retrieving a lot of data (many rows, many columns, or long date ranges) or specifying complex
+                    filter criteria may be responsible for consumption of many tokens per node execution.</p>
+                    """,
         advanced = true)
     @Layout(OutputSection.class)
     boolean m_returnPropertyQuota;
