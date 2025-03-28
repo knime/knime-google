@@ -60,7 +60,9 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
 /**
@@ -160,6 +162,18 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     interface OutputSection {
     }
 
+    static final class CurrencyCodePatternValidation extends PatternValidation {
+        @Override
+        protected String getPattern() {
+            return "$|[a-zA-Z]{3}";
+        }
+
+        @Override
+        public String getErrorMessage() {
+            return "The string must be empty or in the three letter ISO-4217 format.";
+        }
+    }
+
     @Widget(title = "Currency code", description = """
             <p>
             Specify the currency code to use for currency returning metrics, to be stated in three letter
@@ -167,6 +181,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             </p>
             """, advanced = true)
     @Layout(OutputSection.class)
+    @TextInputWidget(validation = CurrencyCodePatternValidation.class)
     String m_currencyCode;
 
     @Widget(title = "Keep empty rows", description = """

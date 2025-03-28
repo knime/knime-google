@@ -58,7 +58,9 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
 /**
  * Settings for a Google Analytics 4 Data API
  * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/DateRange">
@@ -86,6 +88,18 @@ final class GADateRange implements DefaultNodeSettings {
     @Layout(DateRangeLayout.class)
     LocalDate m_toDate;
 
+    static final class RangeNamePatternValidation extends PatternValidation {
+        @Override
+        protected String getPattern() {
+            return "(?!date_range_|RESERVED_).*";
+        }
+
+        @Override
+        public String getErrorMessage() {
+            return "The name must not start with \"date_range_\" or \"RESERVED_\"";
+        }
+    }
+
     @Widget(title = "Name (optional)",
             description = """
                     A custom name for the date range to which the dimension <tt>dateRange</tt> is valued.
@@ -94,8 +108,8 @@ final class GADateRange implements DefaultNodeSettings {
 
                     <b>Note:</b> The custom name must not start with "date_range_" or "RESERVED_".
                     """)
-    // How to validate in UI that it does not begin with "date_range_" or "RESERVED_"?
     @Layout(DateRangeLayout.class)
+    @TextInputWidget(validation = RangeNamePatternValidation.class)
     String m_rangeName;
 
     private GADateRange() {

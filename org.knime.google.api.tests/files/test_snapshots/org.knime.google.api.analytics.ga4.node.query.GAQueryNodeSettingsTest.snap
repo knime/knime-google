@@ -266,7 +266,16 @@
               }
             }, {
               "type" : "Control",
-              "scope" : "#/properties/rangeName"
+              "scope" : "#/properties/rangeName",
+              "options" : {
+                "validations" : [ {
+                  "id" : "pattern",
+                  "parameters" : {
+                    "pattern" : "(?!date_range_|RESERVED_).*"
+                  },
+                  "errorMessage" : "The name must not start with \"date_range_\" or \"RESERVED_\""
+                } ]
+              }
             } ]
           } ],
           "addButtonText" : "Add date range"
@@ -342,7 +351,14 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/currencyCode",
         "options" : {
-          "isAdvanced" : true
+          "isAdvanced" : true,
+          "validations" : [ {
+            "id" : "pattern",
+            "parameters" : {
+              "pattern" : "$|[a-zA-Z]{3}"
+            },
+            "errorMessage" : "The string must be empty or in the three letter ISO-4217 format."
+          } ]
         }
       }, {
         "type" : "Control",
