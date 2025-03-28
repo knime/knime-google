@@ -274,7 +274,17 @@
               }
             }, {
               "type" : "Control",
-              "scope" : "#/properties/rangeName"
+              "scope" : "#/properties/rangeName",
+              "options" : {
+                "hideOnNull" : false,
+                "validations" : [ {
+                  "errorMessage" : "The name must not start with \"date_range_\" or \"RESERVED_\"",
+                  "id" : "pattern",
+                  "parameters" : {
+                    "pattern" : "(?!date_range_|RESERVED_).*"
+                  }
+                } ]
+              }
             } ]
           } ],
           "addButtonText" : "Add date range"
