@@ -220,12 +220,8 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.MetricsChoicesProvider",
-              "format" : "dropDown",
-              "showNoneColumn" : false,
-              "showRowKeys" : false,
-              "showSearch" : true,
-              "showMode" : true
+              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.MetricsChoicesProvider",
+              "format" : "dropDown"
             }
           } ],
           "addButtonText" : "Add metric",
@@ -243,12 +239,8 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
-              "format" : "dropDown",
-              "showNoneColumn" : false,
-              "showRowKeys" : false,
-              "showSearch" : true,
-              "showMode" : true
+              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
+              "format" : "dropDown"
             }
           } ],
           "addButtonText" : "Add dimension",
@@ -313,12 +305,8 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
-              "format" : "dropDown",
-              "showNoneColumn" : false,
-              "showRowKeys" : false,
-              "showSearch" : true,
-              "showMode" : true
+              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
+              "format" : "dropDown"
             }
           }, {
             "type" : "Control",
@@ -435,5 +423,12 @@
         }
       }
     }
-  }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog",
+      "triggerInitially" : true
+    },
+    "dependencies" : [ ]
+  } ]
 }

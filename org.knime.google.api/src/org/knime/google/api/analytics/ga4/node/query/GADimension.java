@@ -54,7 +54,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
@@ -76,7 +76,7 @@ final class GADimension implements DefaultNodeSettings {
                   """
                 + "Available names can be seen in the <a href=\""
                 + ExternalLinks.API_LIST_DIMENSION + "\">list of dimensions</a> under the column \"API Name\".")
-    @ChoicesWidget(choices = DimensionChoicesProvider.class)
+    @ChoicesProvider(DimensionChoicesProvider.class)
     String m_name;
 
     // Supporting "Dimension expression" requires a more complex UI than is currently feasible

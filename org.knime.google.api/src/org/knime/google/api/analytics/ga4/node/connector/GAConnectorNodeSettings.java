@@ -49,6 +49,9 @@
 package org.knime.google.api.analytics.ga4.node.connector;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Supplier;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
@@ -58,14 +61,14 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpdateHandler;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoice;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
@@ -100,12 +103,17 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
             &quot;Analytics Accounts&quot; navigation section.
             </p>
             """)
-    @ChoicesWidget(choices = AnalyticsAccountsProvider.class)
+    @ChoicesProvider(AnalyticsAccountsProvider.class)
+    @ValueReference(AnalyticsAccountIdRef.class)
     GAAccount m_analyticsAccountId; // will implicitly be handled as string
 
+    interface AnalyticsAccountIdRef extends Reference<GAAccount> {
+    }
+
     @Persistor(GAProperty.Persistor.class)
-    @Widget(title = "Google Analytics 4 property", description = """
-            <p>
+    @Widget(title = "Google Analytics 4 property",
+        description = """
+                <p>
             Specify the Google Analytics 4
             <a href="
             """ + ExternalLinks.EXPLAIN_PROPERTY + """
@@ -121,7 +129,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
             &quot;Properties &amp; Apps &quot; navigation section.
             </p>
             """)
-    @ChoicesWidget(choicesUpdateHandler = AnalyticsAccountUpdateHandler.class)
+    @ChoicesProvider(AnalyticsAccountUpdateHandler.class)
     GAProperty m_analyticsPropertyId; // will implicitly be handled as string
 
     /* Advanced settings */
@@ -164,32 +172,6 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
         //
     }
 
-    /** Signal that an account was chosen and update supplier for the {@link AnalyticsAccountUpdateHandler}. */
-    private interface AccountChoice {
-        /**
-         * Returns the chosen GA4 account ID. Magically connected to
-         * {@link GAConnectorNodeSettings#m_analyticsAccountId} through the JSON value serializer (Jackson).
-         *
-         * @return account ID as String
-         */
-        GAAccount getAnalyticsAccountId();
-    }
-
-    /**
-     * Implementation of the settings update supplier for the {@link AnalyticsAccountUpdateHandler}. An accessible
-     * constructor is needed for the conversion between JSON and Java objects.
-     */
-    static final class AccountChoiceDependency implements AccountChoice {
-
-        GAAccount m_analyticsAccountId;
-
-        @Override
-        public GAAccount getAnalyticsAccountId() {
-            return m_analyticsAccountId;
-        }
-
-    }
-
     /**
      * Asynchronously fetches the Google Analytics account IDs and names from the API. Uses pagination to collect all
      * accounts.
@@ -197,24 +179,29 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    static final class AnalyticsAccountsProvider implements ChoicesProvider, AsyncChoicesProvider {
+    static final class AnalyticsAccountsProvider implements StringChoicesProvider {
 
         @Override
-        public IdAndText[] choicesWithIdAndText(final DefaultNodeSettingsContext ctx) {
+        public void init(final StateProviderInitializer initializer) {
+            initializer.computeAfterOpenDialog();
+        }
+
+        @Override
+        public List<StringChoice> computeState(final DefaultNodeSettingsContext ctx) {
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             if (credentialRef.isEmpty()) {
-                return new IdAndText[0];
+                return Collections.emptyList();
             }
             try {
                 final var conn = new GAConnection(credentialRef.get(), GAConnection.DEFAULT_CONNECT_TIMEOUT,
                     GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
                 return GAConnectorNodeModel.fetchAllAccountIdsAndNames(conn).stream()//
-                    .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
-                    .toArray(IdAndText[]::new);
+                    .map(pair -> new StringChoice(pair.getFirst(), pair.getSecond()))//
+                    .toList();
             } catch (KNIMEException e) {
                 LOGGER.error("Failed to retrieve Google Analytics 4 accounts from Google Analytics API.", e);
             }
-            return new IdAndText[0];
+            return Collections.emptyList();
         }
 
     }
@@ -225,31 +212,38 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    static final class AnalyticsAccountUpdateHandler implements ChoicesUpdateHandler<AccountChoiceDependency> {
+    static final class AnalyticsAccountUpdateHandler implements StringChoicesProvider {
+
+        Supplier<GAAccount> m_analyticsAccountIdSupplier;
 
         @Override
-        public IdAndText[] update(final AccountChoiceDependency settings, final DefaultNodeSettingsContext ctx)
-            throws WidgetHandlerException {
-            if (settings == null || settings.getAnalyticsAccountId() == null) {
-                return new IdAndText[0];
+        public void init(final StateProviderInitializer initializer) {
+            initializer.computeAfterOpenDialog();
+            m_analyticsAccountIdSupplier = initializer.computeFromValueSupplier(AnalyticsAccountIdRef.class);
+        }
+
+        @Override
+        public List<StringChoice> computeState(final DefaultNodeSettingsContext ctx) throws WidgetHandlerException {
+            final var analyticsAccountId = m_analyticsAccountIdSupplier.get();
+            if (analyticsAccountId == null) {
+                return Collections.emptyList();
             }
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             if (credentialRef.isEmpty()) {
-                return new IdAndText[0];
+                return Collections.emptyList();
             }
             try {
                 final var conn = new GAConnection(credentialRef.get(), GAConnection.DEFAULT_CONNECT_TIMEOUT,
                     GAConnection.DEFAULT_READ_TIMEOUT, GAConnection.DEFAULT_ERR_RETRY_MAX_ELAPSED_TIME);
-                final var accountId = settings.getAnalyticsAccountId().getAccountId();
+                final var accountId = analyticsAccountId.getAccountId();
                 return GAConnectorNodeModel.fetchPropertiesForAccount(conn, accountId).stream()//
-                    .map(pair -> new IdAndText(pair.getFirst(), pair.getSecond()))//
-                    .toArray(IdAndText[]::new);
+                    .map(pair -> new StringChoice(pair.getFirst(), pair.getSecond()))//
+                    .toList();
             } catch (KNIMEException e) {
                 LOGGER.error("Failed to retrieve Google Analytics 4 properties from Google Analytics API.", e);
             }
-            return new IdAndText[0];
+            return Collections.emptyList();
         }
-
     }
 
     /**

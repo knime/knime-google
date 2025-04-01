@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,13 +66,11 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettin
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesUpdateHandler;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.DeclaringDefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoice;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
@@ -79,6 +78,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicatePr
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthType;
+import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthTypeRef;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
 import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
 
@@ -135,7 +135,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
 
     static final class StandardScope implements DefaultNodeSettings {
         @Widget(title = "Scope/permission", description = "")
-        @ChoicesWidget(choicesUpdateHandler = ScopeChoicesUpdateHandler.class)
+        @ChoicesProvider(ScopeChoicesUpdateHandler.class)
         String m_scopeId;
 
         StandardScope() {
@@ -145,28 +145,28 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             m_scopeId = scopeId;
         }
 
-        static class ScopeChoicesUpdateHandler implements ChoicesUpdateHandler<ScopeChoicesDependency> {
+        static class ScopeChoicesUpdateHandler implements StringChoicesProvider {
+
+            private Supplier<AuthType> m_authTypeSupplier;
 
             @Override
-            public IdAndText[] update(final ScopeChoicesDependency settings, final DefaultNodeSettingsContext context)
-                throws WidgetHandlerException {
-                if (settings == null) {
-                    return new IdAndText[0];
-                }
+            public void init(final StateProviderInitializer initializer) {
+                initializer.computeAfterOpenDialog();
+                m_authTypeSupplier = initializer.computeFromValueSupplier(AuthTypeRef.class);
+            }
+
+            @Override
+            public List<StringChoice> computeState(final DefaultNodeSettingsContext context) {
+                final var authType = m_authTypeSupplier.get();
                 final var registry = KnimeGoogleAuthScopeRegistry.getInstance();
                 final var scopes =
-                    settings.m_authType == AuthType.API_KEY ? registry.getServiceAccountEnabledKnimeGoogleAuthScopes()
+                    authType == AuthType.API_KEY ? registry.getServiceAccountEnabledKnimeGoogleAuthScopes()
                         : registry.getOAuthEnabledKnimeGoogleAuthScopes();
 
-                return scopes.stream().map(s -> new IdAndText(s.getScopeID(), s.getAuthScopeName())) //
-                    .sorted(Comparator.comparing(IdAndText::text)) //
-                    .toArray(IdAndText[]::new);
+                return scopes.stream().map(s -> new StringChoice(s.getScopeID(), s.getAuthScopeName())) //
+                    .sorted(Comparator.comparing(StringChoice::text)) //
+                    .toList();
             }
-        }
-
-        static class ScopeChoicesDependency {
-            @DeclaringDefaultNodeSettings(GoogleAuthenticatorSettings.class)
-            AuthType m_authType;
         }
 
         static final class ScopeArrayPersistor implements NodeSettingsPersistor<StandardScope[]> {

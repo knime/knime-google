@@ -55,10 +55,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
-import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AccountChoiceDependency;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountUpdateHandler;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountsProvider;
 import org.knime.google.api.credential.GoogleCredential;
@@ -67,7 +65,7 @@ import org.knime.google.api.credential.GoogleCredential;
  * Tests the {@link AnalyticsAccountsProvider} and {@link AnalyticsAccountUpdateHandler} from the
  * {@link GAConnectorNodeSettings}. These classes all have package scope for testing here.
  */
-@SuppressWarnings("restriction")// WebUI* classes
+@SuppressWarnings("restriction") // WebUI* classes
 class GAAccountsChoicesTest {
 
     private static Stream<PortObjectSpec> createEmptyCredentialSpecs() {
@@ -77,18 +75,10 @@ class GAAccountsChoicesTest {
             null);
     }
 
-    private static Stream<AccountChoiceDependency> createEmptyAccountSettings() {
+    private static Stream<String> createEmptyAccountSettings() {
         return Stream.of( //
-            createAccountSetting(UUID.randomUUID().toString()), //
-            createAccountSetting(null), //
-            new AccountChoiceDependency(), //
+            UUID.randomUUID().toString(), //
             null);
-    }
-
-    private static AccountChoiceDependency createAccountSetting(final String id) {
-        final var setting = new AccountChoiceDependency();
-        setting.m_analyticsAccountId = GAAccount.of(id);
-        return setting;
     }
 
     @Test
@@ -97,19 +87,19 @@ class GAAccountsChoicesTest {
 
         createEmptyCredentialSpecs().forEach(spec -> {
             final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
-            Assertions.assertArrayEquals(new IdAndText[0], choicesProvider.choicesWithIdAndText(ctx), //
+            Assertions.assertTrue(choicesProvider.computeState(ctx).isEmpty(), //
                 "Account choices were null or not empty.");
         });
     }
 
     @Test
     void testAccountUpdateHandler() {
-        final var updateHandler = new GAConnectorNodeSettings.AnalyticsAccountUpdateHandler();
-
         createEmptyCredentialSpecs().forEach(spec -> {
             final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
             createEmptyAccountSettings().forEach(settings -> {
-                Assertions.assertArrayEquals(new IdAndText[0], updateHandler.update(settings, ctx), //
+                final var updateHandler = new GAConnectorNodeSettings.AnalyticsAccountUpdateHandler();
+                updateHandler.m_analyticsAccountIdSupplier = () -> GAAccount.of(settings);
+                Assertions.assertTrue(updateHandler.computeState(ctx).isEmpty(), //
                     "Account choices were null or not empty.");
             });
         });

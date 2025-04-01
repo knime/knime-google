@@ -352,14 +352,8 @@
             "type" : "Control",
             "scope" : "#/properties/scopeId",
             "options" : {
-              "choicesUpdateHandler" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
-              "dependencies" : [ "#/properties/model/properties/authType" ],
-              "setFirstValueOnUpdate" : true,
-              "format" : "dropDown",
-              "showNoneColumn" : false,
-              "showRowKeys" : false,
-              "showSearch" : true,
-              "showMode" : true
+              "choicesProvider" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
+              "format" : "dropDown"
             }
           } ],
           "addButtonText" : "Add scope"
@@ -572,5 +566,24 @@
         }
       }
     }
-  }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog",
+      "triggerInitially" : true
+    },
+    "dependencies" : [ {
+      "scopes" : [ "#/properties/model/properties/authType" ],
+      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef"
+    } ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef",
+      "scopes" : [ "#/properties/model/properties/authType" ]
+    },
+    "dependencies" : [ {
+      "scopes" : [ "#/properties/model/properties/authType" ],
+      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef"
+    } ]
+  } ]
 }

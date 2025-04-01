@@ -59,7 +59,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.IdAndText;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoice;
 import org.knime.credentials.base.CredentialCache;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountsProvider;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
@@ -84,9 +84,9 @@ class GAConnectorNodeSettingsTest extends DefaultNodeSettingsSnapshotTest {
     void beforeTest() {
         mockedAccountsProviderConstruction =
             Mockito.mockConstruction(AnalyticsAccountsProvider.class, (mock, context) -> {
-                when(mock.choices(ArgumentMatchers.any())).thenReturn(new String[]{"choice1", "choice2"});
-                when(mock.choicesWithIdAndText(ArgumentMatchers.any()))
-                    .thenReturn(new IdAndText[]{IdAndText.fromId("choice1"), IdAndText.fromId("choice2")});
+                when(mock.choices(ArgumentMatchers.any())).thenReturn(List.of("choice1", "choice2"));
+                when(mock.computeState(ArgumentMatchers.any()))
+                    .thenReturn(List.of(StringChoice.fromId("choice1"), StringChoice.fromId("choice2")));
             });
     }
 

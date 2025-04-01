@@ -52,8 +52,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
 /**
@@ -74,7 +74,7 @@ final class GAMetric implements DefaultNodeSettings {
                 <a href=" """ + ExternalLinks.API_LIST_METRIC + """
                 ">list of metrics</a> under the column "API Name".
                 """)
-    @ChoicesWidget(choices = MetricsChoicesProvider.class)
+    @ChoicesProvider(MetricsChoicesProvider.class)
     String m_name;
 
     GAMetric() {

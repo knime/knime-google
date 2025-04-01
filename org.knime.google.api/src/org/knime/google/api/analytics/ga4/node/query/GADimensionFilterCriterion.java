@@ -60,7 +60,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 
@@ -74,7 +74,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 final class GADimensionFilterCriterion implements DefaultNodeSettings {
 
     @Widget(title = "Dimension", description = "The name of the dimension to filter on.")
-    @ChoicesWidget(choices = DimensionChoicesProvider.class)
+    @ChoicesProvider(DimensionChoicesProvider.class)
     String m_name;
 
     @Widget(title = "Invert matches", description = """

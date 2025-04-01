@@ -20,7 +20,7 @@
           "analyticsPropertyId" : {
             "type" : "object",
             "title" : "Google Analytics 4 property",
-            "description" : "<p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#property\">property</a> from which you want to query data.\n</p>\n<p>\nIf no properties are listed, check that your account has access to at least one <i>Google Analytics 4\n</i> property. Universal Analytics properties are not supported.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Properties &amp; Apps &quot; navigation section.\n</p>\n"
+            "description" : "    <p>\nSpecify the Google Analytics 4\n<a href=\"\nhttps://support.google.com/analytics/answer/9304153?hl=en#property\">property</a> from which you want to query data.\n</p>\n<p>\nIf no properties are listed, check that your account has access to at least one <i>Google Analytics 4\n</i> property. Universal Analytics properties are not supported.\n</p>\n<p><b>Note for setting via a flow variable:</b>\nThe property is identified by its <i>numeric</i> ID which is visible below the property&apos;s name on\n<a href=\"https://analytics.google.com\">analytics.google.com</a> under the\n&quot;Properties &amp; Apps &quot; navigation section.\n</p>\n"
           },
           "connTimeoutSec" : {
             "type" : "integer",
@@ -52,25 +52,15 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsAccountId",
       "options" : {
-        "choicesProviderClass" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountsProvider",
-        "format" : "dropDown",
-        "showNoneColumn" : false,
-        "showRowKeys" : false,
-        "showSearch" : true,
-        "showMode" : true
+        "choicesProvider" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountsProvider",
+        "format" : "dropDown"
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
-        "choicesUpdateHandler" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
-        "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ],
-        "setFirstValueOnUpdate" : true,
-        "format" : "dropDown",
-        "showNoneColumn" : false,
-        "showRowKeys" : false,
-        "showSearch" : true,
-        "showMode" : true
+        "choicesProvider" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
+        "format" : "dropDown"
       }
     }, {
       "type" : "Control",
@@ -140,5 +130,24 @@
         }
       }
     }
-  }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog",
+      "triggerInitially" : true
+    },
+    "dependencies" : [ {
+      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ],
+      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef"
+    } ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef",
+      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ]
+    },
+    "dependencies" : [ {
+      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ],
+      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef"
+    } ]
+  } ]
 }

@@ -48,11 +48,13 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.AsyncChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
 
 import com.google.api.services.analyticsdata.v1beta.model.DimensionMetadata;
 
@@ -61,25 +63,28 @@ import com.google.api.services.analyticsdata.v1beta.model.DimensionMetadata;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class DimensionChoicesProvider implements ChoicesProvider, AsyncChoicesProvider {
+final class DimensionChoicesProvider implements StringChoicesProvider {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DimensionChoicesProvider.class);
 
-        @Override
-        public String[] choices(final DefaultNodeSettingsContext ctx) {
-            final var connSpec = GAQueryNodeModel.getGoogleAnalyticsConnectionPortObjectSpec(ctx.getPortObjectSpecs());
-            if (connSpec.isPresent()) {
-                try {
-                    final var pos = connSpec.get();
-                    final var conn = pos.getConnection();
-                    return conn.metadata(pos.getProperty()).getDimensions()
-                            .stream()
-                            .map(DimensionMetadata::getApiName)
-                            .toArray(String[]::new);
-                } catch (KNIMEException e) {
-                    LOGGER.error("Failed to retrieve Google Analytics 4 dimensions from Google Analytics API.", e);
-                }
+    @Override
+    public void init(final StateProviderInitializer initializer) {
+        initializer.computeAfterOpenDialog();
+    }
+
+    @Override
+    public List<String> choices(final DefaultNodeSettingsContext ctx) {
+        final var connSpec = GAQueryNodeModel.getGoogleAnalyticsConnectionPortObjectSpec(ctx.getPortObjectSpecs());
+        if (connSpec.isPresent()) {
+            try {
+                final var pos = connSpec.get();
+                final var conn = pos.getConnection();
+                return conn.metadata(pos.getProperty()).getDimensions().stream().map(DimensionMetadata::getApiName)
+                    .toList();
+            } catch (KNIMEException e) {
+                LOGGER.error("Failed to retrieve Google Analytics 4 dimensions from Google Analytics API.", e);
             }
-            return new String[0];
         }
+        return Collections.emptyList();
+    }
 }
