@@ -329,7 +329,7 @@
             "scope" : "#/properties/stringFilter/properties/value"
           } ],
           "addButtonText" : "Add filter criterion",
-          "arrayElementTitle" : "Filter criterion"
+          "arrayElementTitle" : "Criterion"
         }
       } ]
     }, {

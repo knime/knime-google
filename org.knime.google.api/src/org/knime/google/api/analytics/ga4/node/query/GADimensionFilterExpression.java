@@ -98,7 +98,7 @@ final class GADimensionFilterExpression implements DefaultNodeSettings {
     }
 
     @ValueReference(FiltersRef.class)
-    @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Filter criterion")
+    @ArrayWidget(addButtonText = "Add filter criterion", elementTitle = "Criterion")
     @Widget(title = "Dimension filter", description = """
             <p>
             Data can be filtered by comparing dimension values to strings or based on list inclusion.
