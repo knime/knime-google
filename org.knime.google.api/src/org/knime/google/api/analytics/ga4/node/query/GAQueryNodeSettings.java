@@ -100,7 +100,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             """)
     @ArrayWidget(addButtonText = "Add metric", showSortButtons = true) // TODO add validation constraints min = 1, max = MAX_NUM_METRICS
     @Layout(MetricsSection.class)
-    GAMetric[] m_gaMetrics;
+    GAMetric[] m_gaMetrics = new GAMetric[0];
 
     @Section(title = "Dimensions")
     @After(MetricsSection.class)
@@ -120,7 +120,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             """)
     @ArrayWidget(addButtonText = "Add dimension", showSortButtons = true) // TODO add validation constraints max = MAX_NUM_DIMENSIONS
     @Layout(DimensionsSection.class)
-    GADimension[] m_gaDimensions;
+    GADimension[] m_gaDimensions = new GADimension[0];
 
     /** Date ranges to make an API call with. */
     @Widget(title = "Date ranges", description = """
@@ -135,7 +135,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             """)
     @ArrayWidget(addButtonText = "Add date range") // TODO add validation constraints min = 1, max = MAX_NUM_DATE_RANGES
     @Layout(DimensionsSection.class)
-    GADateRange[] m_dateRanges;
+    GADateRange[] m_dateRanges = new GADateRange[]{GADateRange.lastWeek()};
 
     @Widget(title = "Include date range name column", description = """
             <p>
@@ -169,12 +169,10 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     @Layout(OutputSection.class)
     String m_currencyCode;
 
-    @Widget(title = "Keep empty rows",
-        description = """
-                If enabled, rows will also be returned if all their metrics are equal to 0.
-                Otherwise they are omitted from the result.
-                """,
-        advanced = true)
+    @Widget(title = "Keep empty rows", description = """
+            If enabled, rows will also be returned if all their metrics are equal to 0.
+            Otherwise they are omitted from the result.
+            """, advanced = true)
     @Layout(OutputSection.class)
     boolean m_keepEmptyRows;
 
@@ -203,9 +201,9 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
                 Available quotas can be seen in the """
             + " <a href=\"" + ExternalLinks.API_QUOTAS + "\">API documentation</a>.</p>"
             + """
-                <p><b>Note:</b> Retrieving a lot of data (many rows, many columns, or long date ranges) or specifying complex
-                filter criteria may be responsible for consumption of many tokens per node execution.</p>
-                """,
+                    <p><b>Note:</b> Retrieving a lot of data (many rows, many columns, or long date ranges) or specifying complex
+                    filter criteria may be responsible for consumption of many tokens per node execution.</p>
+                    """,
         advanced = true)
     @Layout(OutputSection.class)
     boolean m_returnPropertyQuota;
@@ -267,17 +265,6 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
         if (m_gaDimensionFilter != null) {
             m_gaDimensionFilter.validate();
         }
-    }
-
-    GAQueryNodeSettings() {
-        // for de-/serialization
-    }
-
-    GAQueryNodeSettings(@SuppressWarnings("unused") final DefaultNodeSettingsContext ctx) {// NOSONAR required by framework
-        m_gaMetrics = new GAMetric[0];
-        m_gaDimensions = new GADimension[0];
-        m_gaDimensionFilter = new GADimensionFilterExpression();
-        m_dateRanges = new GADateRange[]{GADateRange.lastWeek()};
     }
 
 }
