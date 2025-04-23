@@ -49,16 +49,22 @@
 package org.knime.google.api.nodes.authenticator;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.webui.node.dialog.configmapping.ConfigMigration;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migration;
+import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsMigration;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonChange;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.button.ButtonWidget;
@@ -117,9 +123,17 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     }
 
     enum AuthType {
-            @Label("Interactive")
-            INTERACTIVE, @Label("Service Account")
+            @Label("Interactive") //
+            INTERACTIVE, //
+            @Label("Service Account") //
             API_KEY;
+    }
+
+    enum ClientType {
+            @Label("Default") //
+            DEFAULT, //
+            @Label("Custom") //
+            CUSTOM;
     }
 
     interface AuthTypeRef extends Reference<AuthType> {
@@ -182,7 +196,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
             throws IOException, InvalidSettingsException {
 
             final GoogleClientSecrets clientSecrets;
-            if (settings.m_useCustomClientId) {
+            if (settings.m_clientType == ClientType.CUSTOM) {
                 try (final var pathAccessor =
                     new FSLocationPathAccessor(settings.m_customClientIdFile.getFSLocation())) {
                     clientSecrets = ClientSecrets.loadClientSecrets(pathAccessor.getRootPath(null));
@@ -220,23 +234,43 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
         }
     }
 
-    static final class UseCustomClientIdRef implements Reference<Boolean> {
+    static final class UseCustomClientIdRef implements Reference<ClientType> {
 
     }
 
-    @Widget(title = "Use custom client ID", description = "Enable the option to use custom client ID.", advanced = true)
+    @Widget(title = "Which client/app to use", //
+            description = "Choose whether to use the default client/app or specify a custom one.", advanced = true)
     @Layout(ClientIdSection.class)
     @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
+    @Migration(MigrationFromUseCustomClientId.class)
     @ValueReference(UseCustomClientIdRef.class)
-    boolean m_useCustomClientId;
+    @ValueSwitchWidget
+    ClientType m_clientType = ClientType.DEFAULT;
 
     static final class UseCustomClientId implements PredicateProvider {
 
         @Override
         public Predicate init(final PredicateInitializer i) {
-            return i.getBoolean(UseCustomClientIdRef.class).isTrue().and(i.getPredicate(AuthTypeIsInteractive.class));
+            return i.getEnum(UseCustomClientIdRef.class).isOneOf(ClientType.CUSTOM) //
+                    .and(i.getPredicate(AuthTypeIsInteractive.class));
         }
 
+    }
+
+    static final class MigrationFromUseCustomClientId implements NodeSettingsMigration<ClientType> {
+
+        private static final String CFG_USE_CUSTOM_CLIENT = "useCustomClientId";
+
+        private static ClientType loadFromSettings(final NodeSettingsRO settings) {
+            final var useCustomClient = settings.getBoolean(CFG_USE_CUSTOM_CLIENT, false);
+            return useCustomClient ? ClientType.CUSTOM : ClientType.DEFAULT;
+        }
+
+        @Override
+        public List<ConfigMigration<ClientType>> getConfigMigrations() {
+            return List.of(ConfigMigration.builder(MigrationFromUseCustomClientId::loadFromSettings) //
+                .withDeprecatedConfigPath(CFG_USE_CUSTOM_CLIENT).build());
+        }
     }
 
     @Widget(title = "ID file (JSON format)", //

@@ -30,7 +30,7 @@
         "standardScopes" : [ ],
         "customScopes" : [ ]
       },
-      "useCustomClientId" : false,
+      "clientType" : "DEFAULT",
       "customClientIdFile" : {
         "path" : {
           "fsCategory" : "LOCAL",
@@ -162,6 +162,18 @@
             "description" : "Authentication method to use.",
             "default" : "INTERACTIVE"
           },
+          "clientType" : {
+            "oneOf" : [ {
+              "const" : "DEFAULT",
+              "title" : "Default"
+            }, {
+              "const" : "CUSTOM",
+              "title" : "Custom"
+            } ],
+            "title" : "Which client/app to use",
+            "description" : "Choose whether to use the default client/app or specify a custom one.",
+            "default" : "DEFAULT"
+          },
           "customClientIdFile" : {
             "type" : "object",
             "properties" : {
@@ -247,12 +259,6 @@
               "standardScopes" : [ ],
               "customScopes" : [ ]
             }
-          },
-          "useCustomClientId" : {
-            "type" : "boolean",
-            "title" : "Use custom client ID",
-            "description" : "Enable the option to use custom client ID.",
-            "default" : false
           }
         }
       }
@@ -410,10 +416,10 @@
       },
       "elements" : [ {
         "type" : "Control",
-        "scope" : "#/properties/model/properties/useCustomClientId",
+        "scope" : "#/properties/model/properties/clientType",
         "options" : {
-          "format" : "checkbox",
-          "isAdvanced" : true
+          "isAdvanced" : true,
+          "format" : "valueSwitch"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -440,9 +446,11 @@
           "condition" : {
             "type" : "AND",
             "conditions" : [ {
-              "scope" : "#/properties/model/properties/useCustomClientId",
+              "scope" : "#/properties/model/properties/clientType",
               "schema" : {
-                "const" : true
+                "oneOf" : [ {
+                  "const" : "CUSTOM"
+                } ]
               }
             }, {
               "scope" : "#/properties/model/properties/authType",
@@ -495,10 +503,10 @@
           } ],
           "displayErrorMessage" : true,
           "showTitleAndDescription" : false,
-          "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/useCustomClientId", "#/properties/model/properties/customClientIdFile" ],
+          "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/clientType", "#/properties/model/properties/customClientIdFile" ],
           "updateOptions" : {
             "updateHandler" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$LoginUpdateHandler",
-            "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/useCustomClientId", "#/properties/model/properties/customClientIdFile" ]
+            "dependencies" : [ "#/properties/model/properties/authType", "#/properties/model/properties/apiKeySettings/properties/apiKeyFormat", "#/properties/model/properties/apiKeySettings/properties/jsonFile", "#/properties/model/properties/apiKeySettings/properties/serviceAccountEmail", "#/properties/model/properties/apiKeySettings/properties/p12File", "#/properties/model/properties/scopeSettings/properties/scopesSelectionMode", "#/properties/model/properties/scopeSettings/properties/standardScopes", "#/properties/model/properties/scopeSettings/properties/customScopes", "#/properties/model/properties/clientType", "#/properties/model/properties/customClientIdFile" ]
           }
         },
         "rule" : {
@@ -556,7 +564,11 @@
           "loginCredentialRef" : {
             "configPaths" : [ ]
           },
-          "useCustomClientId" : { },
+          "clientType" : {
+            "deprecatedConfigKeys" : [ {
+              "deprecated" : [ [ "useCustomClientId" ] ]
+            } ]
+          },
           "customClientIdFile" : {
             "type" : "object",
             "properties" : {
