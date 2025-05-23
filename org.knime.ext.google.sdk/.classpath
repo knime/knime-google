@@ -15,7 +15,7 @@
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/threeten-extra-1.7.2.jar" sourcepath="libs/threeten-extra-1.7.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/api-common-2.16.0.jar" sourcepath="libs/api-common-2.16.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/auto-value-annotations-1.10.1.jar" sourcepath="libs/auto-value-annotations-1.10.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/auto-value-annotations-1.11.0.jar" sourcepath="libs/auto-value-annotations-1.11.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gapic-google-cloud-storage-v2-2.27.0-alpha.jar" sourcepath="libs/gapic-google-cloud-storage-v2-2.27.0-alpha-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gax-2.33.0.jar" sourcepath="libs/gax-2.33.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gax-grpc-2.33.0.jar" sourcepath="libs/gax-grpc-2.33.0-sources.jar"/>
@@ -27,8 +27,8 @@
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-drive-v3-rev20230212-2.0.0.jar" sourcepath="libs/google-api-services-drive-v3-rev20230212-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-sheets-v4-rev20221216-2.0.0.jar" sourcepath="libs/google-api-services-sheets-v4-rev20221216-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-storage-v1-rev20230907-2.0.0.jar" sourcepath="libs/google-api-services-storage-v1-rev20230907-2.0.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-credentials-1.19.0.jar" sourcepath="libs/google-auth-library-credentials-1.19.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-oauth2-http-1.19.0.jar" sourcepath="libs/google-auth-library-oauth2-http-1.19.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-credentials-1.35.0.jar" sourcepath="libs/google-auth-library-credentials-1.35.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-oauth2-http-1.35.0.jar" sourcepath="libs/google-auth-library-oauth2-http-1.35.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-2.23.0.jar" sourcepath="libs/google-cloud-core-2.23.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-grpc-2.23.0.jar" sourcepath="libs/google-cloud-core-grpc-2.23.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-http-2.23.0.jar" sourcepath="libs/google-cloud-core-http-2.23.0-sources.jar"/>
@@ -50,7 +50,7 @@
 	<classpathentry exported="true" kind="lib" path="libs/grpc-protobuf-1.56.1.jar" sourcepath="libs/grpc-protobuf-1.56.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/grpc-protobuf-lite-1.56.1.jar" sourcepath="libs/grpc-protobuf-lite-1.56.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/grpc-stub-1.56.1.jar" sourcepath="libs/grpc-stub-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/gson-2.10.1.jar" sourcepath="libs/gson-2.10.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gson-2.12.1.jar" sourcepath="libs/gson-2.12.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/j2objc-annotations-2.8.jar" sourcepath="libs/j2objc-annotations-2.8-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/opencensus-api-0.31.1.jar" sourcepath="libs/opencensus-api-0.31.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/opencensus-contrib-http-util-0.31.1.jar" sourcepath="libs/opencensus-contrib-http-util-0.31.1-sources.jar"/>
