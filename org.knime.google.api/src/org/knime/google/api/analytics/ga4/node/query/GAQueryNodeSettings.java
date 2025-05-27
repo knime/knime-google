@@ -181,7 +181,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             </p>
             """, advanced = true)
     @Layout(OutputSection.class)
-    @TextInputWidget(validation = CurrencyCodePatternValidation.class)
+    @TextInputWidget(patternValidation = CurrencyCodePatternValidation.class)
     String m_currencyCode;
 
     @Widget(title = "Keep empty rows", description = """

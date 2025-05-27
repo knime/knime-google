@@ -109,7 +109,7 @@ final class GADateRange implements DefaultNodeSettings {
                     <b>Note:</b> The custom name must not start with "date_range_" or "RESERVED_".
                     """)
     @Layout(DateRangeLayout.class)
-    @TextInputWidget(validation = RangeNamePatternValidation.class)
+    @TextInputWidget(patternValidation = RangeNamePatternValidation.class)
     String m_rangeName;
 
     private GADateRange() {
