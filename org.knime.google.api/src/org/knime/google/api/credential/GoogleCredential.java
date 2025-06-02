@@ -191,8 +191,10 @@ public class GoogleCredential
         try {
             if (m_credentials instanceof ServiceAccountCredentials) {
                 sections.addAll(describeServiceCredentials());
-            } else {
+            } else if (m_credentials instanceof UserCredentials) {
                 sections.addAll(describeUserCredentials());
+            } else {
+                sections.addAll(describeCredentials());
             }
         } catch (IOException ex) {// NOSONAR error message is attached to description
             sections.add(new Section("Error", new String[][]{{"message", ex.getMessage()}}));
@@ -224,6 +226,16 @@ public class GoogleCredential
                 {"Expires after", getFormattedExpiresAfter()},//
                 {"Client ID", credentials.getClientId()},//
                 { "Is refreshable", Boolean.toString(credentials.getRefreshToken() != null)}, //
+        }));
+    }
+
+    private List<Section> describeCredentials() throws IOException {
+        return List.of(new Section("Google Credentials",
+            new String[][]{//
+                { "Property", "Value" },//
+                {"Token", obfuscate(getAccessTokenValue())},//
+                {"Token type", getTokenType() }, //
+                {"Expires after", getFormattedExpiresAfter()},//
         }));
     }
 
