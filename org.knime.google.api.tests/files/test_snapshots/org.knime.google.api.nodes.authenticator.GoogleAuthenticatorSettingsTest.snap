@@ -358,9 +358,9 @@
             "type" : "Control",
             "scope" : "#/properties/scopeId",
             "options" : {
-              "choicesProvider" : "org.knime.google.api.nodes.authenticator.ScopeSettings$StandardScope$ScopeChoicesUpdateHandler",
               "format" : "dropDown"
-            }
+            },
+            "providedOptions" : [ "possibleValues" ]
           } ],
           "addButtonText" : "Add scope"
         },
@@ -581,21 +581,14 @@
   },
   "globalUpdates" : [ {
     "trigger" : {
-      "id" : "after-open-dialog",
-      "triggerInitially" : true
+      "id" : "after-open-dialog"
     },
-    "dependencies" : [ {
-      "scopes" : [ "#/properties/model/properties/authType" ],
-      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef"
-    } ]
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/authType" ]
   }, {
     "trigger" : {
-      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef",
-      "scopes" : [ "#/properties/model/properties/authType" ]
+      "scope" : "#/properties/model/properties/authType"
     },
-    "dependencies" : [ {
-      "scopes" : [ "#/properties/model/properties/authType" ],
-      "id" : "org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings$AuthTypeRef"
-    } ]
+    "dependencies" : [ "#/properties/model/properties/authType" ]
   } ]
 }

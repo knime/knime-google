@@ -220,9 +220,9 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.MetricsChoicesProvider",
               "format" : "dropDown"
-            }
+            },
+            "providedOptions" : [ "possibleValues" ]
           } ],
           "addButtonText" : "Add metric",
           "showSortButtons" : true
@@ -239,9 +239,9 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
               "format" : "dropDown"
-            }
+            },
+            "providedOptions" : [ "possibleValues" ]
           } ],
           "addButtonText" : "Add dimension",
           "showSortButtons" : true
@@ -268,13 +268,14 @@
               "type" : "Control",
               "scope" : "#/properties/rangeName",
               "options" : {
-                "validations" : [ {
-                  "id" : "pattern",
-                  "parameters" : {
-                    "pattern" : "(?!date_range_|RESERVED_).*"
-                  },
-                  "errorMessage" : "The name must not start with \"date_range_\" or \"RESERVED_\""
-                } ]
+                "validation" : {
+                  "pattern" : {
+                    "parameters" : {
+                      "pattern" : "(?!date_range_|RESERVED_).*"
+                    },
+                    "errorMessage" : "The name must not start with \"date_range_\" or \"RESERVED_\""
+                  }
+                }
               }
             } ]
           } ],
@@ -314,9 +315,9 @@
             "type" : "Control",
             "scope" : "#/properties/name",
             "options" : {
-              "choicesProvider" : "org.knime.google.api.analytics.ga4.node.query.DimensionChoicesProvider",
               "format" : "dropDown"
-            }
+            },
+            "providedOptions" : [ "possibleValues" ]
           }, {
             "type" : "Control",
             "scope" : "#/properties/isNegated",
@@ -351,14 +352,15 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/currencyCode",
         "options" : {
-          "isAdvanced" : true,
-          "validations" : [ {
-            "id" : "pattern",
-            "parameters" : {
-              "pattern" : "$|[a-zA-Z]{3}"
-            },
-            "errorMessage" : "The string must be empty or in the three letter ISO-4217 format."
-          } ]
+          "validation" : {
+            "pattern" : {
+              "parameters" : {
+                "pattern" : "$|[a-zA-Z]{3}"
+              },
+              "errorMessage" : "The string must be empty or in the three letter ISO-4217 format."
+            }
+          },
+          "isAdvanced" : true
         }
       }, {
         "type" : "Control",
@@ -442,9 +444,9 @@
   },
   "globalUpdates" : [ {
     "trigger" : {
-      "id" : "after-open-dialog",
-      "triggerInitially" : true
+      "id" : "after-open-dialog"
     },
+    "triggerInitially" : true,
     "dependencies" : [ ]
   } ]
 }

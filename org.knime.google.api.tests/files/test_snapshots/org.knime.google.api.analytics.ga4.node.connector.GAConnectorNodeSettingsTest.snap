@@ -52,57 +52,60 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsAccountId",
       "options" : {
-        "choicesProvider" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountsProvider",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/analyticsPropertyId",
       "options" : {
-        "choicesProvider" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountUpdateHandler",
         "format" : "dropDown"
-      }
+      },
+      "providedOptions" : [ "possibleValues" ]
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/connTimeoutSec",
       "options" : {
-        "isAdvanced" : true,
-        "validations" : [ {
-          "errorMessage" : "The value must be at least 1.",
-          "id" : "min",
-          "parameters" : {
-            "min" : 1.0,
-            "isExclusive" : false
+        "validation" : {
+          "min" : {
+            "errorMessage" : "The value must be at least 1.",
+            "parameters" : {
+              "min" : 1.0,
+              "isExclusive" : false
+            }
           }
-        } ]
+        },
+        "isAdvanced" : true
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/readTimeoutSec",
       "options" : {
-        "isAdvanced" : true,
-        "validations" : [ {
-          "errorMessage" : "The value must be at least 1.",
-          "id" : "min",
-          "parameters" : {
-            "min" : 1.0,
-            "isExclusive" : false
+        "validation" : {
+          "min" : {
+            "errorMessage" : "The value must be at least 1.",
+            "parameters" : {
+              "min" : 1.0,
+              "isExclusive" : false
+            }
           }
-        } ]
+        },
+        "isAdvanced" : true
       }
     }, {
       "type" : "Control",
       "scope" : "#/properties/model/properties/retryMaxElapsedTimeSec",
       "options" : {
-        "isAdvanced" : true,
-        "validations" : [ {
-          "errorMessage" : "The value must be at least 1.",
-          "id" : "min",
-          "parameters" : {
-            "min" : 1.0,
-            "isExclusive" : false
+        "validation" : {
+          "min" : {
+            "errorMessage" : "The value must be at least 1.",
+            "parameters" : {
+              "min" : 1.0,
+              "isExclusive" : false
+            }
           }
-        } ]
+        },
+        "isAdvanced" : true
       }
     } ]
   },
@@ -133,21 +136,14 @@
   },
   "globalUpdates" : [ {
     "trigger" : {
-      "id" : "after-open-dialog",
-      "triggerInitially" : true
+      "id" : "after-open-dialog"
     },
-    "dependencies" : [ {
-      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ],
-      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef"
-    } ]
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ]
   }, {
     "trigger" : {
-      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef",
-      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ]
+      "scope" : "#/properties/model/properties/analyticsAccountId"
     },
-    "dependencies" : [ {
-      "scopes" : [ "#/properties/model/properties/analyticsAccountId" ],
-      "id" : "org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings$AnalyticsAccountIdRef"
-    } ]
+    "dependencies" : [ "#/properties/model/properties/analyticsAccountId" ]
   } ]
 }
