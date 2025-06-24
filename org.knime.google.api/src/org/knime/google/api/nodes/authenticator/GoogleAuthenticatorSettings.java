@@ -63,6 +63,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migration;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsMigration;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -110,7 +111,8 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
     interface ScopesSection {
     }
 
-    @Section(title = "Client/App configuration", advanced = true)
+    @Section(title = "Client/App configuration")
+    @Advanced
     @After(ScopesSection.class)
     @Effect(predicate = AuthTypeIsInteractive.class, type = EffectType.SHOW)
     interface ClientIdSection {

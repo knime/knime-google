@@ -59,6 +59,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.After;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -157,7 +158,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     @Migrate(loadDefaultIfAbsent = true) // optional since unavailable in 4.7
     GADimensionFilterExpression m_gaDimensionFilter = new GADimensionFilterExpression();
 
-    @Section(title = "Output", advanced = true)
+    @Section(title = "Output")
+    @Advanced
     @After(DimensionsSection.class)
     interface OutputSection {
     }
