@@ -1,65 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="libs/auto-value-1.10.1.jar" sourcepath="libs/auto-value-1.10.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/flatbuffers-java-1.12.0.jar" sourcepath="libs/flatbuffers-java-1.12.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-api-services-bigquery-v2-rev20230520-2.0.0.jar" sourcepath="libs/google-api-services-bigquery-v2-rev20230520-2.0.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquery-2.27.0.jar" sourcepath="libs/google-cloud-bigquery-2.27.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquerystorage-2.37.2.jar" sourcepath="libs/google-cloud-bigquerystorage-2.37.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-core-1.56.1.jar" sourcepath="libs/grpc-core-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>	
-	<classpathentry exported="true" kind="lib" path="libs/json-20230227.jar" sourcepath="libs/json-20230227-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1-2.37.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1-2.37.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta1-0.161.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta2-0.161.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/threeten-extra-1.7.2.jar" sourcepath="libs/threeten-extra-1.7.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/api-common-2.16.0.jar" sourcepath="libs/api-common-2.16.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/animal-sniffer-annotations-1.24.jar" sourcepath="libs/animal-sniffer-annotations-1.24-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/api-common-2.50.2.jar" sourcepath="libs/api-common-2.50.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/auto-value-1.11.0.jar" sourcepath="libs/auto-value-1.11.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/auto-value-annotations-1.11.0.jar" sourcepath="libs/auto-value-annotations-1.11.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/gapic-google-cloud-storage-v2-2.27.0-alpha.jar" sourcepath="libs/gapic-google-cloud-storage-v2-2.27.0-alpha-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/gax-2.33.0.jar" sourcepath="libs/gax-2.33.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/gax-grpc-2.33.0.jar" sourcepath="libs/gax-grpc-2.33.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/gax-httpjson-2.33.0.jar" sourcepath="libs/gax-httpjson-2.33.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/eclipse-collections-11.1.0.jar" sourcepath="libs/eclipse-collections-11.1.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/eclipse-collections-api-11.1.0.jar" sourcepath="libs/eclipse-collections-api-11.1.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/exporter-metrics-0.33.0.jar" sourcepath="libs/exporter-metrics-0.33.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/fetch_jars" sourcepath="libs/flatbuffers-java-23.5.26.jar flatbuffers-java-23.5.26-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gapic-google-cloud-storage-v2-2.53.1.jar" sourcepath="libs/gapic-google-cloud-storage-v2-2.53.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gax-2.67.2.jar" sourcepath="libs/gax-2.67.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gax-grpc-2.67.2.jar" sourcepath="libs/gax-grpc-2.67.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/gax-httpjson-2.67.2.jar" sourcepath="libs/gax-httpjson-2.67.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-client-2.2.0.jar" sourcepath="libs/google-api-client-2.2.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-services-analytics-v3-rev20190807-2.0.0.jar" sourcepath="libs/google-api-services-analytics-v3-rev20190807-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-analyticsadmin-v1beta-rev20230214-2.0.0.jar" sourcepath="libs/google-api-services-analyticsadmin-v1beta-rev20230214-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-analyticsdata-v1beta-rev20230214-2.0.0.jar" sourcepath="libs/google-api-services-analyticsdata-v1beta-rev20230214-2.0.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-api-services-analytics-v3-rev20190807-2.0.0.jar" sourcepath="libs/google-api-services-analytics-v3-rev20190807-2.0.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-services-bigquery-v2-rev20250511-2.0.0.jar" sourcepath="libs/google-api-services-bigquery-v2-rev20250511-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-drive-v3-rev20230212-2.0.0.jar" sourcepath="libs/google-api-services-drive-v3-rev20230212-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-services-sheets-v4-rev20221216-2.0.0.jar" sourcepath="libs/google-api-services-sheets-v4-rev20221216-2.0.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-api-services-storage-v1-rev20230907-2.0.0.jar" sourcepath="libs/google-api-services-storage-v1-rev20230907-2.0.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-api-services-storage-v1-rev20250605-2.0.0.jar" sourcepath="libs/google-api-services-storage-v1-rev20250605-2.0.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-credentials-1.35.0.jar" sourcepath="libs/google-auth-library-credentials-1.35.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-auth-library-oauth2-http-1.35.0.jar" sourcepath="libs/google-auth-library-oauth2-http-1.35.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-2.23.0.jar" sourcepath="libs/google-cloud-core-2.23.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-grpc-2.23.0.jar" sourcepath="libs/google-cloud-core-grpc-2.23.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-http-2.23.0.jar" sourcepath="libs/google-cloud-core-http-2.23.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-cloud-storage-2.27.0.jar" sourcepath="libs/google-cloud-storage-2.27.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquery-2.51.0.jar" sourcepath="libs/google-cloud-bigquery-2.51.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-bigquerystorage-3.15.0.jar" sourcepath="libs/google-cloud-bigquerystorage-3.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-2.57.2.jar" sourcepath="libs/google-cloud-core-2.57.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-grpc-2.57.2.jar" sourcepath="libs/google-cloud-core-grpc-2.57.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-core-http-2.57.2.jar" sourcepath="libs/google-cloud-core-http-2.57.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-monitoring-3.52.0.jar" sourcepath="libs/google-cloud-monitoring-3.52.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-cloud-storage-2.53.1.jar" sourcepath="libs/google-cloud-storage-2.53.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-http-client-1.42.3.jar" sourcepath="libs/google-http-client-1.42.3-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-http-client-apache-v2-1.42.3.jar" sourcepath="libs/google-http-client-apache-v2-1.42.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-http-client-appengine-1.43.3.jar" sourcepath="libs/google-http-client-appengine-1.43.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-http-client-appengine-1.47.0.jar" sourcepath="libs/google-http-client-appengine-1.47.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-http-client-gson-1.42.3.jar" sourcepath="libs/google-http-client-gson-1.42.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/google-http-client-jackson2-1.43.3.jar" sourcepath="libs/google-http-client-jackson2-1.43.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/google-http-client-jackson2-1.47.0.jar" sourcepath="libs/google-http-client-jackson2-1.47.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-1.34.1.jar" sourcepath="libs/google-oauth-client-1.34.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-java6-1.34.1.jar" sourcepath="libs/google-oauth-client-java6-1.34.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-oauth-client-jetty-1.34.1.jar" sourcepath="libs/google-oauth-client-jetty-1.34.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-alts-1.56.1.jar" sourcepath="libs/grpc-alts-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-api-1.56.1.jar" sourcepath="libs/grpc-api-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-auth-1.56.1.jar" sourcepath="libs/grpc-auth-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-context-1.56.1.jar" sourcepath="libs/grpc-context-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-storage-v2-2.27.0-alpha.jar" sourcepath="libs/grpc-google-cloud-storage-v2-2.27.0-alpha-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-grpclb-1.56.1.jar" sourcepath="libs/grpc-grpclb-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-protobuf-1.56.1.jar" sourcepath="libs/grpc-protobuf-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-protobuf-lite-1.56.1.jar" sourcepath="libs/grpc-protobuf-lite-1.56.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/grpc-stub-1.56.1.jar" sourcepath="libs/grpc-stub-1.56.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-alts-1.71.0.jar" sourcepath="libs/grpc-alts-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-api-1.71.0.jar" sourcepath="libs/grpc-api-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-auth-1.71.0.jar" sourcepath="libs/grpc-auth-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-context-1.71.0.jar" sourcepath="libs/grpc-context-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-core-1.71.0.jar" sourcepath="libs/grpc-core-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1-3.15.0.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1-3.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.187.0.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta1-0.187.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.187.0.jar" sourcepath="libs/grpc-google-cloud-bigquerystorage-v1beta2-0.187.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-google-cloud-storage-v2-2.53.1.jar" sourcepath="libs/grpc-google-cloud-storage-v2-2.53.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-grpclb-1.71.0.jar" sourcepath="libs/grpc-grpclb-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-inprocess-1.71.0.jar" sourcepath="libs/grpc-inprocess-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-opentelemetry-1.71.0.jar" sourcepath="libs/grpc-opentelemetry-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-protobuf-1.71.0.jar" sourcepath="libs/grpc-protobuf-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-stub-1.71.0.jar" sourcepath="libs/grpc-stub-1.71.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/grpc-util-1.71.0.jar" sourcepath="libs/grpc-util-1.71.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gson-2.12.1.jar" sourcepath="libs/gson-2.12.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/j2objc-annotations-2.8.jar" sourcepath="libs/j2objc-annotations-2.8-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/j2objc-annotations-3.0.0.jar" sourcepath="libs/j2objc-annotations-3.0.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/json-20250107.jar" sourcepath="libs/json-20250107-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/opencensus-api-0.31.1.jar" sourcepath="libs/opencensus-api-0.31.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/opencensus-contrib-http-util-0.31.1.jar" sourcepath="libs/opencensus-contrib-http-util-0.31.1-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-3.23.2.jar" sourcepath="libs/protobuf-java-3.23.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-util-3.23.2.jar" sourcepath="libs/protobuf-java-util-3.23.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-storage-v2-2.27.0-alpha.jar" sourcepath="libs/proto-google-cloud-storage-v2-2.27.0-alpha-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-common-protos-2.24.0.jar" sourcepath="libs/proto-google-common-protos-2.24.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/proto-google-iam-v1-1.19.0.jar" sourcepath="libs/proto-google-iam-v1-1.19.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/threetenbp-1.6.8.jar" sourcepath="libs/threetenbp-1.6.8-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-api-1.47.0.jar" sourcepath="libs/opentelemetry-api-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-context-1.47.0.jar" sourcepath="libs/opentelemetry-context-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-gcp-resources-1.37.0-alpha.jar" sourcepath="libs/opentelemetry-gcp-resources-1.37.0-alpha-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-common-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-common-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-extension-autoconfigure-spi-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-extension-autoconfigure-spi-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-logs-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-logs-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-metrics-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-metrics-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-sdk-trace-1.47.0.jar" sourcepath="libs/opentelemetry-sdk-trace-1.47.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opentelemetry-semconv-1.29.0-alpha.jar" sourcepath="libs/opentelemetry-semconv-1.29.0-alpha-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1-3.15.0.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1-3.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1alpha-3.15.0.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1alpha-3.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta-3.15.0.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta-3.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta1-0.187.0.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta1-0.187.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-bigquerystorage-v1beta2-0.187.0.jar" sourcepath="libs/proto-google-cloud-bigquerystorage-v1beta2-0.187.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-monitoring-v3-3.52.0.jar" sourcepath="libs/proto-google-cloud-monitoring-v3-3.52.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-storage-v2-2.53.1.jar" sourcepath="libs/proto-google-cloud-storage-v2-2.53.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-common-protos-2.58.2.jar" sourcepath="libs/proto-google-common-protos-2.58.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/proto-google-iam-v1-1.53.2.jar" sourcepath="libs/proto-google-iam-v1-1.53.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-3.25.8.jar" sourcepath="libs/protobuf-java-3.25.8-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-util-3.25.8.jar" sourcepath="libs/protobuf-java-util-3.25.8-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/threeten-extra-1.8.0.jar" sourcepath="libs/threeten-extra-1.8.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/threetenbp-1.7.0.jar" sourcepath="libs/threetenbp-1.7.0-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17">
 		<attributes>
 			<attribute name="module" value="true"/>
