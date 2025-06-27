@@ -66,6 +66,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettin
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
@@ -127,7 +128,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> and define what the resulting access token can be used for.
             """)
-    @ArrayWidget(addButtonText = "Add scope")
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsStandard.class, type = EffectType.SHOW)
     @Persistor(StandardScope.ScopeArrayPersistor.class)
     @Migrate(loadDefaultIfAbsent = true)
@@ -198,7 +199,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             <a href="https://developers.google.com/identity/protocols/oauth2/scopes">
             permissions</a> and define what the resulting access token can be used for.
             """)
-    @ArrayWidget(addButtonText = "Add scope")
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add scope")
     @Effect(predicate = ScopesSelectionModeIsCustom.class, type = EffectType.SHOW)
     @Persistor(CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];

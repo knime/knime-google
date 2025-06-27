@@ -224,6 +224,7 @@
             },
             "providedOptions" : [ "possibleValues" ]
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add metric",
           "showSortButtons" : true
         }
@@ -243,6 +244,7 @@
             },
             "providedOptions" : [ "possibleValues" ]
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add dimension",
           "showSortButtons" : true
         }
@@ -279,6 +281,7 @@
               }
             } ]
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add date range"
         }
       }, {

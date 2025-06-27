@@ -362,6 +362,7 @@
             },
             "providedOptions" : [ "possibleValues" ]
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add scope"
         },
         "rule" : {
@@ -383,6 +384,7 @@
             "type" : "Control",
             "scope" : "#/properties/scope"
           } ],
+          "elementLayout": "HORIZONTAL_SINGLE_LINE",
           "addButtonText" : "Add scope"
         },
         "rule" : {
