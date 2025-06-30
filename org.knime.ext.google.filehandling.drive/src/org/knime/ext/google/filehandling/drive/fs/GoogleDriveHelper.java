@@ -430,9 +430,8 @@ public class GoogleDriveHelper {
     private static void addDriveIdToQuery(final Files.List query, final String driveId) {
         query.setDriveId(driveId);
         query.setIncludeItemsFromAllDrives(true);
-        query.setCorpora("allDrives");
+        query.setCorpora("drive");
         query.setSupportsAllDrives(true);
-        
     }
 
     /**
