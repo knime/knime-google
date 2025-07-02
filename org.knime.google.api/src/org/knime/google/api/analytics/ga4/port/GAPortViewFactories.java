@@ -89,7 +89,8 @@ public final class GAPortViewFactories {
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(() -> createHtmlContent(portObject.getSpec()), "index.html").build();
+                return Page.create().fromString(() -> createHtmlContent(portObject.getSpec()))
+                    .relativePath("index.html");
             }
 
             @SuppressWarnings("unchecked")
@@ -112,7 +113,7 @@ public final class GAPortViewFactories {
         return new PortView() {
             @Override
             public Page getPage() {
-                return Page.builder(() -> createHtmlContent(pos), "index.html").build();
+                return Page.create().fromString(() -> createHtmlContent(pos)).relativePath("index.html");
             }
 
             @SuppressWarnings("unchecked")
