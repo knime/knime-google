@@ -287,6 +287,7 @@ public class GoogleAuthenticatorSettings implements DefaultNodeSettings {
      *
      * @throws InvalidSettingsException
      */
+    @Override
     public void validate() throws InvalidSettingsException {
         if (m_authType == AuthType.API_KEY) {
             m_apiKeySettings.validate();

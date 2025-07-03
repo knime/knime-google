@@ -54,8 +54,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 
 /**
@@ -89,7 +89,8 @@ final class GADimension implements DefaultNodeSettings {
         m_name = Objects.requireNonNull(name);
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Dimension name cannot be blank.");
     }
 }

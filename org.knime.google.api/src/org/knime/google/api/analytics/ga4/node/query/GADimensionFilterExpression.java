@@ -128,7 +128,8 @@ final class GADimensionFilterExpression implements DefaultNodeSettings {
         return filters;
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         if (m_filters != null) {
             for (final var filter: m_filters) {
                 filter.validate();

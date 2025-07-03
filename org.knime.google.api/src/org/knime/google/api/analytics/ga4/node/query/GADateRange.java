@@ -135,7 +135,8 @@ final class GADateRange implements DefaultNodeSettings {
      *
      * @throws InvalidSettingsException if the date range is invalid
      */
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         CheckUtils.checkSetting(m_fromDate != null, "\"From date\" must not be empty.");
         CheckUtils.checkSetting(m_toDate != null, "\"To date\" must not be empty.");
         CheckUtils.checkSetting(!m_toDate.isBefore(m_fromDate),

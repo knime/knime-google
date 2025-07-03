@@ -60,9 +60,9 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
 
 /**
  * A Google Analytics dimension filter criterion.
@@ -102,7 +102,8 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
         m_isNegated = isNegated;
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         checkUnionValid(InvalidSettingsException::new);
         m_stringFilter.validate();
         CheckUtils.checkSettingNotNull(m_caseSensitivity, "Case sensitivity is missing.");

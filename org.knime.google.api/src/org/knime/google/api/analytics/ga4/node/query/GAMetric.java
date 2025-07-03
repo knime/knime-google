@@ -85,7 +85,8 @@ final class GAMetric implements DefaultNodeSettings {
         m_name = name;
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         CheckUtils.checkSetting(StringUtils.isNotBlank(m_name), "Metric name cannot be blank.");
     }
 }

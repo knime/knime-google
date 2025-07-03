@@ -115,6 +115,7 @@ class APIKeySettings implements DefaultNodeSettings {
      * @throws InvalidSettingsException
      *             when one of the settings was invalid.
      */
+    @Override
     public void validate() throws InvalidSettingsException {
         if (m_apiKeyFormat == APIKeyType.P12) {
             if (StringUtils.isEmpty(m_serviceAccountEmail)) {
