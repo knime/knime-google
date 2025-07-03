@@ -124,7 +124,8 @@ final class GAStringFilter implements DefaultNodeSettings {
         m_value = Objects.requireNonNull(value);
     }
 
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         CheckUtils.checkSettingNotNull(m_matchType, "Match type is missing.");
         CheckUtils.checkSetting(StringUtils.isNotBlank(m_value), "Value is missing.");
     }

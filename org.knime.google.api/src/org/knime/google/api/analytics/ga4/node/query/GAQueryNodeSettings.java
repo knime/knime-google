@@ -231,7 +231,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
     /**
      * Validates the current state of the settings instance. Intended to be called from the model.
      */
-    void validate() throws InvalidSettingsException {
+    @Override
+    public void validate() throws InvalidSettingsException {
         // validate metrics
         CheckUtils.checkSetting(ArrayUtils.isNotEmpty(m_gaMetrics),
             "The Google Analytics query needs at least one metric.");

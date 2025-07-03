@@ -51,8 +51,8 @@ package org.knime.google.api.nodes.authenticator;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.setting.fileselection.FileSelection;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
@@ -115,6 +115,7 @@ class APIKeySettings implements DefaultNodeSettings {
      * @throws InvalidSettingsException
      *             when one of the settings was invalid.
      */
+    @Override
     public void validate() throws InvalidSettingsException {
         if (m_apiKeyFormat == APIKeyType.P12) {
             if (StringUtils.isEmpty(m_serviceAccountEmail)) {
