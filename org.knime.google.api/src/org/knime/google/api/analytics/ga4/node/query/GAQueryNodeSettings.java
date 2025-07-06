@@ -61,6 +61,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.layout.Section;
 import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Advanced;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
@@ -101,7 +102,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             ">list of metrics</a> under the column &quot;API Name&quot;.
             </p>
             """)
-    @ArrayWidget(addButtonText = "Add metric", showSortButtons = true) // TODO add validation constraints min = 1, max = MAX_NUM_METRICS
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add metric",
+        showSortButtons = true) // TODO add validation constraints min = 1, max = MAX_NUM_METRICS
     @Layout(MetricsSection.class)
     GAMetric[] m_gaMetrics = new GAMetric[0];
 
@@ -121,7 +123,8 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             ">list of dimensions</a> under the column &quot;API Name&quot;.
             </p>
             """)
-    @ArrayWidget(addButtonText = "Add dimension", showSortButtons = true) // TODO add validation constraints max = MAX_NUM_DIMENSIONS
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add dimension",
+        showSortButtons = true) // TODO add validation constraints max = MAX_NUM_DIMENSIONS
     @Layout(DimensionsSection.class)
     GADimension[] m_gaDimensions = new GADimension[0];
 
@@ -136,7 +139,7 @@ final class GAQueryNodeSettings implements DefaultNodeSettings {
             Google Analytics.
             </p>
             """)
-    @ArrayWidget(addButtonText = "Add date range") // TODO add validation constraints min = 1, max = MAX_NUM_DATE_RANGES
+    @ArrayWidget(elementLayout = ElementLayout.HORIZONTAL_SINGLE_LINE, addButtonText = "Add date range") // TODO add validation constraints min = 1, max = MAX_NUM_DATE_RANGES
     @Layout(DimensionsSection.class)
     GADateRange[] m_dateRanges = new GADateRange[]{GADateRange.lastWeek()};
 
