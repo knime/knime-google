@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Google Java libraries
 Bundle-SymbolicName: org.knime.ext.google.sdk;singleton:=true
-Bundle-Version: 5.5.0.qualifier
+Bundle-Version: 5.6.0.qualifier
 Require-Bundle: org.apache.httpcomponents.httpclient;bundle-version="[4.5.13,5.0.0)",
  org.apache.httpcomponents.httpcore;bundle-version="[4.4.16,5.0.0)",
  com.google.flatbuffers.java;bundle-version="[24.3.25,24.3.25]",
