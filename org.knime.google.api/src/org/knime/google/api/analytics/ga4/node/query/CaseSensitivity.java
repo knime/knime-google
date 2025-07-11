@@ -48,7 +48,7 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.node.parameters.widget.singleselection.Label;
 
 /**
  * Case sensitivity for string-based filters.

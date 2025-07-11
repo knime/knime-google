@@ -53,16 +53,16 @@ import java.util.function.Function;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.widget.Widget;
+import org.knime.node.parameters.widget.array.ArrayWidget;
+import org.knime.node.parameters.widget.singleselection.ValueSwitchWidget;
+import org.knime.node.parameters.widget.updates.Effect;
+import org.knime.node.parameters.widget.updates.Predicate;
+import org.knime.node.parameters.widget.updates.PredicateProvider;
+import org.knime.node.parameters.widget.updates.Reference;
+import org.knime.node.parameters.widget.updates.ValueReference;
+import org.knime.node.parameters.widget.updates.Effect.EffectType;
 
 /**
  * An expression for combining dimension filter critera.
@@ -70,7 +70,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueRefere
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction") // webui* classes
-final class GADimensionFilterExpression implements DefaultNodeSettings {
+final class GADimensionFilterExpression implements NodeParameters {
 
     @Widget(title = "Filter if matched by",
             description = """

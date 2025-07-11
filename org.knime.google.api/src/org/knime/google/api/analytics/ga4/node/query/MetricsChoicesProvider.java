@@ -53,8 +53,8 @@ import java.util.List;
 
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
+import org.knime.node.parameters.NodeParametersInput;
+import org.knime.node.parameters.widget.choices.StringChoicesProvider;
 
 import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;
 
@@ -74,7 +74,7 @@ final class MetricsChoicesProvider implements StringChoicesProvider {
     }
 
     @Override
-    public List<String> choices(final DefaultNodeSettingsContext ctx) {
+    public List<String> choices(final NodeParametersInput ctx) {
         final var connSpec = GAQueryNodeModel.getGoogleAnalyticsConnectionPortObjectSpec(ctx.getPortObjectSpecs());
         if (connSpec.isPresent()) {
             try {

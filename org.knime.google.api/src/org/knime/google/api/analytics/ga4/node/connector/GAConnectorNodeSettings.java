@@ -58,22 +58,23 @@ import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.NumberInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoice;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
 import org.knime.core.webui.node.dialog.defaultdialog.widget.handler.WidgetHandlerException;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
 import org.knime.google.api.analytics.ga4.node.GAProperty;
 import org.knime.google.api.analytics.ga4.port.GAConnection;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.NodeParametersInput;
+import org.knime.node.parameters.persistence.NodeSettingsPersistor;
+import org.knime.node.parameters.persistence.Persistor;
+import org.knime.node.parameters.widget.Widget;
+import org.knime.node.parameters.widget.choices.ChoicesProvider;
+import org.knime.node.parameters.widget.choices.StringChoice;
+import org.knime.node.parameters.widget.choices.StringChoicesProvider;
+import org.knime.node.parameters.widget.number.NumberInputWidget;
+import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinValidation.IsPositiveIntegerValidation;
+import org.knime.node.parameters.widget.updates.Reference;
+import org.knime.node.parameters.widget.updates.ValueReference;
 
 /**
  * Settings for the Google Analytics 4 Connector node.
@@ -81,7 +82,7 @@ import org.knime.google.api.analytics.ga4.port.GAConnection;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("restriction")
-final class GAConnectorNodeSettings implements DefaultNodeSettings {
+final class GAConnectorNodeSettings implements NodeParameters {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GAConnectorNodeSettings.class);
 
@@ -168,7 +169,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
      *
      * @param ctx context for auto-configuration
      */
-    GAConnectorNodeSettings(final DefaultNodeSettingsContext ctx) { //NOSONAR
+    GAConnectorNodeSettings(final NodeParametersInput ctx) { //NOSONAR
         //
     }
 
@@ -187,7 +188,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
         }
 
         @Override
-        public List<StringChoice> computeState(final DefaultNodeSettingsContext ctx) {
+        public List<StringChoice> computeState(final NodeParametersInput ctx) {
             final var credentialRef = GAConnectorNodeModel.getCredentialRef(ctx.getPortObjectSpecs());
             if (credentialRef.isEmpty()) {
                 return Collections.emptyList();
@@ -223,7 +224,7 @@ final class GAConnectorNodeSettings implements DefaultNodeSettings {
         }
 
         @Override
-        public List<StringChoice> computeState(final DefaultNodeSettingsContext ctx) throws WidgetHandlerException {
+        public List<StringChoice> computeState(final NodeParametersInput ctx) throws WidgetHandlerException {
             final var analyticsAccountId = m_analyticsAccountIdSupplier.get();
             if (analyticsAccountId == null) {
                 return Collections.emptyList();
