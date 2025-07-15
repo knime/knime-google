@@ -5,17 +5,17 @@ Bundle-SymbolicName: org.knime.google.cloud.storage;singleton:=true
 Bundle-Version: 5.6.0.qualifier
 Bundle-ClassPath: knime.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Require-Bundle: org.knime.workbench.repository;bundle-version="[5.5.0,6.0.0)",
- org.knime.base;bundle-version="[5.5.0,6.0.0)",
- org.knime.base.filehandling;bundle-version="[5.5.0,6.0.0)",
- org.knime.cloud.core;bundle-version="[5.5.0,6.0.0)",
- org.knime.ext.google.sdk;bundle-version="[5.5.0,6.0.0)",
- org.knime.google.api;bundle-version="[5.5.0,6.0.0)",
+Require-Bundle: org.knime.workbench.repository;bundle-version="[5.6.0,6.0.0)",
+ org.knime.base;bundle-version="[5.6.0,6.0.0)",
+ org.knime.base.filehandling;bundle-version="[5.6.0,6.0.0)",
+ org.knime.cloud.core;bundle-version="[5.6.0,6.0.0)",
+ org.knime.ext.google.sdk;bundle-version="[5.6.0,6.0.0)",
+ org.knime.google.api;bundle-version="[5.6.0,6.0.0)",
  org.apache.commons.codec;bundle-version="[1.10.0,2.0.0)",
  org.apache.commons.lang3;bundle-version="[3.3.1,4.0.0)",
  org.apache.commons.logging;bundle-version="[1.1.1,2.0.0)",
- org.knime.credentials.base;bundle-version="[5.5.0,6.0.0)",
- org.knime.credentials.base.oauth;bundle-version="[5.5.0,6.0.0)"
+ org.knime.credentials.base;bundle-version="[5.6.0,6.0.0)",
+ org.knime.credentials.base.oauth;bundle-version="[5.6.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir

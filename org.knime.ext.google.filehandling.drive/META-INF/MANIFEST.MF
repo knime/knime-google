@@ -4,13 +4,13 @@ Bundle-Name: Google Drive filehandling extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.ext.google.filehandling.drive;singleton:=true
 Bundle-Version: 5.6.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Require-Bundle: org.knime.core;bundle-version="[5.5.0,6.0.0)",
- org.knime.filehandling.core;bundle-version="[5.5.0,6.0.0)",
- org.knime.workbench.core;bundle-version="[5.5.0,6.0.0)",
- org.knime.ext.google.sdk;bundle-version="[5.5.0,6.0.0)",
- org.knime.google.api;bundle-version="[5.5.0,6.0.0)",
- org.knime.credentials.base;bundle-version="[5.5.0,6.0.0)",
- org.knime.credentials.base.oauth;bundle-version="[5.5.0,6.0.0)"
+Require-Bundle: org.knime.core;bundle-version="[5.6.0,6.0.0)",
+ org.knime.filehandling.core;bundle-version="[5.6.0,6.0.0)",
+ org.knime.workbench.core;bundle-version="[5.6.0,6.0.0)",
+ org.knime.ext.google.sdk;bundle-version="[5.6.0,6.0.0)",
+ org.knime.google.api;bundle-version="[5.6.0,6.0.0)",
+ org.knime.credentials.base;bundle-version="[5.6.0,6.0.0)",
+ org.knime.credentials.base.oauth;bundle-version="[5.6.0,6.0.0)"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: org.knime.ext.google.filehandling.drive
