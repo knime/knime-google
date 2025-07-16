@@ -86,7 +86,7 @@ class GAAccountsChoicesTest {
         final var choicesProvider = new GAConnectorNodeSettings.AnalyticsAccountsProvider();
 
         createEmptyCredentialSpecs().forEach(spec -> {
-            final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
+            final var ctx = NodeParameters.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
             Assertions.assertTrue(choicesProvider.computeState(ctx).isEmpty(), //
                 "Account choices were null or not empty.");
         });
@@ -95,7 +95,7 @@ class GAAccountsChoicesTest {
     @Test
     void testAccountUpdateHandler() {
         createEmptyCredentialSpecs().forEach(spec -> {
-            final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
+            final var ctx = NodeParameters.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
             createEmptyAccountSettings().forEach(settings -> {
                 final var updateHandler = new GAConnectorNodeSettings.AnalyticsAccountUpdateHandler();
                 updateHandler.m_analyticsAccountIdSupplier = () -> GAAccount.of(settings);
