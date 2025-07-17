@@ -50,7 +50,7 @@ package org.knime.google.api.nodes.authenticator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FileSelection;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.APIKeyTypeSection;
 import org.knime.node.parameters.Widget;

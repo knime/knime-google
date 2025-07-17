@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountUpdateHandler;

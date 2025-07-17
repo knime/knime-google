@@ -53,7 +53,7 @@ import java.util.List;
 
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings.DefaultNodeSettingsContext;
+import org.knime.node.parameters.NodeParametersInput;
 import org.knime.node.parameters.widget.choices.StringChoicesProvider;
 
 import com.google.api.services.analyticsdata.v1beta.model.MetricMetadata;

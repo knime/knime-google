@@ -59,7 +59,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthType;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthTypeRef;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;

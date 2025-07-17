@@ -53,7 +53,7 @@ import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.node.parameters.NodeParameters;
 import org.knime.google.api.analytics.ga4.docs.ExternalLinks;
 import org.knime.node.parameters.Widget;
 import org.knime.node.parameters.widget.choices.ChoicesProvider;
