@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
 import org.knime.node.parameters.NodeParameters;
 import org.knime.node.parameters.Widget;
 import org.knime.node.parameters.persistence.NodeSettingsPersistor;
@@ -139,7 +140,7 @@ final class GADimensionFilterCriterion implements NodeParameters {
             final var name = settings.getString(CFG_KEY_NAME);
             final var caseSensitivity = valueOf(CaseSensitivity.class, settings, CFG_KEY_CASE_SENSITIVITY);
             final var isNegated = settings.getBoolean(CFG_KEY_IS_NEGATED);
-            final var filter = NodeParameters.loadSettings(settings, GAStringFilter.class);
+            final var filter = NodeParametersUtil.loadSettings(settings, GAStringFilter.class);
             return new GADimensionFilterCriterion(name, filter, caseSensitivity, isNegated);
         }
 
@@ -167,7 +168,7 @@ final class GADimensionFilterCriterion implements NodeParameters {
             settings.addString(CFG_KEY_NAME, filter.m_name);
             settings.addString(CFG_KEY_CASE_SENSITIVITY, filter.m_caseSensitivity.name());
             settings.addBoolean(CFG_KEY_IS_NEGATED, filter.m_isNegated);
-            NodeParameters.saveSettings(GAStringFilter.class, filter.m_stringFilter, settings);
+            NodeParametersUtil.saveSettings(GAStringFilter.class, filter.m_stringFilter, settings);
         }
 
         @Override
