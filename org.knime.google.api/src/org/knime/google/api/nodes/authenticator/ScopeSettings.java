@@ -59,29 +59,30 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.WidgetGroup;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Migrate;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.PersistableSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ArrayWidget.ElementLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoice;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.StringChoicesProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Effect.EffectType;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Predicate;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.PredicateProvider;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.Reference;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.updates.ValueReference;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthType;
 import org.knime.google.api.nodes.authenticator.GoogleAuthenticatorSettings.AuthTypeRef;
 import org.knime.google.api.nodes.authenticator.ScopeSettings.CustomScope.CustomScopesPersistor;
 import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.NodeParametersInput;
+import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.WidgetGroup;
+import org.knime.node.parameters.array.ArrayWidget;
+import org.knime.node.parameters.array.ArrayWidget.ElementLayout;
+import org.knime.node.parameters.migration.Migrate;
+import org.knime.node.parameters.persistence.NodeParametersPersistor;
+import org.knime.node.parameters.persistence.Persistable;
+import org.knime.node.parameters.persistence.Persistor;
+import org.knime.node.parameters.updates.Effect;
+import org.knime.node.parameters.updates.Effect.EffectType;
+import org.knime.node.parameters.updates.EffectPredicate;
+import org.knime.node.parameters.updates.EffectPredicateProvider;
+import org.knime.node.parameters.updates.ParameterReference;
+import org.knime.node.parameters.updates.ValueReference;
+import org.knime.node.parameters.widget.choices.ChoicesProvider;
+import org.knime.node.parameters.widget.choices.StringChoice;
+import org.knime.node.parameters.widget.choices.StringChoicesProvider;
+import org.knime.node.parameters.widget.choices.ValueSwitchWidget;
 
 /**
  * Scope settings for the Google Authenticator node.
@@ -89,7 +90,7 @@ import org.knime.google.api.scopes.KnimeGoogleAuthScopeRegistry;
  * @author Alexander Bondaletov, Redfield SE
  */
 @SuppressWarnings("restriction")
-public class ScopeSettings implements WidgetGroup, PersistableSettings {
+public class ScopeSettings implements WidgetGroup, Persistable {
 
     @Widget(title = "Scope type", description = """
             Scopes are
@@ -106,19 +107,19 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             STANDARD, CUSTOM;
     }
 
-    interface ScopesSelectionModeRef extends Reference<ScopesSelectionMode> {
+    interface ScopesSelectionModeRef extends ParameterReference<ScopesSelectionMode> {
     }
 
-    static final class ScopesSelectionModeIsStandard implements PredicateProvider {
+    static final class ScopesSelectionModeIsStandard implements EffectPredicateProvider {
         @Override
-        public Predicate init(final PredicateInitializer i) {
+        public EffectPredicate init(final PredicateInitializer i) {
             return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.STANDARD);
         }
     }
 
-    static final class ScopesSelectionModeIsCustom implements PredicateProvider {
+    static final class ScopesSelectionModeIsCustom implements EffectPredicateProvider {
         @Override
-        public Predicate init(final PredicateInitializer i) {
+        public EffectPredicate init(final PredicateInitializer i) {
             return i.getEnum(ScopesSelectionModeRef.class).isOneOf(ScopesSelectionMode.CUSTOM);
         }
     }
@@ -134,7 +135,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
     @Migrate(loadDefaultIfAbsent = true)
     StandardScope[] m_standardScopes = new StandardScope[0];
 
-    static final class StandardScope implements DefaultNodeSettings {
+    static final class StandardScope implements NodeParameters {
         @Widget(title = "Scope/permission", description = "")
         @ChoicesProvider(ScopeChoicesUpdateHandler.class)
         String m_scopeId;
@@ -157,7 +158,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             }
 
             @Override
-            public List<StringChoice> computeState(final DefaultNodeSettingsContext context) {
+            public List<StringChoice> computeState(final NodeParametersInput context) {
                 final var authType = m_authTypeSupplier.get();
                 final var registry = KnimeGoogleAuthScopeRegistry.getInstance();
                 final var scopes =
@@ -170,7 +171,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
             }
         }
 
-        static final class ScopeArrayPersistor implements NodeSettingsPersistor<StandardScope[]> {
+        static final class ScopeArrayPersistor implements NodeParametersPersistor<StandardScope[]> {
 
             private static final String CONFIG_KEY = "standardScopes";
 
@@ -204,7 +205,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
     @Persistor(CustomScopesPersistor.class)
     CustomScope[] m_customScopes = new CustomScope[0];
 
-    static class CustomScope implements DefaultNodeSettings {
+    static class CustomScope implements NodeParameters {
         @Widget(title = "Scope/permission", description = "")
         String m_scope;
 
@@ -215,7 +216,7 @@ public class ScopeSettings implements WidgetGroup, PersistableSettings {
         CustomScope() {
         }
 
-        static class CustomScopesPersistor implements NodeSettingsPersistor<CustomScope[]> {
+        static class CustomScopesPersistor implements NodeParametersPersistor<CustomScope[]> {
 
             private static final String CONFIG_KEY = "customScopes";
 

@@ -57,12 +57,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.Persistor;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.ValueSwitchWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.persistence.NodeParametersPersistor;
+import org.knime.node.parameters.persistence.Persistor;
+import org.knime.node.parameters.widget.choices.ChoicesProvider;
+import org.knime.node.parameters.widget.choices.ValueSwitchWidget;
 
 /**
  * A Google Analytics dimension filter criterion.
@@ -71,7 +72,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.choices.ChoicesProv
  */
 @SuppressWarnings("restriction") // webui* classes
 @Persistor(org.knime.google.api.analytics.ga4.node.query.GADimensionFilterCriterion.GADimensionFilterSettingsPersistor.class)
-final class GADimensionFilterCriterion implements DefaultNodeSettings {
+final class GADimensionFilterCriterion implements NodeParameters {
 
     @Widget(title = "Dimension", description = "The name of the dimension to filter on.")
     @ChoicesProvider(DimensionChoicesProvider.class)
@@ -126,7 +127,7 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    static final class GADimensionFilterSettingsPersistor implements NodeSettingsPersistor<GADimensionFilterCriterion> {
+    static final class GADimensionFilterSettingsPersistor implements NodeParametersPersistor<GADimensionFilterCriterion> {
 
         private static final String CFG_KEY_NAME = "name";
 
@@ -139,7 +140,7 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
             final var name = settings.getString(CFG_KEY_NAME);
             final var caseSensitivity = valueOf(CaseSensitivity.class, settings, CFG_KEY_CASE_SENSITIVITY);
             final var isNegated = settings.getBoolean(CFG_KEY_IS_NEGATED);
-            final var filter = DefaultNodeSettings.loadSettings(settings, GAStringFilter.class);
+            final var filter = NodeParametersUtil.loadSettings(settings, GAStringFilter.class);
             return new GADimensionFilterCriterion(name, filter, caseSensitivity, isNegated);
         }
 
@@ -167,7 +168,7 @@ final class GADimensionFilterCriterion implements DefaultNodeSettings {
             settings.addString(CFG_KEY_NAME, filter.m_name);
             settings.addString(CFG_KEY_CASE_SENSITIVITY, filter.m_caseSensitivity.name());
             settings.addBoolean(CFG_KEY_IS_NEGATED, filter.m_isNegated);
-            DefaultNodeSettings.saveSettings(GAStringFilter.class, filter.m_stringFilter, settings);
+            NodeParametersUtil.saveSettings(GAStringFilter.class, filter.m_stringFilter, settings);
         }
 
         @Override

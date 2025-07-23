@@ -55,12 +55,12 @@ import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.HorizontalLayout;
-import org.knime.core.webui.node.dialog.defaultdialog.layout.Layout;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.TextInputWidget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Widget;
-import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInputWidgetValidation.PatternValidation;
+import org.knime.node.parameters.NodeParameters;
+import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.layout.HorizontalLayout;
+import org.knime.node.parameters.layout.Layout;
+import org.knime.node.parameters.widget.text.TextInputWidget;
+import org.knime.node.parameters.widget.text.TextInputWidgetValidation.PatternValidation;
 /**
  * Settings for a Google Analytics 4 Data API
  * <a href="https://developers.google.com/analytics/devguides/reporting/data/v1/rest/v1beta/DateRange">
@@ -70,7 +70,7 @@ import org.knime.core.webui.node.dialog.defaultdialog.widget.validation.TextInpu
  */
 // How to support "NdaysAgo", "yesterday", "today" (supported by GA4 API)?
 @SuppressWarnings("restriction") // webui*
-final class GADateRange implements DefaultNodeSettings {
+final class GADateRange implements NodeParameters {
 
     static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 

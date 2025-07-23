@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
+import org.knime.core.webui.node.dialog.defaultdialog.NodeParametersUtil;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.google.api.analytics.ga4.node.GAAccount;
 import org.knime.google.api.analytics.ga4.node.connector.GAConnectorNodeSettings.AnalyticsAccountUpdateHandler;
@@ -86,7 +86,7 @@ class GAAccountsChoicesTest {
         final var choicesProvider = new GAConnectorNodeSettings.AnalyticsAccountsProvider();
 
         createEmptyCredentialSpecs().forEach(spec -> {
-            final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
+            final var ctx = NodeParametersUtil.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
             Assertions.assertTrue(choicesProvider.computeState(ctx).isEmpty(), //
                 "Account choices were null or not empty.");
         });
@@ -95,7 +95,7 @@ class GAAccountsChoicesTest {
     @Test
     void testAccountUpdateHandler() {
         createEmptyCredentialSpecs().forEach(spec -> {
-            final var ctx = DefaultNodeSettings.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
+            final var ctx = NodeParametersUtil.createDefaultNodeSettingsContext(new PortObjectSpec[]{spec});
             createEmptyAccountSettings().forEach(settings -> {
                 final var updateHandler = new GAConnectorNodeSettings.AnalyticsAccountUpdateHandler();
                 updateHandler.m_analyticsAccountIdSupplier = () -> GAAccount.of(settings);

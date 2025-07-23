@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
+import org.knime.node.parameters.persistence.NodeParametersPersistor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -130,7 +130,7 @@ public record GAProperty(String m_propertyId) {
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    public static final class Persistor implements NodeSettingsPersistor<GAProperty> {
+    public static final class Persistor implements NodeParametersPersistor<GAProperty> {
 
         private static final String CONFIG_KEY = "ga4Property";
 

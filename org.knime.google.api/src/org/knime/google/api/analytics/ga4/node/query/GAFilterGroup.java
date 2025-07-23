@@ -48,7 +48,7 @@
  */
 package org.knime.google.api.analytics.ga4.node.query;
 
-import org.knime.core.webui.node.dialog.defaultdialog.widget.Label;
+import org.knime.node.parameters.widget.choices.Label;
 
 /**
  * Specifies how to group a list of filters.

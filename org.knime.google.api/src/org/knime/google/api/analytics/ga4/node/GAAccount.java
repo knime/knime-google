@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.api.NodeSettingsPersistor;
+import org.knime.node.parameters.persistence.NodeParametersPersistor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -126,7 +126,7 @@ public record GAAccount(String m_accountId) {
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    public static final class Persistor implements NodeSettingsPersistor<GAAccount> {
+    public static final class Persistor implements NodeParametersPersistor<GAAccount> {
 
         private static final String KEY_GA_ACCOUNT = "ga4Account";
 
