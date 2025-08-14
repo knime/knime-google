@@ -27,7 +27,6 @@
 		<module>org.knime.ext.google.sdk</module>
 
 		<module>org.knime.google.api</module>
-		<module>org.knime.google.api.tests/lib/fetch_jars</module>
 		<module>org.knime.google.api.tests</module>
 		<module>org.knime.google.cloud.storage</module>
 		<module>org.knime.ext.google.filehandling.cloudstorage</module>
