@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="test">
+    <config key="spreadsheetName_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="spreadsheetName" type="xstring" value=""/>
+    <config key="sheetName_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="sheetName" type="xstring" value=""/>
+    <config key="writeColName_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="writeColName" type="xboolean" value="true"/>
+    <config key="writeRowId_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="writeRowId" type="xboolean" value="false"/>
+    <config key="missingValue_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMN_string_disact"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="missingValue" type="xstring" value=""/>
+    <entry key="missingValue_BOOL" type="xboolean" value="false"/>
+    <config key="writeRaw_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="writeRaw" type="xboolean" value="true"/>
+    <config key="openAfterExecution_Internals">
+        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+        <entry key="EnabledStatus" type="xboolean" value="true"/>
+    </config>
+    <entry key="openAfterExecution" type="xboolean" value="true"/>
+    <config key="columnFilter">
+        <entry key="filter-type" type="xstring" value="STANDARD"/>
+        <config key="included_names">
+            <entry key="array-size" type="xint" value="3"/>
+            <entry key="0" type="xstring" value="Nombre de la agrupación"/>
+            <entry key="1" type="xstring" value="Número de Variaciones"/>
+            <entry key="2" type="xstring" value="Variaciones"/>
+        </config>
+        <config key="excluded_names">
+            <entry key="array-size" type="xint" value="0"/>
+        </config>
+        <entry key="enforce_option" type="xstring" value="EnforceExclusion"/>
+        <config key="name_pattern">
+            <entry key="pattern" type="xstring" value=""/>
+            <entry key="caseSensitive" type="xboolean" value="true"/>
+            <entry key="excludeMatching" type="xboolean" value="false"/>
+            <entry key="type" type="xstring" value="Wildcard"/>
+        </config>
+        <config key="datatype">
+            <config key="typelist"/>
+        </config>
+    </config>
+</config>

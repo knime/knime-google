@@ -47,16 +47,35 @@
  */
 package org.knime.google.api.sheets.nodes.spreadsheetwriter;
 
+import static org.knime.node.impl.description.PortDescription.fixedPort;
+
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultKaiNodeInterface;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterface;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterfaceFactory;
+import org.knime.node.impl.description.DefaultNodeDescriptionUtil;
+import org.knime.node.impl.description.PortDescription;
 
 /**
  * The factory to the Google Spreadsheet Writer node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Ali Asghar Marvi, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSpreadsheetWriterFactory extends NodeFactory<GoogleSpreadsheetWriterModel> {
+@SuppressWarnings("restriction")
+public final class GoogleSpreadsheetWriterFactory extends NodeFactory<GoogleSpreadsheetWriterModel>
+    implements NodeDialogFactory, KaiNodeInterfaceFactory {
 
     /**
      * {@inheritDoc}
@@ -78,7 +97,8 @@ public class GoogleSpreadsheetWriterFactory extends NodeFactory<GoogleSpreadshee
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GoogleSpreadsheetWriterModel> createNodeView(final int viewIndex, final GoogleSpreadsheetWriterModel nodeModel) {
+    public NodeView<GoogleSpreadsheetWriterModel> createNodeView(final int viewIndex,
+        final GoogleSpreadsheetWriterModel nodeModel) {
         return null;
     }
 
@@ -90,12 +110,49 @@ public class GoogleSpreadsheetWriterFactory extends NodeFactory<GoogleSpreadshee
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    private static final String NODE_NAME = "Google Sheets Writer";
+
+    private static final String NODE_ICON = "./googlesheets.png";
+
+    private static final String SHORT_DESCRIPTION =
+        "This node writes the input data table to a new Google Sheets spreadsheet.";
+
+    private static final String FULL_DESCRIPTION = """
+            This node writes the input data table to a new Google Sheets spreadsheet.
+            If you want to overwrite or append data to an existing sheet, you
+            cannot use the Google Sheets Writer node; you must use the Google Sheets Updater node.
+            """;
+
+    private static final List<PortDescription> INPUT_PORTS =
+        List.of(fixedPort("Google Sheets Connection", "A Google Sheets connection."),
+            fixedPort("Buffered data table", "Table to be written to a google sheet"));
+
+    private static final List<PortDescription> OUTPUT_PORTS = List.of();
+
+    private static final List<String> KEYWORDS = List.of( //
+        "Spreadsheet" //
+    );
+
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleSpreadsheetWriterDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
+    }
+
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, GoogleSpreadsheetWriterNodeParameters.class);
+    }
+
+    @Override
+    public NodeDescription createNodeDescription() {
+        return DefaultNodeDescriptionUtil.createNodeDescription(NODE_NAME, NODE_ICON, INPUT_PORTS, OUTPUT_PORTS,
+            SHORT_DESCRIPTION, FULL_DESCRIPTION, List.of(), GoogleSpreadsheetWriterNodeParameters.class, null,
+            NodeType.Manipulator, KEYWORDS, null);
+    }
+
+    @Override
+    public KaiNodeInterface createKaiNodeInterface() {
+        return new DefaultKaiNodeInterface(Map.of(SettingsType.MODEL, GoogleSpreadsheetWriterNodeParameters.class));
     }
 
 }
