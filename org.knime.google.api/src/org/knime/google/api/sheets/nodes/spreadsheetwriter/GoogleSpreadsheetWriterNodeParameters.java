@@ -82,8 +82,7 @@ final class GoogleSpreadsheetWriterNodeParameters implements NodeParameters {
     interface WriteSettings {
     }
 
-    //left empty since wrt the old dialogue there is no section defined for this.
-    @Section
+    @Section(title = "Outputs")
     @After(WriteSettings.class)
     interface ColumnAndOptionsSelection {
     }

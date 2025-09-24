@@ -236,7 +236,7 @@
         }
       } ]
     }, {
-      "label" : "",
+      "label" : "Outputs",
       "type" : "Section",
       "elements" : [ {
         "type" : "Control",
