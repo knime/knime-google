@@ -1,40 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="test">
-    <config key="spreadsheetName_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
     <entry key="spreadsheetName" type="xstring" value=""/>
-    <config key="sheetName_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
     <entry key="sheetName" type="xstring" value=""/>
-    <config key="writeColName_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
     <entry key="writeColName" type="xboolean" value="true"/>
-    <config key="writeRowId_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
     <entry key="writeRowId" type="xboolean" value="false"/>
-    <config key="missingValue_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMN_string_disact"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
-    <entry key="missingValue" type="xstring" value=""/>
     <entry key="missingValue_BOOL" type="xboolean" value="false"/>
-    <config key="writeRaw_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
+    <entry key="missingValue" type="xstring" isnull="true" value=""/>
     <entry key="writeRaw" type="xboolean" value="true"/>
-    <config key="openAfterExecution_Internals">
-        <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
-        <entry key="EnabledStatus" type="xboolean" value="true"/>
-    </config>
     <entry key="openAfterExecution" type="xboolean" value="true"/>
     <config key="columnFilter">
         <entry key="filter-type" type="xstring" value="STANDARD"/>

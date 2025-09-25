@@ -48,17 +48,16 @@ package org.knime.google.api.sheets.nodes.spreadsheetwriter;
 
 import java.util.Optional;
 
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.persistors.settingsmodel.SettingsModelBooleanPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.persistors.settingsmodel.SettingsModelOptionalStringPersistor;
-import org.knime.core.webui.node.dialog.defaultdialog.persistence.persistors.settingsmodel.SettingsModelStringPersistor;
 import org.knime.node.parameters.NodeParameters;
 import org.knime.node.parameters.Widget;
 import org.knime.node.parameters.layout.After;
 import org.knime.node.parameters.layout.Layout;
 import org.knime.node.parameters.layout.Section;
 import org.knime.node.parameters.migration.LoadDefaultsForAbsentFields;
+import org.knime.node.parameters.persistence.Persist;
 import org.knime.node.parameters.persistence.Persistor;
 import org.knime.node.parameters.persistence.legacy.LegacyColumnFilterPersistor;
+import org.knime.node.parameters.persistence.legacy.OptionalStringPersistor;
 import org.knime.node.parameters.widget.choices.filter.ColumnFilter;
 import org.knime.node.parameters.widget.choices.filter.ColumnFilterWidget;
 import org.knime.node.parameters.widget.choices.util.AllColumnsProvider;
@@ -87,57 +86,31 @@ final class GoogleSpreadsheetWriterNodeParameters implements NodeParameters {
     interface ColumnAndOptionsSelection {
     }
 
-    static final class SpreadsheetNamePersistor extends SettingsModelStringPersistor {
-        SpreadsheetNamePersistor() {
-            super("spreadsheetName");
-        }
-    }
-
     @Layout(SpreadsheetSettings.class)
     @Widget(title = "Spreadsheet name", description = "The name of the spreadsheet to be created.")
     @TextInputWidget(placeholder = "Enter spreadsheet name")
-    @Persistor(SpreadsheetNamePersistor.class)
     String m_spreadsheetName = "";
-
-    static final class SheetNamePersistor extends SettingsModelStringPersistor {
-        SheetNamePersistor() {
-            super("sheetName");
-        }
-    }
 
     @Layout(SpreadsheetSettings.class)
     @Widget(title = "Sheet name", description = "The name of the sheet to which the table should be written.")
     @TextInputWidget(placeholder = "Enter sheet name")
-    @Persistor(SheetNamePersistor.class)
     String m_sheetName = "";
-
-    static final class AddColumnHeaderPersistor extends SettingsModelBooleanPersistor {
-        AddColumnHeaderPersistor() {
-            super("writeColName");
-        }
-    }
 
     @Layout(WriteSettings.class)
     @Widget(title = "Add column header",
         description = "Here you determine whether the column names should be written in the first row.")
-    @Persistor(AddColumnHeaderPersistor.class)
+    @Persist(configKey = "writeColName")
     boolean m_addColumnHeader = true;
-
-    static final class AddRowHeaderPersistor extends SettingsModelBooleanPersistor {
-        AddRowHeaderPersistor() {
-            super("writeRowId");
-        }
-    }
 
     @Layout(WriteSettings.class)
     @Widget(title = "Add row header",
         description = "Here you determine whether the row ID's should be written in the first column.")
-    @Persistor(AddRowHeaderPersistor.class)
+    @Persist(configKey = "writeRowId")
     boolean m_addRowHeader = true;
 
-    static final class MissingValuePersistor extends SettingsModelOptionalStringPersistor {
+    static final class MissingValuePersistor extends OptionalStringPersistor {
         MissingValuePersistor() {
-            super("missingValue");
+            super("missingValue_BOOL", "missingValue");
         }
     }
 
@@ -149,12 +122,6 @@ final class GoogleSpreadsheetWriterNodeParameters implements NodeParameters {
     @Persistor(MissingValuePersistor.class)
     Optional<String> m_missingValueReplacement = Optional.empty();
 
-    static final class WriteRawPersistor extends SettingsModelBooleanPersistor {
-        WriteRawPersistor() {
-            super("writeRaw");
-        }
-    }
-
     @Layout(WriteSettings.class)
     @Widget(title = "Write raw values", description = """
             Values are written into the spreadsheet as-is ("raw"), i.e. numbers, dates, hyperlinks, etc. will not
@@ -164,21 +131,13 @@ final class GoogleSpreadsheetWriterNodeParameters implements NodeParameters {
             cell via the Google Sheets website. For example, strings like =hyperlink("example.com", "example")
             will be parsed to hyperlinks if this option is unchecked.
             """)
-    @Persistor(WriteRawPersistor.class)
     boolean m_writeRaw = true;
-
-    static final class OpenAfterExecutionPersistor extends SettingsModelBooleanPersistor {
-        OpenAfterExecutionPersistor() {
-            super("openAfterExecution");
-        }
-    }
 
     @Layout(ColumnAndOptionsSelection.class)
     @Widget(title = "Open spreadsheet after execution", description = """
             Opens the spreadsheet after it has been written successfully.
             The spreadsheet will be opened in the systems's default browser.
             """)
-    @Persistor(OpenAfterExecutionPersistor.class)
     boolean m_openAfterExecution;
 
     /**

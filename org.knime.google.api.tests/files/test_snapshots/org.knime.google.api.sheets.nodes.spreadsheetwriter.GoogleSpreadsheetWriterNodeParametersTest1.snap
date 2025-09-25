@@ -262,27 +262,19 @@
       "model" : {
         "type" : "object",
         "properties" : {
-          "spreadsheetName" : {
-            "configPaths" : [ [ "spreadsheetName" ] ]
-          },
-          "sheetName" : {
-            "configPaths" : [ [ "sheetName" ] ]
-          },
+          "spreadsheetName" : { },
+          "sheetName" : { },
           "addColumnHeader" : {
-            "configPaths" : [ [ "writeColName" ] ]
+            "configKey" : "writeColName"
           },
           "addRowHeader" : {
-            "configPaths" : [ [ "writeRowId" ] ]
+            "configKey" : "writeRowId"
           },
           "missingValueReplacement" : {
-            "configPaths" : [ [ "missingValue" ] ]
+            "configPaths" : [ [ "missingValue_BOOL" ], [ "missingValue" ] ]
           },
-          "writeRaw" : {
-            "configPaths" : [ [ "writeRaw" ] ]
-          },
-          "openAfterExecution" : {
-            "configPaths" : [ [ "openAfterExecution" ] ]
-          },
+          "writeRaw" : { },
+          "openAfterExecution" : { },
           "columnFilter" : {
             "configPaths" : [ [ "columnFilter", "filter-type" ], [ "columnFilter", "included_names" ], [ "columnFilter", "excluded_names" ], [ "columnFilter", "enforce_option" ], [ "columnFilter", "name_pattern", "pattern" ], [ "columnFilter", "name_pattern", "type" ], [ "columnFilter", "name_pattern", "caseSensitive" ], [ "columnFilter", "name_pattern", "excludeMatching" ] ]
           }
