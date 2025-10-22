@@ -47,14 +47,20 @@
 package org.knime.ext.google.filehandling.drive.node;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.CustomFileConnectionFolderReaderWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FSConnectionProvider;
+import org.knime.credentials.base.CredentialPortObject;
+import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.google.api.credential.CredentialUtil;
 import org.knime.node.parameters.Advanced;
 import org.knime.node.parameters.NodeParameters;
 import org.knime.node.parameters.NodeParametersInput;
@@ -69,6 +75,9 @@ import org.knime.node.parameters.updates.StateProvider;
 import org.knime.node.parameters.updates.ValueReference;
 import org.knime.node.parameters.widget.number.NumberInputWidget;
 import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinValidation.IsNonNegativeValidation;
+
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.OAuth2Credentials;
 
 /**
  * Node parameters for Google Drive Connector.
@@ -114,9 +123,6 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_CONNECTION_TIMEOUT)
     int m_connectionTimeout = GoogleDriveFSConnectionConfig.DEFAULT_CONNECTION_TIMEOUT_SECONDS;
 
-    static final class ConnectionTimeoutRef implements ParameterReference<Integer> {
-    }
-
     @Layout(AdvancedSection.class)
     @Widget(title = "Read timeout", description = """
             Timeout in seconds to read data from connection or 0 for an infinite timeout.""")
@@ -125,14 +131,14 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_READ_TIMEOUT)
     int m_readTimeout = GoogleDriveFSConnectionConfig.DEFAULT_READ_TIMEOUT_SECONDS;
 
+    // ----- HELPER CLASSES -----
+
+    static final class ConnectionTimeoutRef implements ParameterReference<Integer> {
+    }
+
     static final class ReadTimeoutRef implements ParameterReference<Integer> {
     }
 
-    /**
-     * Provides a {@link FSConnectionProvider} based on the Google Drive connection settings.
-     * We need this to support setting the working directory using the exact same
-     * Google Drive connection this node is providing.
-     */
     static final class FileSystemConnectionProvider implements StateProvider<FSConnectionProvider> {
 
         private Supplier<Integer> m_connectionTimeoutSupplier;
@@ -148,16 +154,42 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
         @Override
         public FSConnectionProvider computeState(final NodeParametersInput parametersInput) {
             return () -> {
-                try {
-                    // TODO: This does not work
-                    final var connection = new GoogleDriveFSConnection(null);
-                    GoogleDriveConnectionNodeModel.testConnection(connection);
-                    return connection;
-                } catch (final IOException e) {
-                    NodeLogger.getLogger(GoogleDriveConnectionNodeParameters.class).error("Invalid Google Drive settings", e);
-                    return null;
-                }
+                final var credentials = getOAuth2Credentials(parametersInput.getInPortObject(0));
+                final var config = toFSConnectionConfig(GoogleDriveFileSystem.PATH_SEPARATOR, credentials,
+                        m_connectionTimeoutSupplier.get(), m_readTimeoutSupplier.get());
+                return createFSConnection(config);
             };
+        }
+
+        private static final OAuth2Credentials getOAuth2Credentials(final Optional<PortObject> portObject)
+                throws InvalidSettingsException {
+            return portObject.filter(CredentialPortObject.class::isInstance) //
+                    .map(CredentialPortObject.class::cast) //
+                    .map(CredentialPortObject::toRef) //
+                    .map(ref -> {
+                        try {
+                            return CredentialUtil.toOAuth2Credentials(ref);
+                        } catch (final IOException | NoSuchCredentialException e) {
+                            return null;
+                        }
+                    }) //
+                    .orElseThrow(
+                            () -> new InvalidSettingsException("Could not obtain credentials from the input port."));
+        }
+
+        private static GoogleDriveFSConnectionConfig toFSConnectionConfig(final String workingDirectory,
+                final Credentials credentials, final int connectionTimeout, final int readTimeout) {
+            final var config = new GoogleDriveFSConnectionConfig(workingDirectory, credentials);
+            config.setConnectionTimeOut(Duration.ofSeconds(connectionTimeout));
+            config.setReadTimeOut(Duration.ofSeconds(readTimeout));
+            return config;
+        }
+
+        private static final GoogleDriveFSConnection createFSConnection(final GoogleDriveFSConnectionConfig config)
+                throws IOException {
+            final var connection = new GoogleDriveFSConnection(config);
+            GoogleDriveConnectionNodeModel.testConnection(connection);
+            return connection;
         }
     }
 }
