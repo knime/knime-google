@@ -43,37 +43,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-    
+
 package org.knime.ext.google.filehandling.drive.node;
 
 import java.io.IOException;
 import java.util.function.Supplier;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.CustomFileConnectionFolderReaderWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FSConnectionProvider;
-import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnection;
-import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
 import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFSConnectionConfig;
-import org.knime.google.api.credential.CredentialUtil;
-import org.knime.node.parameters.Layout;
+import org.knime.ext.google.filehandling.drive.fs.GoogleDriveFileSystem;
+import org.knime.node.parameters.Advanced;
 import org.knime.node.parameters.NodeParameters;
-import org.knime.node.parameters.Persist;
-import org.knime.node.parameters.Section;
+import org.knime.node.parameters.NodeParametersInput;
 import org.knime.node.parameters.Widget;
+import org.knime.node.parameters.layout.After;
+import org.knime.node.parameters.layout.Layout;
+import org.knime.node.parameters.layout.Section;
 import org.knime.node.parameters.migration.LoadDefaultsForAbsentFields;
+import org.knime.node.parameters.persistence.Persist;
+import org.knime.node.parameters.updates.ParameterReference;
 import org.knime.node.parameters.updates.StateProvider;
-import org.knime.node.parameters.updates.StateProviderInitializer;
 import org.knime.node.parameters.updates.ValueReference;
 import org.knime.node.parameters.widget.number.NumberInputWidget;
 import org.knime.node.parameters.widget.number.NumberInputWidgetValidation.MinValidation.IsNonNegativeValidation;
-import org.knime.node.parameters.NodeParametersInput;
 
 /**
  * Node parameters for Google Drive Connector.
- * 
+ *
  * @author Kai Franze, KNIME GmbH, Germany
  * @author AI Migration Pipeline v1.2
  */
@@ -88,8 +87,8 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
     }
 
     @Section(title = "Advanced")
-    @Layout.After(FileSystemSection.class)
-    @Layout.Advanced
+    @After(FileSystemSection.class)
+    @Advanced
     interface AdvancedSection {
     }
 
@@ -115,7 +114,7 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_CONNECTION_TIMEOUT)
     int m_connectionTimeout = GoogleDriveFSConnectionConfig.DEFAULT_CONNECTION_TIMEOUT_SECONDS;
 
-    static final class ConnectionTimeoutRef implements ValueReference<Integer> {
+    static final class ConnectionTimeoutRef implements ParameterReference<Integer> {
     }
 
     @Layout(AdvancedSection.class)
@@ -126,7 +125,7 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_READ_TIMEOUT)
     int m_readTimeout = GoogleDriveFSConnectionConfig.DEFAULT_READ_TIMEOUT_SECONDS;
 
-    static final class ReadTimeoutRef implements ValueReference<Integer> {
+    static final class ReadTimeoutRef implements ParameterReference<Integer> {
     }
 
     /**
@@ -150,27 +149,11 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
         public FSConnectionProvider computeState(final NodeParametersInput parametersInput) {
             return () -> {
                 try {
-                    // Get Google Service Connection from input port
-                    final var inputSpecs = parametersInput.getPortObjectSpecs();
-                    if (inputSpecs == null || inputSpecs.length == 0 || inputSpecs[0] == null) {
-                        throw new InvalidSettingsException("No Google Service Connection available");
-                    }
-
-                    final var credentialSpec = (CredentialPortObjectSpec) inputSpecs[0];
-                    final var creds = CredentialUtil.toOAuth2Credentials(credentialSpec);
-                    
-                    // Create connection configuration
-                    final var config = new GoogleDriveFSConnectionConfig(
-                            GoogleDriveFileSystem.PATH_SEPARATOR, // Don't depend on the current working directory here
-                            creds);
-                    config.setConnectionTimeOut(java.time.Duration.ofSeconds(m_connectionTimeoutSupplier.get()));
-                    config.setReadTimeOut(java.time.Duration.ofSeconds(m_readTimeoutSupplier.get()));
-
-                    final var connection = new GoogleDriveFSConnection(config);
+                    // TODO: This does not work
+                    final var connection = new GoogleDriveFSConnection(null);
                     GoogleDriveConnectionNodeModel.testConnection(connection);
-
                     return connection;
-                } catch (final InvalidSettingsException | IOException e) {
+                } catch (final IOException e) {
                     NodeLogger.getLogger(GoogleDriveConnectionNodeParameters.class).error("Invalid Google Drive settings", e);
                     return null;
                 }
