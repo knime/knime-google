@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Google Drive filehandling tests
+Bundle-SymbolicName: org.knime.ext.google.filehandling.drive.tests
+Bundle-Version: 5.6.0.qualifier
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Automatic-Module-Name: org.knime.ext.google.filehandling.drive.tests
+Fragment-Host: org.knime.ext.google.filehandling.drive;bundle-version="[5.6.0,6.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: org.knime.core.ui.testing;bundle-version="[5.6.0,6.0.0)",
+ junit-jupiter-api;bundle-version="[5.9.2,6.0.0)"

@@ -67,11 +67,11 @@ import com.google.auth.Credentials;
  */
 class GoogleDriveConnectionSettingsModel {
 
-    private static final String KEY_WORKING_DIRECTORY = "workingDirectory";
+    static final String KEY_WORKING_DIRECTORY = "workingDirectory";
 
-    private static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
+    static final String KEY_CONNECTION_TIMEOUT = "connectionTimeout";
 
-    private static final String KEY_READ_TIMEOUT = "readTimeout";
+    static final String KEY_READ_TIMEOUT = "readTimeout";
 
     private final SettingsModelString m_workingDirectory;
 

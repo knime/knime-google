@@ -1,0 +1,130 @@
+{
+  "data" : {
+    "model" : {
+      "workingDirectory" : "/",
+      "connectionTimeout" : 30,
+      "readTimeout" : 30
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "connectionTimeout" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Connection timeout (seconds)",
+            "description" : "Timeout in seconds to establish a connection or 0 for an infinite timeout.",
+            "default" : 30
+          },
+          "readTimeout" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Read timeout (seconds)",
+            "description" : "Timeout in seconds to read data from connection or 0 for an infinite timeout.",
+            "default" : 30
+          },
+          "workingDirectory" : {
+            "type" : "string",
+            "title" : "Working directory",
+            "description" : "Specify the working directory of the resulting file system connection, using the Path syntax explained above. The working directory must be specified as an absolute path. A working directory allows downstream nodes to access files/folders using relative paths, i.e. paths that do not have a leading slash. The default working directory is the root \"/\".",
+            "default" : "/"
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/workingDirectory",
+      "options" : {
+        "format" : "customFileSystemFileChooser",
+        "selectionMode" : "FOLDER"
+      },
+      "providedOptions" : [ "fileSystemId" ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/connectionTimeout",
+      "options" : {
+        "validation" : {
+          "max" : {
+            "errorMessage" : "The value must not exceed 2147483647.",
+            "parameters" : {
+              "isExclusive" : false,
+              "max" : 2.147483647E9
+            }
+          },
+          "min" : {
+            "errorMessage" : "The value must be at least 0.",
+            "parameters" : {
+              "isExclusive" : false,
+              "min" : 0.0
+            }
+          }
+        },
+        "isAdvanced" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/readTimeout",
+      "options" : {
+        "validation" : {
+          "max" : {
+            "errorMessage" : "The value must not exceed 2147483647.",
+            "parameters" : {
+              "isExclusive" : false,
+              "max" : 2.147483647E9
+            }
+          },
+          "min" : {
+            "errorMessage" : "The value must be at least 0.",
+            "parameters" : {
+              "isExclusive" : false,
+              "min" : 0.0
+            }
+          }
+        },
+        "isAdvanced" : true
+      }
+    } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "workingDirectory" : {
+            "configKey" : "workingDirectory"
+          },
+          "connectionTimeout" : {
+            "configKey" : "connectionTimeout"
+          },
+          "readTimeout" : {
+            "configKey" : "readTimeout"
+          }
+        }
+      }
+    }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog"
+    },
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/connectionTimeout"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/readTimeout"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/readTimeout" ]
+  } ]
+}
