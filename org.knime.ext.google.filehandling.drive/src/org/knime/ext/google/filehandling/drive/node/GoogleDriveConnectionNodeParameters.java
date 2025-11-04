@@ -87,9 +87,9 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
 
     @Widget(title = "Working directory", description = """
             Specify the working directory of the resulting file system connection, using the Path syntax explained \
-            above. The working directory must be specified as an absolute path. A working directory allows downstream \
-            nodes to access files/folders using relative paths, i.e. paths that do not have a leading slash. \
-            The default working directory is the root "/".""")
+            in the node description. The working directory must be specified as an absolute path. A working directory \
+            allows downstream nodes to access files/folders using relative paths, i.e. paths that do not have a \
+            leading slash. The default working directory is the root "/".""")
     @CustomFileConnectionFolderReaderWidget(connectionProvider = FileSystemConnectionProvider.class)
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_WORKING_DIRECTORY)
     String m_workingDirectory = GoogleDriveFileSystem.PATH_SEPARATOR;
