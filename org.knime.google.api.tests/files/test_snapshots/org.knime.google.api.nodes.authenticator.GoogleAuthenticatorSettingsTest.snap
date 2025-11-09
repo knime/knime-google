@@ -292,9 +292,11 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/jsonFile",
         "options" : {
-          "format" : "fileChooser",
           "isLocal" : true,
-          "mountId" : "Local space"
+          "spaceFSOptions" : {
+            "mountId" : "Local space"
+          },
+          "format" : "fileChooser"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -325,9 +327,11 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/apiKeySettings/properties/p12File",
         "options" : {
-          "format" : "fileChooser",
           "isLocal" : true,
-          "mountId" : "Local space"
+          "spaceFSOptions" : {
+            "mountId" : "Local space"
+          },
+          "format" : "fileChooser"
         },
         "rule" : {
           "effect" : "HIDE",
@@ -362,8 +366,8 @@
             },
             "providedOptions" : [ "possibleValues" ]
           } ],
-          "elementLayout": "HORIZONTAL_SINGLE_LINE",
-          "addButtonText" : "Add scope"
+          "addButtonText" : "Add scope",
+          "elementLayout" : "HORIZONTAL_SINGLE_LINE"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -384,8 +388,8 @@
             "type" : "Control",
             "scope" : "#/properties/scope"
           } ],
-          "elementLayout": "HORIZONTAL_SINGLE_LINE",
-          "addButtonText" : "Add scope"
+          "addButtonText" : "Add scope",
+          "elementLayout" : "HORIZONTAL_SINGLE_LINE"
         },
         "rule" : {
           "effect" : "SHOW",
@@ -438,9 +442,11 @@
         "type" : "Control",
         "scope" : "#/properties/model/properties/customClientIdFile",
         "options" : {
-          "format" : "fileChooser",
           "isLocal" : true,
-          "mountId" : "Local space",
+          "spaceFSOptions" : {
+            "mountId" : "Local space"
+          },
+          "format" : "fileChooser",
           "isAdvanced" : true
         },
         "rule" : {

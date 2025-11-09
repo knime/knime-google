@@ -41,8 +41,8 @@
       "type" : "Control",
       "scope" : "#/properties/model/properties/workingDirectory",
       "options" : {
-        "format" : "customFileSystemFileChooser",
-        "selectionMode" : "FOLDER"
+        "selectionMode" : "FOLDER",
+        "format" : "stringFileChooser"
       },
       "providedOptions" : [ "fileSystemId" ]
     }, {

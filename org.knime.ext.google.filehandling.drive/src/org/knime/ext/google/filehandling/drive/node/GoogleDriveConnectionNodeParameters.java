@@ -51,8 +51,10 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.webui.node.dialog.defaultdialog.internal.file.CustomFileConnectionFolderReaderWidget;
 import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FSConnectionProvider;
+import org.knime.core.webui.node.dialog.defaultdialog.internal.file.FileSelectionWidget;
+import org.knime.core.webui.node.dialog.defaultdialog.internal.file.SingleFileSelectionMode;
+import org.knime.core.webui.node.dialog.defaultdialog.internal.file.WithCustomFileSystem;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.CredentialRef;
 import org.knime.credentials.base.NoSuchCredentialException;
@@ -90,7 +92,8 @@ final class GoogleDriveConnectionNodeParameters implements NodeParameters {
             in the node description. The working directory must be specified as an absolute path. A working directory \
             allows downstream nodes to access files/folders using relative paths, i.e. paths that do not have a \
             leading slash. The default working directory is the root "/".""")
-    @CustomFileConnectionFolderReaderWidget(connectionProvider = FileSystemConnectionProvider.class)
+    @FileSelectionWidget(SingleFileSelectionMode.FOLDER)
+    @WithCustomFileSystem(connectionProvider = FileSystemConnectionProvider.class)
     @Persist(configKey = GoogleDriveConnectionSettingsModel.KEY_WORKING_DIRECTORY)
     String m_workingDirectory = GoogleDriveFileSystem.PATH_SEPARATOR;
 
