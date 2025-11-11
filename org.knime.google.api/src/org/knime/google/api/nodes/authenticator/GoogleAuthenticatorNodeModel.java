@@ -109,7 +109,7 @@ public class GoogleAuthenticatorNodeModel extends AuthenticatorNodeModel<GoogleA
     @Override
     protected void validateOnConfigure(final PortObjectSpec[] inSpecs, final GoogleAuthenticatorSettings settings)
         throws InvalidSettingsException {
-        settings.validate();
+        settings.validateOnConfigure();
 
         if (settings.m_authType == GoogleAuthenticatorSettings.AuthType.INTERACTIVE) {
             m_interactiveCredentialRef = Optional.ofNullable(settings.m_loginCredentialRef)//
