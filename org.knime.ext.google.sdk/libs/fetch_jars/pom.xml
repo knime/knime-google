@@ -203,7 +203,7 @@
 								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt,org.apache.arrow,io.netty
 							</excludeGroupIds>
 							<excludeArtifactIds>
-								grpc-netty-shaded
+								grpc-netty-shaded,protobuf-java
 							</excludeArtifactIds>
 						</configuration>
 						<phase>
@@ -223,7 +223,7 @@
 								com.google.code.findbugs,com.google.errorprone,com.google.guava,commons-codec,org.checkerframework,org.conscrypt,org.apache.arrow,io.netty
 							</excludeGroupIds>
 							<excludeArtifactIds>
-								grpc-netty-shaded
+								grpc-netty-shaded,protobuf-java
 							</excludeArtifactIds>
 						</configuration>
 						<phase>

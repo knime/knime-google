@@ -3,6 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Google Java libraries
 Bundle-SymbolicName: org.knime.ext.google.sdk;singleton:=true
 Bundle-Version: 5.9.0.qualifier
+Eclipse-BundleShape: dir
 Require-Bundle: org.apache.httpcomponents.httpclient;bundle-version="[4.5.13,5.0.0)",
  org.apache.httpcomponents.httpcore;bundle-version="[4.4.16,5.0.0)",
  com.google.flatbuffers.java;bundle-version="[24.3.25,24.3.25]",
@@ -19,7 +20,8 @@ Require-Bundle: org.apache.httpcomponents.httpclient;bundle-version="[4.5.13,5.0
  org.apache.arrow.memory-core;bundle-version="[18.1.0,19.0.0)",
  org.apache.arrow.format;bundle-version="[18.1.0,19.0.0)",
  org.apache.arrow.vector;bundle-version="[18.1.0,19.0.0)",
- io.grpc.netty-shaded;bundle-version="[1.56.1,2.0.0)"
+ io.grpc.netty-shaded;bundle-version="[1.56.1,2.0.0)",
+ com.google.protobuf;bundle-version="[3.25.8,4.0.0)"
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-ClassPath: .,
  libs/animal-sniffer-annotations-1.24.jar,
@@ -98,7 +100,6 @@ Bundle-ClassPath: .,
  libs/proto-google-cloud-storage-v2-2.53.1.jar,
  libs/proto-google-common-protos-2.58.2.jar,
  libs/proto-google-iam-v1-1.53.2.jar,
- libs/protobuf-java-3.25.8.jar,
  libs/protobuf-java-util-3.25.8.jar,
  libs/threeten-extra-1.8.0.jar,
  libs/threetenbp-1.7.0.jar

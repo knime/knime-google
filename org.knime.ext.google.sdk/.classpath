@@ -76,7 +76,6 @@
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-cloud-storage-v2-2.53.1.jar" sourcepath="libs/proto-google-cloud-storage-v2-2.53.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-common-protos-2.58.2.jar" sourcepath="libs/proto-google-common-protos-2.58.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/proto-google-iam-v1-1.53.2.jar" sourcepath="libs/proto-google-iam-v1-1.53.2-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-3.25.8.jar" sourcepath="libs/protobuf-java-3.25.8-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/protobuf-java-util-3.25.8.jar" sourcepath="libs/protobuf-java-util-3.25.8-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/threeten-extra-1.8.0.jar" sourcepath="libs/threeten-extra-1.8.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/threetenbp-1.7.0.jar" sourcepath="libs/threetenbp-1.7.0-sources.jar"/>
