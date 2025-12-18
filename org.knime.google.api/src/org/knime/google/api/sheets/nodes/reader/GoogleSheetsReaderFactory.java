@@ -47,55 +47,129 @@
  */
 package org.knime.google.api.sheets.nodes.reader;
 
+import static org.knime.node.impl.description.PortDescription.fixedPort;
+
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultKaiNodeInterface;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterface;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterfaceFactory;
+import org.knime.node.impl.description.DefaultNodeDescriptionUtil;
+import org.knime.node.impl.description.PortDescription;
 
 /**
  * The factory to the GoogleSheetsReader node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Magnus Gohm, KNIME GmbH, Konstanz, Germany
+ * @author AI Migration Pipeline v1.2
  */
-public class GoogleSheetsReaderFactory extends NodeFactory<GoogleSheetsReaderModel> {
+@SuppressWarnings("restriction")
+public class GoogleSheetsReaderFactory extends NodeFactory<GoogleSheetsReaderModel>
+    implements NodeDialogFactory, KaiNodeInterfaceFactory {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GoogleSheetsReaderModel createNodeModel() {
         return new GoogleSheetsReaderModel();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected int getNrNodeViews() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public NodeView<GoogleSheetsReaderModel> createNodeView(final int viewIndex, final GoogleSheetsReaderModel nodeModel) {
+    public NodeView<GoogleSheetsReaderModel> createNodeView(final int viewIndex,
+        final GoogleSheetsReaderModel nodeModel) {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean hasDialog() {
         return true;
     }
 
+    private static final String NODE_NAME = "Google Sheets Reader";
+
+    private static final String NODE_ICON = "./googlesheets.png";
+
+    private static final String SHORT_DESCRIPTION = """
+            Read tables from Google Sheets.
+            """;
+
+    private static final String FULL_DESCRIPTION = """
+            This node reads a tab ("sheet") of a Google spreadsheet. The spreadsheet can be selected from the
+                spreadsheets available on Google Drive. Optionally, a specific range can be read from the sheet. The
+                range must be entered in A1 notation (E.g. "A1:G10"). <p> For more information about A1 notation visit:
+                <a href="https://developers.google.com/sheets/api/guides/concepts#a1_notation">
+                developers.google.com/sheets/api/guides/concepts#a1_notation</a> </p>
+            """;
+
+    private static final List<PortDescription> INPUT_PORTS = List.of(
+            fixedPort("Google Sheets Connection", """
+                A Google Sheets Connection.
+                """)
+    );
+
+    private static final List<PortDescription> OUTPUT_PORTS = List.of(
+            fixedPort("Buffered Data Table", """
+                The retrieved sheet.
+                """)
+    );
+
+    private static final List<String> KEYWORDS = List.of( //
+        "Spreadsheet" //
+    );
+
     /**
      * {@inheritDoc}
+     * @since 5.10
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleSheetsReaderDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
+    }
+
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, GoogleSheetsReaderParameters.class);
+    }
+
+    @Override
+    public NodeDescription createNodeDescription() {
+        return DefaultNodeDescriptionUtil.createNodeDescription(
+            NODE_NAME,
+            NODE_ICON,
+            INPUT_PORTS,
+            OUTPUT_PORTS,
+            SHORT_DESCRIPTION,
+            FULL_DESCRIPTION,
+            List.of(),
+            GoogleSheetsReaderParameters.class,
+            null,
+            NodeType.Manipulator,
+            KEYWORDS,
+            null
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 5.10
+     */
+    @Override
+    public KaiNodeInterface createKaiNodeInterface() {
+        return new DefaultKaiNodeInterface(Map.of(SettingsType.MODEL, GoogleSheetsReaderParameters.class));
     }
 
 }

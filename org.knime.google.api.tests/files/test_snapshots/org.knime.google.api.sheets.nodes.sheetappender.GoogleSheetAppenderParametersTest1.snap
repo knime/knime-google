@@ -1,0 +1,455 @@
+{
+  "data" : {
+    "model" : {
+      "addColumnHeader" : true,
+      "addRowHeader" : true,
+      "enableMissingValuePattern" : false,
+      "missingValuePattern" : "",
+      "writeRaw" : true,
+      "openAfterExecution" : false,
+      "appenderColumnsSelection" : {
+        "mode" : "MANUAL",
+        "patternFilter" : {
+          "pattern" : "",
+          "isCaseSensitive" : true,
+          "isInverted" : false
+        },
+        "manualFilter" : {
+          "manuallySelected" : [ "Universe_0_0", "Universe_0_1", "Universe_1_0", "Universe_1_1", "Cluster Membership" ],
+          "manuallyDeselected" : [ ],
+          "includeUnknownColumns" : true
+        },
+        "typeFilter" : {
+          "selectedTypes" : [ ],
+          "typeDisplays" : [ ]
+        }
+      },
+      "spreadSheetIdentifierParameters" : {
+        "spreadSheetId" : "1-4rtLhr3cJAn-IxmtLd6jtNKgh8eTaZcN60XreMAj84",
+        "spreadSheetName" : "Lunch KNOffice 2025"
+      },
+      "sheetName" : "",
+      "createUniqueSheetName" : true
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "addColumnHeader" : {
+            "type" : "boolean",
+            "title" : "Add column header",
+            "description" : "Here you determine whether the column names should be written in the first row.\n",
+            "default" : true
+          },
+          "addRowHeader" : {
+            "type" : "boolean",
+            "title" : "Add row header",
+            "description" : "Here you determine whether the RowIDs should be written in the first column.\n",
+            "default" : true
+          },
+          "appenderColumnsSelection" : {
+            "type" : "object",
+            "properties" : {
+              "manualFilter" : {
+                "type" : "object",
+                "properties" : {
+                  "includeUnknownColumns" : {
+                    "type" : "boolean",
+                    "default" : false
+                  },
+                  "manuallyDeselected" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "manuallySelected" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "default" : {
+                  "manuallySelected" : [ ],
+                  "manuallyDeselected" : [ ],
+                  "includeUnknownColumns" : false
+                }
+              },
+              "mode" : {
+                "oneOf" : [ {
+                  "const" : "MANUAL",
+                  "title" : "Manual"
+                }, {
+                  "const" : "REGEX",
+                  "title" : "Regex"
+                }, {
+                  "const" : "WILDCARD",
+                  "title" : "Wildcard"
+                }, {
+                  "const" : "TYPE",
+                  "title" : "Type"
+                } ],
+                "default" : "MANUAL"
+              },
+              "patternFilter" : {
+                "type" : "object",
+                "properties" : {
+                  "isCaseSensitive" : {
+                    "type" : "boolean",
+                    "default" : false
+                  },
+                  "isInverted" : {
+                    "type" : "boolean",
+                    "default" : false
+                  },
+                  "pattern" : {
+                    "type" : "string",
+                    "default" : ""
+                  }
+                },
+                "default" : {
+                  "pattern" : "",
+                  "isCaseSensitive" : false,
+                  "isInverted" : false
+                }
+              },
+              "selected" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "typeFilter" : {
+                "type" : "object",
+                "properties" : {
+                  "selectedTypes" : {
+                    "default" : [ ],
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "default" : {
+                  "selectedTypes" : [ ],
+                  "typeDisplays" : [ ]
+                }
+              }
+            },
+            "title" : "Exclude/Include columns",
+            "description" : "Select the columns that will be written to the sheet file.\nIf the columns in the input table change, they will automatically be excluded.\n"
+          },
+          "connectionSummary" : {
+            "type" : "object"
+          },
+          "createUniqueSheetName" : {
+            "type" : "boolean",
+            "title" : "Create unique sheet name",
+            "description" : "The node will create a unique sheet name based on the given sheet name.\n(Example: Should 'SheetOne' already exist, the unique sheet name will be 'SheetOne (#1)')\n",
+            "default" : true
+          },
+          "enableMissingValuePattern" : {
+            "type" : "boolean",
+            "title" : "Fill in missing values",
+            "description" : "By selecting this option, you can specify a string you want to substitute for missing values.\nIf the option is left unchecked, the cells with missing values remain empty.\n",
+            "default" : false
+          },
+          "missingValuePattern" : {
+            "type" : "string",
+            "title" : "Missing value substitute",
+            "description" : "The value which is substituted for missing values.\n"
+          },
+          "openAfterExecution" : {
+            "type" : "boolean",
+            "title" : "Open spreadsheet after execution",
+            "description" : "Opens the spreadsheet after it has been written successfully. The spreadsheet will be opened in\nthe system's default browser.\n",
+            "default" : false
+          },
+          "refreshButton" : {
+            "type" : "object",
+            "title" : "Refresh",
+            "description" : "Refreshes the list of available spreadsheets from Google Drive.\n"
+          },
+          "sheetName" : {
+            "type" : "string",
+            "title" : "Sheet name",
+            "description" : "The name of the sheet to which the table should be written.\n",
+            "default" : ""
+          },
+          "spreadSheetIdentifierParameters" : {
+            "type" : "object",
+            "properties" : {
+              "openInBrowserButton" : {
+                "type" : "object",
+                "title" : "Open in browser",
+                "description" : "Opens the selected spreadsheet in the browser.\n"
+              },
+              "spreadSheetId" : {
+                "type" : "string",
+                "title" : "Spreadsheet",
+                "description" : "The spreadsheet can be selected from the spreadsheets available on Google Drive.\n"
+              },
+              "spreadSheetName" : {
+                "type" : "string"
+              }
+            },
+            "default" : { }
+          },
+          "writeRaw" : {
+            "type" : "boolean",
+            "title" : "Write raw (do not parse numbers, dates, hyperlinks, etc.)",
+            "description" : "Values are written into the spreadsheet as-is (\"raw\"), i.e. they will <i>not</i> be parsed.\nUncheck the option, if values should be written into the spreadsheet as if they were entered via\nthe Google Sheets website. If unchecked, numbers will stay as numbers, but other strings may be\nconverted to numbers, dates, etc. following the same rules that are applied when entering text\ninto a cell via the Google Sheets website. For example, strings like\n<tt>=hyperlink(\"example.com\", \"example\")</tt> will be parsed to hyperlinks if this option is\nunchecked.\n",
+            "default" : true
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "id" : "#/properties/model/properties/connectionSummary",
+      "options" : {
+        "format" : "textMessage"
+      },
+      "providedOptions" : [ "message" ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId",
+      "options" : {
+        "format" : "dropDown"
+      },
+      "providedOptions" : [ "possibleValues" ]
+    }, {
+      "type" : "HorizontalLayout",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/refreshButton",
+        "options" : {
+          "format" : "simpleButton",
+          "triggerId" : "org.knime.google.api.sheets.nodes.util.AbstractGoogleSpreadSheetParameters$RefreshButtonRef"
+        },
+        "rule" : {
+          "effect" : "ENABLE",
+          "condition" : {
+            "schema" : {
+              "not" : { }
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/openInBrowserButton",
+        "options" : {
+          "format" : "simpleButton",
+          "triggerId" : "org.knime.google.api.sheets.nodes.util.SpreadSheetParameters$OpenInBrowserButtonRef"
+        },
+        "rule" : {
+          "effect" : "ENABLE",
+          "condition" : {
+            "schema" : {
+              "not" : { }
+            }
+          }
+        }
+      } ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/sheetName",
+      "options" : {
+        "validation" : {
+          "pattern" : {
+            "errorMessage" : "The field cannot be blank (it must contain at least one non-whitespace character).",
+            "parameters" : {
+              "pattern" : ".*\\S.*"
+            }
+          }
+        }
+      }
+    }, {
+      "label" : "Write Settings",
+      "type" : "Section",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/addColumnHeader",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/addRowHeader",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/enableMissingValuePattern",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/missingValuePattern",
+        "rule" : {
+          "effect" : "SHOW",
+          "condition" : {
+            "scope" : "#/properties/model/properties/enableMissingValuePattern",
+            "schema" : {
+              "const" : true
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/writeRaw",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/createUniqueSheetName",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/openAfterExecution",
+        "options" : {
+          "format" : "checkbox"
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/appenderColumnsSelection",
+        "options" : {
+          "format" : "typedStringFilter",
+          "unknownValuesText" : "Any unknown column",
+          "emptyStateLabel" : "No columns in this list."
+        },
+        "providedOptions" : [ "possibleValues" ]
+      } ]
+    } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "connectionSummary" : { },
+          "refreshButton" : { },
+          "addColumnHeader" : {
+            "configKey" : "writeColName"
+          },
+          "addRowHeader" : {
+            "configKey" : "writeRowId"
+          },
+          "enableMissingValuePattern" : {
+            "configKey" : "missingValue_BOOL"
+          },
+          "missingValuePattern" : {
+            "configKey" : "missingValue"
+          },
+          "writeRaw" : {
+            "configKey" : "writeRaw"
+          },
+          "openAfterExecution" : {
+            "configKey" : "openAfterExecution"
+          },
+          "appenderColumnsSelection" : {
+            "configPaths" : [ [ "columnFilter", "filter-type" ], [ "columnFilter", "included_names" ], [ "columnFilter", "excluded_names" ], [ "columnFilter", "enforce_option" ], [ "columnFilter", "name_pattern", "pattern" ], [ "columnFilter", "name_pattern", "type" ], [ "columnFilter", "name_pattern", "caseSensitive" ], [ "columnFilter", "name_pattern", "excludeMatching" ] ]
+          },
+          "spreadSheetIdentifierParameters" : {
+            "configPaths" : [ [ "spreadsheetId" ], [ "spreadsheetName" ] ],
+            "route" : [ "spreadsheetChooser" ]
+          },
+          "sheetName" : {
+            "configKey" : "sheetName"
+          },
+          "createUniqueSheetName" : {
+            "configKey" : "createUniqueSheetName"
+          }
+        }
+      }
+    }
+  },
+  "initialUpdates" : [ {
+    "scope" : "#/properties/model/properties/appenderColumnsSelection",
+    "providedOptionName" : "possibleValues",
+    "values" : [ {
+      "indices" : [ ],
+      "value" : [ {
+        "id" : "Universe_0_0",
+        "text" : "Universe_0_0",
+        "type" : {
+          "id" : "org.knime.core.data.DoubleValue",
+          "text" : "Number (Float)"
+        }
+      }, {
+        "id" : "Universe_0_1",
+        "text" : "Universe_0_1",
+        "type" : {
+          "id" : "org.knime.core.data.DoubleValue",
+          "text" : "Number (Float)"
+        }
+      }, {
+        "id" : "Universe_1_0",
+        "text" : "Universe_1_0",
+        "type" : {
+          "id" : "org.knime.core.data.DoubleValue",
+          "text" : "Number (Float)"
+        }
+      }, {
+        "id" : "Universe_1_1",
+        "text" : "Universe_1_1",
+        "type" : {
+          "id" : "org.knime.core.data.DoubleValue",
+          "text" : "Number (Float)"
+        }
+      }, {
+        "id" : "Cluster Membership",
+        "text" : "Cluster Membership",
+        "type" : {
+          "id" : "org.knime.core.data.StringValue",
+          "text" : "String"
+        }
+      } ]
+    } ]
+  }, {
+    "id" : "#/properties/model/properties/connectionSummary",
+    "providedOptionName" : "message",
+    "values" : [ {
+      "indices" : [ ],
+      "value" : {
+        "title" : "Execute upstream nodes first.",
+        "description" : "Execute the upstream nodes first to select a spreadsheet.",
+        "type" : "INFO"
+      }
+    } ]
+  } ],
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog"
+    },
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.sheets.nodes.util.AbstractGoogleSpreadSheetParameters$RefreshButtonRef"
+    },
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.sheets.nodes.util.SpreadSheetParameters$OpenInBrowserButtonRef"
+    },
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId"
+    },
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  } ]
+}

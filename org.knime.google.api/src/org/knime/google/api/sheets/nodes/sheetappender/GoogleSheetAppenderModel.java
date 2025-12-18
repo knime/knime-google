@@ -59,7 +59,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -71,6 +70,7 @@ import org.knime.credentials.base.NoSuchCredentialException;
 import org.knime.google.api.sheets.data.GoogleSheetsConnection;
 import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObject;
 import org.knime.google.api.sheets.nodes.spreadsheetwriter.GoogleSpreadsheetWriterModel;
+import org.knime.google.api.sheets.nodes.util.GoogleSpreadSheetCacheNodeModel;
 import org.knime.google.api.sheets.nodes.util.NodesUtil;
 import org.knime.google.api.sheets.nodes.util.RangeUtil;
 import org.knime.google.api.sheets.nodes.util.RetryUtil;
@@ -87,8 +87,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
-public class GoogleSheetAppenderModel extends NodeModel {
-
+public class GoogleSheetAppenderModel extends GoogleSpreadSheetCacheNodeModel {
 
     GoogleSheetAppenderSettings m_settings = new GoogleSheetAppenderSettings();
 

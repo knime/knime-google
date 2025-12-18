@@ -48,16 +48,29 @@
  */
 package org.knime.google.api.sheets.nodes.util;
 
+import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.node.NodeModel;
+import org.knime.core.webui.node.dialog.defaultdialog.util.updates.StateComputationFailureException;
+import org.knime.credentials.base.NoSuchCredentialException;
+import org.knime.google.api.sheets.data.GoogleSheetsConnection;
+import org.knime.google.api.sheets.data.GoogleSheetsConnectionPortObjectSpec;
+import org.knime.node.parameters.NodeParametersInput;
+import org.knime.node.parameters.updates.EffectPredicate;
+import org.knime.node.parameters.updates.EffectPredicateProvider;
+import org.knime.node.parameters.updates.StateProvider;
+import org.knime.node.parameters.widget.message.TextMessage;
 
 /**
  * Contains utilities to handle functionality shared by multiple Google Sheets Nodes
  *
  * @author Jannik Löscher, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("restriction")
 public final class NodesUtil {
 
     private static final String VAR_SPREADSHEET_NAME = "spreadsheetName";
@@ -99,6 +112,104 @@ public final class NodesUtil {
         return variableNames.contains(VAR_SPREADSHEET_NAME + suffix) || //
                 variableNames.contains(VAR_SPREADSHEET_ID + suffix) || //
                 variableNames.contains(VAR_SHEET_NAME + suffix);
+    }
+
+    /**
+     * Effect predicate that enables/disables buttons depending on the connection input port state.
+     *
+     * @author Magnus Gohm, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class AreButtonsEnabled implements EffectPredicateProvider {
+
+        @Override
+        public EffectPredicate init(final PredicateInitializer i) {
+            return i.getConstant(pi -> {
+                final var inputPortSpecOpt = pi.getInPortSpec(0);
+                if (inputPortSpecOpt.isEmpty()) {
+                    return false;
+                }
+                GoogleSheetsConnectionPortObjectSpec connectionSpec =
+                    (GoogleSheetsConnectionPortObjectSpec)inputPortSpecOpt.get();
+                if (connectionSpec.getGoogleSheetsConnection() == null) {
+                    return false;
+                }
+                try {
+                    connectionSpec.getGoogleSheetsConnection().getSheetsService();
+                } catch (IOException | NoSuchCredentialException e) { //NOSONAR
+                    return false;
+                }
+                return true;
+            });
+        }
+
+    }
+
+    /**
+     * Message provider that shows messages depending on the connection input port state.
+     *
+     * @author Magnus Gohm, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class ConnectionMessageProvider implements StateProvider<Optional<TextMessage.Message>> {
+
+        @Override
+        public void init(final StateProviderInitializer initializer) {
+            initializer.computeBeforeOpenDialog();
+        }
+
+        @Override
+        public Optional<TextMessage.Message> computeState(final NodeParametersInput parametersInput)
+            throws StateComputationFailureException {
+            final var inputPortSpecOpt = parametersInput.getInPortSpec(0);
+            if (inputPortSpecOpt.isEmpty()) {
+                return Optional.of(new TextMessage.Message("Missing google sheets connection.",
+                    "Connect a \"Google Sheets Connector\" node to select a spreadsheet.",
+                    TextMessage.MessageType.INFO));
+            }
+
+            if (parametersInput.getInPortObject(0).isEmpty()) {
+                return Optional.of(new TextMessage.Message("Execute upstream nodes first.",
+                    "Execute the upstream nodes first to select a spreadsheet.", TextMessage.MessageType.INFO));
+            }
+
+            return Optional.empty();
+        }
+
+    }
+
+    /**
+     *
+     * Gets the Google Sheets connection from the input port and checks if it is valid by trying to create the
+     * sheets service.
+     *
+     * @param parametersInput the node parameters input
+     * @return the Google Sheets connection
+     */
+    public static GoogleSheetsConnection getCheckedSheetConnection(final NodeParametersInput parametersInput) {
+        GoogleSheetsConnection sheetConnection = getUncheckedSheetConnection(parametersInput);
+        try {
+            sheetConnection.getSheetsService();
+        } catch (IOException | NoSuchCredentialException e) {
+            throw ExceptionUtils.asRuntimeException(e);
+        }
+        return sheetConnection;
+    }
+
+    /**
+     * Gets the Google Sheets connection from the input port without checking if it is valid.
+     *
+     * @param parametersInput the node parameters input
+     * @return the Google Sheets connection
+     */
+    public static GoogleSheetsConnection getUncheckedSheetConnection(final NodeParametersInput parametersInput) {
+        GoogleSheetsConnection sheetConnection = null;
+        final var inputPortSpecOpt = parametersInput.getInPortSpec(0);
+        if (inputPortSpecOpt.isPresent() && parametersInput.getInPortObject(0).isPresent()) {
+            final var inputPortSpec = inputPortSpecOpt.get();
+            GoogleSheetsConnectionPortObjectSpec connectionSpec =
+                (GoogleSheetsConnectionPortObjectSpec)inputPortSpec;
+            sheetConnection = connectionSpec.getGoogleSheetsConnection();
+        }
+        return sheetConnection;
     }
 
 }
