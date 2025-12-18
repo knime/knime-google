@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="test">
+    <config key="spreadsheet">
+        <entry key="spreadsheetId" type="xstring" value="1-4rtLhr3cJAn-IxmtLd6jtNKgh8eTaZcN60XreMAj84"/>
+        <entry key="spreadsheetName" type="xstring" value="Lunch KNOffice 2025"/>
+        <entry key="firstSheet" type="xboolean" value="false"/>
+        <entry key="sheetName" type="xstring" value="09.01."/>
+    </config>
+    <entry key="readRange_BOOL" type="xboolean" value="false"/>
+    <entry key="readRange" type="xstring" value=""/>
+    <entry key="hasColumnHeader" type="xboolean" value="true"/>
+    <entry key="hasRowHeader" type="xboolean" value="true"/>
+</config>

@@ -47,55 +47,124 @@
  */
 package org.knime.google.api.sheets.nodes.sheetappender;
 
+import static org.knime.node.impl.description.PortDescription.fixedPort;
+
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultKaiNodeInterface;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterface;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterfaceFactory;
+import org.knime.node.impl.description.DefaultNodeDescriptionUtil;
+import org.knime.node.impl.description.PortDescription;
 
 /**
  * The factory to the Google Sheet Appender node
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Magnus Gohm, KNIME GmbH, Konstanz, Germany
+ * @author AI Migration Pipeline v1.2
  */
-public class GoogleSheetAppenderFactory extends NodeFactory<GoogleSheetAppenderModel> {
+@SuppressWarnings("restriction")
+public class GoogleSheetAppenderFactory extends NodeFactory<GoogleSheetAppenderModel>
+    implements NodeDialogFactory, KaiNodeInterfaceFactory {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GoogleSheetAppenderModel createNodeModel() {
         return new GoogleSheetAppenderModel();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected int getNrNodeViews() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public NodeView<GoogleSheetAppenderModel> createNodeView(final int viewIndex, final GoogleSheetAppenderModel nodeModel) {
+    public NodeView<GoogleSheetAppenderModel> createNodeView(final int viewIndex,
+        final GoogleSheetAppenderModel nodeModel) {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean hasDialog() {
         return true;
     }
 
+    private static final String NODE_NAME = "Google Sheets Appender";
+
+    private static final String NODE_ICON = "./googlesheets.png";
+
+    private static final String SHORT_DESCRIPTION = """
+            Appends a new sheet to an existing spreadsheet in Google Sheets.
+            """;
+
+    private static final String FULL_DESCRIPTION = """
+            Writes the input table to a new sheet of an existing spreadsheet in Google Sheets.
+            """;
+
+    private static final List<PortDescription> INPUT_PORTS = List.of(
+            fixedPort("Google Sheets Connection", """
+                A Google Sheets connection.
+                """),
+            fixedPort("Buffered data table", """
+                Table to be written to a Google sheet
+                """)
+    );
+
+    private static final List<PortDescription> OUTPUT_PORTS = List.of();
+
+    private static final List<String> KEYWORDS = List.of( //
+        "Spreadsheet" //
+    );
+
     /**
      * {@inheritDoc}
+     * @since 5.10
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleSheetAppenderDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
+    }
+
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, GoogleSheetAppenderParameters.class);
+    }
+
+    @Override
+    public NodeDescription createNodeDescription() {
+        return DefaultNodeDescriptionUtil.createNodeDescription( //
+            NODE_NAME, //
+            NODE_ICON, //
+            INPUT_PORTS, //
+            OUTPUT_PORTS, //
+            SHORT_DESCRIPTION, //
+            FULL_DESCRIPTION, //
+            List.of(), //
+            GoogleSheetAppenderParameters.class, //
+            null, //
+            NodeType.Manipulator, //
+            KEYWORDS, //
+            null //
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 5.10
+     */
+    @Override
+    public KaiNodeInterface createKaiNodeInterface() {
+        return new DefaultKaiNodeInterface(Map.of(SettingsType.MODEL, GoogleSheetAppenderParameters.class));
     }
 
 }

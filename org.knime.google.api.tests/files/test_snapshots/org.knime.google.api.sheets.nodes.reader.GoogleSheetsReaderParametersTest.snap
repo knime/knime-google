@@ -1,0 +1,266 @@
+{
+  "data" : {
+    "model" : {
+      "spreadSheetIdentifierParameters" : { },
+      "firstSheet" : false,
+      "enableRange" : false,
+      "range" : "",
+      "hasColumnHeader" : true,
+      "hasRowHeader" : true
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "connectionSummary" : {
+            "type" : "object"
+          },
+          "enableRange" : {
+            "type" : "boolean",
+            "title" : "Select range",
+            "description" : "Specify whether a range should be read from the sheet.\n",
+            "default" : false
+          },
+          "firstSheet" : {
+            "type" : "boolean",
+            "title" : "Select first sheet",
+            "description" : "When selected, the first sheet of the spreadsheet will be read instead of the one selected from the\ndrop-down menu.\n",
+            "default" : false
+          },
+          "hasColumnHeader" : {
+            "type" : "boolean",
+            "title" : "Read column names",
+            "description" : "Specify whether the first row of the sheet should be read as column names.\n",
+            "default" : true
+          },
+          "hasRowHeader" : {
+            "type" : "boolean",
+            "title" : "Read RowIDs",
+            "description" : "Specify whether the first column of the sheet should be read as RowIDs.\n",
+            "default" : true
+          },
+          "range" : {
+            "type" : "string",
+            "title" : "Range",
+            "description" : "The range that should be read from the sheet can be specified in A1 notation. (E.g. \"A1:G20\")\n",
+            "default" : ""
+          },
+          "refreshButton" : {
+            "type" : "object",
+            "title" : "Refresh",
+            "description" : "Refreshes the list of available spreadsheets from Google Drive.\n"
+          },
+          "sheetName" : {
+            "type" : "string",
+            "title" : "Sheet",
+            "description" : "The sheet from the spreadsheet that should be read.\nAvailable sheets can be selected from the drop-down menu.\n"
+          },
+          "spreadSheetIdentifierParameters" : {
+            "type" : "object",
+            "properties" : {
+              "openInBrowserButton" : {
+                "type" : "object",
+                "title" : "Open in browser",
+                "description" : "Opens the selected spreadsheet in the browser.\n"
+              },
+              "spreadSheetId" : {
+                "type" : "string",
+                "title" : "Spreadsheet",
+                "description" : "The spreadsheet can be selected from the spreadsheets available on Google Drive.\n"
+              },
+              "spreadSheetName" : {
+                "type" : "string"
+              }
+            },
+            "default" : { }
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "id" : "#/properties/model/properties/connectionSummary",
+      "options" : {
+        "format" : "textMessage"
+      },
+      "providedOptions" : [ "message" ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId",
+      "options" : {
+        "format" : "dropDown"
+      },
+      "providedOptions" : [ "possibleValues" ]
+    }, {
+      "type" : "HorizontalLayout",
+      "elements" : [ {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/refreshButton",
+        "options" : {
+          "format" : "simpleButton",
+          "triggerId" : "org.knime.google.api.sheets.nodes.util.AbstractGoogleSpreadSheetParameters$RefreshButtonRef"
+        },
+        "rule" : {
+          "effect" : "ENABLE",
+          "condition" : {
+            "schema" : {
+              "not" : { }
+            }
+          }
+        }
+      }, {
+        "type" : "Control",
+        "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/openInBrowserButton",
+        "options" : {
+          "format" : "simpleButton",
+          "triggerId" : "org.knime.google.api.sheets.nodes.util.SpreadSheetParameters$OpenInBrowserButtonRef"
+        },
+        "rule" : {
+          "effect" : "ENABLE",
+          "condition" : {
+            "schema" : {
+              "not" : { }
+            }
+          }
+        }
+      } ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/firstSheet",
+      "options" : {
+        "format" : "checkbox"
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/sheetName",
+      "options" : {
+        "format" : "dropDown"
+      },
+      "providedOptions" : [ "possibleValues" ],
+      "rule" : {
+        "effect" : "HIDE",
+        "condition" : {
+          "scope" : "#/properties/model/properties/firstSheet",
+          "schema" : {
+            "const" : true
+          }
+        }
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/enableRange",
+      "options" : {
+        "format" : "checkbox"
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/range",
+      "options" : {
+        "validation" : {
+          "minLength" : {
+            "errorMessage" : "The field cannot be empty (it must contain at least one character).",
+            "parameters" : {
+              "minLength" : 1
+            }
+          }
+        }
+      },
+      "rule" : {
+        "effect" : "SHOW",
+        "condition" : {
+          "scope" : "#/properties/model/properties/enableRange",
+          "schema" : {
+            "const" : true
+          }
+        }
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/hasColumnHeader",
+      "options" : {
+        "format" : "checkbox"
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/hasRowHeader",
+      "options" : {
+        "format" : "checkbox"
+      }
+    } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "connectionSummary" : { },
+          "refreshButton" : { },
+          "spreadSheetIdentifierParameters" : {
+            "configPaths" : [ [ "spreadsheetId" ], [ "spreadsheetName" ] ],
+            "route" : [ "spreadsheet" ]
+          },
+          "firstSheet" : {
+            "configKey" : "firstSheet",
+            "route" : [ "spreadsheet" ]
+          },
+          "sheetName" : {
+            "configKey" : "sheetName",
+            "route" : [ "spreadsheet" ]
+          },
+          "enableRange" : {
+            "configKey" : "readRange_BOOL"
+          },
+          "range" : {
+            "configKey" : "readRange"
+          },
+          "hasColumnHeader" : {
+            "configKey" : "hasColumnHeader"
+          },
+          "hasRowHeader" : {
+            "configKey" : "hasRowHeader"
+          }
+        }
+      }
+    }
+  },
+  "initialUpdates" : [ {
+    "id" : "#/properties/model/properties/connectionSummary",
+    "providedOptionName" : "message",
+    "values" : [ {
+      "indices" : [ ],
+      "value" : {
+        "title" : "Execute upstream nodes first.",
+        "description" : "Execute the upstream nodes first to select a spreadsheet.",
+        "type" : "INFO"
+      }
+    } ]
+  } ],
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog"
+    },
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/sheetName", "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.sheets.nodes.util.AbstractGoogleSpreadSheetParameters$RefreshButtonRef"
+    },
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "id" : "org.knime.google.api.sheets.nodes.util.SpreadSheetParameters$OpenInBrowserButtonRef"
+    },
+    "dependencies" : [ "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId"
+    },
+    "dependencies" : [ "#/properties/model/properties/sheetName", "#/properties/model/properties/spreadSheetIdentifierParameters/properties/spreadSheetId" ]
+  } ]
+}
