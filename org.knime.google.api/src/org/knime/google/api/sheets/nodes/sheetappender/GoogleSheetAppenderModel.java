@@ -51,6 +51,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import com.google.api.services.drive.model.FileList;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -88,6 +99,67 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
  */
 public class GoogleSheetAppenderModel extends NodeModel {
+
+    record SpreadSheetCacheKey(GoogleSheetsConnection sheetsConnection) {
+    }
+
+    private LoadingCache<SpreadSheetCacheKey, List<com.google.api.services.drive.model.File>> m_spreadSheetsCache =
+        CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).weakKeys()
+            .build(new CacheLoader<SpreadSheetCacheKey, List<com.google.api.services.drive.model.File>>() {
+
+                @Override
+                public List<com.google.api.services.drive.model.File> load(final SpreadSheetCacheKey key) {
+                    try {
+                        final List<com.google.api.services.drive.model.File> spreadsheets = new ArrayList<>();
+                        final com.google.api.services.drive.Drive.Files.List request =
+                            key.sheetsConnection.getDriveService().files().list()
+                                .setQ("mimeType='application/vnd.google-apps.spreadsheet'");
+
+                        do {
+                            final FileList execute = request.execute();
+                            spreadsheets.addAll(execute.getFiles());
+                        } while (request.getPageToken() != null && request.getPageToken().length() > 0);
+
+                        return spreadsheets;
+                    } catch (IOException | NoSuchCredentialException e) {
+                        throw ExceptionUtils.asRuntimeException(e);
+                    }
+                }
+
+                @Override
+                public ListenableFuture<List<com.google.api.services.drive.model.File>> reload(
+                    final SpreadSheetCacheKey key, final List<com.google.api.services.drive.model.File> oldValue)
+                    throws Exception {
+                    return Futures.immediateFuture(load(key));
+                }
+
+            });
+
+    /**
+     * Retrieves the spreadsheets cache entry.
+     *
+     * @param key the google sheets connection
+     * @return the spreadsheets cache entry
+     * @throws ExecutionException if the cache could not be retrieved
+     */
+    List<com.google.api.services.drive.model.File> getSpreadSheetsEntry(final GoogleSheetsConnection key)
+        throws ExecutionException {
+        return m_spreadSheetsCache.get(new SpreadSheetCacheKey(key));
+    }
+
+    /**
+     * Computes the spreadsheets cache entry.
+     *
+     * @param key the google sheets connection
+     * @return the spreadsheets cache entry
+     * @throws ExecutionException if the cache could not be computed
+     */
+    List<com.google.api.services.drive.model.File> computeSpreadSheetsEntry(final GoogleSheetsConnection key)
+        throws ExecutionException {
+        final var cacheKey = new SpreadSheetCacheKey(key);
+        m_spreadSheetsCache.refresh(cacheKey);
+        return m_spreadSheetsCache.get(cacheKey);
+    }
 
 
     GoogleSheetAppenderSettings m_settings = new GoogleSheetAppenderSettings();
