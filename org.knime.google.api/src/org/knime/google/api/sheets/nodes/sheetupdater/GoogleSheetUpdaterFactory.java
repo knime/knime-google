@@ -47,55 +47,127 @@
  */
 package org.knime.google.api.sheets.nodes.sheetupdater;
 
+import static org.knime.node.impl.description.PortDescription.fixedPort;
+
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultKaiNodeInterface;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterface;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterfaceFactory;
+import org.knime.node.impl.description.DefaultNodeDescriptionUtil;
+import org.knime.node.impl.description.PortDescription;
 
 /**
  * The factory to the Google Sheets Updater node.
  *
  * @author Ole Ostergaard, KNIME GmbH, Konstanz, Germany
+ * @author Magnus Gohm, KNIME GmbH, Konstanz, Germany
+ * @author AI Migration Pipeline v1.2
  */
-public class GoogleSheetUpdaterFactory extends NodeFactory<GoogleSheetUpdaterModel> {
+@SuppressWarnings("restriction")
+public class GoogleSheetUpdaterFactory extends NodeFactory<GoogleSheetUpdaterModel>
+    implements NodeDialogFactory, KaiNodeInterfaceFactory {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GoogleSheetUpdaterModel createNodeModel() {
         return new GoogleSheetUpdaterModel();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected int getNrNodeViews() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public NodeView<GoogleSheetUpdaterModel> createNodeView(final int viewIndex, final GoogleSheetUpdaterModel nodeModel) {
+    public NodeView<GoogleSheetUpdaterModel> createNodeView(final int viewIndex,
+        final GoogleSheetUpdaterModel nodeModel) {
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean hasDialog() {
         return true;
     }
 
+    private static final String NODE_NAME = "Google Sheets Updater";
+
+    private static final String NODE_ICON = "./googlesheets.png";
+
+    private static final String SHORT_DESCRIPTION = """
+            This node updates values in an existing sheet.
+            """;
+
+    private static final String FULL_DESCRIPTION = """
+            This node writes the input data table to an existing Google sheet. It can overwrite some or all of the
+                content of a sheet or append to the content of a sheet. If only part of the content of a sheet is to be
+                overwritten, the relevant range can be specified in A1 notation. The size of the input table must not
+                exceed the size of the selected range, otherwise execution will fail.
+            """;
+
+    private static final List<PortDescription> INPUT_PORTS = List.of(
+            fixedPort("Google Sheets Connection", """
+                A Google Sheets connection.
+                """),
+            fixedPort("Buffered data table", """
+                Table to be written to a Google sheet
+                """)
+    );
+
+    private static final List<PortDescription> OUTPUT_PORTS = List.of();
+
+    private static final List<String> KEYWORDS = List.of( //
+        "Spreadsheet" //
+    );
+
     /**
      * {@inheritDoc}
+     * @since 5.10
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GoogleSheetUpdaterDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
+    }
+
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, GoogleSheetUpdaterParameters.class);
+    }
+
+    @Override
+    public NodeDescription createNodeDescription() {
+        return DefaultNodeDescriptionUtil.createNodeDescription( //
+            NODE_NAME, //
+            NODE_ICON, //
+            INPUT_PORTS, //
+            OUTPUT_PORTS, //
+            SHORT_DESCRIPTION, //
+            FULL_DESCRIPTION, //
+            List.of(), //
+            GoogleSheetUpdaterParameters.class, //
+            null, //
+            NodeType.Manipulator, //
+            KEYWORDS, //
+            null //
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 5.10
+     */
+    @Override
+    public KaiNodeInterface createKaiNodeInterface() {
+        return new DefaultKaiNodeInterface(Map.of(SettingsType.MODEL, GoogleSheetUpdaterParameters.class));
     }
 
 }
