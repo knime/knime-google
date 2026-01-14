@@ -30,6 +30,7 @@
 		<module>org.knime.google.api.tests</module>
 		<module>org.knime.google.cloud.storage</module>
 		<module>org.knime.ext.google.filehandling.cloudstorage</module>
+		<module>org.knime.ext.google.filehandling.cloudstorage.tests</module>
 		<module>org.knime.ext.google.filehandling.drive</module>
 		<module>org.knime.ext.google.filehandling.drive.tests</module>
 		<module>org.knime.features.google.api</module>

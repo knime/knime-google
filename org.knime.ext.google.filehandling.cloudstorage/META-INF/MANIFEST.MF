@@ -14,8 +14,9 @@ Require-Bundle: org.knime.base;bundle-version="[5.9.0,6.0.0)",
  org.knime.google.cloud.storage;bundle-version="[5.9.0,6.0.0)",
  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
  org.knime.credentials.base;bundle-version="[5.9.0,6.0.0)",
- org.knime.credentials.base.oauth;bundle-version="[5.9.0,6.0.0)"
+ org.knime.credentials.base.oauth;bundle-version="[5.9.0,6.0.0)",
+ org.knime.core.ui;bundle-version="[5.9.0,6.0.0)"
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
 Automatic-Module-Name: org.knime.ext.google.filehandling.cloudstorage
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
