@@ -48,16 +48,45 @@
  */
 package org.knime.ext.google.filehandling.cloudstorage.node;
 
+import static org.knime.node.impl.description.PortDescription.fixedPort;
+
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.webui.node.dialog.NodeDialog;
+import org.knime.core.webui.node.dialog.NodeDialogFactory;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultKaiNodeInterface;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterface;
+import org.knime.core.webui.node.dialog.kai.KaiNodeInterfaceFactory;
+import org.knime.node.impl.description.DefaultNodeDescriptionUtil;
+import org.knime.node.impl.description.PortDescription;
 
 /**
  * Factory class for Google Cloud Storage Connection node.
  *
  * @author Alexander Bondaletov
  */
-public class CloudStorageConnectorNodeFactory extends NodeFactory<CloudStorageConnectorNodeModel> {
+@SuppressWarnings("restriction")
+public class CloudStorageConnectorNodeFactory extends NodeFactory<CloudStorageConnectorNodeModel>
+        implements NodeDialogFactory, KaiNodeInterfaceFactory {
+
+    private static final String NODE_NAME = "Google Cloud Storage Connector";
+    private static final String NODE_ICON = "./file_system_connector.png";
+    private static final String SHORT_DESCRIPTION = "Connects to Google Cloud Storage.";
+    private static final String FULL_DESCRIPTION = "This node connects to Google Cloud Storage. "
+            + "The resulting output port allows downstream nodes to access the files in Google Cloud Storage.";
+
+    private static final List<PortDescription> INPUT_PORTS = List.of(fixedPort("Google Service Connection",
+            "Google Authentication connection."));
+    private static final List<PortDescription> OUTPUT_PORTS = List.of(fixedPort("Google Cloud Storage Connection",
+            "Connection to Google Cloud Storage file system."));
 
     /**
      * {@inheritDoc}
@@ -97,7 +126,33 @@ public class CloudStorageConnectorNodeFactory extends NodeFactory<CloudStorageCo
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new CloudStorageConnectorNodeDialog();
+        return NodeDialogManager.createLegacyFlowVariableNodeDialog(createNodeDialog());
     }
 
+    @Override
+    public NodeDialog createNodeDialog() {
+        return new DefaultNodeDialog(SettingsType.MODEL, CloudStorageConnectorNodeParameters.class);
+    }
+
+    @Override
+    public KaiNodeInterface createKaiNodeInterface() {
+        return new DefaultKaiNodeInterface(Map.of(SettingsType.MODEL, CloudStorageConnectorNodeParameters.class));
+    }
+
+    @Override
+    public NodeDescription createNodeDescription() {
+        return DefaultNodeDescriptionUtil.createNodeDescription( //
+                NODE_NAME, //
+                NODE_ICON, //
+                INPUT_PORTS, //
+                OUTPUT_PORTS, //
+                SHORT_DESCRIPTION, //
+                FULL_DESCRIPTION, //
+                List.of(), //
+                CloudStorageConnectorNodeParameters.class, //
+                null, //
+                NodeType.Source, //
+                List.of(), //
+                null);
+    }
 }
