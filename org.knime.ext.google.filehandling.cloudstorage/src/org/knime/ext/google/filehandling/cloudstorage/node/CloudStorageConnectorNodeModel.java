@@ -87,7 +87,7 @@ class CloudStorageConnectorNodeModel extends NodeModel {
     private String m_fsId;
     private CloudStorageFSConnection m_fsConnection;
 
-    private final CloudStorageConnectorSettings m_settings = new CloudStorageConnectorSettings();
+    private final CloudStorageConnectorNodeParameters m_params = new CloudStorageConnectorNodeParameters();
 
     /**
      * Creates new instance.
@@ -103,7 +103,7 @@ class CloudStorageConnectorNodeModel extends NodeModel {
 
         final var creds = CredentialUtil.toOAuth2Credentials(inSpec);
 
-        m_fsConnection = new CloudStorageFSConnection(m_settings.toFSConnectionConfig(creds));
+        m_fsConnection = new CloudStorageFSConnection(m_params.createFSConnectionConfig(creds));
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {
@@ -142,17 +142,18 @@ class CloudStorageConnectorNodeModel extends NodeModel {
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_settings.saveSettingsTo(settings);
+        m_params.save(settings);
     }
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.validateSettings(settings);
+        m_params.load(settings);
+        m_params.validate();
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.loadSettingsFrom(settings);
+        m_params.load(settings);
     }
 
     @Override

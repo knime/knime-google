@@ -1,0 +1,179 @@
+{
+  "data" : {
+    "model" : {
+      "projectId" : "",
+      "workingDirectory" : "/",
+      "normalizePaths" : true,
+      "connectionTimeout" : 20,
+      "readTimeout" : 20
+    }
+  },
+  "schema" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "connectionTimeout" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Connection timeout in seconds",
+            "description" : "Timeout in seconds to establish a connection or 0 for an infinite timeout.",
+            "default" : 20
+          },
+          "normalizePaths" : {
+            "type" : "boolean",
+            "title" : "Normalize paths",
+            "description" : "Determines if the path normalization should be applied. Path normalization eliminates redundant components of a path like, e.g. /a/../b/./c\" can be normalized to \"/b/c\". When these redundant  components like \"../\" or \".\" are part of an existing object, then normalization must be deactivated in order to access them properly.",
+            "default" : true
+          },
+          "projectId" : {
+            "type" : "string",
+            "title" : "Project ID",
+            "description" : "Specifies the <a href=\"https://cloud.google.com/storage/docs/key-terms#projects\">project</a> to which the Cloud Storage data belongs. See <a  href=\"https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects\">Google Cloud Documentation</a> for more information.",
+            "default" : ""
+          },
+          "readTimeout" : {
+            "type" : "integer",
+            "format" : "int32",
+            "title" : "Read timeout in seconds",
+            "description" : "Timeout in seconds to read data from an established connection or 0 for an infinite timeout.",
+            "default" : 20
+          },
+          "workingDirectory" : {
+            "type" : "string",
+            "title" : "Working directory",
+            "description" : "Specifies the <i>working directory</i> using the path syntax explained above. The working directory must be specified as an absolute path. A working directory allows downstream nodes to access files/folders using <i>relative</i> paths, i.e. paths that do not have a leading slash. If not specified, the default working directory is \"/\".",
+            "default" : "/"
+          }
+        }
+      }
+    }
+  },
+  "ui_schema" : {
+    "elements" : [ {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/projectId",
+      "options" : {
+        "validation" : {
+          "minLength" : {
+            "errorMessage" : "The field cannot be empty (it must contain at least one character).",
+            "parameters" : {
+              "minLength" : 1
+            }
+          }
+        }
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/workingDirectory",
+      "options" : {
+        "selectionMode" : "FOLDER",
+        "format" : "stringFileChooser"
+      },
+      "providedOptions" : [ "fileSystemId" ]
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/normalizePaths",
+      "options" : {
+        "format" : "checkbox"
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/connectionTimeout",
+      "options" : {
+        "validation" : {
+          "max" : {
+            "errorMessage" : "The value must not exceed 2147483647.",
+            "parameters" : {
+              "isExclusive" : false,
+              "max" : 2.147483647E9
+            }
+          },
+          "min" : {
+            "errorMessage" : "The value must be at least 0.",
+            "parameters" : {
+              "isExclusive" : false,
+              "min" : 0.0
+            }
+          }
+        },
+        "isAdvanced" : true
+      }
+    }, {
+      "type" : "Control",
+      "scope" : "#/properties/model/properties/readTimeout",
+      "options" : {
+        "validation" : {
+          "max" : {
+            "errorMessage" : "The value must not exceed 2147483647.",
+            "parameters" : {
+              "isExclusive" : false,
+              "max" : 2.147483647E9
+            }
+          },
+          "min" : {
+            "errorMessage" : "The value must be at least 0.",
+            "parameters" : {
+              "isExclusive" : false,
+              "min" : 0.0
+            }
+          }
+        },
+        "isAdvanced" : true
+      }
+    } ]
+  },
+  "persist" : {
+    "type" : "object",
+    "properties" : {
+      "model" : {
+        "type" : "object",
+        "properties" : {
+          "projectId" : {
+            "configKey" : "projectId"
+          },
+          "workingDirectory" : {
+            "configKey" : "workingDirectory"
+          },
+          "normalizePaths" : {
+            "configKey" : "normalizePaths"
+          },
+          "connectionTimeout" : {
+            "configKey" : "connectionTimeout"
+          },
+          "readTimeout" : {
+            "configKey" : "readTimeout"
+          }
+        }
+      }
+    }
+  },
+  "globalUpdates" : [ {
+    "trigger" : {
+      "id" : "after-open-dialog"
+    },
+    "triggerInitially" : true,
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/normalizePaths", "#/properties/model/properties/projectId", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/connectionTimeout"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/normalizePaths", "#/properties/model/properties/projectId", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/normalizePaths"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/normalizePaths", "#/properties/model/properties/projectId", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/projectId"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/normalizePaths", "#/properties/model/properties/projectId", "#/properties/model/properties/readTimeout" ]
+  }, {
+    "trigger" : {
+      "scope" : "#/properties/model/properties/readTimeout"
+    },
+    "dependencies" : [ "#/properties/model/properties/connectionTimeout", "#/properties/model/properties/normalizePaths", "#/properties/model/properties/projectId", "#/properties/model/properties/readTimeout" ]
+  } ]
+}
