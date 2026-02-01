@@ -56,12 +56,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.webui.node.impl.WebUINodeModel;
 import org.knime.credentials.base.CredentialPortObject;
 import org.knime.credentials.base.CredentialPortObjectSpec;
 import org.knime.ext.google.filehandling.cloudstorage.fs.CloudStorageFSConnection;
@@ -80,30 +78,32 @@ import com.google.cloud.storage.StorageException;
  *
  * @author Alexander Bondaletov
  */
-class CloudStorageConnectorNodeModel extends NodeModel {
+@SuppressWarnings({ "deprecation", "restriction" })
+class CloudStorageConnectorNodeModel extends WebUINodeModel<CloudStorageConnectorNodeParameters> {
 
     private static final String FILE_SYSTEM_NAME = "Google Cloud Storage";
 
     private String m_fsId;
     private CloudStorageFSConnection m_fsConnection;
 
-    private final CloudStorageConnectorNodeParameters m_params = new CloudStorageConnectorNodeParameters();
-
     /**
      * Creates new instance.
      */
     protected CloudStorageConnectorNodeModel() {
-        super(new PortType[] { CredentialPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE });
+        super(new PortType[] { CredentialPortObject.TYPE }, new PortType[] { FileSystemPortObject.TYPE },
+                CloudStorageConnectorNodeParameters.class);
     }
 
     @SuppressWarnings("resource")
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec,
+            final CloudStorageConnectorNodeParameters params) throws Exception {
+
         final var inSpec = (CredentialPortObjectSpec) inObjects[0].getSpec();
 
         final var creds = CredentialUtil.toOAuth2Credentials(inSpec);
 
-        m_fsConnection = new CloudStorageFSConnection(m_params.createFSConnectionConfig(creds));
+        m_fsConnection = new CloudStorageFSConnection(params.createFSConnectionConfig(creds));
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
 
         try {
@@ -116,7 +116,10 @@ class CloudStorageConnectorNodeModel extends NodeModel {
     }
 
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
+            final CloudStorageConnectorNodeParameters params) throws InvalidSettingsException {
+
+        params.validateOnConfigure();
         m_fsId = FSConnectionRegistry.getInstance().getKey();
         return new PortObjectSpec[] { createSpec() };
     }
@@ -132,28 +135,6 @@ class CloudStorageConnectorNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
         setWarningMessage("Connection no longer available. Please re-execute the node.");
 
-    }
-
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // nothing to save
-    }
-
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_params.save(settings);
-    }
-
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_params.load(settings);
-        m_params.validate();
-    }
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_params.load(settings);
     }
 
     @Override
