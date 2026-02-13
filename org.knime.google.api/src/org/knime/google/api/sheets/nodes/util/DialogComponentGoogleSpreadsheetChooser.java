@@ -445,6 +445,9 @@ public class DialogComponentGoogleSpreadsheetChooser extends DialogComponent {
         final List<File> spreadsheets = new ArrayList<File>();
         final com.google.api.services.drive.Drive.Files.List request =
                 m_sheetsConnection.getDriveService().files().list()
+                .setCorpora("allDrives")
+                .setIncludeItemsFromAllDrives(true)
+                .setSupportsAllDrives(true)
                 .setQ("mimeType='application/vnd.google-apps.spreadsheet'");
 
         do {

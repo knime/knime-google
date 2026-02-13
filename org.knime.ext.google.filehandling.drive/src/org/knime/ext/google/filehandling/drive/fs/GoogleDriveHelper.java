@@ -167,6 +167,8 @@ public class GoogleDriveHelper {
 
         if (driveId != null) {
             addDriveIdToQuery(query, driveId);
+        } else {
+            addSearchAllDrivesToQuery(query);
         }
 
         FileList result = query.execute();
@@ -401,6 +403,8 @@ public class GoogleDriveHelper {
                 .setSpaces("drive");
         if (driveId != null) {
             addDriveIdToQuery(query, driveId);
+        } else {
+            addSearchAllDrivesToQuery(query);
         }
 
         final List<File> files = new LinkedList<>();
@@ -427,6 +431,15 @@ public class GoogleDriveHelper {
         query.setDriveId(driveId);
         query.setIncludeItemsFromAllDrives(true);
         query.setCorpora("drive");
+        query.setSupportsAllDrives(true);
+    }
+
+    /**
+     * @param query
+     */
+    private static void addSearchAllDrivesToQuery(final Files.List query) {
+        query.setIncludeItemsFromAllDrives(true);
+        query.setCorpora("allDrives");
         query.setSupportsAllDrives(true);
     }
 
